@@ -1,4 +1,4 @@
-package enum
+package taste
 
 type TasteType int
 

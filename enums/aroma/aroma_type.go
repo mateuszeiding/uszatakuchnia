@@ -1,4 +1,4 @@
-package enum
+package aroma
 
 type AromaType int
 

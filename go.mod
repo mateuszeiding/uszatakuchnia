@@ -1,3 +1,3 @@
-module uszata_kuchnia
+module uszatakuchnia
 
 go 1.25.1
