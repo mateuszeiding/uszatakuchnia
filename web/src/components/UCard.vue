@@ -23,11 +23,12 @@ defineProps<{
       <div class="image-wrapper pt-4">
         <img class="radius-4" :src="ingredient.image.urls.small" />
       </div>
-      <div class="d-flex justify-content-between gap-2 fs-xs">
-        <span>autor</span>
+      <div class="fs-xs">
+        <span>Photo by </span>
         <a :href="ingredient.image.author.profileURL">{{
           ingredient.image.author.name ?? ingredient.image.author.username
         }}</a>
+        <span> on <b>Unsplash</b></span>
       </div>
     </div>
     <div class="flex-wrap px-5 py-4">
