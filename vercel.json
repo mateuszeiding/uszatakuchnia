@@ -6,5 +6,5 @@
   ],
   "installCommand": "pnpm -C web install",
   "buildCommand": "pnpm -C web run build",
-  "outputDirectory": "."
+  "outputDirectory": "web/dist"
 }
