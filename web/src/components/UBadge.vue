@@ -1,14 +1,27 @@
 <script setup lang="ts">
 import type { Palette } from '@/scss/colors.config'
 import { AromaType } from '@/shared/enums/AromaType'
-import type { IngredientType } from '@/shared/enums/IngredientType'
-import type { TasteType } from '@/shared/enums/TasteType'
+import { IngredientType } from '@/shared/enums/IngredientType'
+import { TasteType } from '@/shared/enums/TasteType'
 
 type Union = `${AromaType}` | `${IngredientType}` | `${TasteType}`
 
 defineProps<{
   val: Union
 }>()
+
+const invertTextColorFor = [
+  AromaType.FRUITY.valueOf(),
+  AromaType.HERBAL.valueOf(),
+  AromaType.SPICY.valueOf(),
+  AromaType.EARTHY.valueOf(),
+  AromaType.SMOKY.valueOf(),
+  IngredientType.VEGETABLE.valueOf(),
+  IngredientType.FRUIT.valueOf(),
+  IngredientType.SPICE.valueOf(),
+  IngredientType.MEAT.valueOf(),
+  TasteType.UMAMI.valueOf(),
+] as const
 
 const aromaMap: Record<AromaType, NestedKeyUnion<Palette>> = {
   CREAMY: 'brown-lavender-blush',
@@ -46,7 +59,15 @@ const mapMerge = {
 }
 </script>
 <template>
-  <span class="radius-2 border px-4 py-2 fw-medium" :class="`bg-${mapMerge[val]}`">
+  <span
+    class="radius-2 border px-4 py-2 fw-medium"
+    :class="[
+      `bg-${mapMerge[val]}`,
+      {
+        ['tx-gray-ghost-white']: invertTextColorFor.includes(val),
+      },
+    ]"
+  >
     {{ val }}
   </span>
 </template>
