@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { IngredientDto } from '@/data/dtos/ingredients/ingredientDto'
+import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto'
 import UBadge from './UBadge.vue'
 
 defineProps<{

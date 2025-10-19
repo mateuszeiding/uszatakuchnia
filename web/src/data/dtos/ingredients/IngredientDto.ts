@@ -1,6 +1,6 @@
 import { IngredientType } from '@/shared/enums/IngredientType'
-import type { AromaDto } from './aromaDto'
-import type { TasteDto } from './tasteDto'
+import type { AromaDto } from './AromaDto'
+import type { TasteDto } from './TasteDto'
 
 export class IngredientDto {
   id: number = 0

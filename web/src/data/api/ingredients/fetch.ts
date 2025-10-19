@@ -1,6 +1,6 @@
 import { useQueryClient, type FetchQueryOptions } from '@tanstack/vue-query'
 import { API } from '../API'
-import type { IngredientDto } from '@/data/dtos/ingredients/ingredientDto'
+import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto'
 
 type RequestMap = {
   list: IngredientDto[]
