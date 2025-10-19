@@ -4,4 +4,5 @@ export enum TasteType {
   SALTY = 'SALTY',
   BITTER = 'BITTER',
   UMAMI = 'UMAMI',
+  UNKNOWN = 'UNKNOWN',
 }

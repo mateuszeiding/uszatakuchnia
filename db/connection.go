@@ -14,6 +14,8 @@ var (
 	once     sync.Once
 	inst     *gorm.DB
 	DevReset = false
+	Migrate  = false
+	AddSeed  = false
 )
 
 func DB() *gorm.DB {
@@ -43,12 +45,16 @@ func initDB() error {
 		}
 	}
 
-	if err := runMigrations(db); err != nil {
-		return fmt.Errorf("migrations: %w", err)
+	if Migrate {
+		if err := runMigrations(db); err != nil {
+			return fmt.Errorf("migrations: %w", err)
+		}
 	}
 
-	if err := runSeed(db); err != nil {
-		return fmt.Errorf("seed: %w", err)
+	if AddSeed {
+		if err := runSeed(db); err != nil {
+			return fmt.Errorf("seed: %w", err)
+		}
 	}
 
 	sqlDB, err := db.DB()

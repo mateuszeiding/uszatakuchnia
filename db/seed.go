@@ -14,6 +14,7 @@ func runSeed(gdb *gorm.DB) error {
 		{Code: "SALTY", Name: "Słony"},
 		{Code: "BITTER", Name: "Gorzki"},
 		{Code: "UMAMI", Name: "Umami"},
+		{Code: "UNKNOWN", Name: "Nieznany"},
 	}
 
 	gdb.Clauses(clause.OnConflict{

@@ -5,13 +5,6 @@ import type { IngredientType } from '@/shared/enums/IngredientType'
 import type { TasteType } from '@/shared/enums/TasteType'
 
 type Union = `${AromaType}` | `${IngredientType}` | `${TasteType}`
-type NestedKeyUnion<T> = {
-  [K in keyof T]: K extends string
-    ? keyof T[K] extends string
-      ? `${K}-${keyof T[K]}`
-      : never
-    : never
-}[keyof T]
 
 defineProps<{
   val: Union
@@ -33,6 +26,7 @@ const tasteMap: Record<TasteType, NestedKeyUnion<Palette>> = {
   SOUR: 'orange-ut-orange',
   SWEET: 'violet-plum',
   UMAMI: 'gray-outer-space',
+  UNKNOWN: 'brown-sandy-brown',
 }
 
 const ingredientMap: Record<IngredientType, NestedKeyUnion<Palette>> = {
