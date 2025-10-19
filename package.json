@@ -1,0 +1,12 @@
+{
+  "name": "root",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "pnpm -C web install && npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
