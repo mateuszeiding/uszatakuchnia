@@ -3,5 +3,7 @@
   "rewrites": [
     { "source": "/api", "destination": "/api" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  ],
+  "installCommand": "pnpm -C web install",
+  "buildCommand": "pnpm -C web run build"
 }
