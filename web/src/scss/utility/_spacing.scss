@@ -66,6 +66,10 @@ $spacers: (
   @include spacer('margin', $key, $val);
   @include spacer('padding', $key, $val);
   @include spacer_but_better($key, $val);
+
+  .radius-#{$key} {
+    border-radius: $val !important;
+  }
 }
 
 .w-10 {

@@ -3,9 +3,11 @@
 $columns: 12;
 
 .container {
-  margin: auto auto;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1920px;
   box-sizing: border-box;
-  padding: 0 1.2rem;
+  padding: 0 3.6rem;
 }
 
 @include media-query.sm() {
