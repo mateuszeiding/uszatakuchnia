@@ -7,14 +7,11 @@ defineProps<{
 }>()
 </script>
 <template>
-  <div class="border radius-5 pb-6 pt-4">
+  <div class="border radius-5 pb-6 pt-4 w-100 h-100">
     <div class="pb-4 px-5">
-      <span class="fs-lg">
+      <div class="fs-xl pb-2">
         {{ ingredient.name }}
-      </span>
-    </div>
-    <div class="border-top px-5 py-4">
-      <span>Smak</span>
+      </div>
       <div class="d-flex flex-wrap gap-3">
         <u-badge
           v-for="val in ingredient.tastes"
@@ -25,7 +22,7 @@ defineProps<{
       </div>
     </div>
     <div class="border-top flex-wrap px-5 py-4">
-      <span>Aromat</span>
+      <div class="pb-2">Aromat</div>
       <div class="d-flex gap-3">
         <u-badge
           v-for="val in ingredient.aromas"

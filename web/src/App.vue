@@ -30,8 +30,10 @@ onMounted(async () => {
       <u-badge v-for="val in enums" :key="val" :val />
     </div>
 
-    <div class="d-flex gap-5 flex-wrap">
-      <u-card v-for="ingredient in ingredients" :key="ingredient.id" :ingredient />
+    <div class="row row-cols-4 row-gap-6">
+      <div class="col" v-for="ingredient in ingredients" :key="ingredient.id">
+        <u-card :ingredient />
+      </div>
     </div>
   </main>
 </template>

@@ -23,13 +23,15 @@ $columns: 12;
 }
 
 .col {
-  display: flex;
-  flex-grow: 1;
   padding: 0 1.2rem;
 }
 
 @mixin col($i) {
   width: calc(100% / #{$columns} * #{$i});
+  padding: 0 1.2rem;
+}
+@mixin row-col($i) {
+  width: calc(100% / #{$i});
   padding: 0 1.2rem;
 }
 
@@ -47,6 +49,28 @@ $columns: 12;
   @include media-query.sm() {
     .col-sm-#{$i} {
       @include col($i);
+    }
+  }
+
+  .row-cols-#{$i} {
+    .col {
+      @include row-col($i);
+    }
+  }
+
+  @include media-query.lg() {
+    .row-cols-lg-#{$i} {
+      .col {
+        @include row-col($i);
+      }
+    }
+  }
+
+  @include media-query.sm() {
+    .row-cols-sm-#{$i} {
+      .col {
+        @include row-col($i);
+      }
     }
   }
 }
