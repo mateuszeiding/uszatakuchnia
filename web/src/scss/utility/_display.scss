@@ -1,0 +1,35 @@
+@use './../mixins/media-query' as media-query;
+
+.d-flex {
+  display: flex !important;
+}
+
+.d-inline-flex {
+  display: inline-flex !important;
+}
+
+.d-none {
+  display: none !important;
+}
+
+@include media-query.lg() {
+  .d-lg-none {
+    display: none !important;
+  }
+}
+
+@include media-query.sm() {
+  .d-sm-none {
+    display: none !important;
+  }
+}
+
+@media print {
+  .d-print-none {
+    display: none !important;
+  }
+
+  .d-print-block {
+    display: block !important;
+  }
+}

@@ -1,0 +1,22 @@
+.p-relative {
+  position: relative;
+}
+
+.p-absolute {
+  position: absolute;
+}
+
+$poistion: ('left', 'right', 'top', 'bottom');
+$positionValue: ('0', '50', '100');
+
+@mixin position($attr, $val) {
+  .#{$attr}-#{$val} {
+    #{$attr}: calc(#{$val} * 1%) !important;
+  }
+}
+
+@each $pos in $poistion {
+  @each $val in $positionValue {
+    @include position($pos, $val);
+  }
+}

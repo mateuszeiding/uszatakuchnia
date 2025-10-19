@@ -1,0 +1,69 @@
+@use './../mixins/media-query' as media-query;
+
+$columns: 12;
+
+.container {
+  margin: auto auto;
+  box-sizing: border-box;
+  padding: 0 1.2rem;
+}
+
+@include media-query.sm() {
+  .container {
+    height: fit-content;
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -1.2rem;
+}
+
+.col {
+  display: flex;
+  flex-grow: 1;
+  padding: 0 1.2rem;
+}
+
+@mixin col($i) {
+  width: calc(100% / #{$columns} * #{$i});
+  padding: 0 1.2rem;
+}
+
+@for $i from 1 to $columns + 1 {
+  .col-#{$i} {
+    @include col($i);
+  }
+
+  @include media-query.lg() {
+    .col-lg-#{$i} {
+      @include col($i);
+    }
+  }
+
+  @include media-query.sm() {
+    .col-sm-#{$i} {
+      @include col($i);
+    }
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+  }
+
+  @for $i from 1 to $columns + 1 {
+    .col-print-#{$i} {
+      @include col($i);
+    }
+  }
+
+  .container {
+    width: 100%;
+    height: auto;
+    background-color: white;
+    box-sizing: border-box;
+  }
+}

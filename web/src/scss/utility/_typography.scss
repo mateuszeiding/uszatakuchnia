@@ -1,0 +1,115 @@
+@use './../mixins/media-query' as media-query;
+
+$fw: (
+  light: 300,
+  regular: 400,
+  medium: 500,
+  bold: 700,
+);
+
+@each $key, $value in $fw {
+  .fw-#{$key} {
+    font-weight: $value !important;
+  }
+}
+$fs: (
+  xxs: 1rem,
+  xs: 1.2rem,
+  sm: 1.4rem,
+  md: 1.6rem,
+  lg: 1.8rem,
+  xl: 2rem,
+  xxl: 2.4rem,
+  xxxl: 3.2rem,
+);
+
+@each $key, $value in $fs {
+  .fs-#{$key} {
+    font-size: $value !important;
+    @if $key == 'sm' {
+      line-height: 2rem;
+    }
+  }
+}
+
+.uppercase {
+  text-transform: uppercase !important;
+}
+
+.lowercase {
+  text-transform: lowercase !important;
+}
+
+.underline {
+  text-decoration: underline !important;
+}
+
+.lh-1 {
+  line-height: 1 !important;
+}
+
+.lh-sm {
+  line-height: 1.25 !important;
+}
+
+.lh-base {
+  line-height: 1.5 !important;
+}
+
+.lh-lg {
+  line-height: 1.75 !important;
+}
+
+.text-start {
+  text-align: left !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-end {
+  text-align: right !important;
+}
+
+@include media-query.lg() {
+  .text-lg-start {
+    text-align: left !important;
+  }
+
+  .text-lg-center {
+    text-align: center !important;
+  }
+
+  .text-lg-end {
+    text-align: right !important;
+  }
+}
+
+@include media-query.sm() {
+  .text-sm-start {
+    text-align: left !important;
+  }
+
+  .text-sm-center {
+    text-align: center !important;
+  }
+
+  .text-sm-end {
+    text-align: right !important;
+  }
+}
+
+@media print {
+  .text-print-start {
+    text-align: left !important;
+  }
+
+  .text-print-center {
+    text-align: center !important;
+  }
+
+  .text-print-end {
+    text-align: right !important;
+  }
+}

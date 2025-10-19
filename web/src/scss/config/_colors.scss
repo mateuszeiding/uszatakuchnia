@@ -1,0 +1,255 @@
+@use 'sass:map';
+@use 'sass:color';
+@use 'sass:meta';
+
+// ⚠️ GENERATED from colors.config.mjs — do not edit.
+
+/* --- GRAY --- */
+$gray-cool-gray: #7e7f9a;
+$gray-davys-gray: #4e4b5c;
+$gray-eerie-black: #1c2321;
+$gray-ghost-white: #f8f8ff;
+$gray-outer-space: #464f51;
+$gray-paynes-gray: #5e6572;
+
+/* --- BLUE --- */
+$blue-berkeley-blue: #12355b;
+$blue-celtic-blue: #276fbf;
+$blue-cerulean: #0081af;
+$blue-deep-sky-blue: #00bbf9;
+$blue-delft-blue: #183059;
+$blue-indigo-dye: #2b4162;
+$blue-picton-blue: #00abe7;
+$blue-steel-blue: #4381c1;
+
+/* --- RED --- */
+$red-amaranth-purple: #a30b37;
+$red-bright-pink: #ef626c;
+$red-chili-red: #e03616;
+$red-china-rose: #aa6373;
+$red-crimson: #d72638;
+$red-falu-red: #721817;
+$red-imperial-red: #f03a47;
+$red-old-rose: #bd6b73;
+$red-quinacridone-magenta: #993955;
+$red-redwood: #af5b5b;
+
+/* --- GREEN --- */
+$green-cambridge-blue: #9dcbba;
+$green-celadon: #abebd2;
+$green-dartmouth-green: #0b6e4f;
+$green-drab-dark-brown: #313715;
+$green-fern-green: #4f772d;
+$green-mint: #4fb477;
+$green-moss-green: #90a955;
+$green-myrtle-green: #508484;
+$green-persian-green: #2a9d8f;
+$green-phlato-green: #123524;
+$green-spring-green: #04f06a;
+$green-stale-gray: #6d8a96;
+$green-tiffany-blue: #84dccf;
+
+/* --- PURPLE --- */
+$purple-dark-purple: #381d2a;
+$purple-finn: #613f75;
+$purple-mardi-gras: #822e81;
+$purple-royal-purple: #7b4b94;
+
+/* --- VIOLET --- */
+$violet-chinese-violet: #925e78;
+$violet-french-violet: #731dd8;
+$violet-plum: #ec9ded;
+$violet-russian-violet: #392061;
+$violet-ultra-violet: #4e5283;
+
+/* --- YELLOW --- */
+$yellow-maize: #fee440;
+$yellow-old-gold: #e2c044;
+$yellow-selective-yellow: #fabc2a;
+$yellow-vanilla: #f0f2a6;
+$yellow-xanthous: #f7b32b;
+
+/* --- BROWN --- */
+$brown-lavender-blush: #f6e8ea;
+$brown-licorice: #22181c;
+$brown-sandy-brown: #ffa552;
+$brown-taupe: #4a4238;
+$brown-wenge: #6d5959;
+
+/* --- ORANGE --- */
+$orange-burnt-orange: #ba5624;
+$orange-cocoa-brown: #d16014;
+$orange-ut-orange: #fb8b24;
+
+$grays: (
+  gray-cool-gray: $gray-cool-gray,
+  gray-davys-gray: $gray-davys-gray,
+  gray-eerie-black: $gray-eerie-black,
+  gray-ghost-white: $gray-ghost-white,
+  gray-outer-space: $gray-outer-space,
+  gray-paynes-gray: $gray-paynes-gray,
+);
+
+$blues: (
+  blue-berkeley-blue: $blue-berkeley-blue,
+  blue-celtic-blue: $blue-celtic-blue,
+  blue-cerulean: $blue-cerulean,
+  blue-deep-sky-blue: $blue-deep-sky-blue,
+  blue-delft-blue: $blue-delft-blue,
+  blue-indigo-dye: $blue-indigo-dye,
+  blue-picton-blue: $blue-picton-blue,
+  blue-steel-blue: $blue-steel-blue,
+);
+
+$reds: (
+  red-amaranth-purple: $red-amaranth-purple,
+  red-bright-pink: $red-bright-pink,
+  red-chili-red: $red-chili-red,
+  red-china-rose: $red-china-rose,
+  red-crimson: $red-crimson,
+  red-falu-red: $red-falu-red,
+  red-imperial-red: $red-imperial-red,
+  red-old-rose: $red-old-rose,
+  red-quinacridone-magenta: $red-quinacridone-magenta,
+  red-redwood: $red-redwood,
+);
+
+$greens: (
+  green-cambridge-blue: $green-cambridge-blue,
+  green-celadon: $green-celadon,
+  green-dartmouth-green: $green-dartmouth-green,
+  green-drab-dark-brown: $green-drab-dark-brown,
+  green-fern-green: $green-fern-green,
+  green-mint: $green-mint,
+  green-moss-green: $green-moss-green,
+  green-myrtle-green: $green-myrtle-green,
+  green-persian-green: $green-persian-green,
+  green-phlato-green: $green-phlato-green,
+  green-spring-green: $green-spring-green,
+  green-stale-gray: $green-stale-gray,
+  green-tiffany-blue: $green-tiffany-blue,
+);
+
+$purples: (
+  purple-dark-purple: $purple-dark-purple,
+  purple-finn: $purple-finn,
+  purple-mardi-gras: $purple-mardi-gras,
+  purple-royal-purple: $purple-royal-purple,
+);
+
+$violets: (
+  violet-chinese-violet: $violet-chinese-violet,
+  violet-french-violet: $violet-french-violet,
+  violet-plum: $violet-plum,
+  violet-russian-violet: $violet-russian-violet,
+  violet-ultra-violet: $violet-ultra-violet,
+);
+
+$yellows: (
+  yellow-maize: $yellow-maize,
+  yellow-old-gold: $yellow-old-gold,
+  yellow-selective-yellow: $yellow-selective-yellow,
+  yellow-vanilla: $yellow-vanilla,
+  yellow-xanthous: $yellow-xanthous,
+);
+
+$browns: (
+  brown-lavender-blush: $brown-lavender-blush,
+  brown-licorice: $brown-licorice,
+  brown-sandy-brown: $brown-sandy-brown,
+  brown-taupe: $brown-taupe,
+  brown-wenge: $brown-wenge,
+);
+
+$oranges: (
+  orange-burnt-orange: $orange-burnt-orange,
+  orange-cocoa-brown: $orange-cocoa-brown,
+  orange-ut-orange: $orange-ut-orange,
+);
+
+@function hex-to-rgb($c) {
+  @return rgb(
+    color.channel($c, 'red', $space: rgb),
+    color.channel($c, 'green', $space: rgb),
+    color.channel($c, 'blue', $space: rgb)
+  );
+}
+
+@function map-merge-all($maps...) {
+  $out: ();
+  @each $m in $maps {
+    @if $m != null and meta.type-of($m) == 'map' {
+      $out: map.merge($out, $m);
+    }
+  }
+  @return $out;
+}
+
+$colors: map-merge-all($grays, $blues, $reds, $greens, $purples, $violets, $yellows, $browns, $oranges);
+
+:root {
+  --color-gray-cool-gray: #{$gray-cool-gray};
+  --color-gray-davys-gray: #{$gray-davys-gray};
+  --color-gray-eerie-black: #{$gray-eerie-black};
+  --color-gray-ghost-white: #{$gray-ghost-white};
+  --color-gray-outer-space: #{$gray-outer-space};
+  --color-gray-paynes-gray: #{$gray-paynes-gray};
+  --color-blue-berkeley-blue: #{$blue-berkeley-blue};
+  --color-blue-celtic-blue: #{$blue-celtic-blue};
+  --color-blue-cerulean: #{$blue-cerulean};
+  --color-blue-deep-sky-blue: #{$blue-deep-sky-blue};
+  --color-blue-delft-blue: #{$blue-delft-blue};
+  --color-blue-indigo-dye: #{$blue-indigo-dye};
+  --color-blue-picton-blue: #{$blue-picton-blue};
+  --color-blue-steel-blue: #{$blue-steel-blue};
+  --color-red-amaranth-purple: #{$red-amaranth-purple};
+  --color-red-bright-pink: #{$red-bright-pink};
+  --color-red-chili-red: #{$red-chili-red};
+  --color-red-china-rose: #{$red-china-rose};
+  --color-red-crimson: #{$red-crimson};
+  --color-red-falu-red: #{$red-falu-red};
+  --color-red-imperial-red: #{$red-imperial-red};
+  --color-red-old-rose: #{$red-old-rose};
+  --color-red-quinacridone-magenta: #{$red-quinacridone-magenta};
+  --color-red-redwood: #{$red-redwood};
+  --color-green-cambridge-blue: #{$green-cambridge-blue};
+  --color-green-celadon: #{$green-celadon};
+  --color-green-dartmouth-green: #{$green-dartmouth-green};
+  --color-green-drab-dark-brown: #{$green-drab-dark-brown};
+  --color-green-fern-green: #{$green-fern-green};
+  --color-green-mint: #{$green-mint};
+  --color-green-moss-green: #{$green-moss-green};
+  --color-green-myrtle-green: #{$green-myrtle-green};
+  --color-green-persian-green: #{$green-persian-green};
+  --color-green-phlato-green: #{$green-phlato-green};
+  --color-green-spring-green: #{$green-spring-green};
+  --color-green-stale-gray: #{$green-stale-gray};
+  --color-green-tiffany-blue: #{$green-tiffany-blue};
+  --color-purple-dark-purple: #{$purple-dark-purple};
+  --color-purple-finn: #{$purple-finn};
+  --color-purple-mardi-gras: #{$purple-mardi-gras};
+  --color-purple-royal-purple: #{$purple-royal-purple};
+  --color-violet-chinese-violet: #{$violet-chinese-violet};
+  --color-violet-french-violet: #{$violet-french-violet};
+  --color-violet-plum: #{$violet-plum};
+  --color-violet-russian-violet: #{$violet-russian-violet};
+  --color-violet-ultra-violet: #{$violet-ultra-violet};
+  --color-yellow-maize: #{$yellow-maize};
+  --color-yellow-old-gold: #{$yellow-old-gold};
+  --color-yellow-selective-yellow: #{$yellow-selective-yellow};
+  --color-yellow-vanilla: #{$yellow-vanilla};
+  --color-yellow-xanthous: #{$yellow-xanthous};
+  --color-brown-lavender-blush: #{$brown-lavender-blush};
+  --color-brown-licorice: #{$brown-licorice};
+  --color-brown-sandy-brown: #{$brown-sandy-brown};
+  --color-brown-taupe: #{$brown-taupe};
+  --color-brown-wenge: #{$brown-wenge};
+  --color-orange-burnt-orange: #{$orange-burnt-orange};
+  --color-orange-cocoa-brown: #{$orange-cocoa-brown};
+  --color-orange-ut-orange: #{$orange-ut-orange};
+}
+
+@each $name, $value in $colors {
+  .tx-#{$name} { color: var(--color-#{$name}); }
+  .bg-#{$name} { background-color: var(--color-#{$name}); }
+}

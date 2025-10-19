@@ -1,0 +1,159 @@
+@use 'sass:string';
+@use './../mixins/media-query' as media-query;
+
+$spacers: (
+  0: 0,
+  1: 0.2rem,
+  2: 0.4rem,
+  3: 0.8rem,
+  4: 1.2rem,
+  5: 1.6rem,
+  6: 2.4rem,
+  7: 3.2rem,
+  8: 4.8rem,
+  9: 6.4rem,
+);
+
+@mixin spacer($attr, $key, $val) {
+  $prefix: string.slice(#{$attr}, 1, 1);
+
+  .#{$prefix}-#{$key} {
+    #{$attr}: $val !important;
+  }
+
+  .#{$prefix}t-#{$key} {
+    #{$attr}-top: $val !important;
+  }
+
+  .#{$prefix}e-#{$key} {
+    #{$attr}-right: $val !important;
+  }
+
+  .#{$prefix}b-#{$key} {
+    #{$attr}-bottom: $val !important;
+  }
+
+  .#{$prefix}s-#{$key} {
+    #{$attr}-left: $val !important;
+  }
+
+  .#{$prefix}x-#{$key} {
+    #{$attr}-left: $val !important;
+    #{$attr}-right: $val !important;
+  }
+
+  .#{$prefix}y-#{$key} {
+    #{$attr}-top: $val !important;
+    #{$attr}-bottom: $val !important;
+  }
+}
+
+@mixin spacer_but_better($key, $val) {
+  .gap-#{$key} {
+    gap: $val !important;
+  }
+
+  .row-gap-#{$key} {
+    row-gap: $val !important;
+  }
+
+  .column-gap-#{$key} {
+    column-gap: $val !important;
+  }
+}
+
+@each $key, $val in $spacers {
+  @include spacer('margin', $key, $val);
+  @include spacer('padding', $key, $val);
+  @include spacer_but_better($key, $val);
+}
+
+.w-10 {
+  width: 10% !important;
+}
+
+.w-25 {
+  width: 25% !important;
+}
+
+.w-50 {
+  width: 50% !important;
+}
+
+.w-75 {
+  width: 75% !important;
+}
+
+.w-100 {
+  width: 100% !important;
+}
+
+@include media-query.lg() {
+  .w-lg-10 {
+    width: 10% !important;
+  }
+
+  .w-lg-25 {
+    width: 25% !important;
+  }
+
+  .w-lg-50 {
+    width: 50% !important;
+  }
+
+  .w-lg-75 {
+    width: 75% !important;
+  }
+
+  .w-lg-100 {
+    width: 100% !important;
+  }
+}
+
+@include media-query.sm() {
+  .w-sm-10 {
+    width: 10% !important;
+  }
+
+  .w-sm-25 {
+    width: 25% !important;
+  }
+
+  .w-sm-50 {
+    width: 50% !important;
+  }
+
+  .w-sm-75 {
+    width: 75% !important;
+  }
+
+  .w-sm-100 {
+    width: 100% !important;
+  }
+}
+
+@media print {
+  .w-print-10 {
+    width: 10% !important;
+  }
+
+  .w-print-25 {
+    width: 25% !important;
+  }
+
+  .w-print-50 {
+    width: 50% !important;
+  }
+
+  .w-print-75 {
+    width: 75% !important;
+  }
+
+  .w-print-100 {
+    width: 100% !important;
+  }
+}
+
+.h-100 {
+  height: 100% !important;
+}

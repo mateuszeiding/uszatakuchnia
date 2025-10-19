@@ -1,0 +1,10 @@
+@mixin lg() {
+  @media (min-width: 851px) {
+    @content;
+  }
+}
+@mixin sm() {
+  @media (max-width: 850px) {
+    @content;
+  }
+}
