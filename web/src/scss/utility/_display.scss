@@ -25,6 +25,12 @@
   }
 }
 
+@include media-query.md() {
+  .d-md-none {
+    display: none !important;
+  }
+}
+
 @include media-query.sm() {
   .d-sm-none {
     display: none !important;

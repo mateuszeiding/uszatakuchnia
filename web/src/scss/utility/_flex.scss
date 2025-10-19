@@ -18,6 +18,16 @@
   }
 }
 
+@include media-query.md() {
+  .flex-md-row {
+    flex-direction: row !important;
+  }
+
+  .flex-md-column {
+    flex-direction: column !important;
+  }
+}
+
 @include media-query.sm() {
   .flex-sm-row {
     flex-direction: row !important;
@@ -120,7 +130,7 @@
   }
 }
 
-@include media-query.sm() {
+@include media-query.md() {
   .justify-content-sm-center {
     justify-content: center !important;
   }

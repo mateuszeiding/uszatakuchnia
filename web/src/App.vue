@@ -30,7 +30,7 @@ onMounted(async () => {
       <u-badge v-for="val in enums" :key="val" :val />
     </div>
 
-    <div class="row row-cols-4 row-gap-6">
+    <div class="row row-cols-lg-4 row-cols-md-2 row-cols-sm-1 row-gap-6">
       <div class="col" v-for="ingredient in ingredients" :key="ingredient.id">
         <u-card :ingredient />
       </div>

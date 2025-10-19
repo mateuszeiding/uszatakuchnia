@@ -10,7 +10,7 @@ $columns: 12;
   padding: 0 3.6rem;
 }
 
-@include media-query.sm() {
+@include media-query.md() {
   .container {
     height: fit-content;
   }
@@ -46,6 +46,12 @@ $columns: 12;
     }
   }
 
+  @include media-query.md() {
+    .col-md-#{$i} {
+      @include col($i);
+    }
+  }
+
   @include media-query.sm() {
     .col-sm-#{$i} {
       @include col($i);
@@ -60,6 +66,14 @@ $columns: 12;
 
   @include media-query.lg() {
     .row-cols-lg-#{$i} {
+      .col {
+        @include row-col($i);
+      }
+    }
+  }
+
+  @include media-query.md() {
+    .row-cols-md-#{$i} {
       .col {
         @include row-col($i);
       }

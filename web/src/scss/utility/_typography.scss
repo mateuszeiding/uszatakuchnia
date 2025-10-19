@@ -86,6 +86,20 @@ $fs: (
   }
 }
 
+@include media-query.md() {
+  .text-md-start {
+    text-align: left !important;
+  }
+
+  .text-md-center {
+    text-align: center !important;
+  }
+
+  .text-md-end {
+    text-align: right !important;
+  }
+}
+
 @include media-query.sm() {
   .text-sm-start {
     text-align: left !important;
