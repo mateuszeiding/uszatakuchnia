@@ -13,9 +13,9 @@ import (
 var (
 	once     sync.Once
 	inst     *gorm.DB
-	DevReset = false
-	Migrate  = false
-	AddSeed  = false
+	DevReset = true
+	Migrate  = true
+	AddSeed  = true
 )
 
 func DB() *gorm.DB {

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"sync"
 	"uszatakuchnia/db/entities"
 
 	"gorm.io/gorm"
@@ -35,6 +36,25 @@ func runMigrations(gdb *gorm.DB) error {
 	return nil
 }
 
-func devReset(gdb *gorm.DB) error {
-	return gdb.Exec(`DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;`).Error
+var migrateLock sync.Mutex
+
+func devReset(db *gorm.DB) error {
+	migrateLock.Lock()
+	defer migrateLock.Unlock()
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Dropuj w odwrotnej kolejności zależności
+		if err := tx.Migrator().DropTable(
+			&entities.IngredientTaste{}, // PK (ingredient_id, taste_id)
+			&entities.Aroma{},
+			&entities.Taste{},
+			&entities.Ingredient{},
+			&entities.TasteType{},
+			&entities.IngredientType{},
+			&entities.AromaType{},
+		); err != nil {
+			return err
+		}
+		return nil
+	})
 }

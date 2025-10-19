@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { fetchEnums } from './data/api/enums/fetch'
 import UBadge from './components/UBadge.vue'
+import UTopBar from './components/UTopBar.vue'
 
 const enums = ref<PropsOf<typeof UBadge>['val'][]>()
 
@@ -17,7 +18,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="container">
+  <UTopBar />
+  <main class="container pt-7">
     <div class="d-flex gap-5 flex-wrap">
       <u-badge v-for="val in enums" :key="val" :val />
     </div>

@@ -60,7 +60,7 @@ const mapMerge = {
 </script>
 <template>
   <span
-    class="radius-2 border px-4 py-2 fw-medium"
+    class="radius-2 border px-4 py-2 fw-medium cursor-default"
     :class="[
       `bg-${mapMerge[val]}`,
       {
