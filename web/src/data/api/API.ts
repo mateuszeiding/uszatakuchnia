@@ -3,7 +3,7 @@ import axios from 'axios'
 export class API {
   static #instance: API | null = null
 
-  private __baseUrl = 'http://localhost:3000/api'
+  private __baseUrl = `${import.meta.env.DEV ? 'http://localhost:3000' : ''}/api`
 
   private constructor() {}
 
