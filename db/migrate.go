@@ -16,6 +16,7 @@ func AutoMigrate(gdb *gorm.DB) error {
 		&entities.Taste{},
 		&entities.IngredientTaste{},
 		&entities.Aroma{},
+		&entities.Image{},
 	)
 }
 
@@ -39,6 +40,7 @@ func devReset(db *gorm.DB) error {
 			&entities.IngredientTaste{}, // PK (ingredient_id, taste_id)
 			&entities.Aroma{},
 			&entities.Taste{},
+			&entities.Image{},
 			&entities.Ingredient{},
 			&entities.TasteType{},
 			&entities.IngredientType{},

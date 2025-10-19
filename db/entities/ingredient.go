@@ -17,6 +17,7 @@ type Ingredient struct {
 
 	Aromas           []Aroma
 	IngredientTastes []IngredientTaste
+	Image            Image `gorm:"polymorphic:Ref;polymorphicValue:ingredient"`
 }
 
 func (Ingredient) TableName() string { return "ingredients" }
@@ -48,6 +49,7 @@ func (i Ingredient) ToDto() dtos.IngredientDto {
 		Type:       i.Type.Code,
 		Aromas:     aromas,
 		Tastes:     tastes,
+		Image:      i.Image.ToDto(),
 	}
 
 	return dto

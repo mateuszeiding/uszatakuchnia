@@ -8,4 +8,5 @@ type IngredientDto struct {
 	IsAllergen bool       `json:"isAllergen"`
 	Type       string     `json:"type"`
 	Tastes     []TasteDto `json:"tastes"`
+	Image      *ImageDto  `json:"image"`
 }

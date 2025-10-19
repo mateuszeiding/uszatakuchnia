@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"uszatakuchnia/db/entities"
+	"uszatakuchnia/services"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -115,20 +116,29 @@ func EnsureTasteForTypes(tx *gorm.DB) error {
 	return nil
 }
 
+type TasteSeed struct {
+	TypeCode  string
+	Intensity int
+}
+
+type AromaSeed struct {
+	Name, TypeCode string
+	Intensity      int
+}
+type ImageSeed struct {
+	PostID  string
+	RefType entities.RefType
+}
+
 func SeedOneIngredient(
 	tx *gorm.DB,
 	name string,
 	typeCode string,
 	isAllergen bool,
 	parentName *string,
-	tastes []struct {
-		TypeCode  string
-		Intensity int
-	},
-	aromas []struct {
-		Name, TypeCode string
-		Intensity      int
-	},
+	tastes []TasteSeed,
+	aromas []AromaSeed,
+	image ImageSeed,
 ) error {
 	ingTypeID, aromaTypeID, tasteID, err := loadDictMaps(tx)
 	if err != nil {
@@ -201,6 +211,10 @@ func SeedOneIngredient(
 		}
 	}
 
+	if err := services.UpsertImageFromUnsplash(tx, ing.ID, image.RefType, image.PostID); err != nil {
+		return err
+	}
+
 	return nil
 }
 func SeedAll(db *gorm.DB) error {
@@ -213,21 +227,15 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Cebula", "VEGETABLE", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "SWEET", Intensity: 20},
 				{TypeCode: "UMAMI", Intensity: 10},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 30},
 				{Name: "Dymny", TypeCode: "SMOKY", Intensity: 20},
 			},
+			ImageSeed{PostID: "bC1fXU1v98U", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}
@@ -236,21 +244,15 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Czosnek", "VEGETABLE", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "UMAMI", Intensity: 25},
 				{TypeCode: "BITTER", Intensity: 5},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 40},
 				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 15},
 			},
+			ImageSeed{PostID: "_b8n1KTZ8rw", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}
@@ -259,21 +261,15 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Cytryna", "FRUIT", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "SOUR", Intensity: 95},
 				{TypeCode: "BITTER", Intensity: 5},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Owocowy", TypeCode: "FRUITY", Intensity: 85},
 				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 10},
 			},
+			ImageSeed{PostID: "7WAGthfGJ9w", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}
@@ -282,22 +278,16 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Pomidor", "FRUIT", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "UMAMI", Intensity: 35},
 				{TypeCode: "SWEET", Intensity: 20},
 				{TypeCode: "SOUR", Intensity: 10},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 25},
 				{Name: "Owocowy", TypeCode: "FRUITY", Intensity: 35},
 			},
+			ImageSeed{PostID: "Jy7e7RjOFVo", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}
@@ -306,20 +296,14 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Bazylia", "HERB", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "BITTER", Intensity: 10},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 80},
 				{Name: "Korzenny", TypeCode: "SPICY", Intensity: 20},
 			},
+			ImageSeed{PostID: "DDKdfRe1GxA", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}
@@ -328,21 +312,15 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Mięta", "HERB", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "BITTER", Intensity: 5},
 				{TypeCode: "SWEET", Intensity: 5},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 70},
 				{Name: "Kremowy", TypeCode: "CREAMY", Intensity: 15},
 			},
+			ImageSeed{PostID: "s3C-iXNQIsQ", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}
@@ -351,21 +329,15 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Papryczka chili", "VEGETABLE", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "BITTER", Intensity: 10},
 				{TypeCode: "SOUR", Intensity: 5},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Korzenny", TypeCode: "SPICY", Intensity: 70},
 				{Name: "Dymny", TypeCode: "SMOKY", Intensity: 20},
 			},
+			ImageSeed{PostID: "iBsmi-wCXNE", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}
@@ -374,21 +346,15 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Pietruszka (nać)", "HERB", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "BITTER", Intensity: 10},
 				{TypeCode: "SWEET", Intensity: 5},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 70},
 				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 30},
 			},
+			ImageSeed{PostID: "r6BUzN_jTHg", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}
@@ -397,21 +363,15 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Wołowina", "MEAT", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "UMAMI", Intensity: 60},
 				{TypeCode: "BITTER", Intensity: 10},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Dymny", TypeCode: "SMOKY", Intensity: 40},
 				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 25},
 			},
+			ImageSeed{PostID: "u2QnkcLNsBY", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}
@@ -420,21 +380,15 @@ func SeedAll(db *gorm.DB) error {
 		if err := SeedOneIngredient(
 			tx,
 			"Kurczak", "MEAT", false, nil,
-			[]struct {
-				TypeCode  string
-				Intensity int
-			}{
+			[]TasteSeed{
 				{TypeCode: "UMAMI", Intensity: 40},
 				{TypeCode: "SWEET", Intensity: 10},
 			},
-			[]struct {
-				Name      string
-				TypeCode  string
-				Intensity int
-			}{
+			[]AromaSeed{
 				{Name: "Kremowy", TypeCode: "CREAMY", Intensity: 30},
 				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 15},
 			},
+			ImageSeed{PostID: "pNcFMdEe09Q", RefType: "ingredient"},
 		); err != nil {
 			return err
 		}

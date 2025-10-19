@@ -8,7 +8,7 @@ defineProps<{
 </script>
 <template>
   <div class="border radius-5 pb-6 pt-4 w-100 h-100">
-    <div class="pb-4 px-5">
+    <div class="px-5">
       <div class="fs-xl pb-2">
         {{ ingredient.name }}
       </div>
@@ -20,8 +20,11 @@ defineProps<{
           :name="val.name"
         />
       </div>
+      <div class="image-wrapper pt-4">
+        <img class="radius-4" :src="ingredient.image.urls.small" />
+      </div>
     </div>
-    <div class="border-top flex-wrap px-5 py-4">
+    <div class="flex-wrap px-5 py-4">
       <div class="pb-2">Aromat</div>
       <div class="d-flex gap-3">
         <u-badge
@@ -34,3 +37,19 @@ defineProps<{
     </div>
   </div>
 </template>
+<style lang="scss" scoped>
+.image-wrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  position: relative;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+  }
+}
+</style>
