@@ -52,6 +52,8 @@ const mapMerge = {
 }
 </script>
 <template>
-  <div class="d-inline radius-2 px-4 py-2 fw-medium" :class="`bg-${mapMerge[val]}`">{{ val }}</div>
+  <span class="radius-2 border px-4 py-2 fw-medium" :class="`bg-${mapMerge[val]}`">
+    {{ val }}
+  </span>
 </template>
 <style lang="scss" scoped></style>
