@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 	"uszatakuchnia/db/entities"
 
@@ -150,61 +149,16 @@ func SeedOneIngredient(
 		parentID = &parent.ID
 	}
 
-	// SPRÓBUJ ZNALEŹĆ ISTNIEJĄCY INGREDIENT
-	var ing entities.Ingredient
-	q := tx.Model(&entities.Ingredient{}).Where("name = ?", name)
-	if parentID == nil {
-		q = q.Where("parent_id IS NULL")
-	} else {
-		q = q.Where("parent_id = ?", *parentID)
-	}
-	if err := q.First(&ing).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// nie ma → utwórz nowy
-			ing = entities.Ingredient{
-				Name:       name,
-				TypeID:     tID,
-				IsAllergen: isAllergen,
-				ParentID:   parentID,
-			}
-			if err := tx.Create(&ing).Error; err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	} else {
-		// jest → ewentualnie zaktualizuj pola, które chcesz trzymać w seedzie
-		if ing.TypeID != tID || ing.IsAllergen != isAllergen {
-			if err := tx.Model(&ing).Updates(map[string]any{
-				"type_id":     tID,
-				"is_allergen": isAllergen,
-			}).Error; err != nil {
-				return err
-			}
-		}
-	}
+	// Przygotuj dane składnika
+	ing := entities.Ingredient{}
 
-	if err := tx.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "parent_id"}, {Name: "name"}},
-		DoUpdates: clause.Assignments(map[string]any{
-			"type_id":     ing.TypeID,
-			"is_allergen": ing.IsAllergen,
-		}),
-	}).Create(&ing).Error; err != nil {
-		return err
-	}
-
-	if ing.ID == 0 {
-		q := tx.Where("name = ?", ing.Name)
-		if ing.ParentID == nil {
-			q = q.Where("parent_id IS NULL")
-		} else {
-			q = q.Where("parent_id = ?", *ing.ParentID)
-		}
-		if err := q.First(&ing).Error; err != nil {
-			return err
-		}
+	// Użyj Assign, aby zapewnić, że TypeID i IsAllergen są ustawione
+	// zarówno przy tworzeniu, jak i przy aktualizacji.
+	// FirstOrCreate znajdzie rekord po Name i ParentID lub utworzy nowy z pełnymi danymi.
+	if err := tx.Where(entities.Ingredient{Name: name, ParentID: parentID}).
+		Assign(entities.Ingredient{TypeID: tID, IsAllergen: isAllergen}).
+		FirstOrCreate(&ing).Error; err != nil {
+		return fmt.Errorf("failed to find or create ingredient: %w", err)
 	}
 
 	for _, t := range tastes {

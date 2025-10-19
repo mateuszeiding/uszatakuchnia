@@ -13,9 +13,9 @@ import (
 var (
 	once     sync.Once
 	inst     *gorm.DB
-	DevReset = true
-	Migrate  = true
-	AddSeed  = true
+	DevReset = false
+	Migrate  = false
+	AddSeed  = false
 )
 
 func DB() *gorm.DB {
@@ -39,22 +39,9 @@ func initDB() error {
 		return fmt.Errorf("open: %w", err)
 	}
 
-	if DevReset {
-		if err := devReset(db); err != nil {
-			return fmt.Errorf("dev reset: %w", err)
-		}
-	}
-
-	if Migrate {
-		if err := runMigrations(db); err != nil {
-			return fmt.Errorf("migrations: %w", err)
-		}
-	}
-
-	if AddSeed {
-		if err := runSeed(db); err != nil {
-			return fmt.Errorf("seed: %w", err)
-		}
+	// Uruchom migracje i seedowanie w kontrolowany sposób
+	if err := MigrateAndSeed(db); err != nil {
+		return err
 	}
 
 	sqlDB, err := db.DB()
@@ -68,6 +55,42 @@ func initDB() error {
 	inst = db
 
 	return nil
+}
+
+// MigrateAndSeed uruchamia migracje i seedowanie z globalną blokadą transakcyjną,
+// aby zapobiec wielokrotnemu wykonaniu w środowisku serverless.
+func MigrateAndSeed(db *gorm.DB) error {
+	const lockKey int64 = 213742069
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		// Blokada na poziomie transakcji, automatycznie zwalniana po COMMIT/ROLLBACK
+		if err := tx.Exec(`SELECT pg_advisory_xact_lock(?)`, lockKey).Error; err != nil {
+			return fmt.Errorf("advisory lock: %w", err)
+		}
+
+		if DevReset {
+			if err := devReset(tx); err != nil {
+				return fmt.Errorf("dev reset: %w", err)
+			}
+			fmt.Println("DB DROPPED")
+		}
+
+		if Migrate {
+			if err := runMigrations(tx); err != nil {
+				return fmt.Errorf("migrations: %w", err)
+			}
+			fmt.Println("DB MIGRATED")
+		}
+
+		if AddSeed {
+			if err := runSeed(tx); err != nil {
+				return fmt.Errorf("seed: %w", err)
+			}
+			fmt.Println("DB SEEDED")
+		}
+
+		return nil
+	})
 }
 
 func Close() error {

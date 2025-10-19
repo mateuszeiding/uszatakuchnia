@@ -20,15 +20,6 @@ func AutoMigrate(gdb *gorm.DB) error {
 }
 
 func runMigrations(gdb *gorm.DB) error {
-	_ = gdb.Exec(`SET LOCAL statement_timeout = '30s'`).Error
-
-	const lockKey int64 = 2137
-	if err := gdb.Exec(`SELECT pg_advisory_lock(?)`, lockKey).Error; err != nil {
-		return err
-	}
-
-	defer gdb.Exec(`SELECT pg_advisory_unlock(?)`, lockKey)
-
 	if err := AutoMigrate(gdb); err != nil {
 		return err
 	}
