@@ -4,17 +4,17 @@ import type { TasteDto } from '@/data/dtos/enums/TasteDto'
 import type { AromaDto } from '@/data/dtos/enums/AromaDto'
 import type { IngredientDto } from '@/data/dtos/enums/IngredientDto'
 
-type EnumMap = {
+type RequestMap = {
   aroma: AromaDto
   ingredient: IngredientDto
   taste: TasteDto
 }
 
-export const fetchEnums = async <E extends keyof EnumMap>(endpoint: E) => {
+export const fetchEnums = async <E extends keyof RequestMap>(endpoint: E) => {
   const qc = useQueryClient()
-  const options: FetchQueryOptions<EnumMap[E][]> = {
+  const options: FetchQueryOptions<RequestMap[E][]> = {
     queryKey: [endpoint],
-    queryFn: () => API.Client.get<EnumMap[E][]>(`enums/${endpoint}`),
+    queryFn: () => API.Client.get<RequestMap[E][]>(`enums/${endpoint}`),
   }
   return await qc.fetchQuery(options)
 }

@@ -8,6 +8,7 @@ type Union = `${AromaType}` | `${IngredientType}` | `${TasteType}`
 
 defineProps<{
   val: Union
+  name?: string
 }>()
 
 const invertTextColorFor = [
@@ -60,7 +61,7 @@ const mapMerge = {
 </script>
 <template>
   <span
-    class="radius-2 border px-4 py-2 fw-medium cursor-default"
+    class="radius-2 border px-3 py-1 fw-medium fs-xs cursor-default"
     :class="[
       `bg-${mapMerge[val]}`,
       {
@@ -68,7 +69,7 @@ const mapMerge = {
       },
     ]"
   >
-    {{ val }}
+    {{ name ?? val }}
   </span>
 </template>
 <style lang="scss" scoped></style>

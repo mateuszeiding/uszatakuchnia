@@ -33,5 +33,8 @@ type EndpointsConfig = {
     aroma: string
     ingredient: string
     taste: string
+  },
+  ingredients: {
+    list: string
   }
 }
