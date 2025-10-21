@@ -1,0 +1,3 @@
+[submodule "web/src/scss"]
+	path = web/src/scss
+	url = https://github.com/mateuszeiding/scss.git
