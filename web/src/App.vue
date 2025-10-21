@@ -24,13 +24,13 @@ onMounted(async () => {
 </script>
 
 <template>
-  <UTopBar />
-  <main class="container pt-7">
+  <u-top-bar />
+  <main class="container pt-7 pb-6">
     <div class="d-flex gap-5 flex-wrap pb-8">
       <u-badge v-for="val in enums" :key="val" :val />
     </div>
 
-    <div class="row row-cols-lg-4 row-cols-md-2 row-cols-sm-1 row-gap-6">
+    <div class="row row-cols-3-xl row-cols-2-lg row-cols-1-md row-cols-1-sm row-gap-6">
       <div class="col" v-for="ingredient in ingredients" :key="ingredient.id">
         <u-card :ingredient />
       </div>
