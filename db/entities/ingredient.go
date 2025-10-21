@@ -23,22 +23,27 @@ type Ingredient struct {
 func (Ingredient) TableName() string { return "ingredients" }
 
 func (i Ingredient) ToDto() dtos.IngredientDto {
-	aromas := make([]dtos.AromaDto, 0, len(i.Aromas))
+	aromas := make([]dtos.TypeDto, 0, len(i.Aromas))
 	for _, a := range i.Aromas {
-		aromas = append(aromas, dtos.AromaDto{
+		aromas = append(aromas, dtos.TypeDto{
 			Name:      a.Name,
-			Intensity: a.Intensity,
+			Intensity: &a.Intensity,
 			Code:      a.Type.Code,
 		})
 	}
 
-	tastes := make([]dtos.TasteDto, 0, len(i.IngredientTastes))
+	tastes := make([]dtos.TypeDto, 0, len(i.IngredientTastes))
 	for _, t := range i.IngredientTastes {
-		tastes = append(tastes, dtos.TasteDto{
+		tastes = append(tastes, dtos.TypeDto{
 			Name:      t.Taste.Type.Name,
-			Intensity: t.Intensity,
+			Intensity: &t.Intensity,
 			Code:      t.Taste.Type.Code,
 		})
+	}
+
+	ingredientType := dtos.TypeDto{
+		Name: i.Type.Name,
+		Code: i.Type.Code,
 	}
 
 	dto := dtos.IngredientDto{
@@ -46,7 +51,7 @@ func (i Ingredient) ToDto() dtos.IngredientDto {
 		Name:       i.Name,
 		ParentID:   i.ParentID,
 		IsAllergen: i.IsAllergen,
-		Type:       i.Type.Code,
+		Type:       ingredientType,
 		Aromas:     aromas,
 		Tastes:     tastes,
 		Image:      i.Image.ToDto(),

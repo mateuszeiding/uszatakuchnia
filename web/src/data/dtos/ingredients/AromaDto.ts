@@ -1,6 +1,7 @@
 import { AromaType } from '@/shared/enums/AromaType'
+import type { IType } from './IType'
 
-export class AromaDto {
+export class AromaDto implements IType<AromaType> {
   name: string = ''
   intensity: number = 0
   code: AromaType = AromaType.OTHER
