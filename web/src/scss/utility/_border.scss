@@ -1,25 +1,55 @@
-.border {
-  border: 1px solid var(--border-color) !important;
-}
+@use './../mixins/media-query' as media-query;
 
-.border-top {
-  border-top: 1px solid var(--border-color) !important;
-}
-
-.border-end {
-  border-right: 1px solid var(--border-color) !important;
-}
-
-.border-bottom {
-  border-bottom: 1px solid var(--border-color) !important;
-}
-
-.border-start {
-  border-left: 1px solid var(--border-color) !important;
-}
-
-@for $i from 1 through 5 {
-  .border-w-#{$i} {
-    border-width: #{$i}px !important;
+@mixin borderer($sufix: null) {
+  @if $sufix {
+    $sufix: '-' + $sufix;
   }
+
+  .border#{$sufix} {
+    border: 1px solid var(--border-color) !important;
+  }
+
+  .border-top#{$sufix} {
+    border-top: 1px solid var(--border-color) !important;
+  }
+
+  .border-end#{$sufix} {
+    border-right: 1px solid var(--border-color) !important;
+  }
+
+  .border-bottom#{$sufix} {
+    border-bottom: 1px solid var(--border-color) !important;
+  }
+
+  .border-start#{$sufix} {
+    border-left: 1px solid var(--border-color) !important;
+  }
+
+  @for $i from 1 through 5 {
+    .border-w-#{$i}#{$sufix} {
+      border-width: #{$i}px !important;
+    }
+  }
+}
+
+@include borderer();
+
+@include media-query.xl() {
+  @include borderer('xl');
+}
+
+@include media-query.lg() {
+  @include borderer('lg');
+}
+
+@include media-query.md() {
+  @include borderer('md');
+}
+
+@include media-query.sm() {
+  @include borderer('sm');
+}
+
+@media print {
+  @include borderer('print');
 }

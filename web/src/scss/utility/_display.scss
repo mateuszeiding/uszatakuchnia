@@ -1,48 +1,57 @@
 @use './../mixins/media-query' as media-query;
 
-.d-flex {
-  display: flex !important;
+@mixin displayer($sufix: null) {
+  @if $sufix {
+    $sufix: '-' + $sufix;
+  }
+
+  .d-block#{$sufix} {
+    display: block !important;
+  }
+
+  .d-grid#{$sufix} {
+    display: grid !important;
+  }
+
+  .d-flex#{$sufix} {
+    display: flex !important;
+  }
+
+  .d-inline#{$sufix} {
+    display: inline !important;
+  }
+
+  .d-inline-flex#{$sufix} {
+    display: inline-flex !important;
+  }
+
+  .d-inline-block#{$sufix} {
+    display: inline-block !important;
+  }
+
+  .d-none#{$sufix} {
+    display: none !important;
+  }
 }
 
-.d-inline-flex {
-  display: inline-flex !important;
-}
+@include displayer();
 
-.d-inline {
-  display: inline !important;
-}
-.d-inline-block {
-  display: inline-block !important;
-}
-
-.d-none {
-  display: none !important;
+@include media-query.xl() {
+  @include displayer('xl');
 }
 
 @include media-query.lg() {
-  .d-lg-none {
-    display: none !important;
-  }
+  @include displayer('lg');
 }
 
 @include media-query.md() {
-  .d-md-none {
-    display: none !important;
-  }
+  @include displayer('md');
 }
 
 @include media-query.sm() {
-  .d-sm-none {
-    display: none !important;
-  }
+  @include displayer('sm');
 }
 
 @media print {
-  .d-print-none {
-    display: none !important;
-  }
-
-  .d-print-block {
-    display: block !important;
-  }
+  @include displayer('print');
 }
