@@ -39,11 +39,6 @@ func initDB() error {
 		return fmt.Errorf("open: %w", err)
 	}
 
-	// Uruchom migracje i seedowanie w kontrolowany sposób
-	if err := MigrateAndSeed(db); err != nil {
-		return err
-	}
-
 	sqlDB, err := db.DB()
 	if err != nil {
 		return fmt.Errorf("db.DB(): %w", err)
