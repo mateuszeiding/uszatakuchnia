@@ -6,8 +6,15 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "strictNullChecks": true,
 
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"],
+      "@shared/*": ["src/shared/*"],
+      "@view/*": ["src/views/*"],
+      "@cmp/*": ["src/components/*"],
+      "@api/*": ["src/data/api/*"],
+      "@dto/*": ["src/data/dto/*"],
+      "@contract/*": ["src/data/contracts/*"]
     }
   },
   "vueCompilerOptions": {

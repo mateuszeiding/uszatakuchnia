@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { fetchEnums } from './data/api/enums/fetch'
-import UBadge from './components/UBadge.vue'
-import UCard from './components/UCard.vue'
-import UTopBar from './components/UTopBar.vue'
-import { fetchIngredients } from './data/api/ingredients/fetch'
-import { RouterView } from 'vue-router'
+import { fetchEnums } from '@api/enums/fetch'
+import UBadge from '@cmp/UBadge.vue'
+import UCard from '@cmp/UCard.vue'
+import { fetchIngredients } from '@api/ingredients/fetch'
 
 const enums = ref<PropsOf<typeof UBadge>['val'][]>()
 const ingredients = ref<PropsOf<typeof UCard>['ingredient'][]>([])
@@ -23,12 +21,14 @@ onMounted(async () => {
   enums.value = result.flatMap((arr) => arr.map((v) => v.Code))
 })
 </script>
-
 <template>
-  <u-top-bar />
-  <main class="container pt-7 pb-6">
-    <RouterView />
-  </main>
-</template>
+  <div class="d-flex gap-5 flex-wrap pb-8">
+    <u-badge v-for="val in enums" :key="val" :val />
+  </div>
 
-<style scoped></style>
+  <div class="row row-cols-3-xl row-cols-2-lg row-cols-1-md row-cols-1-sm row-gap-6">
+    <div class="col" v-for="ingredient in ingredients" :key="ingredient.id">
+      <u-card :ingredient />
+    </div>
+  </div>
+</template>
