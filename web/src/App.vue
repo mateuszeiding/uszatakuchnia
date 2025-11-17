@@ -6,6 +6,7 @@ import UCard from './components/UCard.vue'
 import UTopBar from './components/UTopBar.vue'
 import { fetchIngredients } from './data/api/ingredients/fetch'
 import { RouterView } from 'vue-router'
+import UMenu from './components/UMenu.vue'
 
 const enums = ref<PropsOf<typeof UBadge>['val'][]>()
 const ingredients = ref<PropsOf<typeof UCard>['ingredient'][]>([])
@@ -25,7 +26,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <u-top-bar />
+  <UTopBar />
+  <UMenu />
   <main class="container pt-7 pb-6">
     <RouterView />
   </main>
