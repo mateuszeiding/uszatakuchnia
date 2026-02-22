@@ -11,7 +11,7 @@ const handleLogin = () => {
 const handleLogout = () => {
     logout({
         logoutParams: {
-            returnTo: window.location.origin,
+            returnTo: globalThis.location.origin,
         },
     });
 };

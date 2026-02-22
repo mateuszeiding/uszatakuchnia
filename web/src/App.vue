@@ -13,16 +13,12 @@ const enums = ref<PropsOf<typeof UBadge>['val'][]>();
 const ingredients = ref<PropsOf<typeof UCard>['ingredient'][]>([]);
 
 onMounted(async () => {
-    const aroma = fetchEnums('aroma');
     const ingredient = fetchEnums('ingredient');
-    const taste = fetchEnums('taste');
     const ingr = fetchIngredients('list');
-
-    const result = await Promise.all([aroma, ingredient, taste]);
 
     ingredients.value = await ingr;
 
-    enums.value = result.flatMap((arr) => arr.map((v) => v.Code));
+    enums.value = await ingredient;
 });
 </script>
 
@@ -33,5 +29,3 @@ onMounted(async () => {
         <RouterView />
     </main>
 </template>
-
-<style scoped></style>

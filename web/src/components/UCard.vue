@@ -5,7 +5,7 @@ import UBadge from './UBadge.vue';
 
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 
-const props = defineProps<{
+defineProps<{
     ingredient: IngredientDto;
 }>();
 

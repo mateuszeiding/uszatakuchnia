@@ -35,7 +35,7 @@ const { value, errorMessage, handleChange, handleBlur } = useField<string | numb
         <div
             v-for="o in options"
             :key="o.value"
-            class="form-field"
+            class="form-field-h"
         >
             <input
                 type="radio"

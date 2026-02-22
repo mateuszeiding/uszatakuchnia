@@ -23,7 +23,10 @@ const { value, errorMessage, handleChange, handleBlur } = useField<Array<string 
 </script>
 
 <template>
-    <fieldset>
+    <fieldset
+        class="form-group"
+        :aria-labelledby="legend ? legendId : undefined"
+    >
         <legend
             v-if="legend"
             :id="legendId"
@@ -34,9 +37,11 @@ const { value, errorMessage, handleChange, handleBlur } = useField<Array<string 
         <div
             v-for="o in options"
             :key="o.value"
+            class="form-field-h"
         >
             <input
                 type="checkbox"
+                class="form-input"
                 :id="optionId(o.value)"
                 :name="props.name"
                 :value="o.value"
@@ -45,7 +50,10 @@ const { value, errorMessage, handleChange, handleBlur } = useField<Array<string 
                 @blur="handleBlur"
             />
 
-            <label :for="optionId(o.value)">
+            <label
+                class="form-label"
+                :for="optionId(o.value)"
+            >
                 {{ o.label }}
             </label>
         </div>

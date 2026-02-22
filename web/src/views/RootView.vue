@@ -1,30 +1,51 @@
 <script lang="ts" setup>
-import UCheckbox from '@/components/form/UCheckbox.vue';
-import UInput from '@/components/form/UInput.vue';
-import URadioButton from '@/components/form/URadioButton.vue';
+import UCheckboxGroup from '@/components/form/UCheckboxGroup.vue';
+import UInputText from '@/components/form/UInputText.vue';
+import URadioGroup from '@/components/form/URadioGroup.vue';
+import USwitch from '@/components/form/USwitch.vue';
+import UTextarea from '@/components/form/UTextarea.vue';
 </script>
 <template>
     <div>
-        <UInput
+        <UInputText
             name="test"
             label="test"
-            type="text"
         />
-        <UCheckbox
+        <UTextarea
             name="test"
             label="test"
-            value="1"
         />
-        <UCheckbox
+        <UCheckboxGroup
             name="test"
-            label="test"
-            value="1"
-            switch
+            legend="Group test"
+            :options="[
+                {
+                    label: 'one',
+                    value: 'one',
+                },
+                {
+                    label: 'two',
+                    value: 'two',
+                },
+            ]"
         />
-        <URadioButton
+        <USwitch
             name="test"
             label="test"
-            value="1"
+        />
+        <URadioGroup
+            name="test"
+            legend="Group test"
+            :options="[
+                {
+                    label: 'one',
+                    value: 'one',
+                },
+                {
+                    label: 'two',
+                    value: 'two',
+                },
+            ]"
         />
     </div>
 </template>

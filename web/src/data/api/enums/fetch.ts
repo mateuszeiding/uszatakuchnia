@@ -2,10 +2,10 @@ import { type FetchQueryOptions, useQueryClient } from '@tanstack/vue-query';
 
 import { API } from '../API';
 
-import type { EnumBase } from '@/data/dtos/enums/!EnumBase';
+import type { IngredientType } from '@/shared/enums/IngredientType';
 
 type RequestMap = {
-    ingredient: EnumBase;
+    ingredient: IngredientType;
 };
 
 export const fetchEnums = async <E extends keyof RequestMap>(endpoint: E) => {

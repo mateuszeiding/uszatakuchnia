@@ -20,7 +20,7 @@ function onInput(e: Event) {
 </script>
 
 <template>
-    <div class="form-field">
+    <div class="form-field-v">
         <label
             v-if="props.label"
             class="form-label"

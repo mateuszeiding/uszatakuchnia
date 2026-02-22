@@ -19,7 +19,7 @@ function onChange(e: Event) {
 </script>
 
 <template>
-    <div class="form-field">
+    <div class="form-field-h">
         <input
             class="form-input"
             type="checkbox"
