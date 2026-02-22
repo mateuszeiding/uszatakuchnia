@@ -1,23 +1,24 @@
-import { IngredientType } from '@/shared/enums/IngredientType'
-import { ImageDto } from './ImageDto'
-import type { IType } from './IType'
+import { ImageDto } from './ImageDto';
+import type { IType } from './IType';
+
+import { IngredientType } from '@/shared/enums/IngredientType';
 
 export class IngredientDto {
-  id: number = 0
-  name: string = ''
-  parentId: number | null = null
+    id: number = 0;
+    name: string = '';
+    parentId: number | null = null;
 
-  type: IType<IngredientType> = {
-    name: '',
-    code: IngredientType.OTHER,
-  }
+    type: IType<IngredientType> = {
+        name: '',
+        code: IngredientType.OTHER,
+    };
 
-  isAllergen: boolean = false
+    isAllergen: boolean = false;
 
-  image: ImageDto = new ImageDto({})
+    image: ImageDto = new ImageDto({});
 
-  constructor(obj: Partial<IngredientDto>) {
-    Object.assign(this, obj)
-    this.image = obj.image ? new ImageDto(obj.image) : new ImageDto({})
-  }
+    constructor(obj: Partial<IngredientDto>) {
+        Object.assign(this, obj);
+        this.image = obj.image ? new ImageDto(obj.image) : new ImageDto({});
+    }
 }

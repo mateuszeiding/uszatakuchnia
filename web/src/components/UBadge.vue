@@ -1,75 +1,45 @@
-<script setup lang="ts">
-import type { Palette } from '@/scss/colors.config'
-import { AromaType } from '@/shared/enums/AromaType'
-import { IngredientType } from '@/shared/enums/IngredientType'
-import { TasteType } from '@/shared/enums/TasteType'
+<script lang="ts" setup>
+import type { Palette } from '@/scss/colors.config';
+import { IngredientType } from '@/shared/enums/IngredientType';
 
-type Union = `${AromaType}` | `${IngredientType}` | `${TasteType}`
+type Union = `${IngredientType}`;
 
 defineProps<{
-  val: Union
-  name?: string
-}>()
+    val: Union;
+    name?: string;
+}>();
 
 const invertTextColorFor = [
-  AromaType.FRUITY.valueOf(),
-  AromaType.HERBAL.valueOf(),
-  AromaType.SPICY.valueOf(),
-  AromaType.EARTHY.valueOf(),
-  AromaType.SMOKY.valueOf(),
-  IngredientType.VEGETABLE.valueOf(),
-  IngredientType.FRUIT.valueOf(),
-  IngredientType.SPICE.valueOf(),
-  IngredientType.MEAT.valueOf(),
-  TasteType.UMAMI.valueOf(),
-] as const
-
-const aromaMap: Record<AromaType, NestedKeyUnion<Palette>> = {
-  CREAMY: 'brown-lavender-blush',
-  EARTHY: 'brown-wenge',
-  FRUITY: 'green-persian-green',
-  HERBAL: 'green-mint',
-  OTHER: 'brown-sandy-brown',
-  SMOKY: 'purple-dark-purple',
-  SPICY: 'red-chili-red',
-}
-
-const tasteMap: Record<TasteType, NestedKeyUnion<Palette>> = {
-  BITTER: 'yellow-maize',
-  SALTY: 'gray-ghost-white',
-  SOUR: 'orange-ut-orange',
-  SWEET: 'violet-plum',
-  UMAMI: 'gray-outer-space',
-  UNKNOWN: 'brown-sandy-brown',
-}
+    IngredientType.VEGETABLE.valueOf(),
+    IngredientType.FRUIT.valueOf(),
+    IngredientType.SPICE.valueOf(),
+    IngredientType.MEAT.valueOf(),
+] as const;
 
 const ingredientMap: Record<IngredientType, NestedKeyUnion<Palette>> = {
-  FISH: 'blue-picton-blue',
-  FRUIT: 'green-persian-green',
-  HERB: 'green-mint',
-  MEAT: 'red-crimson',
-  OTHER: 'brown-sandy-brown',
-  SPICE: 'red-chili-red',
-  VEGETABLE: 'green-dartmouth-green',
-}
+    FISH: 'blue-picton-blue',
+    FRUIT: 'green-persian-green',
+    HERB: 'green-mint',
+    MEAT: 'red-crimson',
+    OTHER: 'brown-sandy-brown',
+    SPICE: 'red-chili-red',
+    VEGETABLE: 'green-dartmouth-green',
+};
 
 const mapMerge = {
-  ...aromaMap,
-  ...tasteMap,
-  ...ingredientMap,
-}
+    ...ingredientMap,
+};
 </script>
 <template>
-  <span
-    class="radius-2 border px-3 py-1 fw-medium fs-xs cursor-default h-fit"
-    :class="[
-      `bg-${mapMerge[val]}`,
-      {
-        ['tx-gray-ghost-white']: invertTextColorFor.includes(val),
-      },
-    ]"
-  >
-    {{ name ?? val }}
-  </span>
+    <span
+        class="radius-2 border px-3 py-1 fw-medium fs-xs cursor-default h-fit"
+        :class="[
+            `bg-${mapMerge[val]}`,
+            {
+                ['tx-gray-ghost-white']: invertTextColorFor.includes(val),
+            },
+        ]"
+    >
+        {{ name ?? val }}
+    </span>
 </template>
-<style lang="scss" scoped></style>

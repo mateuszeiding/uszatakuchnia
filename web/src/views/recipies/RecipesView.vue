@@ -1,4 +1,4 @@
 <script lang="ts" setup></script>
 <template>
-  <div>Recipes</div>
+    <div>Recipes</div>
 </template>

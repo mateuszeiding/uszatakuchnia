@@ -1,4 +1,4 @@
 export interface IType<CodeType> {
-  name: string
-  code: CodeType
+    name: string;
+    code: CodeType;
 }

@@ -1,12 +1,13 @@
-import { createApp } from 'vue'
-import './scss/_!import.scss'
-import App from './App.vue'
-import router from './router'
-import { VueQueryPlugin } from '@tanstack/vue-query'
-import { createAuth } from './auth/createAuth'
+import { createApp } from 'vue';
 
-const app = createApp(App)
+import './scss/_!import.scss';
+import App from './App.vue';
+import { createAuth } from './auth/createAuth';
+import router from './router';
+import { VueQueryPlugin } from '@tanstack/vue-query';
 
-app.use(createAuth()).use(router).use(VueQueryPlugin)
+const app = createApp(App);
 
-app.mount('#app')
+app.use(createAuth()).use(router).use(VueQueryPlugin);
+
+app.mount('#app');
