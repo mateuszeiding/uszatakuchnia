@@ -10,20 +10,6 @@ import (
 )
 
 func runSeed(gdb *gorm.DB) error {
-	tasteTypes := []entities.TasteType{
-		{Code: "SWEET", Name: "Słodki"},
-		{Code: "SOUR", Name: "Kwaśny"},
-		{Code: "SALTY", Name: "Słony"},
-		{Code: "BITTER", Name: "Gorzki"},
-		{Code: "UMAMI", Name: "Umami"},
-		{Code: "UNKNOWN", Name: "Nieznany"},
-	}
-
-	gdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "code"}},
-		DoNothing: true,
-	}).Create(&tasteTypes)
-
 	ingredientTypes := []entities.IngredientType{
 		{Code: "VEGETABLE", Name: "Warzywo"},
 		{Code: "FRUIT", Name: "Owoc"},
@@ -34,365 +20,299 @@ func runSeed(gdb *gorm.DB) error {
 		{Code: "OTHER", Name: "Inne"},
 	}
 
-	gdb.Clauses(clause.OnConflict{
+	if err := gdb.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "code"}},
 		DoNothing: true,
-	}).Create(&ingredientTypes)
-
-	aromaTypes := []entities.AromaType{
-		{Code: "FRUITY", Name: "Owocowy"},
-		{Code: "HERBAL", Name: "Ziołowy"},
-		{Code: "SPICY", Name: "Korzenny"},
-		{Code: "EARTHY", Name: "Ziemisty"},
-		{Code: "SMOKY", Name: "Dymny"},
-		{Code: "CREAMY", Name: "Kremowy"},
-		{Code: "OTHER", Name: "Inny"},
+	}).Create(&ingredientTypes).Error; err != nil {
+		return err
 	}
-
-	gdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "code"}},
-		DoNothing: true,
-	}).Create(&aromaTypes)
 
 	if err := SeedAll(gdb); err != nil {
-		fmt.Println(err)
+		return err
 	}
 
 	return nil
 }
 
-func loadDictMaps(tx *gorm.DB) (ingredientTypeID map[string]uint, aromaTypeID map[string]uint, tasteID map[string]uint, err error) {
-	ingredientTypeID = map[string]uint{}
-	var itypes []entities.IngredientType
-	if err = tx.Find(&itypes).Error; err != nil {
-		return
-	}
-	for _, t := range itypes {
-		ingredientTypeID[t.Code] = t.ID
-	}
+// --------------------
+// Ingredients
+// --------------------
 
-	aromaTypeID = map[string]uint{}
-	var atypes []entities.AromaType
-	if err = tx.Find(&atypes).Error; err != nil {
-		return
-	}
-	for _, a := range atypes {
-		aromaTypeID[a.Code] = a.ID
-	}
+type IngredientImageSeed struct {
+	PostID string // Unsplash photo id
+}
 
-	tasteID = map[string]uint{}
-	type row struct {
-		ID   uint
-		Code string
-	}
-	var rows []row
-	if err = tx.Table("taste").
-		Select("taste.id, taste_types.code").
-		Joins("JOIN taste_types ON taste.type_id = taste_types.id").
-		Scan(&rows).Error; err != nil {
-		return
+type IngredientSeed struct {
+	Name       string
+	TypeCode   string
+	IsAllergen bool
+	ParentName *string
+	Image      *IngredientImageSeed
+}
+
+func loadIngredientTypeMap(tx *gorm.DB) (map[string]uint, error) {
+	out := map[string]uint{}
+	var rows []entities.IngredientType
+	if err := tx.Find(&rows).Error; err != nil {
+		return nil, err
 	}
 	for _, r := range rows {
-		tasteID[r.Code] = r.ID
+		out[r.Code] = r.ID
 	}
-
-	return
+	return out, nil
 }
 
-func EnsureTasteForTypes(tx *gorm.DB) error {
-	var ttypes []entities.TasteType
-	if err := tx.Find(&ttypes).Error; err != nil {
-		return err
-	}
-	for _, tt := range ttypes {
-		t := entities.Taste{TypeID: tt.ID}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "type_id"}},
-			DoNothing: true,
-		}).Create(&t).Error; err != nil {
-			return err
+func findRootIngredientID(tx *gorm.DB, name string) (*uint, error) {
+	var ing entities.Ingredient
+	if err := tx.Where("parent_id IS NULL AND name = ?", name).First(&ing).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("parent not found (root ingredient): %s", name)
 		}
+		return nil, err
 	}
-	return nil
+	return &ing.ID, nil
 }
 
-type TasteSeed struct {
-	TypeCode  string
-	Intensity int
-}
-
-type AromaSeed struct {
-	Name, TypeCode string
-	Intensity      int
-}
-type ImageSeed struct {
-	PostID  string
-	RefType entities.RefType
-}
-
-func SeedOneIngredient(
-	tx *gorm.DB,
-	name string,
-	typeCode string,
-	isAllergen bool,
-	parentName *string,
-	tastes []TasteSeed,
-	aromas []AromaSeed,
-	image ImageSeed,
-) error {
-	ingTypeID, aromaTypeID, tasteID, err := loadDictMaps(tx)
+func SeedOneIngredient(tx *gorm.DB, seed IngredientSeed) (uint, error) {
+	typeMap, err := loadIngredientTypeMap(tx)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	tID, ok := ingTypeID[typeCode]
+	typeID, ok := typeMap[seed.TypeCode]
 	if !ok {
-		return fmt.Errorf("unknown ingredient type code: %s", typeCode)
+		return 0, fmt.Errorf("unknown ingredient type code: %s", seed.TypeCode)
 	}
 
 	var parentID *uint
-	if parentName != nil {
-		var parent entities.Ingredient
-		if err := tx.Where("parent_id IS NULL AND name = ?", *parentName).First(&parent).Error; err != nil {
-			return fmt.Errorf("parent not found: %w", err)
+	if seed.ParentName != nil {
+		pid, err := findRootIngredientID(tx, *seed.ParentName)
+		if err != nil {
+			return 0, err
 		}
-		parentID = &parent.ID
+		parentID = pid
 	}
 
-	// Przygotuj dane składnika
-	ing := entities.Ingredient{}
-
-	// Użyj Assign, aby zapewnić, że TypeID i IsAllergen są ustawione
-	// zarówno przy tworzeniu, jak i przy aktualizacji.
-	// FirstOrCreate znajdzie rekord po Name i ParentID lub utworzy nowy z pełnymi danymi.
-	if err := tx.Where(entities.Ingredient{Name: name, ParentID: parentID}).
-		Assign(entities.Ingredient{TypeID: tID, IsAllergen: isAllergen}).
+	var ing entities.Ingredient
+	if err := tx.Where(entities.Ingredient{Name: seed.Name, ParentID: parentID}).
+		Assign(entities.Ingredient{TypeID: typeID, IsAllergen: seed.IsAllergen}).
 		FirstOrCreate(&ing).Error; err != nil {
-		return fmt.Errorf("failed to find or create ingredient: %w", err)
+		return 0, fmt.Errorf("failed to find or create ingredient: %w", err)
 	}
 
-	for _, t := range tastes {
-		tid, ok := tasteID[t.TypeCode]
-		if !ok {
-			return fmt.Errorf("unknown taste type code: %s", t.TypeCode)
-		}
-		it := entities.IngredientTaste{
-			IngredientID: ing.ID,
-			TasteID:      tid,
-			Intensity:    t.Intensity,
-		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "ingredient_id"}, {Name: "taste_id"}},
-			DoUpdates: clause.Assignments(map[string]any{"intensity": it.Intensity}),
-		}).Create(&it).Error; err != nil {
-			return err
+	// Unsplash image (opcjonalny) — tylko dla ingredientów
+	if seed.Image != nil {
+		if err := services.UpsertImageFromUnsplash(tx, ing.ID, entities.IngredientRef, seed.Image.PostID); err != nil {
+			return 0, err
 		}
 	}
 
-	for _, a := range aromas {
-		atid, ok := aromaTypeID[a.TypeCode]
-		if !ok {
-			return fmt.Errorf("unknown aroma type code: %s", a.TypeCode)
-		}
-		ar := entities.Aroma{
-			IngredientID: ing.ID,
-			Name:         a.Name,
-			TypeID:       atid,
-			Intensity:    a.Intensity,
-		}
-		if err := tx.Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "ingredient_id"}, {Name: "name"}},
-			DoUpdates: clause.Assignments(map[string]any{
-				"type_id":   ar.TypeID,
-				"intensity": ar.Intensity,
-			}),
-		}).Create(&ar).Error; err != nil {
-			return err
-		}
-	}
-
-	if err := services.UpsertImageFromUnsplash(tx, ing.ID, image.RefType, image.PostID); err != nil {
-		return err
-	}
-
-	return nil
+	return ing.ID, nil
 }
+
+// --------------------
+// Recipes
+// --------------------
+
+type RecipePhotoSeed struct {
+	URL string // publiczny URL z Vercel Blob (opcjonalnie)
+}
+
+type RecipeSeed struct {
+	Name        string
+	Servings    int
+	Description *string
+	Photo       *RecipePhotoSeed
+
+	Steps []RecipeStepSeed
+	Items []RecipeIngredientSeed
+}
+
+type RecipeStepSeed struct {
+	StepNo  int
+	Section *string
+	Text    string
+}
+
+type RecipeIngredientSeed struct {
+	SortOrder int
+	Section   *string
+
+	IngredientName       string
+	IngredientParentName *string
+
+	Amount     *float64
+	Unit       *string
+	AmountText *string
+	Note       *string
+}
+
+// kompatybilne z SQLite/MySQL/Postgres: rozgałęzienie po parentID == nil
+func findIngredientID(tx *gorm.DB, name string, parentName *string) (uint, error) {
+	var parentID *uint
+	if parentName != nil {
+		pid, err := findRootIngredientID(tx, *parentName)
+		if err != nil {
+			return 0, err
+		}
+		parentID = pid
+	}
+
+	var ing entities.Ingredient
+	q := tx.Where("name = ?", name)
+	if parentID == nil {
+		q = q.Where("parent_id IS NULL")
+	} else {
+		q = q.Where("parent_id = ?", *parentID)
+	}
+
+	if err := q.First(&ing).Error; err != nil {
+		return 0, fmt.Errorf("ingredient not found: %s (parent=%v): %w", name, parentName, err)
+	}
+
+	return ing.ID, nil
+}
+
+func upsertRecipePhoto(tx *gorm.DB, recipeID uint, url string) error {
+	photo := entities.RecipePhoto{
+		RecipeID: recipeID,
+		ImageURL: url,
+	}
+
+	// PK = recipe_id, więc upsert po recipe_id
+	return tx.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "recipe_id"}},
+		DoUpdates: clause.Assignments(map[string]any{
+			"image_url": photo.ImageURL,
+		}),
+	}).Create(&photo).Error
+}
+
+func SeedOneRecipe(tx *gorm.DB, seed RecipeSeed) (uint, error) {
+	if seed.Servings <= 0 {
+		return 0, fmt.Errorf("recipe servings must be > 0: %s", seed.Name)
+	}
+
+	var r entities.Recipe
+	if err := tx.Where(entities.Recipe{Name: seed.Name}).
+		Assign(entities.Recipe{Servings: seed.Servings, Description: seed.Description}).
+		FirstOrCreate(&r).Error; err != nil {
+		return 0, fmt.Errorf("failed to find or create recipe: %w", err)
+	}
+
+	// Photo (opcjonalne) — zapis do recipe_photos, NIE do images/unsplash
+	if seed.Photo != nil && seed.Photo.URL != "" {
+		if err := upsertRecipePhoto(tx, r.ID, seed.Photo.URL); err != nil {
+			return 0, err
+		}
+	}
+
+	// Steps: PK (recipe_id, step_no)
+	for _, s := range seed.Steps {
+		step := entities.RecipeStep{
+			RecipeID: r.ID,
+			StepNo:   s.StepNo,
+			Section:  s.Section,
+			Text:     s.Text,
+		}
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "recipe_id"}, {Name: "step_no"}},
+			DoUpdates: clause.Assignments(map[string]any{
+				"section": step.Section,
+				"text":    step.Text,
+			}),
+		}).Create(&step).Error; err != nil {
+			return 0, err
+		}
+	}
+
+	// Ingredients: PK (recipe_id, sort_order)
+	for _, it := range seed.Items {
+		ingID, err := findIngredientID(tx, it.IngredientName, it.IngredientParentName)
+		if err != nil {
+			return 0, err
+		}
+
+		item := entities.RecipeIngredient{
+			RecipeID:     r.ID,
+			SortOrder:    it.SortOrder,
+			Section:      it.Section,
+			IngredientID: ingID,
+			Amount:       it.Amount,
+			Unit:         it.Unit,
+			AmountText:   it.AmountText,
+			Note:         it.Note,
+		}
+
+		if err := tx.Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "recipe_id"}, {Name: "sort_order"}},
+			DoUpdates: clause.Assignments(map[string]any{
+				"section":       item.Section,
+				"ingredient_id": item.IngredientID,
+				"amount":        item.Amount,
+				"unit":          item.Unit,
+				"amount_text":   item.AmountText,
+				"note":          item.Note,
+			}),
+		}).Create(&item).Error; err != nil {
+			return 0, err
+		}
+	}
+
+	return r.ID, nil
+}
+
 func SeedAll(db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		if err := EnsureTasteForTypes(tx); err != nil {
-			return err
+		// ---------- Ingredients ----------
+		ings := []IngredientSeed{
+			{Name: "Cebula", TypeCode: "VEGETABLE", IsAllergen: false, Image: &IngredientImageSeed{PostID: "bC1fXU1v98U"}},
+			{Name: "Czosnek", TypeCode: "VEGETABLE", IsAllergen: false, Image: &IngredientImageSeed{PostID: "_b8n1KTZ8rw"}},
+			{Name: "Cytryna", TypeCode: "FRUIT", IsAllergen: false, Image: &IngredientImageSeed{PostID: "7WAGthfGJ9w"}},
+			{Name: "Pomidor", TypeCode: "FRUIT", IsAllergen: false, Image: &IngredientImageSeed{PostID: "Jy7e7RjOFVo"}},
+			{Name: "Bazylia", TypeCode: "HERB", IsAllergen: false, Image: &IngredientImageSeed{PostID: "DDKdfRe1GxA"}},
+			{Name: "Mięta", TypeCode: "HERB", IsAllergen: false, Image: &IngredientImageSeed{PostID: "s3C-iXNQIsQ"}},
+			{Name: "Papryczka chili", TypeCode: "VEGETABLE", IsAllergen: false, Image: &IngredientImageSeed{PostID: "iBsmi-wCXNE"}},
+			{Name: "Pietruszka (nać)", TypeCode: "HERB", IsAllergen: false, Image: &IngredientImageSeed{PostID: "r6BUzN_jTHg"}},
+			{Name: "Wołowina", TypeCode: "MEAT", IsAllergen: false, Image: &IngredientImageSeed{PostID: "u2QnkcLNsBY"}},
+			{Name: "Kurczak", TypeCode: "MEAT", IsAllergen: false, Image: &IngredientImageSeed{PostID: "pNcFMdEe09Q"}},
 		}
 
-		// Cebula
-		if err := SeedOneIngredient(
-			tx,
-			"Cebula", "VEGETABLE", false, nil,
-			[]TasteSeed{
-				{TypeCode: "SWEET", Intensity: 20},
-				{TypeCode: "UMAMI", Intensity: 10},
-			},
-			[]AromaSeed{
-				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 30},
-				{Name: "Dymny", TypeCode: "SMOKY", Intensity: 20},
-			},
-			ImageSeed{PostID: "bC1fXU1v98U", RefType: "ingredient"},
-		); err != nil {
-			return err
+		for _, s := range ings {
+			if _, err := SeedOneIngredient(tx, s); err != nil {
+				return err
+			}
 		}
 
-		// Czosnek
-		if err := SeedOneIngredient(
-			tx,
-			"Czosnek", "VEGETABLE", false, nil,
-			[]TasteSeed{
-				{TypeCode: "UMAMI", Intensity: 25},
-				{TypeCode: "BITTER", Intensity: 5},
+		// ---------- Recipe example ----------
+		secSauce := "Sos"
+		secMain := "Główne"
+
+		desc := "Prosty przepis startowy pod MVP — do sprawdzenia UI sekcji i kolejności."
+		recipe := RecipeSeed{
+			Name:        "Pomidorowy sos z czosnkiem i bazylią",
+			Servings:    2,
+			Description: &desc,
+			Photo:       nil, // zostaw nil — zdjęcia z Vercel Blob ogarniesz później
+			Steps: []RecipeStepSeed{
+				{StepNo: 1, Section: &secSauce, Text: "Posiekaj czosnek, podsmaż krótko na tłuszczu."},
+				{StepNo: 2, Section: &secSauce, Text: "Dodaj pomidory i duś kilka minut."},
+				{StepNo: 3, Section: &secSauce, Text: "Dopraw, na koniec dorzuć bazylię."},
 			},
-			[]AromaSeed{
-				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 40},
-				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 15},
+			Items: []RecipeIngredientSeed{
+				{SortOrder: 1, Section: &secSauce, IngredientName: "Czosnek", AmountText: strPtr("2 ząbki")},
+				{SortOrder: 2, Section: &secSauce, IngredientName: "Pomidor", AmountText: strPtr("3–4 szt.")},
+				{SortOrder: 3, Section: &secSauce, IngredientName: "Bazylia", AmountText: strPtr("kilka listków")},
+				{SortOrder: 4, Section: &secMain, IngredientName: "Cebula", AmountText: strPtr("1/2 szt."), Note: strPtr("opcjonalnie")},
 			},
-			ImageSeed{PostID: "_b8n1KTZ8rw", RefType: "ingredient"},
-		); err != nil {
-			return err
 		}
 
-		// Cytryna
-		if err := SeedOneIngredient(
-			tx,
-			"Cytryna", "FRUIT", false, nil,
-			[]TasteSeed{
-				{TypeCode: "SOUR", Intensity: 95},
-				{TypeCode: "BITTER", Intensity: 5},
-			},
-			[]AromaSeed{
-				{Name: "Owocowy", TypeCode: "FRUITY", Intensity: 85},
-				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 10},
-			},
-			ImageSeed{PostID: "7WAGthfGJ9w", RefType: "ingredient"},
-		); err != nil {
-			return err
-		}
-
-		// Pomidor
-		if err := SeedOneIngredient(
-			tx,
-			"Pomidor", "FRUIT", false, nil,
-			[]TasteSeed{
-				{TypeCode: "UMAMI", Intensity: 35},
-				{TypeCode: "SWEET", Intensity: 20},
-				{TypeCode: "SOUR", Intensity: 10},
-			},
-			[]AromaSeed{
-				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 25},
-				{Name: "Owocowy", TypeCode: "FRUITY", Intensity: 35},
-			},
-			ImageSeed{PostID: "Jy7e7RjOFVo", RefType: "ingredient"},
-		); err != nil {
-			return err
-		}
-
-		// Bazylia
-		if err := SeedOneIngredient(
-			tx,
-			"Bazylia", "HERB", false, nil,
-			[]TasteSeed{
-				{TypeCode: "BITTER", Intensity: 10},
-			},
-			[]AromaSeed{
-				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 80},
-				{Name: "Korzenny", TypeCode: "SPICY", Intensity: 20},
-			},
-			ImageSeed{PostID: "DDKdfRe1GxA", RefType: "ingredient"},
-		); err != nil {
-			return err
-		}
-
-		// Mięta
-		if err := SeedOneIngredient(
-			tx,
-			"Mięta", "HERB", false, nil,
-			[]TasteSeed{
-				{TypeCode: "BITTER", Intensity: 5},
-				{TypeCode: "SWEET", Intensity: 5},
-			},
-			[]AromaSeed{
-				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 70},
-				{Name: "Kremowy", TypeCode: "CREAMY", Intensity: 15},
-			},
-			ImageSeed{PostID: "s3C-iXNQIsQ", RefType: "ingredient"},
-		); err != nil {
-			return err
-		}
-
-		// Papryczka chili
-		if err := SeedOneIngredient(
-			tx,
-			"Papryczka chili", "VEGETABLE", false, nil,
-			[]TasteSeed{
-				{TypeCode: "BITTER", Intensity: 10},
-				{TypeCode: "SOUR", Intensity: 5},
-			},
-			[]AromaSeed{
-				{Name: "Korzenny", TypeCode: "SPICY", Intensity: 70},
-				{Name: "Dymny", TypeCode: "SMOKY", Intensity: 20},
-			},
-			ImageSeed{PostID: "iBsmi-wCXNE", RefType: "ingredient"},
-		); err != nil {
-			return err
-		}
-
-		// Pietruszka (nać)
-		if err := SeedOneIngredient(
-			tx,
-			"Pietruszka (nać)", "HERB", false, nil,
-			[]TasteSeed{
-				{TypeCode: "BITTER", Intensity: 10},
-				{TypeCode: "SWEET", Intensity: 5},
-			},
-			[]AromaSeed{
-				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 70},
-				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 30},
-			},
-			ImageSeed{PostID: "r6BUzN_jTHg", RefType: "ingredient"},
-		); err != nil {
-			return err
-		}
-
-		// Wołowina
-		if err := SeedOneIngredient(
-			tx,
-			"Wołowina", "MEAT", false, nil,
-			[]TasteSeed{
-				{TypeCode: "UMAMI", Intensity: 60},
-				{TypeCode: "BITTER", Intensity: 10},
-			},
-			[]AromaSeed{
-				{Name: "Dymny", TypeCode: "SMOKY", Intensity: 40},
-				{Name: "Ziemisty", TypeCode: "EARTHY", Intensity: 25},
-			},
-			ImageSeed{PostID: "u2QnkcLNsBY", RefType: "ingredient"},
-		); err != nil {
-			return err
-		}
-
-		// Kurczak
-		if err := SeedOneIngredient(
-			tx,
-			"Kurczak", "MEAT", false, nil,
-			[]TasteSeed{
-				{TypeCode: "UMAMI", Intensity: 40},
-				{TypeCode: "SWEET", Intensity: 10},
-			},
-			[]AromaSeed{
-				{Name: "Kremowy", TypeCode: "CREAMY", Intensity: 30},
-				{Name: "Ziołowy", TypeCode: "HERBAL", Intensity: 15},
-			},
-			ImageSeed{PostID: "pNcFMdEe09Q", RefType: "ingredient"},
-		); err != nil {
+		if _, err := SeedOneRecipe(tx, recipe); err != nil {
 			return err
 		}
 
 		return nil
 	})
 }
+
+func strPtr(s string) *string { return &s }

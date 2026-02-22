@@ -19,6 +19,7 @@ type Image struct {
 	AuthorProfileURL string `gorm:"not null"`
 	PhotoPageURL     string `gorm:"not null"`
 }
+
 type ImageProvider string
 
 const (
@@ -29,6 +30,7 @@ type RefType string
 
 const (
 	IngredientRef RefType = "ingredient"
+	RecipeRef     RefType = "recipe"
 )
 
 func (i *Image) ToDto() *dtos.ImageDto {

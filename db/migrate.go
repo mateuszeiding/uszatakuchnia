@@ -9,13 +9,14 @@ import (
 
 func AutoMigrate(gdb *gorm.DB) error {
 	return gdb.AutoMigrate(
-		&entities.TasteType{},
 		&entities.IngredientType{},
-		&entities.AromaType{},
 		&entities.Ingredient{},
-		&entities.Taste{},
-		&entities.IngredientTaste{},
-		&entities.Aroma{},
+
+		&entities.Recipe{},
+		&entities.RecipeStep{},
+		&entities.RecipeIngredient{},
+		&entities.RecipePhoto{},
+
 		&entities.Image{},
 	)
 }
@@ -35,16 +36,17 @@ func devReset(db *gorm.DB) error {
 	defer migrateLock.Unlock()
 
 	return db.Transaction(func(tx *gorm.DB) error {
-		// Dropuj w odwrotnej kolejności zależności
+		// Dropuj w odwrotnej kolejności zależności (children -> parents)
 		if err := tx.Migrator().DropTable(
-			&entities.IngredientTaste{}, // PK (ingredient_id, taste_id)
-			&entities.Aroma{},
-			&entities.Taste{},
-			&entities.Image{},
-			&entities.Ingredient{},
-			&entities.TasteType{},
-			&entities.IngredientType{},
-			&entities.AromaType{},
+			&entities.RecipeStep{},       // zależy od recipes
+			&entities.RecipeIngredient{}, // zależy od recipes i ingredients
+			&entities.Image{},            // polimorficzne - zależy logicznie od encji, ale bez FK
+			&entities.RecipePhoto{},
+
+			&entities.Recipe{},     // parent dla steps/ingredients
+			&entities.Ingredient{}, // parent dla recipe_ingredients
+
+			&entities.IngredientType{}, // parent dla ingredients
 		); err != nil {
 			return err
 		}

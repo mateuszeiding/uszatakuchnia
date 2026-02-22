@@ -17,9 +17,6 @@ func List(w http.ResponseWriter, r *http.Request) {
 	var list []entities.Ingredient
 	if err := conn.
 		Preload("Type").
-		Preload("Aromas").
-		Preload("Aromas.Type").
-		Preload("IngredientTastes.Taste.Type").
 		Preload("Image").
 		Find(&list).Error; err != nil {
 		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
@@ -27,6 +24,5 @@ func List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dtos := entities.IngredientList(list).ListToDto()
-
 	resp.JSON(w, http.StatusOK, dtos)
 }

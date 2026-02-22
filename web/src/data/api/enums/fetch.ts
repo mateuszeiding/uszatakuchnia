@@ -3,9 +3,7 @@ import { API } from '../API'
 import type { EnumBase } from '@/data/dtos/enums/!EnumBase'
 
 type RequestMap = {
-  aroma: EnumBase
   ingredient: EnumBase
-  taste: EnumBase
 }
 
 export const fetchEnums = async <E extends keyof RequestMap>(endpoint: E) => {
