@@ -31,7 +31,7 @@ function onInput(e: Event) {
         </label>
 
         <textarea
-            class="form-input"
+            class="form-input textarea"
             :id="uid"
             :name="props.name"
             :rows="props.rows ?? 3"
