@@ -39,5 +39,6 @@ export type EndpointsConfig = {
     };
     recipes: {
         list: string;
+        [key: number]: string;
     };
 };

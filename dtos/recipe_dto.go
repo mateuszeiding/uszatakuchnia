@@ -9,3 +9,9 @@ type RecipeDto struct {
 	Steps       []RecipeStepDto       `json:"steps"`
 	Ingredients []RecipeIngredientDto `json:"ingredients"`
 }
+
+type RecipeBaseDto struct {
+	ID    uint            `json:"id"`
+	Name  string          `json:"name"`
+	Photo *RecipePhotoDto `json:"photo,omitempty"`
+}

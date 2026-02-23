@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import UBadge from './UBadge.vue';
-
+import UBadge from '@/components/UBadge.vue';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 
 defineProps<{

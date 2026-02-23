@@ -9,22 +9,22 @@ import (
 	resp "uszatakuchnia/http"
 )
 
-func List(w http.ResponseWriter, r *http.Request) {
+func Detailed(w http.ResponseWriter, r *http.Request) {
 	if resp.HandleCORS(w, r) {
 		return
 	}
 	conn := db.DB()
+	id := r.URL.Query().Get("id")
 
-	var list []entities.RecipeBase
+	var entity entities.Recipe
 	if err := conn.
-		Model(&entities.Recipe{}).
-		Select("id, name").
-		Preload("Photo").
-		Find(&list).Error; err != nil {
+		Preload("Steps").
+		Preload("Ingredients").
+		Find(&entity, id).Error; err != nil {
 		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 		return
 	}
 
-	dtos := mappers.MapRecipeBaseArrayToDto(list)
+	dtos := mappers.MapRecipeToDto(entity)
 	resp.JSON(w, http.StatusOK, dtos)
 }

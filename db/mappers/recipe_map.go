@@ -17,10 +17,26 @@ func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 	}
 }
 
+func MapRecipeBaseToDto(e entities.RecipeBase) dtos.RecipeBaseDto {
+	return dtos.RecipeBaseDto{
+		ID:    e.ID,
+		Name:  e.Name,
+		Photo: MapRecipePhotoToDto(e.Photo),
+	}
+}
+
 func MapRecipeArrayToDto(a []entities.Recipe) []dtos.RecipeDto {
 	out := make([]dtos.RecipeDto, 0, len(a))
 	for _, i := range a {
 		out = append(out, MapRecipeToDto(i))
+	}
+	return out
+}
+
+func MapRecipeBaseArrayToDto(a []entities.RecipeBase) []dtos.RecipeBaseDto {
+	out := make([]dtos.RecipeBaseDto, 0, len(a))
+	for _, i := range a {
+		out = append(out, MapRecipeBaseToDto(i))
 	}
 	return out
 }

@@ -1,4 +1,4 @@
-package ingredients
+package api
 
 import (
 	"net/http"

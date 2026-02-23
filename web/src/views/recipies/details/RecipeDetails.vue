@@ -4,11 +4,12 @@ import { ref } from 'vue';
 import { fetchRecipes } from '@/data/api/recipe/fetch';
 import { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 
-const recipes = ref<RecipeDto[]>([]);
-
-fetchRecipes('list').then((v) => (recipes.value = v));
+const recipe = ref<RecipeDto>();
+const props = defineProps<{
+    id: number;
+}>();
+fetchRecipes(props.id).then((v) => (recipe.value = v));
 </script>
 <template>
-    <div>Recipes</div>
-    <div>{{ recipes }}</div>
+    <div>{{ recipe }}</div>
 </template>

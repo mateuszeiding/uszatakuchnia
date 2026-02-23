@@ -2,6 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     { "source": "/api", "destination": "/api" },
+    { "source": "/api/recipes/list", "destination": "/api/recipes/list" },
+    {
+      "source": "/api/recipes/:id(\\d+)",
+      "destination": "/api/recipes/detailed"
+    },
     { "source": "/(.*)", "destination": "/web/dist/index.html" }
   ],
   "installCommand": "pnpm -C web install",

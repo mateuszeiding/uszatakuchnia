@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export {};
 
-type Sep = '-' | '/';
 declare global {
-    type NestedKeyUnion<T, Sep = '-'> = {
-        [K in keyof T]: K extends string
-            ? keyof T[K] extends string
-                ? `${K}${Sep}${keyof T[K]}`
-                : never
+    type Sep = '-' | '/';
+    type NestedKeyUnion<T, Sep extends string = '/'> = {
+        [K in Extract<keyof T, string>]: T[K] extends object
+            ? `${K}${Sep}${KeyToString<Exclude<keyof T[K], symbol>>}`
             : never;
-    }[keyof T];
+    }[Extract<keyof T, string>];
 
     export type PropsOf<T> = T extends keyof JSX.IntrinsicElements
         ? JSX.IntrinsicElements[T]

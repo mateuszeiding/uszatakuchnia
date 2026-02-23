@@ -2,11 +2,12 @@
 import { fetchEnums } from '@api/enums/fetch';
 import { fetchIngredients } from '@api/ingredients/fetch';
 import UBadge from '@cmp/UBadge.vue';
-import UCard from '@cmp/UCard.vue';
 import { ref } from 'vue';
 
+import IngredientCard from './components/IngredientCard.vue';
+
 const enums = ref<PropsOf<typeof UBadge>['val'][]>([]);
-const ingredients = ref<PropsOf<typeof UCard>['ingredient'][]>([]);
+const ingredients = ref<PropsOf<typeof IngredientCard>['ingredient'][]>([]);
 
 fetchEnums('ingredient').then((v) => (enums.value = v.map((e) => e.code)));
 fetchIngredients('list').then((v) => (ingredients.value = v));
@@ -21,7 +22,7 @@ fetchIngredients('list').then((v) => (ingredients.value = v));
     </div>
 
     <div class="grid">
-        <u-card
+        <ingredient-card
             v-for="ingredient in ingredients"
             :key="ingredient.id"
             :ingredient

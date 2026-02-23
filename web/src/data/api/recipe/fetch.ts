@@ -2,10 +2,11 @@ import { type FetchQueryOptions, useQueryClient } from '@tanstack/vue-query';
 
 import { API, type EndpointsConfig } from '../API';
 
-import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
+import type { RecipeBaseDto, RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 
 type RequestMap = {
-    list: RecipeDto[];
+    list: RecipeBaseDto[];
+    [key: number]: RecipeDto;
 };
 
 export const fetchRecipes = async <E extends keyof RequestMap>(endpoint: E) => {
