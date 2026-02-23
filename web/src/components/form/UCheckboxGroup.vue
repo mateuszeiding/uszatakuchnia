@@ -17,9 +17,21 @@ const uid = useId();
 const legendId = `${uid}-legend`;
 const optionId = (val: CheckboxOption['value']) => `${uid}-${val}`;
 
-const { value, errorMessage, handleChange, handleBlur } = useField<Array<string | number>>(
-    toRef(props, 'name')
-);
+const { value, errorMessage, handleBlur } = useField<Array<string | number>>(toRef(props, 'name'));
+
+const toggle = (optionValue: string | number, e: Event) => {
+    const checked = (e.target as HTMLInputElement).checked;
+    const current = value.value ?? [];
+
+    if (checked) {
+        if (!current.includes(optionValue)) {
+            value.value = [...current, optionValue];
+        }
+        return;
+    }
+
+    value.value = current.filter((v) => v !== optionValue);
+};
 </script>
 
 <template>
@@ -46,7 +58,7 @@ const { value, errorMessage, handleChange, handleBlur } = useField<Array<string 
                 :name="props.name"
                 :value="o.value"
                 :checked="value?.includes(o.value)"
-                @change="handleChange"
+                @change="(e) => toggle(o.value, e)"
                 @blur="handleBlur"
             />
 
