@@ -4,7 +4,6 @@ import { RouterView } from 'vue-router';
 
 import UBadge from './components/UBadge.vue';
 import UCard from './components/UCard.vue';
-import UMenu from './components/UMenu.vue';
 import UTopBar from './components/UTopBar.vue';
 import { fetchEnums } from './data/api/enums/fetch';
 import { fetchIngredients } from './data/api/ingredients/fetch';
@@ -18,13 +17,12 @@ onMounted(async () => {
 
     ingredients.value = await ingr;
 
-    enums.value = await ingredient;
+    enums.value = (await ingredient).map((v) => v.code);
 });
 </script>
 
 <template>
     <UTopBar />
-    <UMenu />
     <main class="container pt-7 pb-6">
         <RouterView />
     </main>

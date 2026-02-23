@@ -21,7 +21,7 @@ const btnText = computed(() => (isAuthenticated.value ? 'Wyloguj' : 'Zaloguj'));
 <template>
     <button
         @click="() => (isAuthenticated ? handleLogout() : handleLogin())"
-        class="button login"
+        class="btn"
         :disabled="isLoading"
     >
         {{ isLoading ? 'Loading...' : btnText }}

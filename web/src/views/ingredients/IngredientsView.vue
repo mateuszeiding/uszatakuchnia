@@ -13,7 +13,7 @@ onMounted(async () => {
     const ingr = fetchIngredients('list');
 
     ingredients.value = await ingr;
-    enums.value = await ingredient;
+    enums.value = (await ingredient).map((v) => v.code);
 });
 </script>
 <template>
@@ -25,13 +25,18 @@ onMounted(async () => {
         />
     </div>
 
-    <div class="row row-cols-3-xl row-cols-2-lg row-cols-1-md row-cols-1-sm row-gap-6">
-        <div
-            class="col"
+    <div class="grid">
+        <u-card
             v-for="ingredient in ingredients"
             :key="ingredient.id"
-        >
-            <u-card :ingredient />
-        </div>
+            :ingredient
+        />
     </div>
 </template>
+<style lang="scss" scoped>
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-6);
+}
+</style>

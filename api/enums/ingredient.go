@@ -16,5 +16,7 @@ func Ingredient(w http.ResponseWriter, r *http.Request) {
 
 	var list []entities.IngredientType
 	conn.Find(&list)
-	resp.JSON(w, http.StatusOK, list)
+
+	var dtos = entities.IngredientTypeList(list).ListToDto()
+	resp.JSON(w, http.StatusOK, dtos)
 }
