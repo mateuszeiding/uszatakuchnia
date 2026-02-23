@@ -1,7 +1,5 @@
 package entities
 
-import dtos "uszatakuchnia/dtos"
-
 type Ingredient struct {
 	ID       uint        `gorm:"primaryKey;autoIncrement"`
 	ParentID *uint       `gorm:"index:ix_ingredients_parent;uniqueIndex:ux_ingredients_parent_name"`
@@ -17,29 +15,3 @@ type Ingredient struct {
 }
 
 func (Ingredient) TableName() string { return "ingredients" }
-
-func (i Ingredient) ToDto() dtos.IngredientDto {
-	ingredientType := dtos.TypeDto{
-		Name: i.Type.Name,
-		Code: i.Type.Code,
-	}
-
-	return dtos.IngredientDto{
-		ID:         i.ID,
-		Name:       i.Name,
-		ParentID:   i.ParentID,
-		IsAllergen: i.IsAllergen,
-		Type:       ingredientType,
-		Image:      i.Image.ToDto(),
-	}
-}
-
-type IngredientList []Ingredient
-
-func (l IngredientList) ListToDto() []dtos.IngredientDto {
-	out := make([]dtos.IngredientDto, 0, len(l))
-	for _, i := range l {
-		out = append(out, i.ToDto())
-	}
-	return out
-}

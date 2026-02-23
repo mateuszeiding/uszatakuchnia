@@ -1,7 +1,5 @@
 package entities
 
-import "uszatakuchnia/dtos"
-
 type Image struct {
 	ID      uint    `gorm:"primaryKey"`
 	RefType RefType `gorm:"type:varchar(32);not null;uniqueIndex:ux_images_ref,priority:1"`
@@ -32,24 +30,3 @@ const (
 	IngredientRef RefType = "ingredient"
 	RecipeRef     RefType = "recipe"
 )
-
-func (i *Image) ToDto() *dtos.ImageDto {
-	if i == nil {
-		return nil
-	}
-
-	dto := &dtos.ImageDto{
-		URLs: dtos.ImageURLs{
-			Small:   i.ImageURLSmall,
-			Regular: i.ImageURLRegular,
-			Raw:     i.ImageURLRaw,
-		},
-		Author: dtos.ImageAuthor{
-			Name:       i.AuthorName,
-			Username:   i.AuthorUsername,
-			ProfileURL: i.AuthorProfileURL,
-		},
-	}
-
-	return dto
-}

@@ -5,6 +5,7 @@ import (
 
 	"uszatakuchnia/db"
 	"uszatakuchnia/db/entities"
+	"uszatakuchnia/db/mappers"
 	resp "uszatakuchnia/http"
 )
 
@@ -23,6 +24,6 @@ func List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dtos := entities.IngredientList(list).ListToDto()
+	dtos := mappers.MapIngredientArrayToDto(list)
 	resp.JSON(w, http.StatusOK, dtos)
 }

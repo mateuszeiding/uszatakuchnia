@@ -5,6 +5,7 @@ import (
 
 	"uszatakuchnia/db"
 	"uszatakuchnia/db/entities"
+	"uszatakuchnia/db/mappers"
 	resp "uszatakuchnia/http"
 )
 
@@ -17,6 +18,6 @@ func Ingredient(w http.ResponseWriter, r *http.Request) {
 	var list []entities.IngredientType
 	conn.Find(&list)
 
-	var dtos = entities.IngredientTypeList(list).ListToDto()
+	var dtos = mappers.MapIngredientTypeArrayToDto(list)
 	resp.JSON(w, http.StatusOK, dtos)
 }

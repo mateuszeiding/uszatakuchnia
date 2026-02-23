@@ -1,7 +1,5 @@
 package entities
 
-import dtos "uszatakuchnia/dtos"
-
 type RecipeStep struct {
 	RecipeID uint    `gorm:"not null;primaryKey"`
 	StepNo   int     `gorm:"not null;primaryKey"`
@@ -12,11 +10,3 @@ type RecipeStep struct {
 }
 
 func (RecipeStep) TableName() string { return "recipe_steps" }
-
-func (s RecipeStep) ToDto() dtos.RecipeStepDto {
-	return dtos.RecipeStepDto{
-		StepNo:  s.StepNo,
-		Section: s.Section,
-		Text:    s.Text,
-	}
-}

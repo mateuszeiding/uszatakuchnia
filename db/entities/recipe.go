@@ -1,7 +1,5 @@
 package entities
 
-import dtos "uszatakuchnia/dtos"
-
 type Recipe struct {
 	ID          uint   `gorm:"primaryKey;autoIncrement"`
 	Name        string `gorm:"type:varchar(255);not null;index:ix_recipes_name"`
@@ -14,13 +12,3 @@ type Recipe struct {
 }
 
 func (Recipe) TableName() string { return "recipes" }
-
-func (r Recipe) ToDto() dtos.RecipeDto {
-	return dtos.RecipeDto{
-		ID:          r.ID,
-		Name:        r.Name,
-		Servings:    r.Servings,
-		Description: r.Description,
-		Photo:       r.Photo.ToDto(),
-	}
-}

@@ -1,7 +1,5 @@
 package entities
 
-import dtos "uszatakuchnia/dtos"
-
 type RecipeIngredient struct {
 	RecipeID  uint `gorm:"not null;primaryKey"`
 	SortOrder int  `gorm:"not null;primaryKey"`
@@ -20,16 +18,3 @@ type RecipeIngredient struct {
 }
 
 func (RecipeIngredient) TableName() string { return "recipe_ingredients" }
-
-func (ri RecipeIngredient) ToDto() dtos.RecipeIngredientDto {
-	return dtos.RecipeIngredientDto{
-		SortOrder:      ri.SortOrder,
-		Section:        ri.Section,
-		IngredientID:   ri.IngredientID,
-		IngredientName: ri.Ingredient.Name,
-		Amount:         ri.Amount,
-		Unit:           ri.Unit,
-		AmountText:     ri.AmountText,
-		Note:           ri.Note,
-	}
-}
