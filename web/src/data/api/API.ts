@@ -28,13 +28,16 @@ export class API {
     }
 }
 
-type EndpointsConfig = {
+export type EndpointsConfig = {
     enums: {
         aroma: string;
         ingredient: string;
         taste: string;
     };
     ingredients: {
+        list: string;
+    };
+    recipes: {
         list: string;
     };
 };

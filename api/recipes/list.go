@@ -17,8 +17,8 @@ func List(w http.ResponseWriter, r *http.Request) {
 
 	var list []entities.Recipe
 	if err := conn.
-		Preload("RecipeStep").
-		Preload("RecipeIngredient").
+		Preload("Steps").
+		Preload("Ingredients").
 		Find(&list).Error; err != nil {
 		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 		return
