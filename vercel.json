@@ -3,6 +3,7 @@
   "rewrites": [
     { "source": "/api", "destination": "/api" },
     { "source": "/api/recipes/list", "destination": "/api/recipes/list" },
+    { "source": "/api/recipes", "destination": "/api/recipes/create" },
     {
       "source": "/api/recipes/:id(\\d+)",
       "destination": "/api/recipes/detailed"

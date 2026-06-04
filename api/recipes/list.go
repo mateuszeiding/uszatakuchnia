@@ -18,7 +18,7 @@ func List(w http.ResponseWriter, r *http.Request) {
 	var list []entities.RecipeBase
 	if err := conn.
 		Model(&entities.Recipe{}).
-		Select("id, name").
+		Select("id, name, tagline, category, region, time_minutes, difficulty").
 		Preload("Photo").
 		Find(&list).Error; err != nil {
 		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})

@@ -7,21 +7,32 @@ import (
 
 func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 	return dtos.RecipeDto{
-		ID:          e.ID,
-		Name:        e.Name,
-		Servings:    e.Servings,
-		Description: e.Description,
-		Photo:       MapRecipePhotoToDto(e.Photo),
-		Steps:       MapRecipeStepArrayToDto(e.Steps),
-		Ingredients: MapRecipeIngredientArrayToDto(e.Ingredients),
+		ID:             e.ID,
+		Name:           e.Name,
+		Servings:       e.Servings,
+		Description:    e.Description,
+		Tagline:        e.Tagline,
+		Category:       e.Category,
+		Region:         e.Region,
+		TimeMinutes:    e.TimeMinutes,
+		Difficulty:     e.Difficulty,
+		KcalPerServing: e.KcalPerServing,
+		Photo:          MapRecipePhotoToDto(e.Photo),
+		Steps:          MapRecipeStepArrayToDto(e.Steps),
+		Ingredients:    MapRecipeIngredientArrayToDto(e.Ingredients),
 	}
 }
 
 func MapRecipeBaseToDto(e entities.RecipeBase) dtos.RecipeBaseDto {
 	return dtos.RecipeBaseDto{
-		ID:    e.ID,
-		Name:  e.Name,
-		Photo: MapRecipePhotoToDto(e.Photo),
+		ID:          e.ID,
+		Name:        e.Name,
+		Tagline:     e.Tagline,
+		Category:    e.Category,
+		Region:      e.Region,
+		TimeMinutes: e.TimeMinutes,
+		Difficulty:  e.Difficulty,
+		Photo:       MapRecipePhotoToDto(e.Photo),
 	}
 }
 

@@ -122,6 +122,10 @@ type RecipeSeed struct {
 	Name        string
 	Servings    int
 	Description *string
+	Tagline     *string
+	Category    *string
+	TimeMinutes *int
+	Difficulty  *int
 	Photo       *RecipePhotoSeed
 
 	Steps []RecipeStepSeed
@@ -195,7 +199,14 @@ func SeedOneRecipe(tx *gorm.DB, seed RecipeSeed) (uint, error) {
 
 	var r entities.Recipe
 	if err := tx.Where(entities.Recipe{Name: seed.Name}).
-		Assign(entities.Recipe{Servings: seed.Servings, Description: seed.Description}).
+		Assign(entities.Recipe{
+			Servings:    seed.Servings,
+			Description: seed.Description,
+			Tagline:     seed.Tagline,
+			Category:    seed.Category,
+			TimeMinutes: seed.TimeMinutes,
+			Difficulty:  seed.Difficulty,
+		}).
 		FirstOrCreate(&r).Error; err != nil {
 		return 0, fmt.Errorf("failed to find or create recipe: %w", err)
 	}
@@ -289,10 +300,18 @@ func SeedAll(db *gorm.DB) error {
 		secMain := "Główne"
 
 		desc := "Prosty przepis startowy pod MVP — do sprawdzenia UI sekcji i kolejności."
+		tagline := "Klasyczny włoski sos, gotowy w 20 minut."
+		category := "zupy"
+		time20 := 20
+		diff1 := 1
 		recipe := RecipeSeed{
 			Name:        "Pomidorowy sos z czosnkiem i bazylią",
 			Servings:    2,
 			Description: &desc,
+			Tagline:     &tagline,
+			Category:    &category,
+			TimeMinutes: &time20,
+			Difficulty:  &diff1,
 			Photo:       nil, // zostaw nil — zdjęcia z Vercel Blob ogarniesz później
 			Steps: []RecipeStepSeed{
 				{StepNo: 1, Section: &secSauce, Text: "Posiekaj czosnek, podsmaż krótko na tłuszczu."},
