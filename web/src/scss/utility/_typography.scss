@@ -1,0 +1,95 @@
+@use './../mixins/media' as media;
+
+$fw: (
+    light: 300,
+    regular: 400,
+    medium: 500,
+    bold: 700,
+);
+
+$fs: (
+    xxs: 1rem,
+    xs: 1.2rem,
+    sm: 1.4rem,
+    md: 1.6rem,
+    lg: 1.8rem,
+    xl: 2rem,
+    xxl: 2.4rem,
+    xxxl: 3.2rem,
+);
+
+@mixin typographer($sufix) {
+    @if $sufix {
+        $sufix: '-' + $sufix;
+    }
+
+    @each $key, $value in $fw {
+        .fw-#{$key}#{$sufix} {
+            font-weight: $value !important;
+        }
+    }
+
+    @each $key, $value in $fs {
+        .fs-#{$key}#{$sufix} {
+            font-size: $value !important;
+            @if $key == 'sm' {
+                line-height: 2rem;
+            }
+        }
+    }
+
+    .uppercase#{$sufix} {
+        text-transform: uppercase !important;
+    }
+
+    .lowercase#{$sufix} {
+        text-transform: lowercase !important;
+    }
+
+    .capitalize#{$sufix}::first-letter {
+        text-transform: uppercase;
+    }
+
+    .underline#{$sufix} {
+        text-decoration: underline !important;
+    }
+
+    .lh-1#{$sufix} {
+        line-height: 1 !important;
+    }
+
+    .lh-sm#{$sufix} {
+        line-height: 1.25 !important;
+    }
+
+    .lh-base#{$sufix} {
+        line-height: 1.5 !important;
+    }
+
+    .lh-lg#{$sufix} {
+        line-height: 1.75 !important;
+    }
+
+    .text-start#{$sufix} {
+        text-align: left !important;
+    }
+
+    .text-center#{$sufix} {
+        text-align: center !important;
+    }
+
+    .text-end#{$sufix} {
+        text-align: right !important;
+    }
+}
+
+.ellipsis {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@include media.all() using ($m) {
+    @include typographer($m);
+}

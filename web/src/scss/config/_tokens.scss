@@ -1,0 +1,168 @@
+/* ============================================================
+   Uszatka CSS — TOKENS
+   Warstwa 1: prymitywy (niezależne od motywu)
+   Warstwa 2: kolory motywu — light :root / dark [data-theme]
+   ============================================================ */
+
+:root {
+  /* ── TYPOGRAFIA ── */
+  --font-sans: "Geist", "Inter Tight", "Inter", -apple-system, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  --text-display: 88px;
+  --text-h1:  56px;
+  --text-h2:  32px;
+  --text-h3:  22px;
+  --text-h4:  18px;
+  --text-body: 16px;
+  --text-small: 13px;
+  --text-meta:  11px;
+
+  --lh-display: 0.92;
+  --lh-tight:   0.95;
+  --lh-snug:    1.1;
+  --lh-default: 1.5;
+  --lh-relaxed: 1.6;
+
+  --ls-display: -3.6px;
+  --ls-h1:  -2.2px;
+  --ls-h2:  -0.9px;
+  --ls-h3:  -0.6px;
+  --ls-tight: -0.4px;
+  --ls-mono:   0.5px;
+
+  /* ── ODSTĘPY (skala 4px) ── */
+  --s-0:  0;
+  --s-1:  4px;  --s-2:  8px;  --s-3:  12px; --s-4:  16px; --s-5:  20px;
+  --s-6:  24px; --s-7:  32px; --s-8:  40px; --s-9:  56px; --s-10: 80px;
+
+  /* ── PROMIENIE ── */
+  --r-sm:   4px;
+  --r-md:   6px;
+  --r-lg:   8px;
+  --r-xl:   10px;
+  --r-2xl:  12px;
+  --r-pill: 999px;
+
+  /* ── OBRAMOWANIA ── */
+  --bw-1: 1px;
+  --bw-2: 1.5px;
+
+  /* ── CIENIE ── */
+  --shadow-card:   0 8px 24px rgba(10, 10, 15, 0.08);
+  --shadow-menu:   0 12px 32px rgba(10, 10, 15, 0.10);
+  --shadow-accent: 0 4px 14px rgba(107, 78, 230, 0.32);
+
+  /* ── RUCH ── */
+  --dur-fast: 120ms;
+  --dur:      150ms;
+  --dur-slow: 180ms;
+  --ease:     cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ── WARSTWY ── */
+  --z-base:     1;
+  --z-sticky:   40;
+  --z-dropdown: 50;
+  --z-overlay:  60;
+  --z-modal:    100;
+  --z-toast:    200;
+
+  /* ── STANY ── */
+  --opacity-disabled: 0.45;
+  --opacity-muted:    0.6;
+  --focus-ring: 0 0 0 3px var(--accent-soft);
+  --cat-tint:   0.16;
+
+  /* ── KOLOR — light ── */
+  --bg:         #F8F8FF;
+  --bg-alt:     #FFFFFF;
+  --bg-elev:    #FFFFFF;
+  --ink:        #0A0A0F;
+  --ink-dim:    #3A3A45;
+  --ink-muted:  #6E6E7A;
+  --ink-faint:  #9C9CA8;
+  --rule:        rgba(10, 10, 15, 0.08);
+  --rule-strong: rgba(10, 10, 15, 0.16);
+
+  --accent:      #6B4EE6;
+  --accent-soft: #EDE8FB;
+  --on-accent:   #FFFFFF;
+
+  --success:      #2F6B3F; --success-soft: rgba(47, 107, 63, 0.12);
+  --warning:      #D9A441; --warning-soft: rgba(217, 164, 65, 0.14);
+  --danger:       #C53728; --danger-soft:  rgba(197, 55, 40, 0.12);
+  --info:         #3F70A8; --info-soft:    rgba(63, 112, 168, 0.12);
+
+  --c-blue:       #3F70A8;  /* ryby */
+  --c-terracotta: #B85A2E;  /* mięso */
+  --c-sage:       #7A9050;  /* wege */
+  --c-forest:     #2F6B3F;  /* wegan */
+  --c-mustard:    #D9A441;  /* makarony */
+  --c-wheat:      #B8946A;  /* ryż / kasze */
+  --c-tomato:     #C53728;  /* zupy */
+  --c-lime:       #A8B83D;  /* sałatki */
+  --c-brown:      #7A4A2E;  /* pieczywo */
+  --c-pink:       #D27393;  /* desery */
+  --c-coral:      #E89556;  /* śniadania */
+  --c-plum:       #8A4A6D;  /* przekąski */
+  --c-teal:       #2F8A8A;  /* napoje */
+  --c-olive:      #5C6E33;  /* regiony / wolne */
+
+  color-scheme: light;
+}
+
+/* ── KOLOR — dark (jawny atrybut) ── */
+[data-theme="dark"] {
+  --bg:         #0A0A0F;
+  --bg-alt:     #13131C;
+  --bg-elev:    #1A1A26;
+  --ink:        #F8F8FF;
+  --ink-dim:    #D8D8E5;
+  --ink-muted:  #9696A8;
+  --ink-faint:  #5E5E70;
+  --rule:        rgba(248, 248, 255, 0.08);
+  --rule-strong: rgba(248, 248, 255, 0.18);
+
+  --accent:      #9D8FE8;
+  --accent-soft: rgba(157, 143, 232, 0.16);
+  --on-accent:   #FFFFFF;
+
+  --success: #5E9A6A; --success-soft: rgba(94, 154, 106, 0.18);
+  --warning: #E8B95A; --warning-soft: rgba(232, 185, 90, 0.18);
+  --danger:  #E55D4D; --danger-soft:  rgba(229, 93, 77, 0.18);
+  --info:    #6B98D0; --info-soft:    rgba(107, 152, 208, 0.18);
+
+  --c-blue:       #6B98D0; --c-terracotta: #D87A50; --c-sage: #9DB373; --c-forest: #5E9A6A;
+  --c-mustard:    #E8B95A; --c-wheat:      #D4B088; --c-tomato: #E55D4D; --c-lime: #C5D45A;
+  --c-brown:      #A57050; --c-pink:       #E892B0; --c-coral: #F0AC7A; --c-plum: #B07090;
+  --c-teal:       #5DA8A8; --c-olive:      #7C8E4F;
+
+  --cat-tint: 0.28;
+  color-scheme: dark;
+}
+
+/* ── KOLOR — dark auto (system preference) ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    --bg: #0A0A0F; --bg-alt: #13131C; --bg-elev: #1A1A26;
+    --ink: #F8F8FF; --ink-dim: #D8D8E5; --ink-muted: #9696A8; --ink-faint: #5E5E70;
+    --rule: rgba(248, 248, 255, 0.08); --rule-strong: rgba(248, 248, 255, 0.18);
+    --accent: #9D8FE8; --accent-soft: rgba(157, 143, 232, 0.16);
+    --success: #5E9A6A; --success-soft: rgba(94, 154, 106, 0.18);
+    --warning: #E8B95A; --warning-soft: rgba(232, 185, 90, 0.18);
+    --danger:  #E55D4D; --danger-soft:  rgba(229, 93, 77, 0.18);
+    --info:    #6B98D0; --info-soft:    rgba(107, 152, 208, 0.18);
+    --c-blue: #6B98D0; --c-terracotta: #D87A50; --c-sage: #9DB373; --c-forest: #5E9A6A;
+    --c-mustard: #E8B95A; --c-wheat: #D4B088; --c-tomato: #E55D4D; --c-lime: #C5D45A;
+    --c-brown: #A57050; --c-pink: #E892B0; --c-coral: #F0AC7A; --c-plum: #B07090;
+    --c-teal: #5DA8A8; --c-olive: #7C8E4F;
+    --cat-tint: 0.28;
+    color-scheme: dark;
+  }
+}

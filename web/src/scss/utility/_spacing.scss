@@ -1,0 +1,98 @@
+@use 'sass:string';
+@use './../mixins/media' as media;
+
+$spacers: (
+    0:  0,
+    1:  4px,
+    2:  8px,
+    3:  12px,
+    4:  16px,
+    5:  20px,
+    6:  24px,
+    7:  32px,
+    8:  40px,
+    9:  56px,
+    10: 80px,
+);
+
+:root {
+    @each $name, $value in $spacers {
+        --space-#{$name}: #{$value};
+    }
+}
+
+@mixin spacer($sufix: null) {
+    @if $sufix {
+        $sufix: '-' + $sufix;
+    }
+
+    @each $key, $val in $spacers {
+        @each $attr, $prefix in (padding: p, margin: m) {
+            .#{$prefix}-#{$key}#{$sufix} {
+                #{$attr}: $val !important;
+            }
+
+            .#{$prefix}t-#{$key}#{$sufix} {
+                #{$attr}-top: $val !important;
+            }
+
+            .#{$prefix}e-#{$key}#{$sufix} {
+                #{$attr}-right: $val !important;
+            }
+
+            .#{$prefix}b-#{$key}#{$sufix} {
+                #{$attr}-bottom: $val !important;
+            }
+
+            .#{$prefix}s-#{$key}#{$sufix} {
+                #{$attr}-left: $val !important;
+            }
+
+            .#{$prefix}x-#{$key}#{$sufix} {
+                #{$attr}-left: $val !important;
+                #{$attr}-right: $val !important;
+            }
+
+            .#{$prefix}y-#{$key}#{$sufix} {
+                #{$attr}-top: $val !important;
+                #{$attr}-bottom: $val !important;
+            }
+        }
+
+        .gap-#{$key}#{$sufix} {
+            gap: $val !important;
+        }
+
+        .row-gap-#{$key}#{$sufix} {
+            row-gap: $val !important;
+        }
+
+        .column-gap-#{$key}#{$sufix} {
+            column-gap: $val !important;
+        }
+
+        .radius-#{$key}#{$sufix} {
+            border-radius: $val !important;
+        }
+
+        .radius-top-e-#{$key}#{$sufix} {
+            border-top-right-radius: $val !important;
+        }
+
+        .radius-top-s-#{$key}#{$sufix} {
+            border-top-left-radius: $val !important;
+        }
+
+        .radius-bot-s-#{$key}#{$sufix} {
+            border-bottom-left-radius: $val !important;
+        }
+
+        .radius-bot-e-#{$key}#{$sufix} {
+            border-bottom-right-radius: $val !important;
+        }
+    }
+}
+
+@include media.all() using ($m) {
+    @include spacer($m);
+}

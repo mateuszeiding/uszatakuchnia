@@ -1,0 +1,64 @@
+@use 'sass:string' as string;
+@use './../mixins/media' as media;
+
+$size: (0, 10, 25, 50, 75, 100);
+
+@mixin sizer($val, $sufix: null) {
+    @if $sufix {
+        $sufix: '-' + $sufix;
+    }
+
+    .w-#{$val}#{$sufix} {
+        width: string.unquote('#{$val}%') !important;
+    }
+    .w-#{$val}v#{$sufix} {
+        width: string.unquote('#{$val}vw') !important;
+    }
+    .w-fit#{$sufix} {
+        width: fit-content;
+    }
+
+    .min-w-#{$val}#{$sufix} {
+        min-width: string.unquote('#{$val}%') !important;
+    }
+    .min-w-#{$val}v#{$sufix} {
+        min-width: string.unquote('#{$val}vw') !important;
+    }
+
+    .max-w-#{$val}#{$sufix} {
+        max-width: string.unquote('#{$val}%') !important;
+    }
+    .max-w-#{$val}v#{$sufix} {
+        max-width: string.unquote('#{$val}vw') !important;
+    }
+
+    .h-#{$val}#{$sufix} {
+        height: string.unquote('#{$val}%') !important;
+    }
+    .h-#{$val}v#{$sufix} {
+        height: string.unquote('#{$val}vh') !important;
+    }
+    .h-fit#{$sufix} {
+        height: fit-content;
+    }
+
+    .min-h-#{$val}#{$sufix} {
+        min-height: string.unquote('#{$val}%') !important;
+    }
+    .min-h-#{$val}v#{$sufix} {
+        min-height: string.unquote('#{$val}vh') !important;
+    }
+
+    .max-h-#{$val}#{$sufix} {
+        max-height: string.unquote('#{$val}%') !important;
+    }
+    .max-h-#{$val}v#{$sufix} {
+        max-height: string.unquote('#{$val}vh') !important;
+    }
+}
+
+@include media.all() using ($m) {
+    @each $val in $size {
+        @include sizer($val, $m);
+    }
+}

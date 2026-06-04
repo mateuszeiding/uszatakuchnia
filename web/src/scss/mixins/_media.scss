@@ -1,0 +1,47 @@
+@mixin xl() {
+    @media (min-width: 1200px) {
+        @content;
+    }
+}
+@mixin lg() {
+    @media (min-width: 900px) {
+        @content;
+    }
+}
+@mixin md() {
+    @media (min-width: 600px) {
+        @content;
+    }
+}
+
+@mixin sm() {
+    @media (max-width: 599px) {
+        @content;
+    }
+}
+
+@mixin print() {
+    @media print {
+        @content;
+    }
+}
+
+@mixin all {
+    @content (null);
+
+    @include sm() {
+        @content ('sm');
+    }
+
+    @include md() {
+        @content ('md');
+    }
+
+    @include lg() {
+        @content ('lg');
+    }
+
+    @include xl() {
+        @content ('xl');
+    }
+}

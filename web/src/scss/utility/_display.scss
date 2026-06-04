@@ -1,0 +1,39 @@
+@use './../mixins/media' as media;
+
+@mixin displayer($sufix: null) {
+    @if $sufix {
+        $sufix: '-' + $sufix;
+    }
+
+    .d-block#{$sufix} {
+        display: block !important;
+    }
+
+    .d-grid#{$sufix} {
+        display: grid !important;
+    }
+
+    .d-flex#{$sufix} {
+        display: flex !important;
+    }
+
+    .d-inline#{$sufix} {
+        display: inline !important;
+    }
+
+    .d-inline-flex#{$sufix} {
+        display: inline-flex !important;
+    }
+
+    .d-inline-block#{$sufix} {
+        display: inline-block !important;
+    }
+
+    .d-none#{$sufix} {
+        display: none !important;
+    }
+}
+
+@include media.all() using ($m) {
+    @include displayer($m);
+}

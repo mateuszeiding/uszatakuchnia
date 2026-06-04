@@ -1,0 +1,37 @@
+@use './../mixins/media' as media;
+
+@mixin borderer($sufix: null) {
+    @if $sufix {
+        $sufix: '-' + $sufix;
+    }
+
+    .border#{$sufix} {
+        border: 1px solid var(--border-color) !important;
+    }
+
+    .border-top#{$sufix} {
+        border-top: 1px solid var(--border-color) !important;
+    }
+
+    .border-end#{$sufix} {
+        border-right: 1px solid var(--border-color) !important;
+    }
+
+    .border-bottom#{$sufix} {
+        border-bottom: 1px solid var(--border-color) !important;
+    }
+
+    .border-start#{$sufix} {
+        border-left: 1px solid var(--border-color) !important;
+    }
+
+    @for $i from 1 through 5 {
+        .border-w-#{$i}#{$sufix} {
+            border-width: #{$i}px !important;
+        }
+    }
+}
+
+@include media.all() using ($m) {
+    @include borderer($m);
+}
