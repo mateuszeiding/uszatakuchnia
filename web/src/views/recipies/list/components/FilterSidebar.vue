@@ -238,11 +238,19 @@ function toggleCategory(key: string) {
 
 /* Radio variant */
 .filter-row__box--radio { border-radius: var(--r-pill); }
-.filter-row.is-active .filter-row__box--radio::after { display: none; }
 .filter-row.is-active .filter-row__box--radio {
     background: transparent;
     border-color: var(--accent);
-    box-shadow: inset 0 0 0 3px var(--accent-soft), inset 0 0 0 5px var(--accent);
+}
+.filter-row.is-active .filter-row__box--radio::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: var(--r-pill);
+    background: var(--accent);
+    border: none;
+    transform: none;
+    margin: 0;
 }
 
 /* Category dot */
