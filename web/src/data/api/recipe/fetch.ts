@@ -2,25 +2,31 @@ import { type FetchQueryOptions, useQueryClient } from '@tanstack/vue-query';
 
 import { API, type EndpointsConfig } from '../API';
 
-import type { RecipeBaseDto, RecipeDto, UpsertRecipeRequest } from '@/data/dtos/recipe/RecipeDto';
+import type { IUpsertRecipeRequest, RecipeBaseDto, RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 
 type RequestMap = {
     list: RecipeBaseDto[];
     [key: number]: RecipeDto;
 };
 
-export const fetchRecipes = async <E extends keyof RequestMap>(endpoint: E) => {
+export const fetchRecipes = <E extends keyof RequestMap>(endpoint: E, admin = false) => {
     const qc = useQueryClient();
-    const e: NestedKeyUnion<EndpointsConfig, '/'> = `recipes/${endpoint}`;
+    const base: NestedKeyUnion<EndpointsConfig, '/'> = `recipes/${endpoint}`;
+    const url = (admin && endpoint === 'list' ? `${base}?admin=true` : base) as NestedKeyUnion<
+        EndpointsConfig,
+        '/'
+    >;
     const options: FetchQueryOptions<RequestMap[E]> = {
-        queryKey: [e],
-        queryFn: () => API.Client.get<RequestMap[E]>(e),
+        queryKey: [base, admin],
+        queryFn: () => API.Client.get<RequestMap[E]>(url),
     };
-    return await qc.fetchQuery(options);
+    return qc.fetchQuery(options);
 };
 
-export const createRecipe = async (body: UpsertRecipeRequest) =>
+export const createRecipe = (body: IUpsertRecipeRequest) =>
     API.Client.post<{ id: number }>('recipes', body);
 
-export const updateRecipe = async (id: number, body: UpsertRecipeRequest) =>
+export const updateRecipe = (id: number, body: IUpsertRecipeRequest) =>
     API.Client.put<{ id: number }>(`recipes/${id}`, body);
+
+export const deleteRecipe = (id: number) => API.Client.delete<{ deleted: number }>(`recipes/${id}`);

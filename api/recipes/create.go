@@ -31,6 +31,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	status := req.Status
+	if status == "" {
+		status = "draft"
+	}
+
 	conn := db.DB()
 
 	recipe := entities.Recipe{
@@ -43,6 +48,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		TimeMinutes:    req.TimeMinutes,
 		Difficulty:     req.Difficulty,
 		KcalPerServing: req.KcalPerServing,
+		Status:         status,
+		NeedsPrep:      req.NeedsPrep,
 	}
 
 	if err := conn.Create(&recipe).Error; err != nil {
@@ -68,6 +75,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			IngredientID: i.IngredientId, Amount: i.Amount, Unit: i.Unit,
 			AmountText: i.AmountText, Note: i.Note,
 		})
+	}
+
+	for _, tag := range req.DietTags {
+		conn.Create(&entities.RecipeTag{RecipeID: recipe.ID, Tag: tag, GroupName: "diet"})
+	}
+	for _, tag := range req.PracticalTags {
+		conn.Create(&entities.RecipeTag{RecipeID: recipe.ID, Tag: tag, GroupName: "practical"})
 	}
 
 	resp.JSON(w, http.StatusCreated, map[string]any{"id": recipe.ID})

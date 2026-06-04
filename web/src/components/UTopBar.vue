@@ -65,7 +65,7 @@ if (dark.value) {
                 </button>
 
                 <template v-if="isAuthenticated">
-                    <span class="topbar__admin-badge">Admin</span>
+                    <RouterLink to="/admin" class="topbar__admin-badge">Admin</RouterLink>
                     <RouterLink
                         to="/recipes/new"
                         class="btn btn--accent btn--sm"

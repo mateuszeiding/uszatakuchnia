@@ -1,11 +1,13 @@
 import { authGuard } from '@auth0/auth0-vue';
-import IngredientsView from '@view/ingredients/IngredientsView.vue';
 import RecipesView from '@view/recipies/list/RecipesView.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
+import AdminDashboard from '@/views/admin/AdminDashboard.vue';
+import AdminIngredients from '@/views/admin/AdminIngredients.vue';
+import AdminRecipes from '@/views/admin/AdminRecipes.vue';
+import AdminSettings from '@/views/admin/AdminSettings.vue';
 import UpsertRecipe from '@/views/recipies/auth/UpsertRecipe.vue';
 import RecipeDetails from '@/views/recipies/details/RecipeDetails.vue';
-import UpsertType from '@/views/type/auth/UpsertType.vue';
 
 const PlaceholderView = {
     template:
@@ -26,10 +28,12 @@ const router = createRouter({
             props: true,
             beforeEnter: authGuard,
         },
+        { path: '/admin', component: AdminDashboard, beforeEnter: authGuard },
+        { path: '/admin/recipes', component: AdminRecipes, beforeEnter: authGuard },
+        { path: '/admin/ingredients', component: AdminIngredients, beforeEnter: authGuard },
+        { path: '/admin/settings', component: AdminSettings, beforeEnter: authGuard },
         { path: '/challenges', component: PlaceholderView },
         { path: '/wiki', component: PlaceholderView },
-        { path: '/ingredients', component: IngredientsView },
-        { path: '/type/new', component: UpsertType, beforeEnter: authGuard },
         { path: '/:pathMatch(.*)*', redirect: '/recipes' },
     ],
 });

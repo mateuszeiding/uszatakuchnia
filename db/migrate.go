@@ -16,6 +16,7 @@ func AutoMigrate(gdb *gorm.DB) error {
 		&entities.RecipeStep{},
 		&entities.RecipeIngredient{},
 		&entities.RecipePhoto{},
+		&entities.RecipeTag{},
 
 		&entities.Image{},
 	)

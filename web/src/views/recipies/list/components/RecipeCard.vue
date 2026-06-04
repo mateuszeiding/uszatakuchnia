@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import { useAuth0 } from '@auth0/auth0-vue';
 
+import { deleteRecipe } from '@/data/api/recipe/fetch';
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
+import { confirmDialog } from '@/utils/dialog';
 
-defineProps<{ recipe: RecipeBaseDto }>();
+const props = defineProps<{ recipe: RecipeBaseDto }>();
+const emit = defineEmits<{ deleted: [id: number] }>();
 
 const { isAuthenticated } = useAuth0();
 
@@ -16,6 +19,15 @@ function fmtTime(min: number | null) {
 }
 
 const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUDNE' };
+
+async function handleDelete(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirmDialog(`Usuń przepis „${props.recipe.name}"?`)) return;
+    await deleteRecipe(props.recipe.id);
+    emit('deleted', props.recipe.id);
+}
 </script>
 
 <template>
@@ -23,7 +35,6 @@ const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUD
         class="card recipe-card"
         :to="{ name: 'recipe-details', params: { id: recipe.id } }"
     >
-        <!-- Photo -->
         <div
             class="photo recipe-card__photo"
             style="--hue: 220; position: relative"
@@ -34,7 +45,12 @@ const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUD
                 :alt="recipe.name"
                 style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"
             />
-            <!-- Admin actions — top-right of photo -->
+            <span
+                v-if="recipe.status === 'draft'"
+                class="draft-badge"
+            >
+                SZKIC
+            </span>
             <div
                 v-if="isAuthenticated"
                 class="recipe-card__actions"
@@ -62,6 +78,7 @@ const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUD
                 <button
                     class="card-action-btn card-action-btn--danger"
                     title="Usuń"
+                    @click="handleDelete"
                 >
                     <svg
                         width="14"
@@ -82,15 +99,7 @@ const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUD
         </div>
 
         <div class="body">
-            <div
-                style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: baseline;
-                    margin-bottom: 10px;
-                    gap: 8px;
-                "
-            >
+            <div class="card-top-row">
                 <span
                     v-if="recipe.category"
                     class="badge"
@@ -102,6 +111,32 @@ const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUD
                 <span class="recipe-id">#{{ String(recipe.id).padStart(3, '0') }}</span>
             </div>
             <div class="title balance">{{ recipe.name }}</div>
+            <span
+                v-if="recipe.needsPrep"
+                class="prep-badge"
+            >
+                <svg
+                    width="9"
+                    height="9"
+                    viewBox="0 0 10 10"
+                    fill="none"
+                >
+                    <circle
+                        cx="5"
+                        cy="5"
+                        r="4"
+                        stroke="currentColor"
+                        stroke-width="1.3"
+                    />
+                    <path
+                        d="M5 3v2.5l1.5 1"
+                        stroke="currentColor"
+                        stroke-width="1.2"
+                        stroke-linecap="round"
+                    />
+                </svg>
+                wymaga przygotowania
+            </span>
             <div class="meta">
                 <template v-if="fmtTime(recipe.timeMinutes)">
                     <span>{{ fmtTime(recipe.timeMinutes) }}</span>
@@ -117,7 +152,6 @@ const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUD
 .recipe-card__photo {
     position: relative;
 }
-
 .recipe-card__actions {
     display: none;
     position: absolute;
@@ -129,7 +163,6 @@ const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUD
 .recipe-card:hover .recipe-card__actions {
     display: flex;
 }
-
 .card-action-btn {
     width: 30px;
     height: 30px;
@@ -148,11 +181,47 @@ const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUD
 .card-action-btn--danger {
     background: rgba(197, 55, 40, 0.92);
 }
-
+.draft-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: rgba(10, 10, 15, 0.78);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: var(--r-sm);
+    text-transform: uppercase;
+}
+.card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+    gap: 8px;
+}
 .recipe-id {
     font-family: var(--font-mono);
     font-size: 10px;
     color: var(--ink-faint);
     flex-shrink: 0;
+}
+.prep-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    width: fit-content;
+    background: color-mix(in srgb, #d9a441 16%, transparent);
+    border: 1px solid color-mix(in srgb, #d9a441 45%, transparent);
+    color: #d9a441;
+    padding: 2px 9px;
+    border-radius: var(--r-pill);
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    letter-spacing: 0.3px;
 }
 </style>

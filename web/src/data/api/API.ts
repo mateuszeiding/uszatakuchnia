@@ -35,6 +35,11 @@ export class API {
         const response = await axios.put<T>(endpoint, body, { baseURL: this.__baseUrl });
         return response.data;
     }
+
+    public async delete<T>(endpoint: string) {
+        const response = await axios.delete<T>(endpoint, { baseURL: this.__baseUrl });
+        return response.data;
+    }
 }
 
 export type EndpointsConfig = {

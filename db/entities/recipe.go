@@ -13,9 +13,13 @@ type Recipe struct {
 	Difficulty     *int
 	KcalPerServing *int
 
+	Status    string `gorm:"type:varchar(16);not null;default:'published'"`
+	NeedsPrep bool   `gorm:"not null;default:false"`
+
 	Photo       *RecipePhoto       `gorm:"foreignKey:RecipeID;references:ID"`
 	Steps       []RecipeStep       `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Ingredients []RecipeIngredient `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Tags        []RecipeTag        `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 type RecipeBase struct {
@@ -26,7 +30,11 @@ type RecipeBase struct {
 	Region      *string      `gorm:"type:varchar(64)"`
 	TimeMinutes *int
 	Difficulty  *int
+	Status      string       `gorm:"type:varchar(16);not null;default:'published'"`
+	NeedsPrep   bool         `gorm:"not null;default:false"`
 	Photo       *RecipePhoto `gorm:"foreignKey:RecipeID;references:ID"`
+	Tags        []RecipeTag  `gorm:"foreignKey:RecipeID;references:ID"`
 }
 
-func (Recipe) TableName() string { return "recipes" }
+func (Recipe) TableName() string    { return "recipes" }
+func (RecipeBase) TableName() string { return "recipes" }

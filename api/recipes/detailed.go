@@ -22,6 +22,8 @@ func Detailed(w http.ResponseWriter, r *http.Request) {
 		getDetailed(w, r)
 	case http.MethodPut:
 		putDetailed(w, r)
+	case http.MethodDelete:
+		deleteDetailed(w, r)
 	default:
 		resp.Error(w, http.StatusMethodNotAllowed, "method not allowed")
 	}
@@ -36,6 +38,7 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		Preload("Photo").
 		Preload("Steps").
 		Preload("Ingredients").
+		Preload("Tags").
 		Find(&entity, id).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -69,6 +72,10 @@ func putDetailed(w http.ResponseWriter, r *http.Request) {
 	entity.TimeMinutes = req.TimeMinutes
 	entity.Difficulty = req.Difficulty
 	entity.KcalPerServing = req.KcalPerServing
+	entity.NeedsPrep = req.NeedsPrep
+	if req.Status != "" {
+		entity.Status = req.Status
+	}
 
 	if err := conn.Save(&entity).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
@@ -103,5 +110,32 @@ func putDetailed(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	// replace tags
+	conn.Where("recipe_id = ?", entity.ID).Delete(&entities.RecipeTag{})
+	for _, tag := range req.DietTags {
+		conn.Create(&entities.RecipeTag{RecipeID: entity.ID, Tag: tag, GroupName: "diet"})
+	}
+	for _, tag := range req.PracticalTags {
+		conn.Create(&entities.RecipeTag{RecipeID: entity.ID, Tag: tag, GroupName: "practical"})
+	}
+
 	resp.JSON(w, http.StatusOK, map[string]any{"id": entity.ID})
+}
+
+func deleteDetailed(w http.ResponseWriter, r *http.Request) {
+	conn := db.DB()
+	id := r.URL.Query().Get("id")
+
+	var entity entities.Recipe
+	if err := conn.Find(&entity, id).Error; err != nil || entity.ID == 0 {
+		resp.Error(w, http.StatusNotFound, "recipe not found")
+		return
+	}
+
+	if err := conn.Select(clause.Associations).Delete(&entity).Error; err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp.JSON(w, http.StatusOK, map[string]any{"deleted": entity.ID})
 }

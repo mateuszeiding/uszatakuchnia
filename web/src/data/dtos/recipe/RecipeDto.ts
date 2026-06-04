@@ -11,6 +11,10 @@ export class RecipeBaseDto {
     region: string | null = null;
     timeMinutes: number | null = null;
     difficulty: number | null = null;
+    status: string = 'published';
+    needsPrep: boolean = false;
+    dietTags: string[] = [];
+    practicalTags: string[] = [];
     photoUrl: string | null = null;
 
     constructor(obj: Partial<RecipeBaseDto> & { photo?: BackendRecipePhoto }) {
@@ -37,7 +41,7 @@ export class RecipeDto extends RecipeBaseDto {
     }
 }
 
-export interface UpsertRecipeRequest {
+export interface IUpsertRecipeRequest {
     name: string;
     servings: number;
     description?: string | null;
@@ -48,6 +52,10 @@ export interface UpsertRecipeRequest {
     difficulty?: number | null;
     kcalPerServing?: number | null;
     photoUrl?: string | null;
+    status: string;
+    needsPrep: boolean;
+    dietTags: string[];
+    practicalTags: string[];
     steps: { stepNo: number; section?: string | null; text: string }[];
     ingredients: {
         sortOrder: number;

@@ -1,17 +1,16 @@
 <script lang="ts" setup>
 import { useAuth0 } from '@auth0/auth0-vue';
 import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
 
 import { fetchRecipes } from '@/data/api/recipe/fetch';
-import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
+import type { RecipeBaseDto, RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 
 const props = defineProps<{ id: number }>();
 const { isAuthenticated } = useAuth0();
-const router = useRouter();
 
 const recipe = ref<RecipeDto>();
+const related = ref<RecipeBaseDto[]>([]);
 const servings = ref(1);
 const checkedSteps = ref<Set<number>>(new Set());
 const checkedIngs = ref<Set<string>>(new Set());
@@ -19,6 +18,20 @@ const checkedIngs = ref<Set<string>>(new Set());
 fetchRecipes(props.id).then((v) => {
     recipe.value = v;
     servings.value = v.servings;
+});
+
+// load related after recipe loads
+async function loadRelated() {
+    if (!recipe.value?.category) return;
+    const all = await fetchRecipes('list');
+    related.value = all
+        .filter((r) => r.category === recipe.value!.category && r.id !== recipe.value!.id)
+        .slice(0, 3);
+}
+fetchRecipes(props.id).then((v) => {
+    recipe.value = v;
+    servings.value = v.servings;
+    return loadRelated();
 });
 
 const diffLabel: Record<number, string> = { 1: 'Łatwe', 2: 'Średnie', 3: 'Trudne' };
@@ -70,7 +83,6 @@ function toggleStep(no: number) {
     if (checkedSteps.value.has(no)) checkedSteps.value.delete(no);
     else checkedSteps.value.add(no);
 }
-
 function toggleIng(key: string) {
     if (checkedIngs.value.has(key)) checkedIngs.value.delete(key);
     else checkedIngs.value.add(key);
@@ -97,6 +109,14 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
         v-else
         class="container recipe-page"
     >
+        <!-- Reading progress bar -->
+        <div class="reading-progress">
+            <div
+                class="reading-progress__fill"
+                :style="`width: ${progress}%`"
+            />
+        </div>
+
         <!-- Breadcrumb -->
         <nav class="breadcrumb">
             <RouterLink
@@ -121,18 +141,10 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
             <span class="breadcrumb__current">#{{ String(recipe.id).padStart(3, '0') }}</span>
         </nav>
 
-        <!-- Hero: text left, photo right -->
+        <!-- Hero -->
         <header class="recipe-hero">
             <div class="recipe-hero__text">
-                <div
-                    style="
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                        flex-wrap: wrap;
-                        margin-bottom: 24px;
-                    "
-                >
+                <div class="hero-flags">
                     <span
                         v-if="recipe.category"
                         class="badge"
@@ -141,10 +153,35 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                         {{ recipe.category }}
                         <template v-if="recipe.region">· {{ recipe.region }}</template>
                     </span>
+                    <span
+                        v-if="recipe.needsPrep"
+                        class="prep-badge"
+                    >
+                        <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 12 12"
+                            fill="none"
+                        >
+                            <circle
+                                cx="6"
+                                cy="6"
+                                r="5"
+                                stroke="currentColor"
+                                stroke-width="1.3"
+                            />
+                            <path
+                                d="M6 3.5v3l2 1"
+                                stroke="currentColor"
+                                stroke-width="1.3"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                        wymaga przygotowania
+                    </span>
                 </div>
 
                 <h1 class="recipe-hero__title">{{ recipe.name }}</h1>
-
                 <p
                     v-if="recipe.tagline"
                     class="recipe-hero__tagline"
@@ -190,6 +227,31 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                     </div>
                 </div>
 
+                <!-- Tag strip: Diety + Praktyczne -->
+                <div
+                    v-if="recipe.dietTags.length || recipe.practicalTags.length"
+                    class="tag-strip"
+                >
+                    <span
+                        v-for="tag in recipe.dietTags"
+                        :key="tag"
+                        class="tag-diet"
+                    >
+                        {{ tag }}
+                    </span>
+                    <span
+                        v-if="recipe.dietTags.length && recipe.practicalTags.length"
+                        class="tag-sep"
+                    />
+                    <span
+                        v-for="tag in recipe.practicalTags"
+                        :key="tag"
+                        class="tag-practical"
+                    >
+                        {{ tag }}
+                    </span>
+                </div>
+
                 <RouterLink
                     v-if="isAuthenticated"
                     :to="{ name: 'recipe-edit', params: { id: recipe.id } }"
@@ -222,7 +284,7 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
             </div>
         </header>
 
-        <!-- Body: ingredients left, steps right -->
+        <!-- Body -->
         <div class="recipe-body">
             <!-- Ingredients sidebar -->
             <aside class="recipe-ingredients">
@@ -234,8 +296,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                         <div class="ingredients-kicker">// składniki</div>
                         <h2 class="ingredients-title">Czego potrzebujesz</h2>
                     </div>
-
-                    <!-- Serving stepper -->
                     <div class="servings-control">
                         <div style="display: flex; flex-direction: column; gap: 2px">
                             <span class="servings-control__label">Porcje</span>
@@ -261,8 +321,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                             </button>
                         </div>
                     </div>
-
-                    <!-- Ingredient groups -->
                     <div style="display: flex; flex-direction: column; gap: 22px">
                         <template
                             v-for="section in ingredientsBySection"
@@ -336,7 +394,7 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                 </div>
             </aside>
 
-            <!-- Steps main -->
+            <!-- Steps -->
             <main class="recipe-steps">
                 <div class="steps-header">
                     <div>
@@ -347,7 +405,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                         {{ doneSteps }}/{{ totalSteps }} zrobione
                     </span>
                 </div>
-                <!-- Progress bar -->
                 <div class="steps-progress-bar">
                     <div
                         class="steps-progress-bar__fill"
@@ -416,10 +473,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                         <div class="done-block__kicker">// gotowe ✓</div>
                         <div class="done-block__msg">Smacznego! Daj znać jak wyszło.</div>
                     </div>
-                    <div style="display: flex; gap: 8px">
-                        <button class="btn btn--secondary">★ Oceń przepis</button>
-                        <button class="btn">Dodaj komentarz</button>
-                    </div>
                 </div>
                 <div
                     v-else
@@ -434,12 +487,86 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                 </div>
             </main>
         </div>
+
+        <!-- Related recipes -->
+        <section
+            v-if="related.length"
+            class="related"
+        >
+            <div class="related__header">
+                <div>
+                    <div class="related__kicker">// podobne</div>
+                    <h2 class="related__title">Może zasmakuje też</h2>
+                </div>
+                <RouterLink
+                    to="/recipes"
+                    class="related__all"
+                >
+                    wszystkie przepisy →
+                </RouterLink>
+            </div>
+            <div class="related__grid">
+                <RouterLink
+                    v-for="r in related"
+                    :key="r.id"
+                    :to="{ name: 'recipe-details', params: { id: r.id } }"
+                    class="card related-card"
+                >
+                    <div class="photo related-card__photo">
+                        <img
+                            v-if="r.photoUrl"
+                            :src="r.photoUrl"
+                            :alt="r.name"
+                            style="
+                                position: absolute;
+                                inset: 0;
+                                width: 100%;
+                                height: 100%;
+                                object-fit: cover;
+                            "
+                        />
+                    </div>
+                    <div style="padding: 18px">
+                        <span
+                            v-if="r.category"
+                            class="badge"
+                            :class="`cat-${r.category}`"
+                            style="margin-bottom: 10px; display: inline-flex"
+                        >
+                            {{ r.category }}
+                        </span>
+                        <div class="related-card__title">{{ r.name }}</div>
+                        <div class="related-card__meta">
+                            <span v-if="r.timeMinutes">{{ fmtTime(r.timeMinutes) }}</span>
+                        </div>
+                    </div>
+                </RouterLink>
+            </div>
+        </section>
     </article>
 </template>
 
 <style scoped>
 .recipe-page {
     padding-bottom: 80px;
+    position: relative;
+}
+
+/* Reading progress */
+.reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: transparent;
+    z-index: 60;
+    pointer-events: none;
+}
+.reading-progress__fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.25s ease;
 }
 
 /* Breadcrumb */
@@ -477,6 +604,27 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     align-items: end;
     padding-bottom: 8px;
 }
+.hero-flags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+.prep-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    background: color-mix(in srgb, #d9a441 14%, transparent);
+    border: 1px solid color-mix(in srgb, #d9a441 45%, transparent);
+    color: #d9a441;
+    padding: 4px 10px;
+    border-radius: var(--r-pill);
+    font-weight: 600;
+}
 .recipe-hero__title {
     font-size: clamp(48px, 6.5vw, 84px);
     line-height: 0.95;
@@ -493,6 +641,46 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     text-wrap: pretty;
     font-weight: 400;
     margin: 0 0 36px;
+}
+
+/* Tag strip */
+.tag-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-top: 20px;
+}
+.tag-diet {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: var(--r-pill);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--rule-strong);
+}
+.tag-sep {
+    width: 1px;
+    height: 14px;
+    background: var(--rule);
+    margin: 0 2px;
+}
+.tag-practical {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: var(--r-pill);
+    font-size: 11px;
+    font-weight: 400;
+    font-family: var(--font-mono);
+    letter-spacing: 0.2px;
+    background: transparent;
+    color: var(--ink-muted);
+    border: 1px solid var(--rule);
 }
 
 /* Photo */
@@ -552,8 +740,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     align-items: center;
     gap: 8px;
 }
-
-/* Diff dots */
 .diff-dots {
     display: inline-flex;
     gap: 4px;
@@ -599,8 +785,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     letter-spacing: -0.8px;
     margin: 0;
 }
-
-/* Servings */
 .servings-control {
     background: var(--bg);
     border: 1px solid var(--rule);
@@ -648,8 +832,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     background: transparent;
     cursor: not-allowed;
 }
-
-/* Ingredient section label */
 .ing-section-label {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -661,8 +843,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     margin-bottom: 8px;
     border-bottom: 1px solid var(--rule);
 }
-
-/* Ingredient row */
 .ing-row {
     width: 100%;
     display: grid;
@@ -762,8 +942,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     background: var(--accent);
     transition: width 0.25s ease;
 }
-
-/* Step card */
 .step-card {
     background: var(--bg-alt);
     border: 1px solid var(--rule);
@@ -779,7 +957,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     opacity: 0.45;
     background: var(--bg);
 }
-
 .step-num-btn {
     width: 56px;
     height: 56px;
@@ -806,7 +983,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     border-color: var(--accent);
     color: #fff;
 }
-
 .step-text {
     font-size: 17px;
     line-height: 1.55;
@@ -820,8 +996,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     text-decoration: line-through;
     text-decoration-color: var(--ink-faint);
 }
-
-/* Step section label */
 .step-section-label {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -831,8 +1005,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     font-weight: 600;
     margin: 0 0 12px;
 }
-
-/* Done block */
 .done-block {
     margin-top: 32px;
     padding: 32px 28px;
@@ -869,6 +1041,70 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     letter-spacing: -0.6px;
 }
 
+/* Related */
+.related {
+    margin-top: 96px;
+}
+.related__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+.related__kicker {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+.related__title {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -1px;
+    margin: 0;
+}
+.related__all {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.related__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+.related-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    overflow: hidden;
+}
+.related-card__photo {
+    aspect-ratio: 1/1;
+    position: relative;
+}
+.related-card__title {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+    line-height: 1.25;
+    text-wrap: balance;
+}
+.related-card__meta {
+    display: flex;
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.4px;
+}
+
 @media (max-width: 1100px) {
     .recipe-hero {
         grid-template-columns: 1fr 340px;
@@ -879,7 +1115,6 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
         gap: 40px;
     }
 }
-
 @media (max-width: 900px) {
     .recipe-hero {
         grid-template-columns: 1fr;
@@ -895,6 +1130,9 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     }
     .recipe-ingredients {
         position: static;
+    }
+    .related__grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 </style>

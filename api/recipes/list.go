@@ -15,12 +15,20 @@ func List(w http.ResponseWriter, r *http.Request) {
 	}
 	conn := db.DB()
 
-	var list []entities.RecipeBase
-	if err := conn.
-		Model(&entities.Recipe{}).
-		Select("id, name, tagline, category, region, time_minutes, difficulty").
+	// admin=true query param means show all; otherwise only published
+	isAdmin := r.URL.Query().Get("admin") == "true"
+
+	query := conn.Model(&entities.Recipe{}).
+		Select("id, name, tagline, category, region, time_minutes, difficulty, status, needs_prep").
 		Preload("Photo").
-		Find(&list).Error; err != nil {
+		Preload("Tags")
+
+	if !isAdmin {
+		query = query.Where("status = ?", "published")
+	}
+
+	var list []entities.RecipeBase
+	if err := query.Find(&list).Error; err != nil {
 		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 		return
 	}

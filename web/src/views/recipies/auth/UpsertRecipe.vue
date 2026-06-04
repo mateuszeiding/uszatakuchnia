@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import { fetchIngredients } from '@/data/api/ingredients/fetch';
 import { createRecipe, fetchRecipes, updateRecipe } from '@/data/api/recipe/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
-import type { UpsertRecipeRequest } from '@/data/dtos/recipe/RecipeDto';
+import type { IUpsertRecipeRequest } from '@/data/dtos/recipe/RecipeDto';
 
 const props = defineProps<{ id?: number }>();
 const router = useRouter();
@@ -26,6 +26,8 @@ const tip = ref('');
 
 const diets = ref<Set<string>>(new Set());
 const practical = ref<Set<string>>(new Set());
+const needsPrep = ref(false);
+const status = ref<'draft' | 'published'>('draft');
 
 const DIETS = [
     'bez glutenu',
@@ -102,6 +104,10 @@ onMounted(async () => {
         kcalPerServing.value = recipe.kcalPerServing ?? null;
         category.value = recipe.category;
         region.value = recipe.region;
+        needsPrep.value = recipe.needsPrep ?? false;
+        status.value = (recipe.status as 'draft' | 'published') ?? 'draft';
+        diets.value = new Set(recipe.dietTags ?? []);
+        practical.value = new Set(recipe.practicalTags ?? []);
 
         if (recipe.steps.length) {
             steps.value = recipe.steps.map((s) => ({
@@ -158,7 +164,7 @@ async function submit() {
     if (!name.value.trim() || servings.value < 1) return;
     saving.value = true;
 
-    const body: UpsertRecipeRequest = {
+    const body: IUpsertRecipeRequest = {
         name: name.value.trim(),
         tagline: tagline.value || null,
         description: description.value || null,
@@ -168,6 +174,10 @@ async function submit() {
         kcalPerServing: kcalPerServing.value,
         category: category.value,
         region: region.value,
+        status: status.value,
+        needsPrep: needsPrep.value,
+        dietTags: [...diets.value],
+        practicalTags: [...practical.value],
         steps: steps.value
             .filter((s) => s.text.trim())
             .map((s) => ({
@@ -501,17 +511,58 @@ async function submit() {
                     </div>
                 </div>
 
+                <!-- Status -->
+                <div class="side-card">
+                    <div class="side-card__title">Status</div>
+                    <div class="status-toggle">
+                        <button
+                            class="status-btn"
+                            :class="{ 'status-btn--active': status === 'draft' }"
+                            @click="status = 'draft'"
+                        >
+                            Szkic
+                        </button>
+                        <button
+                            class="status-btn"
+                            :class="{ 'status-btn--active': status === 'published' }"
+                            @click="status = 'published'"
+                        >
+                            Opublikowany
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Atrybuty -->
                 <div class="side-card">
                     <div class="side-card__title">Atrybuty</div>
                     <div class="field">
-                        <div
+                        <label class="prep-toggle-label">
+                            <input
+                                v-model="needsPrep"
+                                type="checkbox"
+                                class="prep-toggle-input"
+                            />
+                            <span class="prep-toggle-track">
+                                <span class="prep-toggle-thumb" />
+                            </span>
+                            <span class="prep-toggle-text">Wymaga przygotowania</span>
+                        </label>
+                        <div class="field-hint">
+                            // marynata, namaczanie, ciasto dzień wcześniej
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label
+                            for="diets-label"
                             class="field-label"
                             style="margin-bottom: 6px"
                         >
-                            Dieta
-                        </div>
-                        <div class="chip-grid">
+                            Diety
+                        </label>
+                        <div
+                            class="chip-grid"
+                            id="diets-label"
+                        >
                             <button
                                 v-for="d in DIETS"
                                 :key="d"
@@ -524,13 +575,17 @@ async function submit() {
                         </div>
                     </div>
                     <div class="field">
-                        <div
+                        <label
+                            for="practical-label"
                             class="field-label"
                             style="margin-bottom: 6px"
                         >
                             Praktyczne
-                        </div>
-                        <div class="chip-grid">
+                        </label>
+                        <div
+                            class="chip-grid"
+                            id="practical-label"
+                        >
                             <button
                                 v-for="p in PRACTICAL"
                                 :key="p"
@@ -872,5 +927,78 @@ async function submit() {
     .action-bar__hint {
         display: none;
     }
+}
+
+/* Status toggle */
+.status-toggle {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+}
+.status-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: all 0.12s;
+}
+.status-btn--active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* NeedsPrep toggle */
+.prep-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+.prep-toggle-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.prep-toggle-track {
+    width: 32px;
+    height: 18px;
+    border-radius: var(--r-pill);
+    flex-shrink: 0;
+    background: var(--rule-strong);
+    position: relative;
+    transition: background 0.18s;
+    display: inline-block;
+}
+.prep-toggle-input:checked ~ .prep-toggle-track {
+    background: var(--accent);
+}
+.prep-toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: var(--r-pill);
+    background: #fff;
+    transition: left 0.18s;
+    box-shadow: 0 1px 2px rgba(10, 10, 15, 0.18);
+}
+.prep-toggle-input:checked ~ .prep-toggle-track .prep-toggle-thumb {
+    left: 16px;
+}
+.prep-toggle-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
 }
 </style>
