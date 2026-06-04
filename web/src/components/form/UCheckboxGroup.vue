@@ -20,15 +20,27 @@ const toggle = (optionValue: string | number, e: Event) => {
     const checked = (e.target as HTMLInputElement).checked;
     const current = value.value ?? [];
     value.value = checked
-        ? current.includes(optionValue) ? current : [...current, optionValue]
+        ? current.includes(optionValue)
+            ? current
+            : [...current, optionValue]
         : current.filter((v) => v !== optionValue);
 };
 </script>
 
 <template>
-    <fieldset class="field" style="border: none; padding: 0; margin: 0;" :aria-labelledby="legend ? legendId : undefined">
-        <legend v-if="legend" :id="legendId" class="field-label">{{ legend }}</legend>
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+    <fieldset
+        class="field"
+        style="border: none; padding: 0; margin: 0"
+        :aria-labelledby="legend ? legendId : undefined"
+    >
+        <legend
+            v-if="legend"
+            :id="legendId"
+            class="field-label"
+        >
+            {{ legend }}
+        </legend>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px">
             <label
                 v-for="o in options"
                 :key="o.value"
@@ -48,6 +60,11 @@ const toggle = (optionValue: string | number, e: Event) => {
                 {{ o.label }}
             </label>
         </div>
-        <span v-if="errorMessage" class="field-error">{{ errorMessage }}</span>
+        <span
+            v-if="errorMessage"
+            class="field-error"
+        >
+            {{ errorMessage }}
+        </span>
     </fieldset>
 </template>

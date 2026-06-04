@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useAuth0 } from '@auth0/auth0-vue';
+
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 
 defineProps<{ recipe: RecipeBaseDto }>();
@@ -18,38 +19,85 @@ const diffLabel: Record<number, string> = { 1: 'ŁATWE', 2: 'ŚREDNIE', 3: 'TRUD
 </script>
 
 <template>
-    <RouterLink class="card recipe-card" :to="{ name: 'recipe-details', params: { id: recipe.id } }">
+    <RouterLink
+        class="card recipe-card"
+        :to="{ name: 'recipe-details', params: { id: recipe.id } }"
+    >
         <!-- Photo -->
-        <div class="photo recipe-card__photo" style="--hue: 220; position: relative;">
+        <div
+            class="photo recipe-card__photo"
+            style="--hue: 220; position: relative"
+        >
             <img
                 v-if="recipe.photoUrl"
                 :src="recipe.photoUrl"
                 :alt="recipe.name"
-                style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+                style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"
             />
             <!-- Admin actions — top-right of photo -->
-            <div v-if="isAuthenticated" class="recipe-card__actions" @click.prevent.stop>
+            <div
+                v-if="isAuthenticated"
+                class="recipe-card__actions"
+                @click.prevent.stop
+            >
                 <RouterLink
                     :to="{ name: 'recipe-edit', params: { id: recipe.id } }"
                     class="card-action-btn"
                     title="Edytuj"
                 >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M2 10.5L10 2.5l1.5 1.5L3.5 12H2v-1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                    >
+                        <path
+                            d="M2 10.5L10 2.5l1.5 1.5L3.5 12H2v-1.5z"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linejoin="round"
+                        />
                     </svg>
                 </RouterLink>
-                <button class="card-action-btn card-action-btn--danger" title="Usuń">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M3 4h8M5.5 4V2.5h3V4M4 4l0.5 8h5L10 4M6 6v4M8 6v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                <button
+                    class="card-action-btn card-action-btn--danger"
+                    title="Usuń"
+                >
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                    >
+                        <path
+                            d="M3 4h8M5.5 4V2.5h3V4M4 4l0.5 8h5L10 4M6 6v4M8 6v4"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
                     </svg>
                 </button>
             </div>
         </div>
 
         <div class="body">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 8px;">
-                <span v-if="recipe.category" class="badge" :class="`cat-${recipe.category}`">
-                    {{ recipe.category }}<template v-if="recipe.region"> · {{ recipe.region }}</template>
+            <div
+                style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                    margin-bottom: 10px;
+                    gap: 8px;
+                "
+            >
+                <span
+                    v-if="recipe.category"
+                    class="badge"
+                    :class="`cat-${recipe.category}`"
+                >
+                    {{ recipe.category }}
+                    <template v-if="recipe.region">· {{ recipe.region }}</template>
                 </span>
                 <span class="recipe-id">#{{ String(recipe.id).padStart(3, '0') }}</span>
             </div>

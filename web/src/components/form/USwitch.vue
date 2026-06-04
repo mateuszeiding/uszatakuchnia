@@ -18,7 +18,10 @@ function onChange(e: Event) {
 
 <template>
     <div class="field">
-        <label class="switch" :for="uid">
+        <label
+            class="switch"
+            :for="uid"
+        >
             <input
                 type="checkbox"
                 role="switch"
@@ -31,6 +34,11 @@ function onChange(e: Event) {
             <span class="track" />
             <span v-if="label">{{ label }}</span>
         </label>
-        <span v-if="errorMessage" class="field-error">{{ errorMessage }}</span>
+        <span
+            v-if="errorMessage"
+            class="field-error"
+        >
+            {{ errorMessage }}
+        </span>
     </div>
 </template>

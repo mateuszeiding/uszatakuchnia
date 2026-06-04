@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
 import { useAuth0 } from '@auth0/auth0-vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { fetchRecipes } from '@/data/api/recipe/fetch';
@@ -35,9 +35,12 @@ function scaleAmount(ing: RecipeIngredientDto) {
     if (!recipe.value || !ing.amount) return ing.amountText ?? '—';
     const ratio = servings.value / recipe.value.servings;
     const scaled = ing.amount * ratio;
-    const fmt = Math.abs(scaled - Math.round(scaled)) < 0.05
-        ? String(Math.round(scaled))
-        : scaled < 10 ? scaled.toFixed(1) : String(Math.round(scaled));
+    const fmt =
+        Math.abs(scaled - Math.round(scaled)) < 0.05
+            ? String(Math.round(scaled))
+            : scaled < 10
+              ? scaled.toFixed(1)
+              : String(Math.round(scaled));
     return `${fmt}${ing.unit ? ' ' + ing.unit : ''}`;
 }
 
@@ -75,42 +78,92 @@ function toggleIng(key: string) {
 
 const totalSteps = computed(() => recipe.value?.steps.length ?? 0);
 const doneSteps = computed(() => checkedSteps.value.size);
-const progress = computed(() => totalSteps.value ? (doneSteps.value / totalSteps.value) * 100 : 0);
-const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.value : false);
+const progress = computed(() =>
+    totalSteps.value ? (doneSteps.value / totalSteps.value) * 100 : 0
+);
+const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.value : false));
 </script>
 
 <template>
-    <div v-if="!recipe" style="padding: 80px; text-align: center;" class="muted t-small">Ładowanie…</div>
+    <div
+        v-if="!recipe"
+        style="padding: 80px; text-align: center"
+        class="muted t-small"
+    >
+        Ładowanie…
+    </div>
 
-    <article v-else class="container recipe-page">
+    <article
+        v-else
+        class="container recipe-page"
+    >
         <!-- Breadcrumb -->
         <nav class="breadcrumb">
-            <RouterLink to="/recipes" class="breadcrumb__link">przepisy</RouterLink>
+            <RouterLink
+                to="/recipes"
+                class="breadcrumb__link"
+            >
+                przepisy
+            </RouterLink>
             <span class="breadcrumb__sep">/</span>
-            <span class="breadcrumb__link" v-if="recipe.category">{{ recipe.category }}</span>
-            <span class="breadcrumb__sep" v-if="recipe.category">/</span>
+            <span
+                class="breadcrumb__link"
+                v-if="recipe.category"
+            >
+                {{ recipe.category }}
+            </span>
+            <span
+                class="breadcrumb__sep"
+                v-if="recipe.category"
+            >
+                /
+            </span>
             <span class="breadcrumb__current">#{{ String(recipe.id).padStart(3, '0') }}</span>
         </nav>
 
         <!-- Hero: text left, photo right -->
         <header class="recipe-hero">
             <div class="recipe-hero__text">
-                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 24px;">
-                    <span v-if="recipe.category" class="badge" :class="`cat-${recipe.category}`">
-                        {{ recipe.category }}<template v-if="recipe.region"> · {{ recipe.region }}</template>
+                <div
+                    style="
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        flex-wrap: wrap;
+                        margin-bottom: 24px;
+                    "
+                >
+                    <span
+                        v-if="recipe.category"
+                        class="badge"
+                        :class="`cat-${recipe.category}`"
+                    >
+                        {{ recipe.category }}
+                        <template v-if="recipe.region">· {{ recipe.region }}</template>
                     </span>
                 </div>
 
                 <h1 class="recipe-hero__title">{{ recipe.name }}</h1>
 
-                <p v-if="recipe.tagline" class="recipe-hero__tagline">{{ recipe.tagline }}</p>
+                <p
+                    v-if="recipe.tagline"
+                    class="recipe-hero__tagline"
+                >
+                    {{ recipe.tagline }}
+                </p>
 
                 <div class="recipe-meta-strip">
-                    <div v-if="recipe.timeMinutes" class="meta-item">
+                    <div
+                        v-if="recipe.timeMinutes"
+                        class="meta-item"
+                    >
                         <span class="meta-item__label">Czas</span>
                         <span class="meta-item__value">{{ fmtTime(recipe.timeMinutes) }}</span>
                     </div>
-                    <div v-if="recipe.difficulty" class="meta-item">
+                    <div
+                        v-if="recipe.difficulty"
+                        class="meta-item"
+                    >
                         <span class="meta-item__label">Trudność</span>
                         <span class="meta-item__value">
                             <span class="diff-dots">
@@ -128,7 +181,10 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
                         <span class="meta-item__label">Porcje</span>
                         <span class="meta-item__value">{{ recipe.servings }}</span>
                     </div>
-                    <div v-if="recipe.kcalPerServing" class="meta-item">
+                    <div
+                        v-if="recipe.kcalPerServing"
+                        class="meta-item"
+                    >
                         <span class="meta-item__label">Na porcję</span>
                         <span class="meta-item__value">{{ recipe.kcalPerServing }} kcal</span>
                     </div>
@@ -138,17 +194,28 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
                     v-if="isAuthenticated"
                     :to="{ name: 'recipe-edit', params: { id: recipe.id } }"
                     class="btn btn--secondary btn--sm"
-                    style="margin-top: 20px;"
-                >Edytuj przepis</RouterLink>
+                    style="margin-top: 20px"
+                >
+                    Edytuj przepis
+                </RouterLink>
             </div>
 
             <div class="recipe-hero__photo">
-                <div class="photo photo--hero" :style="`--hue: 220`">
+                <div
+                    class="photo photo--hero"
+                    :style="`--hue: 220`"
+                >
                     <img
                         v-if="recipe.photoUrl"
                         :src="recipe.photoUrl"
                         :alt="recipe.name"
-                        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+                        style="
+                            position: absolute;
+                            inset: 0;
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                        "
                     />
                     <div class="photo--hero__label">// foto · 4:5</div>
                 </div>
@@ -159,7 +226,10 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
         <div class="recipe-body">
             <!-- Ingredients sidebar -->
             <aside class="recipe-ingredients">
-                <div class="card" style="padding: 24px; display: flex; flex-direction: column; gap: 18px;">
+                <div
+                    class="card"
+                    style="padding: 24px; display: flex; flex-direction: column; gap: 18px"
+                >
                     <div>
                         <div class="ingredients-kicker">// składniki</div>
                         <h2 class="ingredients-title">Czego potrzebujesz</h2>
@@ -167,38 +237,95 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
 
                     <!-- Serving stepper -->
                     <div class="servings-control">
-                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <div style="display: flex; flex-direction: column; gap: 2px">
                             <span class="servings-control__label">Porcje</span>
-                            <span class="servings-control__hint">ilości skalują się automatycznie</span>
+                            <span class="servings-control__hint">
+                                ilości skalują się automatycznie
+                            </span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 4px;">
-                            <button class="stepper-btn" :disabled="servings <= 1" @click="servings = Math.max(1, servings - 1)">−</button>
+                        <div style="display: flex; align-items: center; gap: 4px">
+                            <button
+                                class="stepper-btn"
+                                :disabled="servings <= 1"
+                                @click="servings = Math.max(1, servings - 1)"
+                            >
+                                −
+                            </button>
                             <span class="servings-control__value">{{ servings }}</span>
-                            <button class="stepper-btn" :disabled="servings >= 20" @click="servings++">+</button>
+                            <button
+                                class="stepper-btn"
+                                :disabled="servings >= 20"
+                                @click="servings++"
+                            >
+                                +
+                            </button>
                         </div>
                     </div>
 
                     <!-- Ingredient groups -->
-                    <div style="display: flex; flex-direction: column; gap: 22px;">
-                        <template v-for="section in ingredientsBySection" :key="section.name">
+                    <div style="display: flex; flex-direction: column; gap: 22px">
+                        <template
+                            v-for="section in ingredientsBySection"
+                            :key="section.name"
+                        >
                             <div>
-                                <div v-if="section.name" class="ing-section-label">{{ section.name }}</div>
-                                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px;">
-                                    <li v-for="(ing, ii) in section.items" :key="ing.sortOrder">
+                                <div
+                                    v-if="section.name"
+                                    class="ing-section-label"
+                                >
+                                    {{ section.name }}
+                                </div>
+                                <ul
+                                    style="
+                                        list-style: none;
+                                        padding: 0;
+                                        margin: 0;
+                                        display: flex;
+                                        flex-direction: column;
+                                        gap: 2px;
+                                    "
+                                >
+                                    <li
+                                        v-for="(ing, ii) in section.items"
+                                        :key="ing.sortOrder"
+                                    >
                                         <button
                                             class="ing-row"
-                                            :class="{ 'is-checked': checkedIngs.has(`${section.name}-${ii}`) }"
+                                            :class="{
+                                                'is-checked': checkedIngs.has(
+                                                    `${section.name}-${ii}`
+                                                ),
+                                            }"
                                             @click="toggleIng(`${section.name}-${ii}`)"
                                         >
                                             <span class="ing-row__check">
-                                                <svg v-if="checkedIngs.has(`${section.name}-${ii}`)" width="8" height="8" viewBox="0 0 10 10" fill="none">
-                                                    <path d="M2 5.2L4.2 7.4L8 3.4" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <svg
+                                                    v-if="checkedIngs.has(`${section.name}-${ii}`)"
+                                                    width="8"
+                                                    height="8"
+                                                    viewBox="0 0 10 10"
+                                                    fill="none"
+                                                >
+                                                    <path
+                                                        d="M2 5.2L4.2 7.4L8 3.4"
+                                                        stroke="#fff"
+                                                        stroke-width="1.8"
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                    />
                                                 </svg>
                                             </span>
-                                            <span class="ing-row__qty mono">{{ scaleAmount(ing) }}</span>
+                                            <span class="ing-row__qty mono">
+                                                {{ scaleAmount(ing) }}
+                                            </span>
                                             <span class="ing-row__name">
                                                 {{ ing.ingredientName }}
-                                                <span v-if="ing.note" class="ing-row__note">{{ ing.note }}</span>
+                                                <span
+                                                    v-if="ing.note"
+                                                    class="ing-row__note"
+                                                >
+                                                    {{ ing.note }}
+                                                </span>
                                             </span>
                                         </button>
                                     </li>
@@ -216,16 +343,38 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
                         <div class="steps-kicker">// kroki</div>
                         <h2 class="steps-title">Jak to zrobić</h2>
                     </div>
-                    <span class="steps-progress-label">{{ doneSteps }}/{{ totalSteps }} zrobione</span>
+                    <span class="steps-progress-label">
+                        {{ doneSteps }}/{{ totalSteps }} zrobione
+                    </span>
                 </div>
                 <!-- Progress bar -->
                 <div class="steps-progress-bar">
-                    <div class="steps-progress-bar__fill" :style="`width: ${progress}%`" />
+                    <div
+                        class="steps-progress-bar__fill"
+                        :style="`width: ${progress}%`"
+                    />
                 </div>
 
-                <template v-for="section in stepsBySection" :key="section.name">
-                    <p v-if="section.name" class="step-section-label">{{ section.name }}</p>
-                    <ol style="list-style: none; padding: 0; margin: 0 0 20px; display: flex; flex-direction: column; gap: 14px;">
+                <template
+                    v-for="section in stepsBySection"
+                    :key="section.name"
+                >
+                    <p
+                        v-if="section.name"
+                        class="step-section-label"
+                    >
+                        {{ section.name }}
+                    </p>
+                    <ol
+                        style="
+                            list-style: none;
+                            padding: 0;
+                            margin: 0 0 20px;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 14px;
+                        "
+                    >
                         <li
                             v-for="step in section.steps"
                             :key="step.stepNo"
@@ -237,8 +386,20 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
                                 :class="{ 'is-done': checkedSteps.has(step.stepNo) }"
                                 @click="toggleStep(step.stepNo)"
                             >
-                                <svg v-if="checkedSteps.has(step.stepNo)" width="22" height="22" viewBox="0 0 22 22" fill="none">
-                                    <path d="M5 11.5L9.5 16L17 7" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg
+                                    v-if="checkedSteps.has(step.stepNo)"
+                                    width="22"
+                                    height="22"
+                                    viewBox="0 0 22 22"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M5 11.5L9.5 16L17 7"
+                                        stroke="#fff"
+                                        stroke-width="2.4"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
                                 </svg>
                                 <span v-else>{{ step.stepNo }}</span>
                             </button>
@@ -247,19 +408,27 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
                     </ol>
                 </template>
 
-                <div v-if="allDone" class="done-block done-block--done">
+                <div
+                    v-if="allDone"
+                    class="done-block done-block--done"
+                >
                     <div>
                         <div class="done-block__kicker">// gotowe ✓</div>
                         <div class="done-block__msg">Smacznego! Daj znać jak wyszło.</div>
                     </div>
-                    <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; gap: 8px">
                         <button class="btn btn--secondary">★ Oceń przepis</button>
                         <button class="btn">Dodaj komentarz</button>
                     </div>
                 </div>
-                <div v-else class="done-block">
+                <div
+                    v-else
+                    class="done-block"
+                >
                     <div>
-                        <div class="done-block__kicker done-block__kicker--muted">// po przepisie</div>
+                        <div class="done-block__kicker done-block__kicker--muted">
+                            // po przepisie
+                        </div>
                         <div class="done-block__msg">Smacznego!</div>
                     </div>
                 </div>
@@ -289,9 +458,16 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
     color: var(--ink-muted);
     text-decoration: none;
 }
-.breadcrumb__link:hover { color: var(--ink); }
-.breadcrumb__sep { color: var(--ink-faint); }
-.breadcrumb__current { color: var(--ink); font-weight: 600; }
+.breadcrumb__link:hover {
+    color: var(--ink);
+}
+.breadcrumb__sep {
+    color: var(--ink-faint);
+}
+.breadcrumb__current {
+    color: var(--ink);
+    font-weight: 600;
+}
 
 /* Hero */
 .recipe-hero {
@@ -339,7 +515,7 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
     color: rgba(10, 10, 15, 0.45);
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    background: rgba(255,255,255,0.55);
+    background: rgba(255, 255, 255, 0.55);
     padding: 4px 8px;
     border-radius: var(--r-sm);
     backdrop-filter: blur(8px);
@@ -378,13 +554,21 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
 }
 
 /* Diff dots */
-.diff-dots { display: inline-flex; gap: 4px; }
+.diff-dots {
+    display: inline-flex;
+    gap: 4px;
+}
 .diff-dot {
-    width: 8px; height: 8px; border-radius: var(--r-pill);
+    width: 8px;
+    height: 8px;
+    border-radius: var(--r-pill);
     border: 1.5px solid var(--rule-strong);
     background: transparent;
 }
-.diff-dot.is-on { background: var(--accent); border-color: var(--accent); }
+.diff-dot.is-on {
+    background: var(--accent);
+    border-color: var(--accent);
+}
 
 /* Body layout */
 .recipe-body {
@@ -396,7 +580,10 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
 }
 
 /* Ingredients */
-.recipe-ingredients { position: sticky; top: 90px; }
+.recipe-ingredients {
+    position: sticky;
+    top: 90px;
+}
 .ingredients-kicker {
     font-family: var(--font-mono);
     font-size: 10px;
@@ -445,7 +632,8 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
     letter-spacing: -0.4px;
 }
 .stepper-btn {
-    width: 30px; height: 30px;
+    width: 30px;
+    height: 30px;
     border-radius: var(--r-md);
     background: var(--bg-alt);
     border: 1px solid var(--rule);
@@ -455,7 +643,11 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
     cursor: pointer;
     font-weight: 500;
 }
-.stepper-btn:disabled { color: var(--ink-faint); background: transparent; cursor: not-allowed; }
+.stepper-btn:disabled {
+    color: var(--ink-faint);
+    background: transparent;
+    cursor: not-allowed;
+}
 
 /* Ingredient section label */
 .ing-section-label {
@@ -485,7 +677,8 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
     border-bottom: 1px solid var(--rule);
 }
 .ing-row__check {
-    width: 14px; height: 14px;
+    width: 14px;
+    height: 14px;
     margin-top: 4px;
     border-radius: var(--r-sm);
     border: 1.5px solid var(--rule-strong);
@@ -588,7 +781,8 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
 }
 
 .step-num-btn {
-    width: 56px; height: 56px;
+    width: 56px;
+    height: 56px;
     border-radius: 12px;
     background: var(--bg);
     border: 1.5px solid var(--rule-strong);
@@ -604,7 +798,9 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
     justify-content: center;
     transition: all 0.15s;
 }
-.step-num-btn:hover { background: var(--accent-soft); }
+.step-num-btn:hover {
+    background: var(--accent-soft);
+}
 .step-num-btn.is-done {
     background: var(--accent);
     border-color: var(--accent);
@@ -664,7 +860,9 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
     font-weight: 600;
     margin-bottom: 6px;
 }
-.done-block__kicker--muted { color: var(--ink-muted); }
+.done-block__kicker--muted {
+    color: var(--ink-muted);
+}
 .done-block__msg {
     font-size: 22px;
     font-weight: 500;
@@ -672,15 +870,31 @@ const allDone = computed(() => recipe.value ? doneSteps.value === totalSteps.val
 }
 
 @media (max-width: 1100px) {
-    .recipe-hero { grid-template-columns: 1fr 340px; gap: 40px; }
-    .recipe-body  { grid-template-columns: 300px 1fr; gap: 40px; }
+    .recipe-hero {
+        grid-template-columns: 1fr 340px;
+        gap: 40px;
+    }
+    .recipe-body {
+        grid-template-columns: 300px 1fr;
+        gap: 40px;
+    }
 }
 
 @media (max-width: 900px) {
-    .recipe-hero { grid-template-columns: 1fr; }
-    .recipe-hero__photo { order: -1; }
-    .photo--hero { aspect-ratio: 16/9 !important; }
-    .recipe-body { grid-template-columns: 1fr; }
-    .recipe-ingredients { position: static; }
+    .recipe-hero {
+        grid-template-columns: 1fr;
+    }
+    .recipe-hero__photo {
+        order: -1;
+    }
+    .photo--hero {
+        aspect-ratio: 16/9 !important;
+    }
+    .recipe-body {
+        grid-template-columns: 1fr;
+    }
+    .recipe-ingredients {
+        position: static;
+    }
 }
 </style>

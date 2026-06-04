@@ -7,18 +7,21 @@ defineProps<{
 }>();
 
 const catClass: Record<IngredientType, string> = {
-    [IngredientType.FISH]:      'cat-ryby-ing',
-    [IngredientType.MEAT]:      'cat-mieso-ing',
+    [IngredientType.FISH]: 'cat-ryby-ing',
+    [IngredientType.MEAT]: 'cat-mieso-ing',
     [IngredientType.VEGETABLE]: 'cat-warzywo',
-    [IngredientType.FRUIT]:     'cat-owoc',
-    [IngredientType.HERB]:      'cat-ziele',
-    [IngredientType.SPICE]:     'cat-przyprawa',
-    [IngredientType.OTHER]:     'cat-inne',
+    [IngredientType.FRUIT]: 'cat-owoc',
+    [IngredientType.HERB]: 'cat-ziele',
+    [IngredientType.SPICE]: 'cat-przyprawa',
+    [IngredientType.OTHER]: 'cat-inne',
 };
 </script>
 
 <template>
-    <span class="badge" :class="catClass[val as IngredientType]">
+    <span
+        class="badge"
+        :class="catClass[val as IngredientType]"
+    >
         {{ name ?? val }}
     </span>
 </template>

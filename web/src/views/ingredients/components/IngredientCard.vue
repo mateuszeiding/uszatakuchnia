@@ -34,7 +34,9 @@ defineProps<{
     display: flex;
     flex-direction: row;
     overflow: hidden;
-    transition: transform .15s, box-shadow .15s;
+    transition:
+        transform 0.15s,
+        box-shadow 0.15s;
 
     &:hover {
         transform: translateY(-2px);

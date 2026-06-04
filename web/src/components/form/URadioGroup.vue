@@ -14,13 +14,25 @@ const uid = useId();
 const legendId = `${uid}-legend`;
 const optionId = (val: RadioOption['value']) => `${uid}-${val}`;
 
-const { value, errorMessage, handleChange, handleBlur } = useField<string | number>(toRef(props, 'name'));
+const { value, errorMessage, handleChange, handleBlur } = useField<string | number>(
+    toRef(props, 'name')
+);
 </script>
 
 <template>
-    <fieldset class="field" style="border: none; padding: 0; margin: 0;" :aria-labelledby="legend ? legendId : undefined">
-        <legend v-if="legend" :id="legendId" class="field-label">{{ legend }}</legend>
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+    <fieldset
+        class="field"
+        style="border: none; padding: 0; margin: 0"
+        :aria-labelledby="legend ? legendId : undefined"
+    >
+        <legend
+            v-if="legend"
+            :id="legendId"
+            class="field-label"
+        >
+            {{ legend }}
+        </legend>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px">
             <label
                 v-for="o in options"
                 :key="o.value"
@@ -40,6 +52,11 @@ const { value, errorMessage, handleChange, handleBlur } = useField<string | numb
                 {{ o.label }}
             </label>
         </div>
-        <span v-if="errorMessage" class="field-error">{{ errorMessage }}</span>
+        <span
+            v-if="errorMessage"
+            class="field-error"
+        >
+            {{ errorMessage }}
+        </span>
     </fieldset>
 </template>

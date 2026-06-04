@@ -2,6 +2,7 @@
 import { useAuth0 } from '@auth0/auth0-vue';
 import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
+
 import AuthButton from './auth/AuthButton.vue';
 
 const { isAuthenticated } = useAuth0();
@@ -24,25 +25,53 @@ if (dark.value) {
     <header class="topbar">
         <div class="topbar__inner">
             <div class="topbar__left">
-                <RouterLink to="/" class="topbar__logo">
-                    uszatakuchnia<span class="topbar__logo-dot">.</span>
+                <RouterLink
+                    to="/"
+                    class="topbar__logo"
+                >
+                    uszatakuchnia
+                    <span class="topbar__logo-dot">.</span>
                 </RouterLink>
                 <nav class="topbar__nav">
-                    <RouterLink to="/recipes" class="topbar__link">Przepisy</RouterLink>
-                    <RouterLink to="/challenges" class="topbar__link">Wyzwania</RouterLink>
-                    <RouterLink to="/wiki" class="topbar__link">Wiki</RouterLink>
+                    <RouterLink
+                        to="/recipes"
+                        class="topbar__link"
+                    >
+                        Przepisy
+                    </RouterLink>
+                    <RouterLink
+                        to="/challenges"
+                        class="topbar__link"
+                    >
+                        Wyzwania
+                    </RouterLink>
+                    <RouterLink
+                        to="/wiki"
+                        class="topbar__link"
+                    >
+                        Wiki
+                    </RouterLink>
                 </nav>
             </div>
 
             <div class="topbar__right">
-                <button class="topbar__theme" @click="toggleTheme" :aria-label="dark ? 'Tryb jasny' : 'Tryb ciemny'">
+                <button
+                    class="topbar__theme"
+                    @click="toggleTheme"
+                    :aria-label="dark ? 'Tryb jasny' : 'Tryb ciemny'"
+                >
                     <span class="topbar__theme-label">{{ dark ? 'dark' : 'light' }}</span>
                     <span class="topbar__theme-dot">{{ dark ? '☾' : '☀' }}</span>
                 </button>
 
                 <template v-if="isAuthenticated">
                     <span class="topbar__admin-badge">Admin</span>
-                    <RouterLink to="/recipes/new" class="btn btn--accent btn--sm">+ Nowy przepis</RouterLink>
+                    <RouterLink
+                        to="/recipes/new"
+                        class="btn btn--accent btn--sm"
+                    >
+                        + Nowy przepis
+                    </RouterLink>
                 </template>
 
                 <AuthButton />

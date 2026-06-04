@@ -1,6 +1,7 @@
 import { type FetchQueryOptions, useQueryClient } from '@tanstack/vue-query';
 
 import { API, type EndpointsConfig } from '../API';
+
 import type { RecipeBaseDto, RecipeDto, UpsertRecipeRequest } from '@/data/dtos/recipe/RecipeDto';
 
 type RequestMap = {

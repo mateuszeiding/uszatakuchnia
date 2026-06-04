@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
 import { useAuth0 } from '@auth0/auth0-vue';
+import { computed, ref } from 'vue';
 
-import RecipeCard from './components/RecipeCard.vue';
 import FilterSidebar from './components/FilterSidebar.vue';
+import RecipeCard from './components/RecipeCard.vue';
+
 import { fetchRecipes } from '@/data/api/recipe/fetch';
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 
@@ -33,12 +34,15 @@ const filtered = computed(() => {
     if (activeDiff.value) {
         list = list.filter((r) => r.difficulty === activeDiff.value);
     }
-    if (sort.value === 'fastest') list = [...list].sort((a, b) => (a.timeMinutes ?? 999) - (b.timeMinutes ?? 999));
-    if (sort.value === 'az')      list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+    if (sort.value === 'fastest')
+        list = [...list].sort((a, b) => (a.timeMinutes ?? 999) - (b.timeMinutes ?? 999));
+    if (sort.value === 'az') list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'pl'));
     return list;
 });
 
-const anyFilter = computed(() => !!search.value || !!activeCategory.value || !!maxTime.value || !!activeDiff.value);
+const anyFilter = computed(
+    () => !!search.value || !!activeCategory.value || !!maxTime.value || !!activeDiff.value
+);
 
 function clearFilters() {
     search.value = '';
@@ -49,7 +53,8 @@ function clearFilters() {
 
 function pluralPL(n: number) {
     if (n === 1) return 'przepis';
-    const m10 = n % 10, m100 = n % 100;
+    const m10 = n % 10;
+    const m100 = n % 100;
     if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return 'przepisy';
     return 'przepisów';
 }
@@ -82,10 +87,16 @@ function pluralPL(n: number) {
             </div>
 
             <div class="results-bar">
-                <span class="results-bar__count">{{ filtered.length }} {{ pluralPL(filtered.length) }}</span>
+                <span class="results-bar__count">
+                    {{ filtered.length }} {{ pluralPL(filtered.length) }}
+                </span>
                 <label class="results-bar__sort">
                     <span class="results-bar__sort-label">Sortuj</span>
-                    <select v-model="sort" class="select" style="width: auto; padding: 7px 28px 7px 10px; font-size: 13px;">
+                    <select
+                        v-model="sort"
+                        class="select"
+                        style="width: auto; padding: 7px 28px 7px 10px; font-size: 13px"
+                    >
                         <option value="newest">najnowsze</option>
                         <option value="fastest">najszybsze</option>
                         <option value="az">A–Z</option>
@@ -93,23 +104,66 @@ function pluralPL(n: number) {
                 </label>
             </div>
 
-            <div v-if="filtered.length === 0" class="empty-state">
+            <div
+                v-if="filtered.length === 0"
+                class="empty-state"
+            >
                 <span class="empty-state__icon">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <circle cx="6" cy="6" r="3.5" stroke="currentColor" stroke-width="1.3"/>
-                        <path d="M8.5 8.5L12 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                    >
+                        <circle
+                            cx="6"
+                            cy="6"
+                            r="3.5"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                        />
+                        <path
+                            d="M8.5 8.5L12 12"
+                            stroke="currentColor"
+                            stroke-width="1.3"
+                            stroke-linecap="round"
+                        />
                     </svg>
                 </span>
                 <p class="empty-state__title">Nic nie pasuje do filtrów</p>
-                <p class="empty-state__desc">Spróbuj usunąć część filtrów albo poszukać innego hasła.</p>
-                <button class="btn" @click="clearFilters">Wyczyść filtry</button>
+                <p class="empty-state__desc">
+                    Spróbuj usunąć część filtrów albo poszukać innego hasła.
+                </p>
+                <button
+                    class="btn"
+                    @click="clearFilters"
+                >
+                    Wyczyść filtry
+                </button>
             </div>
 
-            <div v-else class="recipes-grid">
-                <RouterLink v-if="isAuthenticated" to="/recipes/new" class="card-add">
+            <div
+                v-else
+                class="recipes-grid"
+            >
+                <RouterLink
+                    v-if="isAuthenticated"
+                    to="/recipes/new"
+                    class="card-add"
+                >
                     <span class="card-add__icon">
-                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                            <path d="M11 4v14M4 11h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 22 22"
+                            fill="none"
+                        >
+                            <path
+                                d="M11 4v14M4 11h14"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
                         </svg>
                     </span>
                     <div>
@@ -139,7 +193,9 @@ function pluralPL(n: number) {
 }
 
 /* Page header */
-.page-header { padding-bottom: 24px; }
+.page-header {
+    padding-bottom: 24px;
+}
 .page-header__kicker {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -274,8 +330,14 @@ function pluralPL(n: number) {
 }
 
 @media (max-width: 900px) {
-    .recipes-layout { grid-template-columns: 1fr; }
-    .recipes-grid { grid-template-columns: repeat(2, 1fr); }
-    .page-title { font-size: 48px; }
+    .recipes-layout {
+        grid-template-columns: 1fr;
+    }
+    .recipes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .page-title {
+        font-size: 48px;
+    }
 }
 </style>

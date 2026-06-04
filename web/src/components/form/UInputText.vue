@@ -21,8 +21,18 @@ function onInput(e: Event) {
 
 <template>
     <div class="field">
-        <label v-if="label" class="field-label" :for="uid">
-            {{ label }}<span v-if="required" class="req">*</span>
+        <label
+            v-if="label"
+            class="field-label"
+            :for="uid"
+        >
+            {{ label }}
+            <span
+                v-if="required"
+                class="req"
+            >
+                *
+            </span>
         </label>
         <input
             class="input"
@@ -35,7 +45,17 @@ function onInput(e: Event) {
             @input="onInput"
             @blur="handleBlur"
         />
-        <span v-if="hint && !errorMessage" class="field-hint">{{ hint }}</span>
-        <span v-if="errorMessage" class="field-error">{{ errorMessage }}</span>
+        <span
+            v-if="hint && !errorMessage"
+            class="field-hint"
+        >
+            {{ hint }}
+        </span>
+        <span
+            v-if="errorMessage"
+            class="field-error"
+        >
+            {{ errorMessage }}
+        </span>
     </div>
 </template>
