@@ -2,3 +2,5 @@
 .env
 .env*.local
 .design
+cmd/resetdb/resetdb
+cmd/resetdb/resetdb.exe
