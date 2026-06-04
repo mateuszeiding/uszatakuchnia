@@ -2,10 +2,7 @@
 import { useField } from 'vee-validate';
 import { toRef, useId } from 'vue';
 
-type CheckboxOption = {
-    label: string;
-    value: string | number;
-};
+type CheckboxOption = { label: string; value: string | number };
 
 const props = defineProps<{
     name: string;
@@ -22,56 +19,35 @@ const { value, errorMessage, handleBlur } = useField<Array<string | number>>(toR
 const toggle = (optionValue: string | number, e: Event) => {
     const checked = (e.target as HTMLInputElement).checked;
     const current = value.value ?? [];
-
-    if (checked) {
-        if (!current.includes(optionValue)) {
-            value.value = [...current, optionValue];
-        }
-        return;
-    }
-
-    value.value = current.filter((v) => v !== optionValue);
+    value.value = checked
+        ? current.includes(optionValue) ? current : [...current, optionValue]
+        : current.filter((v) => v !== optionValue);
 };
 </script>
 
 <template>
-    <fieldset
-        class="form-group"
-        :aria-labelledby="legend ? legendId : undefined"
-    >
-        <legend
-            v-if="legend"
-            :id="legendId"
-        >
-            {{ legend }}
-        </legend>
-
-        <div
-            v-for="o in options"
-            :key="o.value"
-            class="form-field-h"
-        >
-            <input
-                type="checkbox"
-                class="form-input"
-                :id="optionId(o.value)"
-                :name="props.name"
-                :value="o.value"
-                :checked="value?.includes(o.value)"
-                @change="(e) => toggle(o.value, e)"
-                @blur="handleBlur"
-            />
-
+    <fieldset class="field" style="border: none; padding: 0; margin: 0;" :aria-labelledby="legend ? legendId : undefined">
+        <legend v-if="legend" :id="legendId" class="field-label">{{ legend }}</legend>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
             <label
-                class="form-label"
+                v-for="o in options"
+                :key="o.value"
+                class="check"
                 :for="optionId(o.value)"
             >
+                <input
+                    type="checkbox"
+                    :id="optionId(o.value)"
+                    :name="name"
+                    :value="o.value"
+                    :checked="value?.includes(o.value)"
+                    @change="(e) => toggle(o.value, e)"
+                    @blur="handleBlur"
+                />
+                <span class="box" />
                 {{ o.label }}
             </label>
         </div>
-
-        <div v-if="errorMessage">
-            {{ errorMessage }}
-        </div>
+        <span v-if="errorMessage" class="field-error">{{ errorMessage }}</span>
     </fieldset>
 </template>

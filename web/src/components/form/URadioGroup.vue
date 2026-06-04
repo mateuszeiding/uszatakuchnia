@@ -14,52 +14,32 @@ const uid = useId();
 const legendId = `${uid}-legend`;
 const optionId = (val: RadioOption['value']) => `${uid}-${val}`;
 
-const { value, errorMessage, handleChange, handleBlur } = useField<string | number>(
-    toRef(props, 'name')
-);
+const { value, errorMessage, handleChange, handleBlur } = useField<string | number>(toRef(props, 'name'));
 </script>
 
 <template>
-    <fieldset
-        class="form-group"
-        :aria-labelledby="legend ? legendId : undefined"
-    >
-        <legend
-            v-if="legend"
-            class="form-legend"
-            :id="legendId"
-        >
-            {{ legend }}
-        </legend>
-
-        <div
-            v-for="o in options"
-            :key="o.value"
-            class="form-field-h"
-        >
-            <input
-                type="radio"
-                class="form-input"
-                :id="optionId(o.value)"
-                :name="props.name"
-                :value="o.value"
-                :checked="value === o.value"
-                @change="handleChange"
-                @blur="handleBlur"
-            />
+    <fieldset class="field" style="border: none; padding: 0; margin: 0;" :aria-labelledby="legend ? legendId : undefined">
+        <legend v-if="legend" :id="legendId" class="field-label">{{ legend }}</legend>
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
             <label
-                class="form-label"
+                v-for="o in options"
+                :key="o.value"
+                class="radio"
                 :for="optionId(o.value)"
             >
+                <input
+                    type="radio"
+                    :id="optionId(o.value)"
+                    :name="name"
+                    :value="o.value"
+                    :checked="value === o.value"
+                    @change="handleChange"
+                    @blur="handleBlur"
+                />
+                <span class="box" />
                 {{ o.label }}
             </label>
         </div>
-
-        <div
-            v-if="errorMessage"
-            class="form-error"
-        >
-            {{ errorMessage }}
-        </div>
+        <span v-if="errorMessage" class="field-error">{{ errorMessage }}</span>
     </fieldset>
 </template>

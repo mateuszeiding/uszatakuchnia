@@ -5,46 +5,38 @@ import { computed, toRef, useId } from 'vue';
 const props = defineProps<{
     name: string;
     label?: string;
+    hint?: string;
+    required?: boolean;
     rows?: number;
+    placeholder?: string;
 }>();
 
 const uid = useId();
-
 const { value, errorMessage, handleBlur, handleChange } = useField<string>(toRef(props, 'name'));
-
 const modelValue = computed(() => value.value ?? '');
 
 function onInput(e: Event) {
-    const el = e.target as HTMLTextAreaElement;
-    handleChange(el.value);
+    handleChange((e.target as HTMLTextAreaElement).value);
 }
 </script>
 
 <template>
-    <div class="form-field-v">
-        <label
-            v-if="props.label"
-            class="form-label"
-            :for="uid"
-        >
-            {{ props.label }}
+    <div class="field">
+        <label v-if="label" class="field-label" :for="uid">
+            {{ label }}<span v-if="required" class="req">*</span>
         </label>
-
         <textarea
-            class="form-input textarea"
+            class="textarea"
+            :class="{ 'is-invalid': errorMessage }"
             :id="uid"
-            :name="props.name"
-            :rows="props.rows ?? 3"
+            :name="name"
+            :rows="rows ?? 3"
+            :placeholder="placeholder"
             :value="modelValue"
             @input="onInput"
             @blur="handleBlur"
         />
-
-        <div
-            v-if="errorMessage"
-            class="form-error"
-        >
-            {{ errorMessage }}
-        </div>
+        <span v-if="hint && !errorMessage" class="field-hint">{{ hint }}</span>
+        <span v-if="errorMessage" class="field-error">{{ errorMessage }}</span>
     </div>
 </template>

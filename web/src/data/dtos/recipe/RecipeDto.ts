@@ -6,11 +6,15 @@ type BackendRecipePhoto = { url: string } | null;
 export class RecipeBaseDto {
     id: number = 0;
     name: string = '';
+    tagline: string | null = null;
+    category: string | null = null;
+    region: string | null = null;
+    timeMinutes: number | null = null;
+    difficulty: number | null = null;
     photoUrl: string | null = null;
 
-    constructor(obj: Partial<RecipeDto> & { photo?: BackendRecipePhoto }) {
+    constructor(obj: Partial<RecipeBaseDto> & { photo?: BackendRecipePhoto }) {
         Object.assign(this, obj);
-
         if ('photo' in obj) {
             this.photoUrl = obj.photo?.url ?? null;
         }
@@ -20,6 +24,7 @@ export class RecipeBaseDto {
 export class RecipeDto extends RecipeBaseDto {
     servings: number = 1;
     description: string | null = null;
+    kcalPerServing: number | null = null;
 
     steps: RecipeStepDto[] = [];
     ingredients: RecipeIngredientDto[] = [];
@@ -27,8 +32,30 @@ export class RecipeDto extends RecipeBaseDto {
     constructor(obj: Partial<RecipeDto> & { photo?: BackendRecipePhoto }) {
         super(obj);
         Object.assign(this, obj);
-
         this.steps = (obj.steps ?? []).map((s) => new RecipeStepDto(s));
         this.ingredients = (obj.ingredients ?? []).map((i) => new RecipeIngredientDto(i));
     }
+}
+
+export interface UpsertRecipeRequest {
+    name: string;
+    servings: number;
+    description?: string | null;
+    tagline?: string | null;
+    category?: string | null;
+    region?: string | null;
+    timeMinutes?: number | null;
+    difficulty?: number | null;
+    kcalPerServing?: number | null;
+    photoUrl?: string | null;
+    steps: { stepNo: number; section?: string | null; text: string }[];
+    ingredients: {
+        sortOrder: number;
+        section?: string | null;
+        ingredientId: number;
+        amount?: number | null;
+        unit?: string | null;
+        amountText?: string | null;
+        note?: string | null;
+    }[];
 }
