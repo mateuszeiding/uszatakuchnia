@@ -13,7 +13,7 @@ fetchEnums('ingredient').then((v) => (enums.value = v.map((e) => e.code)));
 fetchIngredients('list').then((v) => (ingredients.value = v));
 </script>
 <template>
-    <div class="d-flex gap-5 flex-wrap pb-8">
+    <div class="filters">
         <u-badge
             v-for="val in enums"
             :key="val"
@@ -30,9 +30,16 @@ fetchIngredients('list').then((v) => (ingredients.value = v));
     </div>
 </template>
 <style lang="scss" scoped>
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding-bottom: var(--space-6);
+}
+
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-4);
 }
 </style>

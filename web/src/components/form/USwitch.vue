@@ -9,41 +9,28 @@ const props = defineProps<{
 
 const uid = useId();
 const { value, errorMessage, handleBlur } = useField<boolean>(toRef(props, 'name'));
-
 const checked = computed(() => Boolean(value.value));
 
 function onChange(e: Event) {
-    const el = e.target as HTMLInputElement;
-    value.value = el.checked;
+    value.value = (e.target as HTMLInputElement).checked;
 }
 </script>
 
 <template>
-    <div class="form-field-h">
-        <input
-            class="form-input"
-            type="checkbox"
-            role="switch"
-            :id="uid"
-            :name="props.name"
-            :checked="checked"
-            @change="onChange"
-            @blur="handleBlur"
-        />
-
-        <label
-            v-if="props.label"
-            class="form-label"
-            :for="uid"
-        >
-            {{ props.label }}
+    <div class="field">
+        <label class="switch" :for="uid">
+            <input
+                type="checkbox"
+                role="switch"
+                :id="uid"
+                :name="name"
+                :checked="checked"
+                @change="onChange"
+                @blur="handleBlur"
+            />
+            <span class="track" />
+            <span v-if="label">{{ label }}</span>
         </label>
-
-        <div
-            v-if="errorMessage"
-            class="form-error"
-        >
-            {{ errorMessage }}
-        </div>
+        <span v-if="errorMessage" class="field-error">{{ errorMessage }}</span>
     </div>
 </template>

@@ -23,7 +23,16 @@ export class API {
             baseURL: this.__baseUrl,
             params,
         });
+        return response.data;
+    }
 
+    public async post<T>(endpoint: string, body: unknown) {
+        const response = await axios.post<T>(endpoint, body, { baseURL: this.__baseUrl });
+        return response.data;
+    }
+
+    public async put<T>(endpoint: string, body: unknown) {
+        const response = await axios.put<T>(endpoint, body, { baseURL: this.__baseUrl });
         return response.data;
     }
 }
