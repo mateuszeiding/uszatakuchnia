@@ -4,19 +4,18 @@
 
 Pracujemy nad aplikacją Uszata Kuchnia — personal recipe management app. Masz zaprojektować widoki dla Fazy 1 (Przepisy + Panel admina). Faza 2 (Challenges) i Faza 3 (Wiki) są poza scope — nie projektuj ich.
 
-## Stack i Design System
+## Design System
 
-- Frontend: Vue 3 + TypeScript
-- Design System v2 (DS v2): tokeny w `web/src/scss/config/_tokens.scss`, komponenty w `web/src/scss/config/_components.scss`
 - Kolory: ghost white #F8F8FF (tło), accent purple #6B4EE6, Geist + Geist Mono
-- Klasy DS: `btn`, `badge`, `card`, `chip`, `input`, `dots` (trudność), `cat-*` (badge kategorii)
-- Istniejące designy znajdziesz w `C:\Users\eidin\.claude\projects\C--Users-eidin-Repos-uszatakuchnia\design-extracted\uszatakuchnia\project\`
+- Komponenty: `btn`, `badge`, `card`, `chip`, `input`, kropki trudności (1–3), badge kategorii z kolorami per kategoria
 
-## Co już istnieje (nie przeprojektowuj od zera)
+## Istniejące widoki — zachowaj ogólny kierunek
 
-- `/recipes` — lista z sidebar filtrami, grid kart, results bar — **wymaga poprawek opisanych niżej**
-- `/recipes/:id` — detal przepisu: hero, MetaStrip, składniki ze skalowaniem, kroki z checklistą i progress barem
-- `/recipes/new` i `/recipes/:id/edit` — formularz tworzenia/edycji
+Aplikacja ma już zaimplementowane widoki których nie przeprojektowujesz od zera, tylko rozszerzasz:
+
+- `/recipes` — lista przepisów: sidebar z filtrami po lewej, grid kart po prawej, results bar nad gridem. **Wymaga poprawek opisanych niżej.**
+- `/recipes/:id` — detal: hero (tekst po lewej, zdjęcie 4:5 po prawej), MetaStrip z czasem/trudnością/porcjami/kcal, sticky sidebar ze składnikami i skalowaniem porcji, kroki z numerowaną checklistą i progress barem u góry sekcji kroków.
+- `/recipes/new` i `/recipes/:id/edit` — formularz podzielony na karty-sekcje, fixed action bar na dole.
 
 ## Widoki do zaprojektowania
 
