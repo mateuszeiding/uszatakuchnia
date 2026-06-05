@@ -24,7 +24,7 @@ const hidePrep = ref(false);
 const sort = ref<'newest' | 'fastest' | 'az'>('newest');
 const tab = ref<'all' | 'pub' | 'draft'>('all');
 
-fetchRecipes('list', true).then((v) => (recipes.value = v));
+fetchRecipes('list', isAuthenticated.value).then((v) => (recipes.value = v));
 
 const filtered = computed(() => {
     let list = recipes.value;
