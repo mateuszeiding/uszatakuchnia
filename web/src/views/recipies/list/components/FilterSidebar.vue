@@ -174,12 +174,6 @@ function togglePractical(tag: string) {
                         :class="{ 'filter-row--active': activeCategory === cat.key }"
                         @click="toggleCat(cat.key)"
                     >
-                        <span class="filter-row__check filter-row__check--radio">
-                            <span
-                                v-if="activeCategory === cat.key"
-                                class="filter-row__radio-dot"
-                            />
-                        </span>
                         <span
                             class="badge"
                             :class="`cat-${cat.key}`"
@@ -203,12 +197,6 @@ function togglePractical(tag: string) {
                         :class="{ 'filter-row--active': maxTime === opt.v }"
                         @click="emit('update:maxTime', opt.v)"
                     >
-                        <span class="filter-row__check filter-row__check--radio">
-                            <span
-                                v-if="maxTime === opt.v"
-                                class="filter-row__radio-dot"
-                            />
-                        </span>
                         {{ opt.l }}
                     </button>
                 </div>
@@ -227,12 +215,6 @@ function togglePractical(tag: string) {
                         :class="{ 'filter-row--active': activeDiff === opt.v }"
                         @click="emit('update:activeDiff', opt.v)"
                     >
-                        <span class="filter-row__check filter-row__check--radio">
-                            <span
-                                v-if="activeDiff === opt.v"
-                                class="filter-row__radio-dot"
-                            />
-                        </span>
                         <span
                             v-if="opt.v > 0"
                             class="diff-dots"
