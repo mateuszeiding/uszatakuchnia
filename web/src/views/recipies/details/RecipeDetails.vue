@@ -6,6 +6,7 @@ import { computed, ref } from 'vue';
 import { fetchRecipes } from '@/data/api/recipe/fetch';
 import type { RecipeBaseDto, RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
+import { scaleAmount } from '@/shared/utils/units';
 
 const props = defineProps<{ id: number }>();
 const { isAuthenticated } = useAuth0();
@@ -44,17 +45,14 @@ function fmtTime(min: number | null) {
     return m ? `${h}h ${m}min` : `${h}h`;
 }
 
-function scaleAmount(ing: RecipeIngredientDto) {
-    if (!recipe.value || !ing.amount) return ing.amountText ?? '—';
+function scaleIngredient(ing: RecipeIngredientDto): string {
+    if (!recipe.value) return '—';
     const ratio = servings.value / recipe.value.servings;
-    const scaled = ing.amount * ratio;
-    const fmt =
-        Math.abs(scaled - Math.round(scaled)) < 0.05
-            ? String(Math.round(scaled))
-            : scaled < 10
-              ? scaled.toFixed(1)
-              : String(Math.round(scaled));
-    return `${fmt}${ing.unit ? ' ' + ing.unit : ''}`;
+    if (ing.amount != null) {
+        return scaleAmount(ing.amount, ing.unit, ratio);
+    }
+    // Fallback for old amountText-only data
+    return ing.amountText ?? '—';
 }
 
 const stepsBySection = computed(() => {
@@ -374,7 +372,7 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                                                 </svg>
                                             </span>
                                             <span class="ing-row__qty mono">
-                                                {{ scaleAmount(ing) }}
+                                                {{ scaleIngredient(ing) }}
                                             </span>
                                             <span class="ing-row__name">
                                                 {{ ing.ingredientName }}

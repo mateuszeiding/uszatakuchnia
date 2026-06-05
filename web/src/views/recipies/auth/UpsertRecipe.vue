@@ -9,6 +9,7 @@ import { fetchIngredients } from '@/data/api/ingredients/fetch';
 import { createRecipe, fetchRecipesWithClient, updateRecipe } from '@/data/api/recipe/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { IUpsertRecipeRequest } from '@/data/dtos/recipe/RecipeDto';
+import { UNIT_GROUPS, UNIT_OPTIONS } from '@/shared/utils/units';
 
 const props = defineProps<{ id?: number }>();
 const router = useRouter();
@@ -70,39 +71,31 @@ const REGIONS = [
 let _id = 0;
 const uid = () => ++_id;
 
-function splitAmountText(amountText: string | null, unitField: string | null): { qty: string; unit: string } {
-    if (unitField) return { qty: amountText ?? '', unit: unitField };
-    if (!amountText) return { qty: '', unit: '' };
-    const UNIT_LIST = ['g', 'kg', 'ml', 'l', 'łyżka', 'łyżki', 'łyżeczka', 'łyżeczki', 'szczypta', 'ząbek', 'sztuka', 'sztuki', 'filety', 'pęczek'];
+function splitAmountText(
+    amountText: string | null,
+    amount: number | null,
+    unitField: string | null,
+): { qty: number | null; unit: string } {
+    // Prefer numeric amount field if available
+    if (amount != null && unitField) return { qty: amount, unit: unitField };
+    if (amount != null) return { qty: amount, unit: '' };
+    if (!amountText) return { qty: null, unit: '' };
+    // Try to parse old combined amountText like "2 łyżki"
+    const knownUnits = UNIT_OPTIONS.map((u) => u.value).filter(Boolean);
     const parts = amountText.trim().split(/\s+/);
     if (parts.length >= 2) {
         const lastWord = (parts[parts.length - 1] ?? '').toLowerCase();
-        if (UNIT_LIST.includes(lastWord)) {
-            return { qty: parts.slice(0, -1).join(' '), unit: lastWord };
+        if (knownUnits.includes(lastWord)) {
+            const num = parseFloat(parts.slice(0, -1).join('.').replace(',', '.'));
+            return { qty: isNaN(num) ? null : num, unit: lastWord };
         }
     }
-    return { qty: amountText, unit: '' };
+    const num = parseFloat(amountText.replace(',', '.'));
+    return { qty: isNaN(num) ? null : num, unit: '' };
 }
 
-const UNITS = [
-    '',
-    'g',
-    'kg',
-    'ml',
-    'l',
-    'łyżka',
-    'łyżki',
-    'łyżeczka',
-    'łyżeczki',
-    'szczypta',
-    'ząbek',
-    'sztuka',
-    'sztuki',
-    'filety',
-    'pęczek',
-];
 
-type IngItem = { id: number; ingredientId: number; qty: string; unit: string; note: string };
+type IngItem = { id: number; ingredientId: number; qty: number | null; unit: string; note: string };
 type IngGroup = { id: number; label: string; items: IngItem[] };
 type StepItem = { id: number; text: string };
 type StepGroup = { id: number; label: string; items: StepItem[] };
@@ -111,7 +104,7 @@ const ingGroups = ref<IngGroup[]>([
     {
         id: uid(),
         label: '',
-        items: [{ id: uid(), ingredientId: 0, qty: '', unit: '', note: '' }],
+        items: [{ id: uid(), ingredientId: 0, qty: null, unit: '', note: '' }],
     },
 ]);
 const stepGroups = ref<StepGroup[]>([{ id: uid(), label: '', items: [{ id: uid(), text: '' }] }]);
@@ -188,7 +181,7 @@ onMounted(async () => {
             recipe.ingredients.forEach((i) => {
                 const key = i.section ?? '';
                 if (!bySection.has(key)) bySection.set(key, []);
-                const { qty, unit } = splitAmountText(i.amountText, i.unit);
+                const { qty, unit } = splitAmountText(i.amountText, i.amount, i.unit);
                 bySection.get(key)!.push({
                     id: uid(),
                     ingredientId: i.ingredientId,
@@ -226,7 +219,7 @@ function addIngGroup() {
     ingGroups.value.push({
         id: uid(),
         label: '',
-        items: [{ id: uid(), ingredientId: 0, qty: '', unit: '', note: '' }],
+        items: [{ id: uid(), ingredientId: 0, qty: null, unit: '', note: '' }],
     });
 }
 function removeIngGroup(gid: number) {
@@ -234,7 +227,7 @@ function removeIngGroup(gid: number) {
 }
 function addIngItem(gid: number) {
     const g = ingGroups.value.find((x) => x.id === gid)!;
-    g.items.push({ id: uid(), ingredientId: 0, qty: '', unit: '', note: '' });
+    g.items.push({ id: uid(), ingredientId: 0, qty: null, unit: '', note: '' });
 }
 function removeIngItem(gid: number, iid: number) {
     const g = ingGroups.value.find((x) => x.id === gid)!;
@@ -324,7 +317,7 @@ async function submit() {
                     sortOrder: gi * 100 + ii + 1,
                     section: g.label || null,
                     ingredientId: i.ingredientId,
-                    amountText: i.qty || null,
+                    amount: i.qty ?? null,
                     unit: i.unit || null,
                     note: i.note || null,
                 }))
@@ -521,22 +514,38 @@ async function submit() {
                                     class="ing-row"
                                 >
                                     <input
-                                        v-model="item.qty"
+                                        v-model.number="item.qty"
                                         class="input input--mono ing-row__qty"
-                                        type="text"
-                                        placeholder="Ilość"
+                                        type="number"
+                                        min="0"
+                                        step="0.1"
+                                        placeholder="0"
                                     />
                                     <select
                                         v-model="item.unit"
                                         class="select ing-row__unit"
                                     >
                                         <option
-                                            v-for="u in UNITS"
-                                            :key="u"
-                                            :value="u"
+                                            value=""
+                                            disabled
                                         >
-                                            {{ u || '— jed. —' }}
+                                            — jed. —
                                         </option>
+                                        <optgroup
+                                            v-for="group in UNIT_GROUPS"
+                                            :key="group"
+                                            :label="group"
+                                        >
+                                            <option
+                                                v-for="u in UNIT_OPTIONS.filter(
+                                                    (x) => x.group === group,
+                                                )"
+                                                :key="u.value"
+                                                :value="u.value"
+                                            >
+                                                {{ u.label }}
+                                            </option>
+                                        </optgroup>
                                     </select>
                                     <IngAutosuggest
                                         v-model="item.ingredientId"
