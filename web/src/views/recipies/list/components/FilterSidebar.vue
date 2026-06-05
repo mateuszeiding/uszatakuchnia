@@ -174,6 +174,12 @@ function togglePractical(tag: string) {
                         :class="{ 'filter-row--active': activeCategory === cat.key }"
                         @click="toggleCat(cat.key)"
                     >
+                        <span class="radio-dot-wrap">
+                            <span
+                                v-if="activeCategory === cat.key"
+                                class="radio-dot-fill"
+                            />
+                        </span>
                         <span
                             class="badge"
                             :class="`cat-${cat.key}`"
@@ -197,6 +203,12 @@ function togglePractical(tag: string) {
                         :class="{ 'filter-row--active': maxTime === opt.v }"
                         @click="emit('update:maxTime', opt.v)"
                     >
+                        <span class="radio-dot-wrap">
+                            <span
+                                v-if="maxTime === opt.v"
+                                class="radio-dot-fill"
+                            />
+                        </span>
                         {{ opt.l }}
                     </button>
                 </div>
@@ -215,6 +227,12 @@ function togglePractical(tag: string) {
                         :class="{ 'filter-row--active': activeDiff === opt.v }"
                         @click="emit('update:activeDiff', opt.v)"
                     >
+                        <span class="radio-dot-wrap">
+                            <span
+                                v-if="activeDiff === opt.v"
+                                class="radio-dot-fill"
+                            />
+                        </span>
                         <span
                             v-if="opt.v > 0"
                             class="diff-dots"
@@ -488,28 +506,26 @@ function togglePractical(tag: string) {
     color: var(--accent);
     font-weight: 600;
 }
-.filter-row__check {
+.radio-dot-wrap {
     width: 14px;
     height: 14px;
     flex-shrink: 0;
-    border-radius: var(--r-sm);
+    border-radius: 999px;
     border: 1.5px solid var(--rule-strong);
     background: transparent;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    transition: border-color 0.12s;
 }
-.filter-row__check--radio {
-    border-radius: var(--r-pill);
+.filter-row--active .radio-dot-wrap {
+    border-color: var(--accent);
 }
-.filter-row__radio-dot {
+.radio-dot-fill {
     width: 6px;
     height: 6px;
-    border-radius: var(--r-pill);
+    border-radius: 999px;
     background: var(--accent);
-}
-.filter-row--active .filter-row__check--radio {
-    border-color: var(--accent);
 }
 
 .diff-dots {
