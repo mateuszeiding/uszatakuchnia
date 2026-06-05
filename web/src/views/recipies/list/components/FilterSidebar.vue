@@ -174,11 +174,25 @@ function togglePractical(tag: string) {
                         :class="{ 'filter-row--active': activeCategory === cat.key }"
                         @click="toggleCat(cat.key)"
                     >
-                        <span class="radio-dot-wrap">
-                            <span
+                        <span
+                            class="checkbox-wrap"
+                            :class="{ 'checkbox-wrap--active': activeCategory === cat.key }"
+                        >
+                            <svg
                                 v-if="activeCategory === cat.key"
-                                class="radio-dot-fill"
-                            />
+                                width="8"
+                                height="8"
+                                viewBox="0 0 10 10"
+                                fill="none"
+                            >
+                                <path
+                                    d="M2 5.2L4.2 7.4L8 3.4"
+                                    stroke="#fff"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
                         </span>
                         <span
                             class="badge"
@@ -505,6 +519,22 @@ function togglePractical(tag: string) {
     background: var(--accent-soft);
     color: var(--accent);
     font-weight: 600;
+}
+.checkbox-wrap {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    border-radius: 3px;
+    border: 1.5px solid var(--rule-strong);
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s;
+}
+.checkbox-wrap--active {
+    background: var(--accent);
+    border-color: var(--accent);
 }
 .radio-dot-wrap {
     width: 14px;
