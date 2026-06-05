@@ -9,7 +9,11 @@ type RequestMap = {
     [key: number]: RecipeDto;
 };
 
-function doFetch<E extends keyof RequestMap>(qc: QueryClient, endpoint: E, admin = false) {
+export function fetchRecipesWithClient<E extends keyof RequestMap>(
+    qc: QueryClient,
+    endpoint: E,
+    admin = false
+) {
     const base: NestedKeyUnion<EndpointsConfig, '/'> = `recipes/${endpoint}`;
     const url = (admin && endpoint === 'list' ? `${base}?admin=true` : base) as NestedKeyUnion<
         EndpointsConfig,
@@ -21,10 +25,9 @@ function doFetch<E extends keyof RequestMap>(qc: QueryClient, endpoint: E, admin
     });
 }
 
-export const fetchRecipes = <E extends keyof RequestMap>(endpoint: E, admin = false) => {
-    const qc = useQueryClient();
-    return doFetch(qc, endpoint, admin);
-};
+// Use only from setup() context
+export const fetchRecipes = <E extends keyof RequestMap>(endpoint: E, admin = false) =>
+    fetchRecipesWithClient(useQueryClient(), endpoint, admin);
 
 export const createRecipe = (body: IUpsertRecipeRequest) =>
     API.Client.post<{ id: number }>('recipes', body);

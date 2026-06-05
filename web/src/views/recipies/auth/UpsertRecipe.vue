@@ -1,14 +1,16 @@
 <script lang="ts" setup>
+import { useQueryClient } from '@tanstack/vue-query';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { fetchIngredients } from '@/data/api/ingredients/fetch';
-import { createRecipe, fetchRecipes, updateRecipe } from '@/data/api/recipe/fetch';
+import { createRecipe, fetchRecipesWithClient, updateRecipe } from '@/data/api/recipe/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { IUpsertRecipeRequest } from '@/data/dtos/recipe/RecipeDto';
 
 const props = defineProps<{ id?: number }>();
 const router = useRouter();
+const qc = useQueryClient();
 
 const saving = ref(false);
 const ingredients = ref<IngredientDto[]>([]);
@@ -94,7 +96,7 @@ onMounted(async () => {
     ingredients.value = await fetchIngredients('list');
 
     if (props.id) {
-        const recipe = await fetchRecipes(props.id);
+        const recipe = await fetchRecipesWithClient(qc, props.id);
         name.value = recipe.name;
         tagline.value = recipe.tagline ?? '';
         description.value = recipe.description ?? '';
