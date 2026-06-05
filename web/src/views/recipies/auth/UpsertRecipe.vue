@@ -76,6 +76,12 @@ const recipeIngredients = ref<
     }[]
 >([{ sortOrder: 1, section: '', ingredientId: 0, amountText: '', note: '' }]);
 
+const CAT_COLORS: Record<string, string> = {
+    ryby: '#3F70A8', mieso: '#B85A2E', wege: '#7A9050', wegan: '#2F6B3F',
+    makarony: '#D9A441', ryz: '#B8946A', zupy: '#C53728', salatki: '#A8B83D',
+    pieczywo: '#7A4A2E', desery: '#D27393', sniadania: '#E89556', przekaski: '#8A4A6D', napoje: '#2F8A8A',
+};
+
 const categories = [
     { key: 'ryby', label: 'ryby' },
     { key: 'mieso', label: 'mięso' },
@@ -421,15 +427,16 @@ async function submit() {
                             Kategoria
                             <span class="req">*</span>
                         </label>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px">
+                        <div class="cat-picker">
                             <button
                                 v-for="cat in categories"
                                 :key="cat.key"
-                                class="badge"
-                                :class="[`cat-${cat.key}`, { 'cat-active': category === cat.key }]"
-                                style="cursor: pointer"
+                                class="cat-pill"
+                                :class="{ 'cat-pill--active': category === cat.key }"
+                                :style="category === cat.key ? `--cat-color: ${CAT_COLORS[cat.key]}` : `--cat-color: ${CAT_COLORS[cat.key]}`"
                                 @click="category = category === cat.key ? null : cat.key"
                             >
+                                <span class="cat-pill__dot" :style="{ background: CAT_COLORS[cat.key] }" />
                                 {{ cat.label }}
                             </button>
                         </div>
@@ -868,10 +875,33 @@ async function submit() {
     border-bottom: 1px solid var(--rule);
 }
 
-/* Category badges as buttons */
-.badge.cat-active {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
+/* Category picker */
+.cat-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.cat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--rule-strong);
+    color: var(--ink);
+    padding: 4px 10px 4px 8px;
+    border-radius: var(--r-pill);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: all 0.12s;
+}
+.cat-pill--active {
+    background: color-mix(in srgb, var(--cat-color) 18%, transparent);
+    border-color: var(--cat-color);
+    font-weight: 600;
+}
+.cat-pill__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: var(--r-pill);
+    flex-shrink: 0;
 }
 
 /* Difficulty */
