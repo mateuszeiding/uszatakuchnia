@@ -3,6 +3,8 @@ import { useQueryClient } from '@tanstack/vue-query';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
+import IngAutosuggest from './components/IngAutosuggest.vue';
+
 import { fetchIngredients } from '@/data/api/ingredients/fetch';
 import { createRecipe, fetchRecipesWithClient, updateRecipe } from '@/data/api/recipe/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
@@ -25,6 +27,8 @@ const kcalPerServing = ref<number | null>(null);
 const categories = ref<string[]>([]);
 const region = ref<string | null>(null);
 const tip = ref('');
+const photoUrl = ref<string | null>(null);
+const photoPreview = ref<string | null>(null);
 
 const diets = ref<Set<string>>(new Set());
 const practical = ref<Set<string>>(new Set());
@@ -38,6 +42,7 @@ const DIETS = [
     'wysokobiałkowe',
     'niskokaloryczne',
     'keto',
+    'low fodmap',
 ];
 const PRACTICAL = [
     '30 min',
@@ -62,19 +67,54 @@ const REGIONS = [
     'amerykańska',
 ];
 
-const steps = ref<{ stepNo: number; section: string; text: string }[]>([
-    { stepNo: 1, section: '', text: '' },
-]);
+let _id = 0;
+const uid = () => ++_id;
 
-const recipeIngredients = ref<
+function splitAmountText(amountText: string | null, unitField: string | null): { qty: string; unit: string } {
+    if (unitField) return { qty: amountText ?? '', unit: unitField };
+    if (!amountText) return { qty: '', unit: '' };
+    const UNIT_LIST = ['g', 'kg', 'ml', 'l', 'łyżka', 'łyżki', 'łyżeczka', 'łyżeczki', 'szczypta', 'ząbek', 'sztuka', 'sztuki', 'filety', 'pęczek'];
+    const parts = amountText.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        const lastWord = (parts[parts.length - 1] ?? '').toLowerCase();
+        if (UNIT_LIST.includes(lastWord)) {
+            return { qty: parts.slice(0, -1).join(' '), unit: lastWord };
+        }
+    }
+    return { qty: amountText, unit: '' };
+}
+
+const UNITS = [
+    '',
+    'g',
+    'kg',
+    'ml',
+    'l',
+    'łyżka',
+    'łyżki',
+    'łyżeczka',
+    'łyżeczki',
+    'szczypta',
+    'ząbek',
+    'sztuka',
+    'sztuki',
+    'filety',
+    'pęczek',
+];
+
+type IngItem = { id: number; ingredientId: number; qty: string; unit: string; note: string };
+type IngGroup = { id: number; label: string; items: IngItem[] };
+type StepItem = { id: number; text: string };
+type StepGroup = { id: number; label: string; items: StepItem[] };
+
+const ingGroups = ref<IngGroup[]>([
     {
-        sortOrder: number;
-        section: string;
-        ingredientId: number;
-        amountText: string;
-        note: string;
-    }[]
->([{ sortOrder: 1, section: '', ingredientId: 0, amountText: '', note: '' }]);
+        id: uid(),
+        label: '',
+        items: [{ id: uid(), ingredientId: 0, qty: '', unit: '', note: '' }],
+    },
+]);
+const stepGroups = ref<StepGroup[]>([{ id: uid(), label: '', items: [{ id: uid(), text: '' }] }]);
 
 const CAT_COLORS: Record<string, string> = {
     ryby: '#3F70A8',
@@ -126,49 +166,119 @@ onMounted(async () => {
         status.value = (recipe.status as 'draft' | 'published') ?? 'draft';
         diets.value = new Set(recipe.dietTags ?? []);
         practical.value = new Set(recipe.practicalTags ?? []);
+        photoUrl.value = recipe.photoUrl ?? null;
+        photoPreview.value = recipe.photoUrl ?? null;
 
         if (recipe.steps.length) {
-            steps.value = recipe.steps.map((s) => ({
-                stepNo: s.stepNo,
-                section: s.section ?? '',
-                text: s.text,
+            const bySection = new Map<string, StepItem[]>();
+            recipe.steps.forEach((s) => {
+                const key = s.section ?? '';
+                if (!bySection.has(key)) bySection.set(key, []);
+                bySection.get(key)!.push({ id: uid(), text: s.text });
+            });
+            stepGroups.value = [...bySection.entries()].map(([label, items]) => ({
+                id: uid(),
+                label,
+                items,
             }));
         }
 
         if (recipe.ingredients.length) {
-            recipeIngredients.value = recipe.ingredients.map((i, idx) => ({
-                sortOrder: i.sortOrder ?? idx + 1,
-                section: i.section ?? '',
-                ingredientId: i.ingredientId,
-                amountText: i.amountText ?? '',
-                note: i.note ?? '',
+            const bySection = new Map<string, IngItem[]>();
+            recipe.ingredients.forEach((i) => {
+                const key = i.section ?? '';
+                if (!bySection.has(key)) bySection.set(key, []);
+                const { qty, unit } = splitAmountText(i.amountText, i.unit);
+                bySection.get(key)!.push({
+                    id: uid(),
+                    ingredientId: i.ingredientId,
+                    qty,
+                    unit,
+                    note: i.note ?? '',
+                });
+            });
+            ingGroups.value = [...bySection.entries()].map(([label, items]) => ({
+                id: uid(),
+                label,
+                items,
             }));
         }
     }
 });
 
-function addStep() {
-    steps.value.push({ stepNo: steps.value.length + 1, section: '', text: '' });
+// ─── Photo ────────────────────────────────────────────────────
+function onPhotoFile(e: Event) {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        photoPreview.value = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+}
+function clearPhoto() {
+    photoPreview.value = null;
+    photoUrl.value = null;
 }
 
-function removeStep(idx: number) {
-    steps.value.splice(idx, 1);
-    steps.value.forEach((s, i) => (s.stepNo = i + 1));
-}
-
-function addIngredient() {
-    recipeIngredients.value.push({
-        sortOrder: recipeIngredients.value.length + 1,
-        section: '',
-        ingredientId: 0,
-        amountText: '',
-        note: '',
+// ─── Ingredient groups ────────────────────────────────────────
+function addIngGroup() {
+    ingGroups.value.push({
+        id: uid(),
+        label: '',
+        items: [{ id: uid(), ingredientId: 0, qty: '', unit: '', note: '' }],
     });
 }
+function removeIngGroup(gid: number) {
+    ingGroups.value = ingGroups.value.filter((g) => g.id !== gid);
+}
+function addIngItem(gid: number) {
+    const g = ingGroups.value.find((x) => x.id === gid)!;
+    g.items.push({ id: uid(), ingredientId: 0, qty: '', unit: '', note: '' });
+}
+function removeIngItem(gid: number, iid: number) {
+    const g = ingGroups.value.find((x) => x.id === gid)!;
+    g.items = g.items.filter((i) => i.id !== iid);
+}
 
-function removeIngredient(idx: number) {
-    recipeIngredients.value.splice(idx, 1);
-    recipeIngredients.value.forEach((i, x) => (i.sortOrder = x + 1));
+// ─── Step groups ──────────────────────────────────────────────
+function addStepGroup() {
+    stepGroups.value.push({ id: uid(), label: '', items: [{ id: uid(), text: '' }] });
+}
+function removeStepGroup(gid: number) {
+    stepGroups.value = stepGroups.value.filter((g) => g.id !== gid);
+}
+function addStepItem(gid: number) {
+    const g = stepGroups.value.find((x) => x.id === gid)!;
+    g.items.push({ id: uid(), text: '' });
+}
+function removeStepItem(gid: number, iid: number) {
+    const g = stepGroups.value.find((x) => x.id === gid)!;
+    g.items = g.items.filter((i) => i.id !== iid);
+}
+
+function ingGroupPlaceholder(gi: number) {
+    return ingGroups.value.length === 1
+        ? 'Nazwa grupy (opcjonalnie)'
+        : `Grupa ${gi + 1} - np. "Sos"`;
+}
+function stepGroupPlaceholder(gi: number) {
+    return stepGroups.value.length === 1
+        ? 'Nazwa etapu (opcjonalnie)'
+        : `Etap ${gi + 1} - np. "Smażenie"`;
+}
+
+function globalStepIdx(gi: number, ii: number): number {
+    let n = 0;
+    for (let g = 0; g < stepGroups.value.length; g++) {
+        const grp = stepGroups.value[g];
+        if (!grp) continue;
+        for (let i = 0; i < grp.items.length; i++) {
+            n++;
+            if (g === gi && i === ii) return n;
+        }
+    }
+    return n;
 }
 
 function toggleSet(set: Set<string>, v: string) {
@@ -182,6 +292,7 @@ async function submit() {
     if (!name.value.trim() || servings.value < 1) return;
     saving.value = true;
 
+    let stepNo = 0;
     const body: IUpsertRecipeRequest = {
         name: name.value.trim(),
         tagline: tagline.value || null,
@@ -190,28 +301,34 @@ async function submit() {
         timeMinutes: timeMinutes.value,
         difficulty: difficulty.value,
         kcalPerServing: kcalPerServing.value,
+        photoUrl: photoUrl.value,
         categories: categories.value,
         region: region.value,
         status: status.value,
         needsPrep: needsPrep.value,
         dietTags: [...diets.value],
         practicalTags: [...practical.value],
-        steps: steps.value
-            .filter((s) => s.text.trim())
-            .map((s) => ({
-                stepNo: s.stepNo,
-                section: s.section || null,
-                text: s.text.trim(),
-            })),
-        ingredients: recipeIngredients.value
-            .filter((i) => i.ingredientId > 0)
-            .map((i) => ({
-                sortOrder: i.sortOrder,
-                section: i.section || null,
-                ingredientId: i.ingredientId,
-                amountText: i.amountText || null,
-                note: i.note || null,
-            })),
+        steps: stepGroups.value.flatMap((g) =>
+            g.items
+                .filter((s) => s.text.trim())
+                .map((s) => ({
+                    stepNo: ++stepNo,
+                    section: g.label || null,
+                    text: s.text.trim(),
+                }))
+        ),
+        ingredients: ingGroups.value.flatMap((g, gi) =>
+            g.items
+                .filter((i) => i.ingredientId > 0)
+                .map((i, ii) => ({
+                    sortOrder: gi * 100 + ii + 1,
+                    section: g.label || null,
+                    ingredientId: i.ingredientId,
+                    amountText: i.qty || null,
+                    unit: i.unit || null,
+                    note: i.note || null,
+                }))
+        ),
     };
 
     try {
@@ -267,31 +384,101 @@ async function submit() {
                         <h2 class="upsert-section__title">Podstawy</h2>
                     </div>
 
-                    <div class="field">
-                        <label class="field-label">
-                            Nazwa przepisu
-                            <span class="req">*</span>
+                    <div class="basics-grid">
+                        <!-- Photo zone -->
+                        <label class="photo-zone">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                class="photo-zone__input"
+                                @change="onPhotoFile"
+                            />
+                            <img
+                                v-if="photoPreview"
+                                :src="photoPreview"
+                                class="photo-zone__img"
+                                alt=""
+                            />
+                            <template v-else>
+                                <svg
+                                    width="28"
+                                    height="28"
+                                    viewBox="0 0 28 28"
+                                    fill="none"
+                                >
+                                    <rect
+                                        x="3"
+                                        y="5"
+                                        width="22"
+                                        height="18"
+                                        rx="2"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                    />
+                                    <circle
+                                        cx="9"
+                                        cy="11"
+                                        r="2"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                    />
+                                    <path
+                                        d="M3 19l6-5 6 4 4-3 6 5"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                                <span class="photo-zone__label">Dodaj zdjęcie</span>
+                                <span class="photo-zone__hint">1:1 · JPG / PNG / WEBP</span>
+                            </template>
+                            <button
+                                v-if="photoPreview"
+                                class="photo-zone__clear"
+                                @click.prevent="clearPhoto"
+                            >
+                                ×
+                            </button>
                         </label>
-                        <input
-                            v-model="name"
-                            class="input upsert-name-input"
-                            type="text"
-                            placeholder="np. Pieczony dorsz z masłem cytrynowym"
-                        />
-                    </div>
 
-                    <div
-                        class="field"
-                        style="margin-top: 16px"
-                    >
-                        <label class="field-label">Krótki opis</label>
-                        <div class="field-hint">// jedno-dwa zdania, pokazuje się pod tytułem</div>
-                        <textarea
-                            v-model="tagline"
-                            class="textarea"
-                            rows="3"
-                            placeholder="Maślany, lekko kwaśny, gotowy w 30 minut. Jedna patelnia."
-                        />
+                        <!-- Name + tagline -->
+                        <div class="basics-fields">
+                            <div class="field">
+                                <label
+                                    for="recipe-name"
+                                    class="field-label"
+                                >
+                                    Nazwa przepisu
+                                    <span class="req">*</span>
+                                </label>
+                                <input
+                                    id="recipe-name"
+                                    v-model="name"
+                                    class="input upsert-name-input"
+                                    type="text"
+                                    placeholder="np. Pieczony dorsz z masłem cytrynowym"
+                                />
+                            </div>
+
+                            <div class="field">
+                                <label
+                                    for="recipe-tagline"
+                                    class="field-label"
+                                >
+                                    Krótki opis
+                                </label>
+                                <div class="field-hint">
+                                    // jedno-dwa zdania, pokazuje się pod tytułem
+                                </div>
+                                <textarea
+                                    id="recipe-tagline"
+                                    v-model="tagline"
+                                    class="textarea"
+                                    rows="3"
+                                    placeholder="Maślany, lekko kwaśny, gotowy w 30 minut. Jedna patelnia."
+                                />
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -306,59 +493,81 @@ async function submit() {
                         jedna grupa wystarczy
                     </div>
 
-                    <div
-                        v-for="(ing, idx) in recipeIngredients"
-                        :key="idx"
-                        class="ingredient-row"
-                    >
-                        <select
-                            v-model="ing.ingredientId"
-                            class="select"
-                            style="flex: 2"
+                    <div class="groups-list">
+                        <div
+                            v-for="(g, gi) in ingGroups"
+                            :key="g.id"
+                            class="group-box"
                         >
-                            <option
-                                :value="0"
-                                disabled
+                            <div class="group-box__head">
+                                <input
+                                    v-model="g.label"
+                                    class="group-box__label-input"
+                                    :placeholder="ingGroupPlaceholder(gi)"
+                                />
+                                <button
+                                    v-if="ingGroups.length > 1"
+                                    class="row-del-btn"
+                                    @click="removeIngGroup(g.id)"
+                                >
+                                    ×
+                                </button>
+                            </div>
+
+                            <div class="ing-rows">
+                                <div
+                                    v-for="item in g.items"
+                                    :key="item.id"
+                                    class="ing-row"
+                                >
+                                    <input
+                                        v-model="item.qty"
+                                        class="input input--mono ing-row__qty"
+                                        type="text"
+                                        placeholder="Ilość"
+                                    />
+                                    <select
+                                        v-model="item.unit"
+                                        class="select ing-row__unit"
+                                    >
+                                        <option
+                                            v-for="u in UNITS"
+                                            :key="u"
+                                            :value="u"
+                                        >
+                                            {{ u || '— jed. —' }}
+                                        </option>
+                                    </select>
+                                    <IngAutosuggest
+                                        v-model="item.ingredientId"
+                                        :ingredients="ingredients"
+                                    />
+
+                                    <button
+                                        class="row-del-btn"
+                                        :disabled="g.items.length <= 1"
+                                        @click="removeIngItem(g.id, item.id)"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button
+                                class="ghost-add-btn"
+                                @click="addIngItem(g.id)"
                             >
-                                Wybierz składnik
-                            </option>
-                            <option
-                                v-for="i in ingredients"
-                                :key="i.id"
-                                :value="i.id"
-                            >
-                                {{ i.name }}
-                            </option>
-                        </select>
-                        <input
-                            v-model="ing.amountText"
-                            class="input"
-                            type="text"
-                            placeholder="Ilość (np. 2 ząbki)"
-                            style="flex: 1"
-                        />
-                        <input
-                            v-model="ing.section"
-                            class="input input--mono"
-                            type="text"
-                            placeholder="Sekcja"
-                            style="flex: 1"
-                        />
+                                + składnik
+                            </button>
+                        </div>
+
                         <button
-                            class="row-del-btn"
-                            @click="removeIngredient(idx)"
-                            :disabled="recipeIngredients.length <= 1"
+                            class="ghost-add-btn ghost-add-btn--dashed"
+                            @click="addIngGroup"
                         >
-                            ×
+                            + Dodaj grupę składników
                         </button>
                     </div>
-
-                    <button
-                        class="ghost-add-btn"
-                        @click="addIngredient"
-                    >
-                        + składnik
-                    </button>
                 </section>
 
                 <!-- 03 Kroki -->
@@ -369,42 +578,79 @@ async function submit() {
                     </div>
                     <div class="upsert-section__hint">// grupuj jeśli przepis ma kilka etapów</div>
 
-                    <div
-                        v-for="(step, idx) in steps"
-                        :key="idx"
-                        class="step-row"
-                    >
-                        <span class="step-num-large">{{ step.stepNo }}</span>
-                        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
-                            <input
-                                v-model="step.section"
-                                class="input input--mono"
-                                type="text"
-                                placeholder="Etap (opcja, np. Sos)"
-                            />
-                            <textarea
-                                v-model="step.text"
-                                class="textarea"
-                                rows="2"
-                                :placeholder="`Krok ${step.stepNo}…`"
-                            />
-                        </div>
-                        <button
-                            class="row-del-btn"
-                            @click="removeStep(idx)"
-                            :disabled="steps.length <= 1"
-                        >
-                            ×
-                        </button>
+                    <!-- View mode stub -->
+                    <div class="view-mode-stub">
+                        <span class="view-mode-stub__active">etapy</span>
+                        <span class="view-mode-stub__inactive">
+                            timing
+                            <span class="view-mode-stub__soon">wkrótce</span>
+                        </span>
                     </div>
 
-                    <button
-                        class="ghost-add-btn"
-                        style="margin-left: 54px"
-                        @click="addStep"
-                    >
-                        + krok
-                    </button>
+                    <div class="groups-list">
+                        <div
+                            v-for="(g, gi) in stepGroups"
+                            :key="g.id"
+                            class="group-box"
+                        >
+                            <div class="group-box__head">
+                                <input
+                                    v-model="g.label"
+                                    class="group-box__label-input"
+                                    :placeholder="stepGroupPlaceholder(gi)"
+                                />
+                                <button
+                                    v-if="stepGroups.length > 1"
+                                    class="row-del-btn"
+                                    @click="removeStepGroup(g.id)"
+                                >
+                                    ×
+                                </button>
+                            </div>
+
+                            <div class="step-rows">
+                                <div
+                                    v-for="(item, ii) in g.items"
+                                    :key="item.id"
+                                    class="step-row"
+                                >
+                                    <span class="step-num-large">{{ globalStepIdx(gi, ii) }}</span>
+                                    <textarea
+                                        v-model="item.text"
+                                        class="textarea"
+                                        rows="2"
+                                        :placeholder="
+                                            globalStepIdx(gi, ii) === 1
+                                                ? 'Rozgrzej piekarnik do 200°C...'
+                                                : 'Następny krok...'
+                                        "
+                                    />
+                                    <button
+                                        class="row-del-btn"
+                                        :disabled="g.items.length <= 1 && stepGroups.length <= 1"
+                                        @click="removeStepItem(g.id, item.id)"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button
+                                class="ghost-add-btn"
+                                style="margin-left: 54px"
+                                @click="addStepItem(g.id)"
+                            >
+                                + krok
+                            </button>
+                        </div>
+
+                        <button
+                            class="ghost-add-btn ghost-add-btn--dashed"
+                            @click="addStepGroup"
+                        >
+                            + Dodaj etap
+                        </button>
+                    </div>
                 </section>
 
                 <!-- 04 Wskazówka -->
@@ -417,7 +663,14 @@ async function submit() {
                     <div class="upsert-section__hint">
                         // opcjonalna porada na koniec przepisu (np. czego unikać, czym podać)
                     </div>
+                    <label
+                        for="recipe-tip"
+                        class="sr-only"
+                    >
+                        Wskazówka
+                    </label>
                     <textarea
+                        id="recipe-tip"
                         v-model="tip"
                         class="textarea"
                         rows="3"
@@ -428,127 +681,7 @@ async function submit() {
 
             <!-- RIGHT: sticky sidebar -->
             <aside class="upsert-sidebar">
-                <!-- Klasyfikacja -->
-                <div class="side-card">
-                    <div class="side-card__title">Klasyfikacja</div>
-
-                    <div class="field">
-                        <label class="field-label">
-                            Kategoria
-                            <span class="req">*</span>
-                        </label>
-                        <div class="cat-picker">
-                            <button
-                                v-for="cat in CATEGORY_LIST"
-                                :key="cat.key"
-                                class="cat-pill"
-                                :class="{ 'cat-pill--active': categories.includes(cat.key) }"
-                                :style="`--cat-color: ${CAT_COLORS[cat.key]}`"
-                                @click="
-                                    categories = categories.includes(cat.key)
-                                        ? categories.filter((c) => c !== cat.key)
-                                        : [...categories, cat.key]
-                                "
-                            >
-                                <span
-                                    class="cat-pill__dot"
-                                    :style="{ background: CAT_COLORS[cat.key] }"
-                                />
-                                {{ cat.label }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label class="field-label">Region</label>
-                        <div class="field-hint">
-                            // opcjonalnie — pokazywany po kropce w odznace
-                        </div>
-                        <select
-                            v-model="region"
-                            class="select"
-                        >
-                            <option
-                                v-for="r in REGIONS"
-                                :key="r"
-                                :value="r === '—' ? null : r"
-                            >
-                                {{ r }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label class="field-label">
-                            Trudność
-                            <span class="req">*</span>
-                        </label>
-                        <div style="display: flex; gap: 6px">
-                            <button
-                                v-for="d in [1, 2, 3]"
-                                :key="d"
-                                class="diff-btn"
-                                :class="{ 'is-active': difficulty === d }"
-                                @click="difficulty = difficulty === d ? null : d"
-                            >
-                                <span class="diff-btn__dots">
-                                    <span
-                                        v-for="i in 3"
-                                        :key="i"
-                                        class="diff-btn__dot"
-                                        :class="{ 'is-on': i <= d }"
-                                    />
-                                </span>
-                                {{ { 1: 'Łatwe', 2: 'Średnie', 3: 'Trudne' }[d] }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Czas i porcje -->
-                <div class="side-card">
-                    <div class="side-card__title">Czas i porcje</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
-                        <div class="field">
-                            <label class="field-label">
-                                Czas (min)
-                                <span class="req">*</span>
-                            </label>
-                            <input
-                                v-model.number="timeMinutes"
-                                class="input input--mono"
-                                type="number"
-                                min="1"
-                                placeholder="30"
-                            />
-                        </div>
-                        <div class="field">
-                            <label class="field-label">
-                                Porcje
-                                <span class="req">*</span>
-                            </label>
-                            <input
-                                v-model.number="servings"
-                                class="input input--mono"
-                                type="number"
-                                min="1"
-                            />
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label class="field-label">Kalorie / porcja</label>
-                        <div class="field-hint">// opcjonalnie</div>
-                        <input
-                            v-model.number="kcalPerServing"
-                            class="input input--mono"
-                            type="number"
-                            min="1"
-                            placeholder="np. 490"
-                        />
-                    </div>
-                </div>
-
-                <!-- Status -->
+                <!-- Status — first -->
                 <div class="side-card">
                     <div class="side-card__title">Status</div>
                     <div class="status-pill-toggle">
@@ -578,37 +711,165 @@ async function submit() {
                     </div>
                 </div>
 
-                <!-- Atrybuty -->
+                <!-- Klasyfikacja -->
                 <div class="side-card">
-                    <div class="side-card__title">Atrybuty</div>
+                    <div class="side-card__title">Klasyfikacja</div>
+
                     <div class="field">
-                        <label class="prep-toggle-label">
-                            <input
-                                v-model="needsPrep"
-                                type="checkbox"
-                                class="prep-toggle-input"
-                            />
-                            <span class="prep-toggle-track">
-                                <span class="prep-toggle-thumb" />
-                            </span>
-                            <span class="prep-toggle-text">Wymaga przygotowania</span>
+                        <label
+                            for="cat-picker"
+                            class="field-label"
+                        >
+                            Kategoria
+                            <span class="req">*</span>
+                        </label>
+                        <div
+                            id="cat-picker"
+                            class="cat-picker"
+                        >
+                            <button
+                                v-for="cat in CATEGORY_LIST"
+                                :key="cat.key"
+                                class="cat-pill"
+                                :class="{ 'cat-pill--active': categories.includes(cat.key) }"
+                                :style="`--cat-color: ${CAT_COLORS[cat.key]}`"
+                                @click="
+                                    categories = categories.includes(cat.key)
+                                        ? categories.filter((c) => c !== cat.key)
+                                        : [...categories, cat.key]
+                                "
+                            >
+                                <span
+                                    class="cat-pill__dot"
+                                    :style="{ background: CAT_COLORS[cat.key] }"
+                                />
+                                {{ cat.label }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label
+                            for="recipe-region"
+                            class="field-label"
+                        >
+                            Region
                         </label>
                         <div class="field-hint">
-                            // marynata, namaczanie, ciasto dzień wcześniej
+                            // opcjonalnie — pokazywany po kropce w odznace
+                        </div>
+                        <select
+                            id="recipe-region"
+                            v-model="region"
+                            class="select"
+                        >
+                            <option
+                                v-for="r in REGIONS"
+                                :key="r"
+                                :value="r === '—' ? null : r"
+                            >
+                                {{ r }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label
+                            for="diff-picker"
+                            class="field-label"
+                        >
+                            Trudność
+                            <span class="req">*</span>
+                        </label>
+                        <div
+                            id="diff-picker"
+                            style="display: flex; gap: 6px"
+                        >
+                            <button
+                                v-for="d in [1, 2, 3]"
+                                :key="d"
+                                class="diff-btn"
+                                :class="{ 'is-active': difficulty === d }"
+                                @click="difficulty = difficulty === d ? null : d"
+                            >
+                                <span class="diff-btn__dots">
+                                    <span
+                                        v-for="i in 3"
+                                        :key="i"
+                                        class="diff-btn__dot"
+                                        :class="{ 'is-on': i <= d }"
+                                    />
+                                </span>
+                                {{ { 1: 'Łatwe', 2: 'Średnie', 3: 'Trudne' }[d] }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Czas i porcje -->
+                <div class="side-card">
+                    <div class="side-card__title">Czas i porcje</div>
+                    <div class="two-col-grid">
+                        <div class="field">
+                            <label
+                                for="recipe-time"
+                                class="field-label"
+                            >
+                                Czas (min)
+                                <span class="req">*</span>
+                            </label>
+                            <input
+                                id="recipe-time"
+                                v-model.number="timeMinutes"
+                                class="input input--mono"
+                                type="number"
+                                min="1"
+                                placeholder="30"
+                            />
+                        </div>
+                        <div class="field">
+                            <label
+                                for="recipe-servings"
+                                class="field-label"
+                            >
+                                Porcje
+                                <span class="req">*</span>
+                            </label>
+                            <input
+                                id="recipe-servings"
+                                v-model.number="servings"
+                                class="input input--mono"
+                                type="number"
+                                min="1"
+                            />
                         </div>
                     </div>
                     <div class="field">
                         <label
-                            for="diets-label"
+                            for="recipe-kcal"
                             class="field-label"
-                            style="margin-bottom: 6px"
                         >
-                            Diety
+                            Kalorie / porcja
                         </label>
-                        <div
-                            class="chip-grid"
-                            id="diets-label"
-                        >
+                        <div class="field-hint">// opcjonalnie</div>
+                        <input
+                            id="recipe-kcal"
+                            v-model.number="kcalPerServing"
+                            class="input input--mono"
+                            type="number"
+                            min="1"
+                            placeholder="np. 490"
+                        />
+                    </div>
+                </div>
+
+                <!-- Atrybuty -->
+                <div class="side-card">
+                    <div class="side-card__title">Atrybuty</div>
+
+                    <div class="attr-group">
+                        <span class="field-label">Diety</span>
+                        <div class="chip-grid">
                             <button
                                 v-for="d in DIETS"
                                 :key="d"
@@ -620,18 +881,10 @@ async function submit() {
                             </button>
                         </div>
                     </div>
-                    <div class="field">
-                        <label
-                            for="practical-label"
-                            class="field-label"
-                            style="margin-bottom: 6px"
-                        >
-                            Praktyczne
-                        </label>
-                        <div
-                            class="chip-grid"
-                            id="practical-label"
-                        >
+
+                    <div class="attr-group">
+                        <span class="field-label">Praktyczne</span>
+                        <div class="chip-grid">
                             <button
                                 v-for="p in PRACTICAL"
                                 :key="p"
@@ -642,6 +895,23 @@ async function submit() {
                                 {{ p }}
                             </button>
                         </div>
+                    </div>
+
+                    <div class="attr-sep">
+                        <label class="prep-toggle-label">
+                            <input
+                                v-model="needsPrep"
+                                type="checkbox"
+                                class="prep-toggle-input"
+                            />
+                            <span class="prep-toggle-track">
+                                <span class="prep-toggle-thumb" />
+                            </span>
+                            <div>
+                                <div class="prep-toggle-text">Wymaga przygotowania</div>
+                                <div class="prep-toggle-sub">// np. marynata dzień wcześniej</div>
+                            </div>
+                        </label>
                     </div>
                 </div>
             </aside>
@@ -682,6 +952,18 @@ async function submit() {
 </template>
 
 <style scoped>
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .upsert-page {
     padding-top: 48px;
     padding-bottom: 120px;
@@ -739,7 +1021,6 @@ async function submit() {
     width: 6px;
     height: 6px;
     border-radius: var(--r-pill);
-    background: var(--c-sage);
 }
 .upsert-status__dot--draft {
     background: var(--c-mustard);
@@ -802,6 +1083,77 @@ async function submit() {
     margin-bottom: 22px;
 }
 
+/* Section 01 basics grid */
+.basics-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+    align-items: start;
+    margin-top: 22px;
+}
+.basics-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Photo zone */
+.photo-zone {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    background: repeating-linear-gradient(45deg, var(--bg) 0 8px, var(--bg-alt) 8px 9px);
+    border: 1.5px dashed var(--rule-strong);
+    border-radius: var(--r-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--ink-muted);
+    position: relative;
+    overflow: hidden;
+}
+.photo-zone__input {
+    display: none;
+}
+.photo-zone__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.photo-zone__label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+}
+.photo-zone__hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.3px;
+}
+.photo-zone__clear {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(10, 10, 15, 0.6);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-pill);
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
 /* Name input — larger */
 .upsert-name-input {
     font-size: 18px;
@@ -810,21 +1162,82 @@ async function submit() {
     padding: 12px 14px;
 }
 
-/* Ingredients */
-.ingredient-row {
+/* Groups */
+.groups-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.group-box {
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-lg);
+    padding: 16px;
+}
+.group-box__head {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.group-box__label-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 0;
+}
+.group-box__label-input::placeholder {
+    color: var(--ink-faint);
+    font-weight: 500;
+    text-transform: none;
 }
 
-/* Steps */
+/* Ingredient rows */
+.ing-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.ing-row {
+    display: grid;
+    grid-template-columns: 90px 120px 1fr 28px;
+    gap: 8px;
+    align-items: center;
+}
+.ing-row__unit {
+    padding: 8px 10px;
+    font-size: 13px;
+}
+.ing-row__qty {
+    padding: 8px 10px;
+}
+.ing-row__name {
+    padding: 8px 10px;
+    font-size: 13px;
+}
+.ing-row__note {
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+/* Step rows */
+.step-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
 .step-row {
     display: grid;
     grid-template-columns: 40px 1fr 28px;
     gap: 14px;
     align-items: start;
-    margin-bottom: 12px;
 }
 .step-num-large {
     font-size: 24px;
@@ -835,7 +1248,41 @@ async function submit() {
     padding-top: 4px;
 }
 
-/* Common */
+/* View mode stub */
+.view-mode-stub {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-pill);
+    padding: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-bottom: 18px;
+}
+.view-mode-stub__active {
+    padding: 5px 12px;
+    border-radius: var(--r-pill);
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+.view-mode-stub__inactive {
+    padding: 5px 12px;
+    border-radius: var(--r-pill);
+    color: var(--ink-faint);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: not-allowed;
+}
+.view-mode-stub__soon {
+    font-size: 9px;
+}
+
+/* Common row controls */
 .row-del-btn {
     width: 28px;
     height: 28px;
@@ -848,6 +1295,7 @@ async function submit() {
     color: var(--ink-muted);
     font-family: var(--font-mono);
     padding: 0;
+    flex-shrink: 0;
 }
 .row-del-btn:disabled {
     opacity: 0.3;
@@ -867,6 +1315,17 @@ async function submit() {
     margin-top: 8px;
     display: block;
 }
+.ghost-add-btn--dashed {
+    border: 1px dashed var(--rule-strong);
+    padding: 10px;
+    border-radius: var(--r-md);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    width: 100%;
+    margin-top: 0;
+    text-align: center;
+}
 
 /* Sidebar */
 .upsert-sidebar {
@@ -874,13 +1333,13 @@ async function submit() {
     top: 90px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
 }
 .side-card {
     background: var(--bg-alt);
     border: 1px solid var(--rule);
     border-radius: var(--r-lg);
-    padding: 20px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -888,8 +1347,15 @@ async function submit() {
 .side-card__title {
     font-size: 13px;
     font-weight: 600;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--rule);
+}
+
+/* Two-col grid for time/servings */
+.two-col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
 }
 
 /* Category picker */
@@ -971,6 +1437,17 @@ async function submit() {
     gap: 6px;
 }
 
+/* Attrs */
+.attr-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.attr-sep {
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+}
+
 /* Action bar */
 .action-bar {
     position: fixed;
@@ -1001,23 +1478,7 @@ async function submit() {
     letter-spacing: 0.3px;
 }
 
-@media (max-width: 900px) {
-    .upsert-body {
-        grid-template-columns: 1fr;
-    }
-    .upsert-sidebar {
-        position: static;
-    }
-    .upsert-title {
-        font-size: 40px;
-    }
-    .action-bar__hint {
-        display: none;
-    }
-}
-
 /* Status toggle */
-/* Status pill toggle */
 .status-pill-toggle {
     display: flex;
     background: var(--bg);
@@ -1114,5 +1575,34 @@ async function submit() {
     font-size: 13px;
     font-weight: 500;
     color: var(--ink);
+    line-height: 1.3;
+}
+.prep-toggle-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.3px;
+    margin-top: 1px;
+}
+
+@media (max-width: 900px) {
+    .upsert-body {
+        grid-template-columns: 1fr;
+    }
+    .upsert-sidebar {
+        position: static;
+    }
+    .upsert-title {
+        font-size: 40px;
+    }
+    .action-bar__hint {
+        display: none;
+    }
+    .basics-grid {
+        grid-template-columns: 1fr;
+    }
+    .ing-row {
+        grid-template-columns: 70px 100px 1fr 28px;
+    }
 }
 </style>
