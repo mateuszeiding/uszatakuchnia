@@ -101,11 +101,11 @@ async function handleDelete(e: MouseEvent) {
         <div class="body">
             <div class="card-top-row">
                 <span
-                    v-if="recipe.category"
+                    v-if="recipe.categories[0]"
                     class="badge"
-                    :class="`cat-${recipe.category}`"
+                    :class="`cat-${recipe.categories[0]}`"
                 >
-                    {{ recipe.category }}
+                    {{ recipe.categories[0] }}
                     <template v-if="recipe.region">· {{ recipe.region }}</template>
                 </span>
                 <span class="recipe-id">#{{ String(recipe.id).padStart(3, '0') }}</span>

@@ -5,11 +5,14 @@ import (
 	"uszatakuchnia/dtos"
 )
 
-func extractTags(tags []entities.RecipeTag) (diet []string, practical []string) {
+func extractTags(tags []entities.RecipeTag) (categories []string, diet []string, practical []string) {
+	categories = []string{}
 	diet = []string{}
 	practical = []string{}
 	for _, t := range tags {
 		switch t.GroupName {
+		case "category":
+			categories = append(categories, t.Tag)
 		case "diet":
 			diet = append(diet, t.Tag)
 		case "practical":
@@ -20,20 +23,20 @@ func extractTags(tags []entities.RecipeTag) (diet []string, practical []string) 
 }
 
 func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
-	diet, practical := extractTags(e.Tags)
+	cats, diet, practical := extractTags(e.Tags)
 	return dtos.RecipeDto{
 		ID:             e.ID,
 		Name:           e.Name,
 		Servings:       e.Servings,
 		Description:    e.Description,
 		Tagline:        e.Tagline,
-		Category:       e.Category,
 		Region:         e.Region,
 		TimeMinutes:    e.TimeMinutes,
 		Difficulty:     e.Difficulty,
 		KcalPerServing: e.KcalPerServing,
 		Status:         e.Status,
 		NeedsPrep:      e.NeedsPrep,
+		Categories:     cats,
 		DietTags:       diet,
 		PracticalTags:  practical,
 		Photo:          MapRecipePhotoToDto(e.Photo),
@@ -43,17 +46,17 @@ func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 }
 
 func MapRecipeBaseToDto(e entities.RecipeBase) dtos.RecipeBaseDto {
-	diet, practical := extractTags(e.Tags)
+	cats, diet, practical := extractTags(e.Tags)
 	return dtos.RecipeBaseDto{
 		ID:            e.ID,
 		Name:          e.Name,
 		Tagline:       e.Tagline,
-		Category:      e.Category,
 		Region:        e.Region,
 		TimeMinutes:   e.TimeMinutes,
 		Difficulty:    e.Difficulty,
 		Status:        e.Status,
 		NeedsPrep:     e.NeedsPrep,
+		Categories:    cats,
 		DietTags:      diet,
 		PracticalTags: practical,
 		Photo:         MapRecipePhotoToDto(e.Photo),

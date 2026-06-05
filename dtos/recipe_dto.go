@@ -6,13 +6,13 @@ type RecipeDto struct {
 	Servings       int                   `json:"servings"`
 	Description    *string               `json:"description,omitempty"`
 	Tagline        *string               `json:"tagline,omitempty"`
-	Category       *string               `json:"category,omitempty"`
 	Region         *string               `json:"region,omitempty"`
 	TimeMinutes    *int                  `json:"timeMinutes,omitempty"`
 	Difficulty     *int                  `json:"difficulty,omitempty"`
 	KcalPerServing *int                  `json:"kcalPerServing,omitempty"`
 	Status         string                `json:"status"`
 	NeedsPrep      bool                  `json:"needsPrep"`
+	Categories     []string              `json:"categories"`
 	DietTags       []string              `json:"dietTags"`
 	PracticalTags  []string              `json:"practicalTags"`
 	Photo          *RecipePhotoDto       `json:"photo,omitempty"`
@@ -24,30 +24,30 @@ type RecipeBaseDto struct {
 	ID            uint            `json:"id"`
 	Name          string          `json:"name"`
 	Tagline       *string         `json:"tagline,omitempty"`
-	Category      *string         `json:"category,omitempty"`
 	Region        *string         `json:"region,omitempty"`
 	TimeMinutes   *int            `json:"timeMinutes,omitempty"`
 	Difficulty    *int            `json:"difficulty,omitempty"`
 	Status        string          `json:"status"`
 	NeedsPrep     bool            `json:"needsPrep"`
+	Categories    []string        `json:"categories"`
 	DietTags      []string        `json:"dietTags"`
 	PracticalTags []string        `json:"practicalTags"`
 	Photo         *RecipePhotoDto `json:"photo,omitempty"`
 }
 
 type UpsertRecipeRequest struct {
-	Name           string  `json:"name"`
-	Servings       int     `json:"servings"`
-	Description    *string `json:"description"`
-	Tagline        *string `json:"tagline"`
-	Category       *string `json:"category"`
-	Region         *string `json:"region"`
-	TimeMinutes    *int    `json:"timeMinutes"`
-	Difficulty     *int    `json:"difficulty"`
-	KcalPerServing *int    `json:"kcalPerServing"`
-	PhotoUrl       *string `json:"photoUrl"`
-	Status         string  `json:"status"`
-	NeedsPrep      bool    `json:"needsPrep"`
+	Name           string   `json:"name"`
+	Servings       int      `json:"servings"`
+	Description    *string  `json:"description"`
+	Tagline        *string  `json:"tagline"`
+	Region         *string  `json:"region"`
+	TimeMinutes    *int     `json:"timeMinutes"`
+	Difficulty     *int     `json:"difficulty"`
+	KcalPerServing *int     `json:"kcalPerServing"`
+	PhotoUrl       *string  `json:"photoUrl"`
+	Status         string   `json:"status"`
+	NeedsPrep      bool     `json:"needsPrep"`
+	Categories     []string `json:"categories"`
 	DietTags       []string `json:"dietTags"`
 	PracticalTags  []string `json:"practicalTags"`
 

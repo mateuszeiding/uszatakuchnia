@@ -161,11 +161,11 @@ const NAV = [
                             class="draft-card card"
                         >
                             <span
-                                v-if="d.category"
+                                v-if="d.categories[0]"
                                 class="badge"
-                                :class="`cat-${d.category}`"
+                                :class="`cat-${d.categories[0]}`"
                             >
-                                {{ d.category }}
+                                {{ d.categories[0] }}
                             </span>
                             <div class="draft-card__title">{{ d.name }}</div>
                             <div class="draft-card__action">dokończ →</div>

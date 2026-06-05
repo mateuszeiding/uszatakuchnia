@@ -20,7 +20,7 @@ const checkedIngs = ref<Set<string>>(new Set());
 fetchRecipes(props.id).then(async (v) => {
     recipe.value = v;
     servings.value = v.servings;
-    if (v.category) {
+    if (v.categories.length) {
         const all = await qc.fetchQuery({
             queryKey: ['recipes/list', false],
             queryFn: () =>
@@ -28,7 +28,9 @@ fetchRecipes(props.id).then(async (v) => {
                     API.Client.get<RecipeBaseDto[]>('recipes/list')
                 ),
         });
-        related.value = all.filter((r) => r.category === v.category && r.id !== v.id).slice(0, 3);
+        related.value = all
+            .filter((r) => r.categories.some((cat) => v.categories.includes(cat)) && r.id !== v.id)
+            .slice(0, 3);
     }
 });
 
@@ -126,13 +128,13 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
             <span class="breadcrumb__sep">/</span>
             <span
                 class="breadcrumb__link"
-                v-if="recipe.category"
+                v-if="recipe.categories[0]"
             >
-                {{ recipe.category }}
+                {{ recipe.categories[0] }}
             </span>
             <span
                 class="breadcrumb__sep"
-                v-if="recipe.category"
+                v-if="recipe.categories[0]"
             >
                 /
             </span>
@@ -144,11 +146,11 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
             <div class="recipe-hero__text">
                 <div class="hero-flags">
                     <span
-                        v-if="recipe.category"
+                        v-if="recipe.categories[0]"
                         class="badge"
-                        :class="`cat-${recipe.category}`"
+                        :class="`cat-${recipe.categories[0]}`"
                     >
-                        {{ recipe.category }}
+                        {{ recipe.categories[0] }}
                         <template v-if="recipe.region">· {{ recipe.region }}</template>
                     </span>
                     <span
@@ -526,12 +528,12 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                     </div>
                     <div style="padding: 18px">
                         <span
-                            v-if="r.category"
+                            v-if="r.categories[0]"
                             class="badge"
-                            :class="`cat-${r.category}`"
+                            :class="`cat-${r.categories[0]}`"
                             style="margin-bottom: 10px; display: inline-flex"
                         >
-                            {{ r.category }}
+                            {{ r.categories[0] }}
                         </span>
                         <div class="related-card__title">{{ r.name }}</div>
                         <div class="related-card__meta">

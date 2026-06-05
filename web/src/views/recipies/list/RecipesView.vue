@@ -42,10 +42,8 @@ const filtered = computed(() => {
     if (activeCategories.value.length) {
         list =
             catMode.value === 'AND'
-                ? list.filter((r) => activeCategories.value.every((c) => c === r.category))
-                : list.filter(
-                      (r) => r.category !== null && activeCategories.value.includes(r.category)
-                  );
+                ? list.filter((r) => activeCategories.value.every((c) => r.categories.includes(c)))
+                : list.filter((r) => activeCategories.value.some((c) => r.categories.includes(c)));
     }
     if (maxTime.value) {
         list = list.filter((r) => r.timeMinutes != null && r.timeMinutes <= maxTime.value);

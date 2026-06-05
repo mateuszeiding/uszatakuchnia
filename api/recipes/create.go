@@ -43,7 +43,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		Servings:       req.Servings,
 		Description:    req.Description,
 		Tagline:        req.Tagline,
-		Category:       req.Category,
 		Region:         req.Region,
 		TimeMinutes:    req.TimeMinutes,
 		Difficulty:     req.Difficulty,
@@ -77,6 +76,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	for _, tag := range req.Categories {
+		conn.Create(&entities.RecipeTag{RecipeID: recipe.ID, Tag: tag, GroupName: "category"})
+	}
 	for _, tag := range req.DietTags {
 		conn.Create(&entities.RecipeTag{RecipeID: recipe.ID, Tag: tag, GroupName: "diet"})
 	}

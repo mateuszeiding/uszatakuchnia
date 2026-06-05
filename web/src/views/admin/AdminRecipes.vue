@@ -121,11 +121,11 @@ function fmtTime(min: number | null) {
                 </span>
                 <span>
                     <span
-                        v-if="r.category"
+                        v-if="r.categories[0]"
                         class="badge"
-                        :class="`cat-${r.category}`"
+                        :class="`cat-${r.categories[0]}`"
                     >
-                        {{ r.category }}
+                        {{ r.categories[0] }}
                     </span>
                 </span>
                 <span class="cell-meta">{{ fmtTime(r.timeMinutes) }}</span>

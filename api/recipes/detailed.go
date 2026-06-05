@@ -67,7 +67,6 @@ func putDetailed(w http.ResponseWriter, r *http.Request) {
 	entity.Servings = req.Servings
 	entity.Description = req.Description
 	entity.Tagline = req.Tagline
-	entity.Category = req.Category
 	entity.Region = req.Region
 	entity.TimeMinutes = req.TimeMinutes
 	entity.Difficulty = req.Difficulty
@@ -112,6 +111,9 @@ func putDetailed(w http.ResponseWriter, r *http.Request) {
 
 	// replace tags
 	conn.Where("recipe_id = ?", entity.ID).Delete(&entities.RecipeTag{})
+	for _, tag := range req.Categories {
+		conn.Create(&entities.RecipeTag{RecipeID: entity.ID, Tag: tag, GroupName: "category"})
+	}
 	for _, tag := range req.DietTags {
 		conn.Create(&entities.RecipeTag{RecipeID: entity.ID, Tag: tag, GroupName: "diet"})
 	}

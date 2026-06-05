@@ -7,12 +7,12 @@ export class RecipeBaseDto {
     id: number = 0;
     name: string = '';
     tagline: string | null = null;
-    category: string | null = null;
     region: string | null = null;
     timeMinutes: number | null = null;
     difficulty: number | null = null;
     status: string = 'published';
     needsPrep: boolean = false;
+    categories: string[] = [];
     dietTags: string[] = [];
     practicalTags: string[] = [];
     photoUrl: string | null = null;
@@ -46,7 +46,6 @@ export interface IUpsertRecipeRequest {
     servings: number;
     description?: string | null;
     tagline?: string | null;
-    category?: string | null;
     region?: string | null;
     timeMinutes?: number | null;
     difficulty?: number | null;
@@ -54,6 +53,7 @@ export interface IUpsertRecipeRequest {
     photoUrl?: string | null;
     status: string;
     needsPrep: boolean;
+    categories: string[];
     dietTags: string[];
     practicalTags: string[];
     steps: { stepNo: number; section?: string | null; text: string }[];

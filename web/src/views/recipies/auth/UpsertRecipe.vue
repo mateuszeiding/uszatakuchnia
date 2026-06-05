@@ -22,7 +22,7 @@ const servings = ref(2);
 const timeMinutes = ref<number | null>(null);
 const difficulty = ref<number | null>(null);
 const kcalPerServing = ref<number | null>(null);
-const category = ref<string | null>(null);
+const categories = ref<string[]>([]);
 const region = ref<string | null>(null);
 const tip = ref('');
 
@@ -77,12 +77,22 @@ const recipeIngredients = ref<
 >([{ sortOrder: 1, section: '', ingredientId: 0, amountText: '', note: '' }]);
 
 const CAT_COLORS: Record<string, string> = {
-    ryby: '#3F70A8', mieso: '#B85A2E', wege: '#7A9050', wegan: '#2F6B3F',
-    makarony: '#D9A441', ryz: '#B8946A', zupy: '#C53728', salatki: '#A8B83D',
-    pieczywo: '#7A4A2E', desery: '#D27393', sniadania: '#E89556', przekaski: '#8A4A6D', napoje: '#2F8A8A',
+    ryby: '#3F70A8',
+    mieso: '#B85A2E',
+    wege: '#7A9050',
+    wegan: '#2F6B3F',
+    makarony: '#D9A441',
+    ryz: '#B8946A',
+    zupy: '#C53728',
+    salatki: '#A8B83D',
+    pieczywo: '#7A4A2E',
+    desery: '#D27393',
+    sniadania: '#E89556',
+    przekaski: '#8A4A6D',
+    napoje: '#2F8A8A',
 };
 
-const categories = [
+const CATEGORY_LIST = [
     { key: 'ryby', label: 'ryby' },
     { key: 'mieso', label: 'mięso' },
     { key: 'wege', label: 'wege' },
@@ -110,7 +120,7 @@ onMounted(async () => {
         timeMinutes.value = recipe.timeMinutes;
         difficulty.value = recipe.difficulty;
         kcalPerServing.value = recipe.kcalPerServing ?? null;
-        category.value = recipe.category;
+        categories.value = recipe.categories ?? [];
         region.value = recipe.region;
         needsPrep.value = recipe.needsPrep ?? false;
         status.value = (recipe.status as 'draft' | 'published') ?? 'draft';
@@ -180,7 +190,7 @@ async function submit() {
         timeMinutes: timeMinutes.value,
         difficulty: difficulty.value,
         kcalPerServing: kcalPerServing.value,
-        category: category.value,
+        categories: categories.value,
         region: region.value,
         status: status.value,
         needsPrep: needsPrep.value,
@@ -429,14 +439,21 @@ async function submit() {
                         </label>
                         <div class="cat-picker">
                             <button
-                                v-for="cat in categories"
+                                v-for="cat in CATEGORY_LIST"
                                 :key="cat.key"
                                 class="cat-pill"
-                                :class="{ 'cat-pill--active': category === cat.key }"
-                                :style="category === cat.key ? `--cat-color: ${CAT_COLORS[cat.key]}` : `--cat-color: ${CAT_COLORS[cat.key]}`"
-                                @click="category = category === cat.key ? null : cat.key"
+                                :class="{ 'cat-pill--active': categories.includes(cat.key) }"
+                                :style="`--cat-color: ${CAT_COLORS[cat.key]}`"
+                                @click="
+                                    categories = categories.includes(cat.key)
+                                        ? categories.filter((c) => c !== cat.key)
+                                        : [...categories, cat.key]
+                                "
                             >
-                                <span class="cat-pill__dot" :style="{ background: CAT_COLORS[cat.key] }" />
+                                <span
+                                    class="cat-pill__dot"
+                                    :style="{ background: CAT_COLORS[cat.key] }"
+                                />
                                 {{ cat.label }}
                             </button>
                         </div>
@@ -876,7 +893,12 @@ async function submit() {
 }
 
 /* Category picker */
-.cat-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.cat-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
 .cat-pill {
     display: inline-flex;
     align-items: center;
