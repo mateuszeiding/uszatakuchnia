@@ -224,8 +224,19 @@ async function submit() {
             <div class="upsert-header__row">
                 <h1 class="upsert-title">{{ id ? 'Edytuj przepis' : 'Nowy przepis' }}</h1>
                 <div class="upsert-status">
-                    <span class="upsert-status__dot" />
-                    szkic
+                    <span
+                        class="upsert-status__dot"
+                        :class="
+                            status === 'published'
+                                ? 'upsert-status__dot--pub'
+                                : 'upsert-status__dot--draft'
+                        "
+                    />
+                    {{
+                        status === 'published'
+                            ? 'opublikowany · widoczny publicznie'
+                            : 'szkic · zmiany zapisują się auto'
+                    }}
                 </div>
             </div>
         </div>
@@ -516,21 +527,30 @@ async function submit() {
                 <!-- Status -->
                 <div class="side-card">
                     <div class="side-card__title">Status</div>
-                    <div class="status-toggle">
+                    <div class="status-pill-toggle">
                         <button
-                            class="status-btn"
-                            :class="{ 'status-btn--active': status === 'draft' }"
-                            @click="status = 'draft'"
+                            v-for="opt in [
+                                { id: 'draft', label: 'Szkic', dot: 'var(--c-mustard)' },
+                                { id: 'published', label: 'Opublikowany', dot: 'var(--c-sage)' },
+                            ]"
+                            :key="opt.id"
+                            class="status-pill-btn"
+                            :class="{ 'status-pill-btn--active': status === opt.id }"
+                            @click="status = opt.id as 'draft' | 'published'"
                         >
-                            Szkic
+                            <span
+                                class="status-pill-dot"
+                                :style="{ background: opt.dot }"
+                            />
+                            {{ opt.label }}
                         </button>
-                        <button
-                            class="status-btn"
-                            :class="{ 'status-btn--active': status === 'published' }"
-                            @click="status = 'published'"
-                        >
-                            Opublikowany
-                        </button>
+                    </div>
+                    <div class="status-hint">
+                        {{
+                            status === 'published'
+                                ? '// widoczny publicznie'
+                                : '// tylko dla administratora'
+                        }}
                     </div>
                 </div>
 
@@ -619,11 +639,18 @@ async function submit() {
                 </RouterLink>
                 <button class="btn btn--secondary">Podgląd</button>
                 <button
-                    class="btn btn--accent"
+                    class="btn"
+                    :class="status === 'published' ? 'btn--pub' : 'btn--accent'"
                     :disabled="saving || !name.trim()"
                     @click="submit"
                 >
-                    {{ saving ? 'Zapisywanie…' : id ? 'Zapisz zmiany' : 'Opublikuj przepis' }}
+                    {{
+                        saving
+                            ? 'Zapisywanie…'
+                            : status === 'published'
+                              ? 'Opublikowany · Zapisz'
+                              : 'Opublikuj przepis'
+                    }}
                 </button>
             </div>
         </div>
@@ -688,6 +715,12 @@ async function submit() {
     width: 6px;
     height: 6px;
     border-radius: var(--r-pill);
+    background: var(--c-sage);
+}
+.upsert-status__dot--draft {
+    background: var(--c-mustard);
+}
+.upsert-status__dot--pub {
     background: var(--c-sage);
 }
 
@@ -932,29 +965,56 @@ async function submit() {
 }
 
 /* Status toggle */
-.status-toggle {
+/* Status pill toggle */
+.status-pill-toggle {
     display: flex;
-    gap: 6px;
-    margin-top: 4px;
-}
-.status-btn {
-    flex: 1;
-    padding: 8px;
-    border-radius: var(--r-md);
+    background: var(--bg);
     border: 1px solid var(--rule);
+    border-radius: var(--r-lg);
+    padding: 3px;
+    gap: 3px;
+}
+.status-pill-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
     background: transparent;
-    color: var(--ink-muted);
+    border: 1px solid transparent;
+    border-radius: var(--r-md);
+    padding: 9px 6px;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     font-family: var(--font-sans);
-    transition: all 0.12s;
+    color: var(--ink);
+    transition: all 0.15s;
 }
-.status-btn--active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
+.status-pill-btn--active {
+    background: var(--bg-alt);
+    border-color: var(--rule-strong);
     font-weight: 600;
+    box-shadow: 0 1px 3px rgba(10, 10, 15, 0.08);
+}
+.status-pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--r-pill);
+    flex-shrink: 0;
+}
+.status-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.3px;
+}
+
+/* btn--pub (sage green) */
+.btn--pub {
+    background: var(--c-sage);
+    color: #fff;
+    border: none;
 }
 
 /* NeedsPrep toggle */
@@ -982,7 +1042,7 @@ async function submit() {
     display: inline-block;
 }
 .prep-toggle-input:checked ~ .prep-toggle-track {
-    background: var(--accent);
+    background: var(--c-mustard);
 }
 .prep-toggle-thumb {
     position: absolute;
