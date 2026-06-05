@@ -1,4 +1,4 @@
-import { type FetchQueryOptions, useQueryClient } from '@tanstack/vue-query';
+import { type QueryClient, useQueryClient } from '@tanstack/vue-query';
 
 import { API, type EndpointsConfig } from '../API';
 
@@ -9,18 +9,21 @@ type RequestMap = {
     [key: number]: RecipeDto;
 };
 
-export const fetchRecipes = <E extends keyof RequestMap>(endpoint: E, admin = false) => {
-    const qc = useQueryClient();
+function doFetch<E extends keyof RequestMap>(qc: QueryClient, endpoint: E, admin = false) {
     const base: NestedKeyUnion<EndpointsConfig, '/'> = `recipes/${endpoint}`;
     const url = (admin && endpoint === 'list' ? `${base}?admin=true` : base) as NestedKeyUnion<
         EndpointsConfig,
         '/'
     >;
-    const options: FetchQueryOptions<RequestMap[E]> = {
+    return qc.fetchQuery({
         queryKey: [base, admin],
         queryFn: () => API.Client.get<RequestMap[E]>(url),
-    };
-    return qc.fetchQuery(options);
+    });
+}
+
+export const fetchRecipes = <E extends keyof RequestMap>(endpoint: E, admin = false) => {
+    const qc = useQueryClient();
+    return doFetch(qc, endpoint, admin);
 };
 
 export const createRecipe = (body: IUpsertRecipeRequest) =>

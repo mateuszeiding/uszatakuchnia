@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { useAuth0 } from '@auth0/auth0-vue';
+import { useQueryClient } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 
 import { fetchRecipes } from '@/data/api/recipe/fetch';
@@ -8,6 +9,7 @@ import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto
 
 const props = defineProps<{ id: number }>();
 const { isAuthenticated } = useAuth0();
+const qc = useQueryClient();
 
 const recipe = ref<RecipeDto>();
 const related = ref<RecipeBaseDto[]>([]);
@@ -15,23 +17,19 @@ const servings = ref(1);
 const checkedSteps = ref<Set<number>>(new Set());
 const checkedIngs = ref<Set<string>>(new Set());
 
-fetchRecipes(props.id).then((v) => {
+fetchRecipes(props.id).then(async (v) => {
     recipe.value = v;
     servings.value = v.servings;
-});
-
-// load related after recipe loads
-async function loadRelated() {
-    if (!recipe.value?.category) return;
-    const all = await fetchRecipes('list');
-    related.value = all
-        .filter((r) => r.category === recipe.value!.category && r.id !== recipe.value!.id)
-        .slice(0, 3);
-}
-fetchRecipes(props.id).then((v) => {
-    recipe.value = v;
-    servings.value = v.servings;
-    return loadRelated();
+    if (v.category) {
+        const all = await qc.fetchQuery({
+            queryKey: ['recipes/list', false],
+            queryFn: () =>
+                import('@/data/api/API').then(({ API }) =>
+                    API.Client.get<RecipeBaseDto[]>('recipes/list')
+                ),
+        });
+        related.value = all.filter((r) => r.category === v.category && r.id !== v.id).slice(0, 3);
+    }
 });
 
 const diffLabel: Record<number, string> = { 1: 'Łatwe', 2: 'Średnie', 3: 'Trudne' };
