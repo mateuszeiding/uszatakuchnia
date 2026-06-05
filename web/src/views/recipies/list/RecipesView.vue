@@ -140,7 +140,7 @@ const activeFilterGroups = computed(() => {
         const d = activeDiff.value;
         groups.push({
             label: 'TRUDNOŚĆ',
-            chips: [{ key: 'diff', label: labels[d], onRemove: () => (activeDiff.value = 0) }],
+            chips: [{ key: 'diff', label: labels[d] ?? String(d), onRemove: () => (activeDiff.value = 0) }],
         });
     }
     if (search.value) {

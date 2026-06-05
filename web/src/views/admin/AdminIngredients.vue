@@ -47,8 +47,8 @@ const filtered = computed(() => {
             >
                 <span class="cell-name">
                     <img
-                        v-if="ing.image?.url"
-                        :src="ing.image.url"
+                        v-if="ing.image?.urls?.small"
+                        :src="ing.image.urls.small"
                         :alt="ing.name"
                         class="ing-thumb"
                     />

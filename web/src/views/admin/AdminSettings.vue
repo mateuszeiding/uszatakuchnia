@@ -57,14 +57,21 @@ const newPractical = ref('');
 
 const deleteConfirm = ref<string | null>(null);
 
-function addToList(list: typeof regions, input: typeof newRegion) {
+type ListKey = 'regions' | 'diets' | 'practical';
+const lists = { regions, diets, practical };
+const inputs = { regions: newRegion, diets: newDiet, practical: newPractical };
+
+function addToList(key: ListKey) {
+    const list = lists[key];
+    const input = inputs[key];
     const v = input.value.trim();
     if (v && !list.value.includes(v)) {
         list.value.push(v);
         input.value = '';
     }
 }
-function removeFromList(list: typeof regions, item: string) {
+function removeFromList(key: ListKey, item: string) {
+    const list = lists[key];
     if (deleteConfirm.value === item) {
         list.value = list.value.filter((x) => x !== item);
         deleteConfirm.value = null;
@@ -147,7 +154,7 @@ document.addEventListener('click', () => {
                                 Usuń?
                                 <button
                                     class="tag-item__yes"
-                                    @click.stop="removeFromList(regions, r)"
+                                    @click.stop="removeFromList('regions', r)"
                                 >
                                     Tak
                                 </button>
@@ -163,7 +170,7 @@ document.addEventListener('click', () => {
                             {{ r }}
                             <button
                                 class="tag-item__del"
-                                @click.stop="removeFromList(regions, r)"
+                                @click.stop="removeFromList('regions', r)"
                             >
                                 ×
                             </button>
@@ -175,11 +182,11 @@ document.addEventListener('click', () => {
                         v-model="newRegion"
                         class="input add-input"
                         placeholder="Nowy region..."
-                        @keydown.enter="addToList(regions, newRegion)"
+                        @keydown.enter="addToList('regions')"
                     />
                     <button
                         class="btn btn--secondary"
-                        @click="addToList(regions, newRegion)"
+                        @click="addToList('regions')"
                     >
                         Dodaj
                     </button>
@@ -207,7 +214,7 @@ document.addEventListener('click', () => {
                                 Usuń?
                                 <button
                                     class="tag-item__yes"
-                                    @click.stop="removeFromList(diets, d)"
+                                    @click.stop="removeFromList('diets', d)"
                                 >
                                     Tak
                                 </button>
@@ -223,7 +230,7 @@ document.addEventListener('click', () => {
                             {{ d }}
                             <button
                                 class="tag-item__del"
-                                @click.stop="removeFromList(diets, d)"
+                                @click.stop="removeFromList('diets', d)"
                             >
                                 ×
                             </button>
@@ -235,11 +242,11 @@ document.addEventListener('click', () => {
                         v-model="newDiet"
                         class="input add-input"
                         placeholder="Nowy tag diety..."
-                        @keydown.enter="addToList(diets, newDiet)"
+                        @keydown.enter="addToList('diets')"
                     />
                     <button
                         class="btn btn--secondary"
-                        @click="addToList(diets, newDiet)"
+                        @click="addToList('diets')"
                     >
                         Dodaj
                     </button>
@@ -267,7 +274,7 @@ document.addEventListener('click', () => {
                                 Usuń?
                                 <button
                                     class="tag-item__yes"
-                                    @click.stop="removeFromList(practical, p)"
+                                    @click.stop="removeFromList('practical', p)"
                                 >
                                     Tak
                                 </button>
@@ -283,7 +290,7 @@ document.addEventListener('click', () => {
                             {{ p }}
                             <button
                                 class="tag-item__del"
-                                @click.stop="removeFromList(practical, p)"
+                                @click.stop="removeFromList('practical', p)"
                             >
                                 ×
                             </button>
@@ -295,11 +302,11 @@ document.addEventListener('click', () => {
                         v-model="newPractical"
                         class="input add-input"
                         placeholder="Nowy tag praktyczny..."
-                        @keydown.enter="addToList(practical, newPractical)"
+                        @keydown.enter="addToList('practical')"
                     />
                     <button
                         class="btn btn--secondary"
-                        @click="addToList(practical, newPractical)"
+                        @click="addToList('practical')"
                     >
                         Dodaj
                     </button>
