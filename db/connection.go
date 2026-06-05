@@ -64,7 +64,7 @@ func initDB() error {
 
 	if err := Apply(context.Background(), inst, Options{
 		DevReset: false,
-		Migrate:  true,
+		Migrate:  false,
 		AddSeed:  false,
 	}); err != nil {
 		return fmt.Errorf("apply: %w", err)

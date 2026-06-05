@@ -43,17 +43,23 @@ Projekt używa Prettier przez `eslint-plugin-prettier`. Nie commituj kodu bez pr
 - Encje DB: `db/entities/`, mappery: `db/mappers/`, DTOs: `dtos/`.
 - GORM AutoMigrate — nie piszesz ręcznych migracji SQL.
 
-## Reset bazy danych
+## Zmiany schematu bazy danych
 
-Gdy zmieniasz encje (nowe kolumny, nowe tabele) lokalnie, wykonaj reset:
+Serwer **nie** odpala migracji automatycznie. Po zmianie encji trzeba uruchomić migrację ręcznie.
 
+### Dodanie kolumn / tabel (bez utraty danych)
+```
+go run ./cmd/migrate
+```
+Tylko dodaje brakujące kolumny i tabele. Używaj zawsze gdy zmieniasz encje.
+
+### Reset lokalnej bazy (niszczy dane)
 ```
 go run ./cmd/resetdb
 ```
+Drop → migrate → seed. Tylko lokalnie, nigdy na produkcji.
 
-Skrypt: drop → migrate → seed (używa `DB_DATABASE_URL` z env).
-
-**Na produkcji:** nie odpalaj resetu — Vercel + GORM AutoMigrate dodaje kolumny automatycznie przy deploy.
+Oba skrypty wymagają `DB_DATABASE_URL` z `.env.local`.
 
 ## Uruchamianie lokalnie
 
