@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 const props = defineProps<{
     search: string;
-    activeCategory: string | null;
+    activeCategories: string[];
     maxTime: number;
     activeDiff: number;
     activeDiets: string[];
@@ -15,7 +15,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     'update:search': [v: string];
-    'update:activeCategory': [v: string | null];
+    'update:activeCategories': [v: string[]];
     'update:maxTime': [v: number];
     'update:activeDiff': [v: number];
     'update:activeDiets': [v: string[]];
@@ -79,7 +79,10 @@ const PRACTICAL = [
 ];
 
 function toggleCat(key: string) {
-    emit('update:activeCategory', props.activeCategory === key ? null : key);
+    const next = props.activeCategories.includes(key)
+        ? props.activeCategories.filter((c) => c !== key)
+        : [...props.activeCategories, key];
+    emit('update:activeCategories', next);
 }
 
 function toggleDiet(tag: string) {
@@ -158,8 +161,8 @@ function togglePractical(tag: string) {
                     <span class="filter-group__label">Kategoria</span>
                     <button
                         class="or-and-toggle"
-                        :class="{ 'or-and-toggle--disabled': !activeCategory }"
-                        :disabled="!activeCategory"
+                        :class="{ 'or-and-toggle--disabled': activeCategories.length < 2 }"
+                        :disabled="activeCategories.length < 2"
                         @click="emit('update:catMode', catMode === 'OR' ? 'AND' : 'OR')"
                     >
                         <span :class="{ 'or-and-toggle__opt--active': catMode === 'OR' }">LUB</span>
@@ -171,9 +174,29 @@ function togglePractical(tag: string) {
                         v-for="cat in CATEGORIES"
                         :key="cat.key"
                         class="filter-row"
-                        :class="{ 'filter-row--active': activeCategory === cat.key }"
+                        :class="{ 'filter-row--active': activeCategories.includes(cat.key) }"
                         @click="toggleCat(cat.key)"
                     >
+                        <span
+                            class="checkbox-wrap"
+                            :class="{ 'checkbox-wrap--active': activeCategories.includes(cat.key) }"
+                        >
+                            <svg
+                                v-if="activeCategories.includes(cat.key)"
+                                width="8"
+                                height="8"
+                                viewBox="0 0 10 10"
+                                fill="none"
+                            >
+                                <path
+                                    d="M2 5.2L4.2 7.4L8 3.4"
+                                    stroke="#fff"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                        </span>
                         <span
                             class="badge"
                             :class="`cat-${cat.key}`"

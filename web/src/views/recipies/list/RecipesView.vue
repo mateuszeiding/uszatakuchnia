@@ -12,7 +12,7 @@ const { isAuthenticated } = useAuth0();
 
 const recipes = ref<RecipeBaseDto[]>([]);
 const search = ref('');
-const activeCategory = ref<string | null>(null);
+const activeCategories = ref<string[]>([]);
 const maxTime = ref(0);
 const activeDiff = ref(0);
 const activeDiets = ref<string[]>([]);
@@ -39,8 +39,13 @@ const filtered = computed(() => {
         const q = search.value.toLowerCase();
         list = list.filter((r) => r.name.toLowerCase().includes(q));
     }
-    if (activeCategory.value) {
-        list = list.filter((r) => r.category === activeCategory.value);
+    if (activeCategories.value.length) {
+        list =
+            catMode.value === 'AND'
+                ? list.filter((r) => activeCategories.value.every((c) => c === r.category))
+                : list.filter(
+                      (r) => r.category !== null && activeCategories.value.includes(r.category)
+                  );
     }
     if (maxTime.value) {
         list = list.filter((r) => r.timeMinutes != null && r.timeMinutes <= maxTime.value);
@@ -83,7 +88,7 @@ const anyFilter = computed(
     () =>
         !!(
             search.value ||
-            activeCategory.value ||
+            activeCategories.value.length ||
             maxTime.value ||
             activeDiff.value ||
             activeDiets.value.length ||
@@ -97,11 +102,16 @@ const activeFilterGroups = computed(() => {
         label: string;
         chips: { key: string; label: string; onRemove: () => void }[];
     }[] = [];
-    if (activeCategory.value) {
-        const cat = activeCategory.value;
+    if (activeCategories.value.length) {
         groups.push({
             label: 'KATEGORIA',
-            chips: [{ key: 'cat', label: cat, onRemove: () => (activeCategory.value = null) }],
+            chips: activeCategories.value.map((c) => ({
+                key: `cat-${c}`,
+                label: c,
+                onRemove: () => {
+                    activeCategories.value = activeCategories.value.filter((x) => x !== c);
+                },
+            })),
         });
     }
     if (activeDiets.value.length) {
@@ -140,7 +150,13 @@ const activeFilterGroups = computed(() => {
         const d = activeDiff.value;
         groups.push({
             label: 'TRUDNOŚĆ',
-            chips: [{ key: 'diff', label: labels[d] ?? String(d), onRemove: () => (activeDiff.value = 0) }],
+            chips: [
+                {
+                    key: 'diff',
+                    label: labels[d] ?? String(d),
+                    onRemove: () => (activeDiff.value = 0),
+                },
+            ],
         });
     }
     if (search.value) {
@@ -155,7 +171,7 @@ const activeFilterGroups = computed(() => {
 
 function clearFilters() {
     search.value = '';
-    activeCategory.value = null;
+    activeCategories.value = [];
     maxTime.value = 0;
     activeDiff.value = 0;
     activeDiets.value = [];
@@ -180,7 +196,7 @@ function onDeleted(id: number) {
     <div class="recipes-layout container">
         <FilterSidebar
             v-model:search="search"
-            v-model:activeCategory="activeCategory"
+            v-model:activeCategories="activeCategories"
             v-model:maxTime="maxTime"
             v-model:activeDiff="activeDiff"
             v-model:activeDiets="activeDiets"
