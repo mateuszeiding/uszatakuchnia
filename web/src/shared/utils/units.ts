@@ -77,18 +77,6 @@ const CHAINS: Record<string, string[]> = {
 
 function fmtNum(n: number): string {
     if (n === 0) return '0';
-    // Nice fractions for small spoon values
-    const fractions: [number, string][] = [
-        [0.25, '¼'], [0.33, '⅓'], [0.5, '½'], [0.67, '⅔'], [0.75, '¾'],
-    ];
-    for (const [val, sym] of fractions) {
-        if (Math.abs(n - val) < 0.05) return sym;
-        if (n > 1) {
-            const whole = Math.floor(n);
-            const frac = n - whole;
-            if (Math.abs(frac - val) < 0.05) return `${whole}${sym}`;
-        }
-    }
     if (Math.abs(n - Math.round(n)) < 0.05) return String(Math.round(n));
     if (n < 10) return n.toFixed(1).replace(/\.0$/, '');
     return String(Math.round(n));
