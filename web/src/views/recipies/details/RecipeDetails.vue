@@ -6,7 +6,7 @@ import { computed, ref } from 'vue';
 import { fetchRecipes } from '@/data/api/recipe/fetch';
 import type { RecipeBaseDto, RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
-import { scaleAmount } from '@/shared/utils/units';
+import { scaleAmount, scaleAmountImperial } from '@/shared/utils/units';
 
 const props = defineProps<{ id: number }>();
 const { isAuthenticated } = useAuth0();
@@ -15,6 +15,7 @@ const qc = useQueryClient();
 const recipe = ref<RecipeDto>();
 const related = ref<RecipeBaseDto[]>([]);
 const servings = ref(1);
+const imperial = ref(false);
 const checkedSteps = ref<Set<number>>(new Set());
 const checkedIngs = ref<Set<string>>(new Set());
 
@@ -49,7 +50,9 @@ function scaleIngredient(ing: RecipeIngredientDto): string {
     if (!recipe.value) return '—';
     const ratio = servings.value / recipe.value.servings;
     if (ing.amount != null) {
-        return scaleAmount(ing.amount, ing.unit, ratio);
+        return imperial.value
+            ? scaleAmountImperial(ing.amount, ing.unit, ratio)
+            : scaleAmount(ing.amount, ing.unit, ratio);
     }
     // Fallback for old amountText-only data
     return ing.amountText ?? '—';
@@ -318,6 +321,22 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                                 +
                             </button>
                         </div>
+                    </div>
+                    <div class="unit-toggle">
+                        <button
+                            class="unit-toggle__btn"
+                            :class="{ 'is-active': !imperial }"
+                            @click="imperial = false"
+                        >
+                            metryczne
+                        </button>
+                        <button
+                            class="unit-toggle__btn"
+                            :class="{ 'is-active': imperial }"
+                            @click="imperial = true"
+                        >
+                            imperial
+                        </button>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 22px">
                         <template
@@ -1101,6 +1120,37 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
     font-size: 11px;
     color: var(--ink-dim);
     letter-spacing: 0.4px;
+}
+
+/* Unit toggle */
+.unit-toggle {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-lg);
+    padding: 3px;
+    gap: 3px;
+}
+.unit-toggle__btn {
+    flex: 1;
+    padding: 6px 8px;
+    border-radius: var(--r-md);
+    border: 1px solid transparent;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    color: var(--ink-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.unit-toggle__btn.is-active {
+    background: var(--bg-alt);
+    border-color: var(--rule-strong);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(10, 10, 15, 0.08);
 }
 
 @media (max-width: 1100px) {

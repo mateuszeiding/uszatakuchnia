@@ -144,6 +144,74 @@ export function formatAmount(amount: number | null, unit: string | null): string
     return scaleAmount(amount, unit, 1);
 }
 
+// ─── Imperial conversion ──────────────────────────────────────
+
+// Best imperial unit chains ordered from smallest to largest
+const IMPERIAL_VOLUME_CHAIN = ['tsp', 'tbsp', 'fl oz', 'cup', 'pt'] as const;
+const IMPERIAL_WEIGHT_CHAIN = ['oz', 'lb'] as const;
+
+// Metric units that are "spoon-like" — map to tsp/tbsp first
+const METRIC_VOLUME_UNITS = new Set(['kropla', 'łyżeczka', 'łyżki', 'łyżka', 'szklanka', 'ml', 'l']);
+const METRIC_WEIGHT_UNITS = new Set(['szczypta', 'g', 'dag', 'kg']);
+
+function bestImperialUnit(baseValue: number, chain: readonly string[]): { amount: number; unit: string } {
+    let bestUnit = chain[0]!;
+    let bestAmount = baseValue / (UNIT_DEFS[bestUnit]?.toBase ?? 1);
+
+    for (const candidate of chain) {
+        const def = UNIT_DEFS[candidate];
+        if (!def) continue;
+        const val = baseValue / def.toBase;
+        if (val >= 1) {
+            bestUnit = candidate;
+            bestAmount = val;
+        }
+    }
+    return { amount: bestAmount, unit: bestUnit };
+}
+
+/**
+ * Scale an amount and convert to imperial display.
+ * e.g. scaleAmountImperial(3, 'łyżka', 1) → '3 tbsp'
+ *      scaleAmountImperial(500, 'g', 1)    → '1.1 lb'
+ *      scaleAmountImperial(2, 'ząbek', 1)  → '2 ząbek'  (count — no conversion)
+ */
+export function scaleAmountImperial(
+    amount: number | null,
+    unit: string | null,
+    ratio: number,
+): string {
+    if (amount == null || amount === 0) return unit ? `— ${unit}` : '—';
+    if (!unit) return fmtNum(amount * ratio);
+
+    const def = UNIT_DEFS[unit];
+    if (!def) return `${fmtNum(amount * ratio)} ${unit}`;
+
+    const scaledAmount = amount * ratio;
+
+    // Count units: no conversion
+    if (def.base === 'count') return `${fmtNum(scaledAmount)} ${unit}`;
+
+    // Already imperial — just scale normally
+    if (def.imperial) return scaleAmount(amount, unit, ratio);
+
+    // Convert metric → base → best imperial
+    const baseValue = scaledAmount * def.toBase;
+
+    if (def.base === 'ml' && METRIC_VOLUME_UNITS.has(unit)) {
+        const { amount: a, unit: u } = bestImperialUnit(baseValue, IMPERIAL_VOLUME_CHAIN);
+        return `${fmtNum(a)} ${u}`;
+    }
+
+    if (def.base === 'g' && METRIC_WEIGHT_UNITS.has(unit)) {
+        const { amount: a, unit: u } = bestImperialUnit(baseValue, IMPERIAL_WEIGHT_CHAIN);
+        return `${fmtNum(a)} ${u}`;
+    }
+
+    // Fallback
+    return `${fmtNum(scaledAmount)} ${unit}`;
+}
+
 // ─── Unit list for select ─────────────────────────────────────
 
 export const UNIT_OPTIONS: { value: string; label: string; group: string }[] = [
