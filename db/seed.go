@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"os"
 	"uszatakuchnia/db/entities"
 	"uszatakuchnia/services"
 
@@ -100,7 +101,7 @@ func SeedOneIngredient(tx *gorm.DB, seed IngredientSeed) (uint, error) {
 		return 0, fmt.Errorf("failed to find or create ingredient: %w", err)
 	}
 
-	if seed.Image != nil {
+	if seed.Image != nil && os.Getenv("UNSPLASH_ACCESS_KEY") != "" {
 		if err := services.UpsertImageFromUnsplash(tx, ing.ID, entities.IngredientRef, seed.Image.PostID); err != nil {
 			return 0, err
 		}
