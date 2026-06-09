@@ -4,6 +4,7 @@ import { computed, ref } from 'vue';
 
 import FilterSidebar from './components/FilterSidebar.vue';
 import RecipeCard from './components/RecipeCard.vue';
+import RecipeCardSkeleton from './components/RecipeCardSkeleton.vue';
 
 import { fetchRecipes } from '@/data/api/recipe/fetch';
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
@@ -11,6 +12,7 @@ import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 const { isAuthenticated } = useAuth0();
 
 const recipes = ref<RecipeBaseDto[]>([]);
+const loading = ref(true);
 const search = ref('');
 const activeCategories = ref<string[]>([]);
 const maxTime = ref(0);
@@ -24,7 +26,10 @@ const hidePrep = ref(false);
 const sort = ref<'newest' | 'fastest' | 'az'>('newest');
 const tab = ref<'all' | 'pub' | 'draft'>('all');
 
-fetchRecipes('list', isAuthenticated.value).then((v) => (recipes.value = v));
+fetchRecipes('list', isAuthenticated.value).then((v) => {
+    recipes.value = v;
+    loading.value = false;
+});
 
 const filtered = computed(() => {
     let list = recipes.value;
@@ -297,8 +302,44 @@ function onDeleted(id: number) {
                 </label>
             </div>
 
+            <!-- skeleton podczas ładowania -->
             <div
-                v-if="filtered.length === 0"
+                v-if="loading"
+                class="recipes-grid"
+            >
+                <RouterLink
+                    v-if="isAuthenticated"
+                    to="/recipes/new"
+                    class="card-add"
+                >
+                    <span class="card-add__icon">
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 22 22"
+                            fill="none"
+                        >
+                            <path
+                                d="M11 4v14M4 11h14"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </span>
+                    <div>
+                        <div class="card-add__title">Dodaj nowy przepis</div>
+                        <div class="card-add__sub">Wgraj zdjęcie, składniki i kroki.</div>
+                    </div>
+                </RouterLink>
+                <RecipeCardSkeleton
+                    v-for="n in isAuthenticated ? 5 : 6"
+                    :key="n"
+                />
+            </div>
+
+            <div
+                v-else-if="filtered.length === 0"
                 class="empty-state"
             >
                 <span class="empty-state__icon">

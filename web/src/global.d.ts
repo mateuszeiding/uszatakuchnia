@@ -2,6 +2,10 @@
 export {};
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    interface Window {
+        hideLoader?: () => void;
+    }
     type Sep = '-' | '/';
     type NestedKeyUnion<T, Sep extends string = '/'> = {
         [K in Extract<keyof T, string>]: T[K] extends object

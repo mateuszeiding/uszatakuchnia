@@ -16,6 +16,7 @@
 .btn svg { width: 15px; height: 15px; }
 .btn:hover { background: var(--ink-dim); text-decoration: none; }
 .btn:disabled, .btn.is-disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+.btn--saving { opacity: .75; cursor: not-allowed; pointer-events: none; }
 .btn--accent { background: var(--accent); color: var(--on-accent); }
 .btn--accent:hover { background: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-accent); }
 .btn--secondary { background: var(--bg-alt); color: var(--ink); border-color: var(--rule-strong); }

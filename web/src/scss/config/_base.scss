@@ -33,6 +33,23 @@ code, kbd, samp { font-family: var(--font-mono); font-size: 0.9em; }
 
 button { font: inherit; }
 
+// Skeleton shimmer
+@keyframes sk-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+.sk {
+  background: linear-gradient(90deg, #EDEDF5 25%, #F4F4FA 50%, #EDEDF5 75%);
+  background-size: 1200px 100%;
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+  border-radius: 5px;
+}
+[data-theme='dark'] .sk {
+  background: linear-gradient(90deg, #1E1E2A 25%, #26263A 50%, #1E1E2A 75%);
+  background-size: 1200px 100%;
+  animation: sk-shimmer 1.6s ease-in-out infinite;
+}
+
 * { scrollbar-width: thin; scrollbar-color: var(--rule-strong) transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-thumb {

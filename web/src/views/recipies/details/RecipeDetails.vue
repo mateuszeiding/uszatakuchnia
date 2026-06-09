@@ -3,6 +3,7 @@ import { useAuth0 } from '@auth0/auth0-vue';
 import { useQueryClient } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 
+import USpinner from '@/components/USpinner.vue';
 import { fetchRecipes } from '@/data/api/recipe/fetch';
 import type { RecipeBaseDto, RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
@@ -14,6 +15,7 @@ const qc = useQueryClient();
 
 const recipe = ref<RecipeDto>();
 const related = ref<RecipeBaseDto[]>([]);
+const loading = ref(true);
 const servings = ref(1);
 const imperial = ref(false);
 const checkedSteps = ref<Set<number>>(new Set());
@@ -21,6 +23,7 @@ const checkedIngs = ref<Set<string>>(new Set());
 
 fetchRecipes(props.id).then(async (v) => {
     recipe.value = v;
+    loading.value = false;
     servings.value = v.servings;
     if (v.categories.length) {
         const all = await qc.fetchQuery({
@@ -99,15 +102,15 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
 
 <template>
     <div
-        v-if="!recipe"
-        style="padding: 80px; text-align: center"
-        class="muted t-small"
+        v-if="loading"
+        class="recipe-loading"
     >
-        Ładowanie…
+        <USpinner :size="32" />
+        <span class="recipe-loading__label">ładowanie przepisu…</span>
     </div>
 
     <article
-        v-else
+        v-else-if="recipe"
         class="container recipe-page"
     >
         <!-- Reading progress bar -->
@@ -322,22 +325,7 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
                             </button>
                         </div>
                     </div>
-                    <div class="unit-toggle">
-                        <button
-                            class="unit-toggle__btn"
-                            :class="{ 'is-active': !imperial }"
-                            @click="imperial = false"
-                        >
-                            metryczne
-                        </button>
-                        <button
-                            class="unit-toggle__btn"
-                            :class="{ 'is-active': imperial }"
-                            @click="imperial = true"
-                        >
-                            imperial
-                        </button>
-                    </div>
+                    <!-- unit-toggle hidden until translations are ready -->
                     <div style="display: flex; flex-direction: column; gap: 22px">
                         <template
                             v-for="section in ingredientsBySection"
@@ -564,6 +552,20 @@ const allDone = computed(() => (recipe.value ? doneSteps.value === totalSteps.va
 </template>
 
 <style scoped>
+.recipe-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 24px;
+    gap: 14px;
+}
+.recipe-loading__label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink-muted);
+    letter-spacing: 0.3px;
+}
 .recipe-page {
     padding-bottom: 80px;
     position: relative;

@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 
 import IngAutosuggest from './components/IngAutosuggest.vue';
 
+import USpinner from '@/components/USpinner.vue';
 import { fetchIngredients } from '@/data/api/ingredients/fetch';
 import { createRecipe, fetchRecipesWithClient, updateRecipe } from '@/data/api/recipe/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
@@ -74,7 +75,7 @@ const uid = () => ++_id;
 function splitAmountText(
     amountText: string | null,
     amount: number | null,
-    unitField: string | null,
+    unitField: string | null
 ): { qty: number | null; unit: string } {
     // Prefer numeric amount field if available
     if (amount != null && unitField) return { qty: amount, unit: unitField };
@@ -93,7 +94,6 @@ function splitAmountText(
     const num = parseFloat(amountText.replace(',', '.'));
     return { qty: isNaN(num) ? null : num, unit: '' };
 }
-
 
 type IngItem = { id: number; ingredientId: number; qty: number | null; unit: string; note: string };
 type IngGroup = { id: number; label: string; items: IngItem[] };
@@ -538,7 +538,7 @@ async function submit() {
                                         >
                                             <option
                                                 v-for="u in UNIT_OPTIONS.filter(
-                                                    (x) => x.group === group,
+                                                    (x) => x.group === group
                                                 )"
                                                 :key="u.value"
                                                 :value="u.value"
@@ -943,10 +943,19 @@ async function submit() {
                 <button class="btn btn--secondary">Podgląd</button>
                 <button
                     class="btn"
-                    :class="status === 'published' ? 'btn--pub' : 'btn--accent'"
-                    :disabled="saving || !name.trim()"
+                    :class="[
+                        status === 'published' ? 'btn--pub' : 'btn--accent',
+                        { 'btn--saving': saving },
+                    ]"
+                    :disabled="!name.trim()"
                     @click="submit"
                 >
+                    <USpinner
+                        v-if="saving"
+                        :size="14"
+                        color="rgba(255,255,255,0.95)"
+                        style="border-color: rgba(255, 255, 255, 0.25)"
+                    />
                     {{
                         saving
                             ? 'Zapisywanie…'

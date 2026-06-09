@@ -1,14 +1,19 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 
+import USpinner from '@/components/USpinner.vue';
 import { deleteRecipe, fetchRecipes } from '@/data/api/recipe/fetch';
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import { confirmDialog } from '@/utils/dialog';
 
 const recipes = ref<RecipeBaseDto[]>([]);
+const loading = ref(true);
 const tab = ref<'all' | 'pub' | 'draft'>('all');
 const search = ref('');
-fetchRecipes('list', true).then((v) => (recipes.value = v));
+fetchRecipes('list', true).then((v) => {
+    recipes.value = v;
+    loading.value = false;
+});
 
 const filtered = computed(() => {
     let list = recipes.value;
@@ -105,7 +110,15 @@ function fmtTime(min: number | null) {
                 <span></span>
             </div>
             <div
+                v-if="loading"
+                class="table-spinner"
+            >
+                <USpinner :size="24" />
+                <span class="table-spinner__label">ładowanie danych…</span>
+            </div>
+            <div
                 v-for="r in filtered"
+                v-else
                 :key="r.id"
                 class="recipe-table__row"
             >
@@ -182,7 +195,7 @@ function fmtTime(min: number | null) {
                 </span>
             </div>
             <div
-                v-if="filtered.length === 0"
+                v-if="!loading && filtered.length === 0"
                 class="empty"
             >
                 Brak przepisów
@@ -364,6 +377,20 @@ function fmtTime(min: number | null) {
 .status-pill--draft {
     background: color-mix(in srgb, #d9a441 18%, transparent);
     color: #d9a441;
+}
+.table-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    gap: 12px;
+}
+.table-spinner__label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.3px;
 }
 .empty {
     padding: 40px;
