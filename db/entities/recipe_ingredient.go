@@ -9,10 +9,12 @@ type RecipeIngredient struct {
 	IngredientID uint       `gorm:"not null;index:ix_recing_ingredient"`
 	Ingredient   Ingredient `gorm:"foreignKey:IngredientID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 
-	Amount     *float64 `gorm:"type:decimal(10,3)"`
-	Unit       *string  `gorm:"type:varchar(32)"`
-	AmountText *string  `gorm:"type:varchar(255)"`
-	Note       *string  `gorm:"type:varchar(255)"`
+	// Ilość jako tekst: liczba, ułamek ("½", "1/4", "1,5") lub zakres ("2–3"). Parsowana przez services.ParseQuantity.
+	Quantity *string `gorm:"type:varchar(32)"`
+	UnitID   *uint   `gorm:"index:ix_recing_unit"`
+	Unit     *Unit   `gorm:"foreignKey:UnitID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	Note     *string `gorm:"type:varchar(255)"`
+	Optional bool    `gorm:"not null;default:false"`
 
 	Recipe Recipe `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }

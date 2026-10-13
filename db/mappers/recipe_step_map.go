@@ -7,9 +7,11 @@ import (
 
 func MapRecipeStepToDto(e entities.RecipeStep) dtos.RecipeStepDto {
 	return dtos.RecipeStepDto{
-		StepNo:  e.StepNo,
-		Section: e.Section,
-		Text:    e.Text,
+		StepNo:   e.StepNo,
+		Section:  e.Section,
+		Text:     e.Text,
+		Prep:     e.Prep,
+		PrepLead: e.PrepLead,
 	}
 }
 

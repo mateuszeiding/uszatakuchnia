@@ -15,7 +15,7 @@ func MapIngredientToDto(e entities.Ingredient) dtos.IngredientDto {
 		ID:         e.ID,
 		Name:       e.Name,
 		ParentID:   e.ParentID,
-		IsAllergen: e.IsAllergen,
+		Allergens:  mapIngredientAllergenCodes(e.Allergens),
 		Type:       ingredientType,
 		Image:      MapImageToDto(&e.Image),
 	}

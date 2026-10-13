@@ -3,6 +3,7 @@ package db
 import (
 	"sync"
 	"uszatakuchnia/db/entities"
+	"uszatakuchnia/db/migrations"
 
 	"gorm.io/gorm"
 )
@@ -11,45 +12,62 @@ func AutoMigrate(gdb *gorm.DB) error {
 	return gdb.AutoMigrate(
 		&entities.IngredientType{},
 		&entities.Ingredient{},
+		&entities.IngredientAllergen{},
+
+		&entities.TaxonomyAxis{},
+		&entities.TaxonomyValue{},
+		&entities.Unit{},
 
 		&entities.Recipe{},
 		&entities.RecipeStep{},
 		&entities.RecipeIngredient{},
 		&entities.RecipePhoto{},
-		&entities.RecipeTag{},
+		&entities.RecipeTaxonomy{},
 
 		&entities.Image{},
+		&entities.Photo{},
 	)
 }
 
+// runMigrations: najpierw AutoMigrate (dodaje kolumny/tabele), potem wersjonowane migracje danych.
 func runMigrations(gdb *gorm.DB) error {
 	if err := AutoMigrate(gdb); err != nil {
 		return err
 	}
-
-	return nil
+	return migrations.Run(gdb)
 }
 
 var migrateLock sync.Mutex
+
+// devResetTables — wszystkie tabele aplikacji, łącznie z wycofanymi (żeby reset nie zostawiał śmieci).
+var devResetTables = []string{
+	"recipe_taxonomy",
+	"recipe_tags", // wycofana: zastąpiona przez recipe_taxonomy
+	"recipe_steps",
+	"recipe_ingredients",
+	"recipe_photos",
+	"images",
+	"photos",
+	"recipes",
+	"taxonomy_values",
+	"taxonomy_axes",
+	"units",
+	"ingredient_allergens",
+	"ingredients",
+	"ingredient_types",
+	"schema_migrations",
+}
 
 func devReset(db *gorm.DB) error {
 	migrateLock.Lock()
 	defer migrateLock.Unlock()
 
 	return db.Transaction(func(tx *gorm.DB) error {
-		// Dropuj w odwrotnej kolejności zależności (children -> parents)
-		if err := tx.Migrator().DropTable(
-			&entities.RecipeStep{},       // zależy od recipes
-			&entities.RecipeIngredient{}, // zależy od recipes i ingredients
-			&entities.Image{},            // polimorficzne - zależy logicznie od encji, ale bez FK
-			&entities.RecipePhoto{},
-
-			&entities.Recipe{},     // parent dla steps/ingredients
-			&entities.Ingredient{}, // parent dla recipe_ingredients
-
-			&entities.IngredientType{}, // parent dla ingredients
-		); err != nil {
-			return err
+		for _, t := range devResetTables {
+			// postgres migrator: DROP TABLE IF EXISTS ... CASCADE
+			if err := tx.Migrator().DropTable(t); err != nil {
+				return err
+			}
 		}
 		return nil
 	})

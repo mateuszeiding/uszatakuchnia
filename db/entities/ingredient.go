@@ -9,7 +9,7 @@ type Ingredient struct {
 	TypeID uint           `gorm:"not null;index:ix_ingredients_type"`
 	Type   IngredientType `gorm:"foreignKey:TypeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 
-	IsAllergen bool `gorm:"not null;default:false"`
+	Allergens []IngredientAllergen `gorm:"foreignKey:IngredientID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	Image Image `gorm:"polymorphic:Ref;polymorphicValue:ingredient"`
 }

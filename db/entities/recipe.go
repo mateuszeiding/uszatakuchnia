@@ -1,40 +1,42 @@
 package entities
 
+const (
+	StatusDraft     = "draft"
+	StatusPublished = "published"
+)
+
 type Recipe struct {
-	ID          uint    `gorm:"primaryKey;autoIncrement"`
-	Name        string  `gorm:"type:varchar(255);not null;index:ix_recipes_name"`
-	Servings    int     `gorm:"not null"`
+	ID          uint   `gorm:"primaryKey;autoIncrement"`
+	Name        string `gorm:"type:varchar(255);not null;index:ix_recipes_name"`
+	Servings    int    `gorm:"not null;default:0"` // 0 = nieustawione (szkic)
 	Description *string
 	Tagline     *string `gorm:"type:varchar(500)"`
+	Tip         *string // wskazówka pod krokami
 
-	Category       *string `gorm:"type:varchar(64)"`
-	Region         *string `gorm:"type:varchar(64)"`
 	TimeMinutes    *int
 	Difficulty     *int
 	KcalPerServing *int
 
-	Status    string `gorm:"type:varchar(16);not null;default:'published'"`
-	NeedsPrep bool   `gorm:"not null;default:false"`
+	Status string `gorm:"type:varchar(16);not null;default:'draft'"`
 
 	Photo       *RecipePhoto       `gorm:"foreignKey:RecipeID;references:ID"`
 	Steps       []RecipeStep       `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Ingredients []RecipeIngredient `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Tags        []RecipeTag        `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Taxonomy    []RecipeTaxonomy   `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
+// RecipeBase — lekki widok przepisu dla listy. NeedsPrep wyliczane w zapytaniu (EXISTS na krokach prep).
 type RecipeBase struct {
-	ID          uint         `gorm:"primaryKey;autoIncrement"`
-	Name        string       `gorm:"type:varchar(255);not null;index:ix_recipes_name"`
-	Tagline     *string      `gorm:"type:varchar(500)"`
-	Category    *string      `gorm:"type:varchar(64)"`
-	Region      *string      `gorm:"type:varchar(64)"`
+	ID          uint    `gorm:"primaryKey;autoIncrement"`
+	Name        string  `gorm:"type:varchar(255);not null;index:ix_recipes_name"`
+	Tagline     *string `gorm:"type:varchar(500)"`
 	TimeMinutes *int
 	Difficulty  *int
-	Status      string       `gorm:"type:varchar(16);not null;default:'published'"`
-	NeedsPrep   bool         `gorm:"not null;default:false"`
-	Photo       *RecipePhoto `gorm:"foreignKey:RecipeID;references:ID"`
-	Tags        []RecipeTag  `gorm:"foreignKey:RecipeID;references:ID"`
+	Status      string           `gorm:"type:varchar(16);not null"`
+	NeedsPrep   bool             `gorm:"->;-:migration"`
+	Photo       *RecipePhoto     `gorm:"foreignKey:RecipeID;references:ID"`
+	Taxonomy    []RecipeTaxonomy `gorm:"foreignKey:RecipeID;references:ID"`
 }
 
-func (Recipe) TableName() string    { return "recipes" }
+func (Recipe) TableName() string     { return "recipes" }
 func (RecipeBase) TableName() string { return "recipes" }

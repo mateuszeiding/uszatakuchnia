@@ -5,40 +5,48 @@ import (
 	"uszatakuchnia/dtos"
 )
 
-func extractTags(tags []entities.RecipeTag) (categories []string, diet []string, practical []string) {
-	categories = []string{}
-	diet = []string{}
-	practical = []string{}
-	for _, t := range tags {
-		switch t.GroupName {
-		case "category":
-			categories = append(categories, t.Tag)
-		case "diet":
-			diet = append(diet, t.Tag)
-		case "practical":
-			practical = append(practical, t.Tag)
+// recipeAllergens — suma alergenów składników, w kolejności listy UE.
+func recipeAllergens(items []entities.RecipeIngredient) []string {
+	present := map[string]bool{}
+	for _, it := range items {
+		for _, a := range it.Ingredient.Allergens {
+			present[a.Code] = true
 		}
 	}
-	return
+	out := []string{}
+	for _, a := range entities.Allergens {
+		if present[a.Code] {
+			out = append(out, a.Code)
+		}
+	}
+	return out
 }
 
+func recipeNeedsPrep(steps []entities.RecipeStep) bool {
+	for _, s := range steps {
+		if s.Prep {
+			return true
+		}
+	}
+	return false
+}
+
+// MapRecipeToDto wymaga preloadów: Photo, Steps, Ingredients.Ingredient.Allergens, Ingredients.Unit, Taxonomy.Value.Axis.
 func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
-	cats, diet, practical := extractTags(e.Tags)
 	return dtos.RecipeDto{
 		ID:             e.ID,
 		Name:           e.Name,
 		Servings:       e.Servings,
 		Description:    e.Description,
 		Tagline:        e.Tagline,
-		Region:         e.Region,
+		Tip:            e.Tip,
 		TimeMinutes:    e.TimeMinutes,
 		Difficulty:     e.Difficulty,
 		KcalPerServing: e.KcalPerServing,
 		Status:         e.Status,
-		NeedsPrep:      e.NeedsPrep,
-		Categories:     cats,
-		DietTags:       diet,
-		PracticalTags:  practical,
+		NeedsPrep:      recipeNeedsPrep(e.Steps),
+		Taxonomy:       MapRecipeTaxonomyToDto(e.Taxonomy),
+		Allergens:      recipeAllergens(e.Ingredients),
 		Photo:          MapRecipePhotoToDto(e.Photo),
 		Steps:          MapRecipeStepArrayToDto(e.Steps),
 		Ingredients:    MapRecipeIngredientArrayToDto(e.Ingredients),
@@ -46,20 +54,16 @@ func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 }
 
 func MapRecipeBaseToDto(e entities.RecipeBase) dtos.RecipeBaseDto {
-	cats, diet, practical := extractTags(e.Tags)
 	return dtos.RecipeBaseDto{
-		ID:            e.ID,
-		Name:          e.Name,
-		Tagline:       e.Tagline,
-		Region:        e.Region,
-		TimeMinutes:   e.TimeMinutes,
-		Difficulty:    e.Difficulty,
-		Status:        e.Status,
-		NeedsPrep:     e.NeedsPrep,
-		Categories:    cats,
-		DietTags:      diet,
-		PracticalTags: practical,
-		Photo:         MapRecipePhotoToDto(e.Photo),
+		ID:          e.ID,
+		Name:        e.Name,
+		Tagline:     e.Tagline,
+		TimeMinutes: e.TimeMinutes,
+		Difficulty:  e.Difficulty,
+		Status:      e.Status,
+		NeedsPrep:   e.NeedsPrep,
+		Taxonomy:    MapRecipeTaxonomyToDto(e.Taxonomy),
+		Photo:       MapRecipePhotoToDto(e.Photo),
 	}
 }
 

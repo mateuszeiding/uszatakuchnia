@@ -6,15 +6,21 @@ import (
 )
 
 func MapRecipeIngredientToDto(e entities.RecipeIngredient) dtos.RecipeIngredientDto {
+	var unit *string
+	if e.Unit != nil {
+		unit = &e.Unit.Name
+	}
 	return dtos.RecipeIngredientDto{
 		SortOrder:      e.SortOrder,
 		Section:        e.Section,
 		IngredientID:   e.IngredientID,
 		IngredientName: e.Ingredient.Name,
-		Amount:         e.Amount,
-		Unit:           e.Unit,
-		AmountText:     e.AmountText,
+		Quantity:       e.Quantity,
+		UnitID:         e.UnitID,
+		Unit:           unit,
 		Note:           e.Note,
+		Optional:       e.Optional,
+		Allergens:      mapIngredientAllergenCodes(e.Ingredient.Allergens),
 	}
 }
 

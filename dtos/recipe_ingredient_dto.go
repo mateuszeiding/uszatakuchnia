@@ -7,8 +7,11 @@ type RecipeIngredientDto struct {
 	IngredientID   uint   `json:"ingredientId"`
 	IngredientName string `json:"ingredientName"`
 
-	Amount     *float64 `json:"amount,omitempty"`
-	Unit       *string  `json:"unit,omitempty"`
-	AmountText *string  `json:"amountText,omitempty"`
-	Note       *string  `json:"note,omitempty"`
+	Quantity *string `json:"quantity,omitempty"`
+	UnitID   *uint   `json:"unitId,omitempty"`
+	Unit     *string `json:"unit,omitempty"` // nazwa jednostki (forma słownikowa); odmiana po stronie frontu
+	Note     *string `json:"note,omitempty"`
+	Optional bool    `json:"optional"`
+
+	Allergens []string `json:"allergens"` // kody alergenów składnika (do listy „Alergeny” w przepisie)
 }

@@ -45,13 +45,22 @@ Projekt używa Prettier przez `eslint-plugin-prettier`. Nie commituj kodu bez pr
 
 ## Zmiany schematu bazy danych
 
-Serwer **nie** odpala migracji automatycznie. Po zmianie encji trzeba uruchomić migrację ręcznie.
+Serwer odpala migracje (AutoMigrate + `db/migrations`) przy pierwszym połączeniu z bazą (`db/connection.go` → `initDB`), pod advisory lockiem. Lokalnie po zmianie encji i tak uruchom migrację ręcznie, żeby od razu zobaczyć błędy.
 
 ### Dodanie kolumn / tabel (bez utraty danych)
 ```
 go run ./cmd/migrate
 ```
 Tylko dodaje brakujące kolumny i tabele. Używaj zawsze gdy zmieniasz encje.
+
+### Zmiany, które przenoszą / przekształcają / usuwają dane
+AutoMigrate tego nie zrobi (stara kolumna zostaje, nowa jest pusta). Każda taka zmiana = wersjonowana migracja w `db/migrations/`:
+- plik `NNNN_opis.go`, funkcja dopisana na końcu listy `migrations.All`,
+- wykonuje się raz (tabela `schema_migrations`), w transakcji, **po** AutoMigrate,
+- musi działać też na świeżej bazie (resetdb) — sprawdzaj `HasColumn` / `HasTable`,
+- wdrożonej migracji nie edytujesz — poprawka = nowa migracja.
+
+Dopóki w bazie są tylko dane z seeda, zamiast migracji wystarczy `resetdb`. Od pierwszych prawdziwych danych — zawsze migracja.
 
 ### Reset lokalnej bazy (niszczy dane)
 ```
