@@ -23,7 +23,7 @@
 }
 .skeleton-card__img {
     width: 100%;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 1 / 1;
     border-radius: 0;
 }
 .skeleton-card__body {

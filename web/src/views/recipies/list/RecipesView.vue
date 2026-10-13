@@ -1,691 +1,457 @@
 <script lang="ts" setup>
-import { useAuth0 } from '@auth0/auth0-vue';
-import { computed, ref } from 'vue';
+import { useQueryClient } from '@tanstack/vue-query';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-import FilterSidebar from './components/FilterSidebar.vue';
+import ActiveFilters from './components/ActiveFilters.vue';
+import FilterSheet from './components/FilterSheet.vue';
+import FiltersPanel from './components/FiltersPanel.vue';
 import RecipeCard from './components/RecipeCard.vue';
 import RecipeCardSkeleton from './components/RecipeCardSkeleton.vue';
+import {
+    activeCount,
+    applyFilters,
+    emptyFilters,
+    type IListFilters,
+    PAGE_SIZE,
+    readQuery,
+    recipesLabel,
+    toQuery,
+} from './listFilters';
 
-import { fetchRecipes } from '@/data/api/recipe/fetch';
+import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
+import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
+import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
 
-const { isAuthenticated } = useAuth0();
+const route = useRoute();
+const router = useRouter();
+const qc = useQueryClient();
 
 const recipes = ref<RecipeBaseDto[]>([]);
+const axes = ref<ITaxonomyAxis[]>([]);
 const loading = ref(true);
-const search = ref('');
-const activeCategories = ref<string[]>([]);
-const maxTime = ref(0);
-const activeDiff = ref(0);
-const activeDiets = ref<string[]>([]);
-const activePractical = ref<string[]>([]);
-const catMode = ref<'OR' | 'AND'>('OR');
-const dietMode = ref<'OR' | 'AND'>('OR');
-const practicalMode = ref<'OR' | 'AND'>('OR');
-const hidePrep = ref(false);
-const sort = ref<'newest' | 'fastest' | 'az'>('newest');
-const tab = ref<'all' | 'pub' | 'draft'>('all');
+const filters = ref<IListFilters>(emptyFilters());
+const shown = ref(PAGE_SIZE);
+const sheetOpen = ref(false);
 
-fetchRecipes('list', isAuthenticated.value).then((v) => {
-    recipes.value = v;
+onMounted(async () => {
+    const [list, dicts] = await Promise.all([
+        fetchRecipesWithClient(qc, 'list'),
+        fetchDictionariesWithClient(qc),
+    ]);
+    recipes.value = list;
+    axes.value = dicts.axes;
+    filters.value = readQuery(route.query, dicts.axes);
     loading.value = false;
 });
 
-const filtered = computed(() => {
-    let list = recipes.value;
-    if (!isAuthenticated.value) {
-        list = list.filter((r) => r.status === 'published');
-    } else if (tab.value === 'pub') {
-        list = list.filter((r) => r.status === 'published');
-    } else if (tab.value === 'draft') {
-        list = list.filter((r) => r.status === 'draft');
-    }
-    if (search.value.trim()) {
-        const q = search.value.toLowerCase();
-        list = list.filter((r) => r.name.toLowerCase().includes(q));
-    }
-    if (activeCategories.value.length) {
-        list =
-            catMode.value === 'AND'
-                ? list.filter((r) => activeCategories.value.every((c) => r.categories.includes(c)))
-                : list.filter((r) => activeCategories.value.some((c) => r.categories.includes(c)));
-    }
-    if (maxTime.value) {
-        list = list.filter((r) => r.timeMinutes != null && r.timeMinutes <= maxTime.value);
-    }
-    if (activeDiff.value) {
-        list = list.filter((r) => r.difficulty === activeDiff.value);
-    }
-    if (hidePrep.value) {
-        list = list.filter((r) => !r.needsPrep);
-    }
-    if (activeDiets.value.length) {
-        list =
-            dietMode.value === 'AND'
-                ? list.filter((r) => activeDiets.value.every((d) => r.dietTags.includes(d)))
-                : list.filter((r) => activeDiets.value.some((d) => r.dietTags.includes(d)));
-    }
-    if (activePractical.value.length) {
-        list =
-            practicalMode.value === 'AND'
-                ? list.filter((r) =>
-                      activePractical.value.every((p) => r.practicalTags.includes(p))
-                  )
-                : list.filter((r) =>
-                      activePractical.value.some((p) => r.practicalTags.includes(p))
-                  );
-    }
-    if (sort.value === 'fastest')
-        list = [...list].sort((a, b) => (a.timeMinutes ?? 999) - (b.timeMinutes ?? 999));
-    if (sort.value === 'az') list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'pl'));
-    return list;
-});
-
-const counts = computed(() => ({
-    all: recipes.value.length,
-    pub: recipes.value.filter((r) => r.status === 'published').length,
-    draft: recipes.value.filter((r) => r.status === 'draft').length,
-}));
-
-const anyFilter = computed(
-    () =>
-        !!(
-            search.value ||
-            activeCategories.value.length ||
-            maxTime.value ||
-            activeDiff.value ||
-            activeDiets.value.length ||
-            activePractical.value.length ||
-            hidePrep.value
-        )
+// Stan filtrów → URL (replace: bez zaśmiecania historii), nowe filtry = od pierwszej strony.
+watch(
+    filters,
+    (f) => {
+        if (loading.value) return;
+        router.replace({ query: toQuery(f) });
+        shown.value = PAGE_SIZE;
+    },
+    { deep: true }
 );
 
-const activeFilterGroups = computed(() => {
-    const groups: {
-        label: string;
-        chips: { key: string; label: string; onRemove: () => void }[];
-    }[] = [];
-    if (activeCategories.value.length) {
-        groups.push({
-            label: 'KATEGORIA',
-            chips: activeCategories.value.map((c) => ({
-                key: `cat-${c}`,
-                label: c,
-                onRemove: () => {
-                    activeCategories.value = activeCategories.value.filter((x) => x !== c);
-                },
-            })),
-        });
-    }
-    if (activeDiets.value.length) {
-        groups.push({
-            label: 'DIETA',
-            chips: activeDiets.value.map((d) => ({
-                key: `diet-${d}`,
-                label: d,
-                onRemove: () => {
-                    activeDiets.value = activeDiets.value.filter((x) => x !== d);
-                },
-            })),
-        });
-    }
-    if (activePractical.value.length) {
-        groups.push({
-            label: 'PRAKTYCZNE',
-            chips: activePractical.value.map((p) => ({
-                key: `prac-${p}`,
-                label: p,
-                onRemove: () => {
-                    activePractical.value = activePractical.value.filter((x) => x !== p);
-                },
-            })),
-        });
-    }
-    if (maxTime.value) {
-        const t = maxTime.value;
-        groups.push({
-            label: 'CZAS',
-            chips: [{ key: 'time', label: `do ${t} min`, onRemove: () => (maxTime.value = 0) }],
-        });
-    }
-    if (activeDiff.value) {
-        const labels: Record<number, string> = { 1: 'łatwe', 2: 'średnie', 3: 'trudne' };
-        const d = activeDiff.value;
-        groups.push({
-            label: 'TRUDNOŚĆ',
-            chips: [
-                {
-                    key: 'diff',
-                    label: labels[d] ?? String(d),
-                    onRemove: () => (activeDiff.value = 0),
-                },
-            ],
-        });
-    }
-    if (search.value) {
-        const q = search.value;
-        groups.push({
-            label: 'SZUKAJ',
-            chips: [{ key: 'q', label: `„${q}"`, onRemove: () => (search.value = '') }],
-        });
-    }
-    return groups;
-});
-
-function clearFilters() {
-    search.value = '';
-    activeCategories.value = [];
-    maxTime.value = 0;
-    activeDiff.value = 0;
-    activeDiets.value = [];
-    activePractical.value = [];
-    hidePrep.value = false;
-}
-
-function pluralPL(n: number) {
-    if (n === 1) return 'przepis';
-    const m10 = n % 10;
-    const m100 = n % 100;
-    if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return 'przepisy';
-    return 'przepisów';
-}
-
-function onDeleted(id: number) {
-    recipes.value = recipes.value.filter((r) => r.id !== id);
-}
+const results = computed(() => applyFilters(recipes.value, filters.value, axes.value));
+const nActive = computed(() => activeCount(filters.value));
+const clear = () => (filters.value = emptyFilters(filters.value.sort));
 </script>
 
 <template>
-    <div class="recipes-layout container">
-        <FilterSidebar
-            v-model:search="search"
-            v-model:activeCategories="activeCategories"
-            v-model:maxTime="maxTime"
-            v-model:activeDiff="activeDiff"
-            v-model:activeDiets="activeDiets"
-            v-model:activePractical="activePractical"
-            v-model:catMode="catMode"
-            v-model:dietMode="dietMode"
-            v-model:practicalMode="practicalMode"
-            v-model:hidePrep="hidePrep"
-            :anyFilter="anyFilter"
-            @clear="clearFilters"
-        />
-
-        <main class="recipes-main">
-            <div class="page-header">
-                <div class="page-header__kicker">
-                    // {{ isAuthenticated ? 'admin / lista przepisów' : 'przepisy' }}
-                </div>
-                <div class="page-header__row">
-                    <h1 class="page-title">
-                        {{ isAuthenticated ? 'Zarządzaj przepisami' : 'Przepisy' }}
-                    </h1>
-                    <div class="page-header__count">
-                        {{ filtered.length }} {{ pluralPL(filtered.length) }}
-                    </div>
-                </div>
-            </div>
-
-            <div
-                v-if="isAuthenticated"
-                class="admin-tabs"
+    <div class="container list-page">
+        <h1 class="list-page__title">Przepisy</h1>
+        <div class="list-layout">
+            <aside
+                class="list-aside"
+                aria-label="Filtry"
             >
-                <button
-                    v-for="t in [
-                        { id: 'all', label: 'Wszystkie', n: counts.all },
-                        { id: 'pub', label: 'Opublikowane', n: counts.pub },
-                        { id: 'draft', label: 'Szkice', n: counts.draft },
-                    ] as const"
-                    :key="t.id"
-                    class="admin-tab"
-                    :class="{ 'admin-tab--active': tab === t.id }"
-                    @click="tab = t.id"
-                >
-                    {{ t.label }}
-                    <span class="admin-tab__count">{{ t.n }}</span>
-                </button>
-            </div>
-
-            <div
-                class="active-filter-bar"
-                :style="{ visibility: activeFilterGroups.length ? 'visible' : 'hidden' }"
-            >
-                <template
-                    v-for="(group, gi) in activeFilterGroups"
-                    :key="group.label"
-                >
-                    <span
-                        v-if="gi > 0"
-                        class="active-filter-bar__sep"
-                    />
-                    <span class="active-filter-bar__group">
-                        <span class="active-filter-bar__group-label">{{ group.label }}</span>
-                        <span
-                            v-for="chip in group.chips"
-                            :key="chip.key"
-                            class="active-filter-chip"
-                        >
-                            {{ chip.label }}
-                            <button
-                                class="active-filter-chip__remove"
-                                @click="chip.onRemove"
-                            >
-                                ×
-                            </button>
-                        </span>
-                    </span>
-                </template>
-                <button
-                    class="active-filter-bar__clear"
-                    @click="clearFilters"
-                >
-                    Wyczyść
-                </button>
-            </div>
-
-            <div class="results-bar">
-                <span class="results-bar__count">
-                    {{ filtered.length }} {{ pluralPL(filtered.length) }}
-                </span>
-                <label class="results-bar__sort">
-                    <span class="results-bar__sort-label">Sortuj</span>
-                    <select
-                        v-model="sort"
-                        class="select"
-                        style="width: auto; padding: 7px 28px 7px 10px; font-size: 13px"
-                    >
-                        <option value="newest">najnowsze</option>
-                        <option value="fastest">najszybsze</option>
-                        <option value="az">A–Z</option>
-                    </select>
-                </label>
-            </div>
-
-            <!-- skeleton podczas ładowania -->
-            <div
-                v-if="loading"
-                class="recipes-grid"
-            >
-                <RouterLink
-                    v-if="isAuthenticated"
-                    to="/recipes/new"
-                    class="card-add"
-                >
-                    <span class="card-add__icon">
-                        <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 22 22"
-                            fill="none"
-                        >
-                            <path
-                                d="M11 4v14M4 11h14"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
-                        </svg>
-                    </span>
-                    <div>
-                        <div class="card-add__title">Dodaj nowy przepis</div>
-                        <div class="card-add__sub">Wgraj zdjęcie, składniki i kroki.</div>
-                    </div>
-                </RouterLink>
-                <RecipeCardSkeleton
-                    v-for="n in isAuthenticated ? 5 : 6"
-                    :key="n"
-                />
-            </div>
-
-            <div
-                v-else-if="filtered.length === 0"
-                class="empty-state"
-            >
-                <span class="empty-state__icon">
+                <div class="search">
                     <svg
-                        width="14"
-                        height="14"
+                        class="search__icon"
+                        width="15"
+                        height="15"
                         viewBox="0 0 14 14"
-                        fill="none"
+                        aria-hidden="true"
                     >
                         <circle
                             cx="6"
                             cy="6"
-                            r="3.5"
+                            r="3.8"
                             stroke="currentColor"
                             stroke-width="1.3"
                         />
                         <path
-                            d="M8.5 8.5L12 12"
+                            d="M8.8 8.8L12 12"
                             stroke="currentColor"
                             stroke-width="1.3"
                             stroke-linecap="round"
                         />
                     </svg>
-                </span>
-                <p class="empty-state__title">Nic nie pasuje do filtrów</p>
-                <p class="empty-state__desc">
-                    Spróbuj usunąć część filtrów albo poszukać innego hasła.
-                </p>
-                <button
-                    class="btn"
-                    @click="clearFilters"
-                >
-                    Wyczyść filtry
-                </button>
-            </div>
+                    <input
+                        v-model="filters.q"
+                        type="search"
+                        class="search__input"
+                        aria-label="Szukaj przepisu lub składnika"
+                        placeholder="Przepis albo składnik…"
+                    />
+                </div>
+                <div class="list-aside__scroll">
+                    <FiltersPanel
+                        v-model="filters"
+                        :axes="axes"
+                    />
+                </div>
+            </aside>
 
-            <div
-                v-else
-                class="recipes-grid"
-            >
-                <RouterLink
-                    v-if="isAuthenticated"
-                    to="/recipes/new"
-                    class="card-add"
-                >
-                    <span class="card-add__icon">
+            <div>
+                <div class="mobile-bar">
+                    <div class="search">
                         <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 22 22"
-                            fill="none"
+                            class="search__icon"
+                            width="15"
+                            height="15"
+                            viewBox="0 0 14 14"
+                            aria-hidden="true"
                         >
-                            <path
-                                d="M11 4v14M4 11h14"
+                            <circle
+                                cx="6"
+                                cy="6"
+                                r="3.8"
                                 stroke="currentColor"
-                                stroke-width="2"
+                                stroke-width="1.3"
+                            />
+                            <path
+                                d="M8.8 8.8L12 12"
+                                stroke="currentColor"
+                                stroke-width="1.3"
                                 stroke-linecap="round"
                             />
                         </svg>
-                    </span>
-                    <div>
-                        <div class="card-add__title">Dodaj nowy przepis</div>
-                        <div class="card-add__sub">Wgraj zdjęcie, składniki i kroki.</div>
+                        <input
+                            v-model="filters.q"
+                            type="search"
+                            class="search__input"
+                            aria-label="Szukaj przepisu lub składnika"
+                            placeholder="Przepis albo składnik…"
+                        />
                     </div>
-                </RouterLink>
+                    <div class="mobile-bar__row">
+                        <button
+                            type="button"
+                            class="mobile-bar__filters"
+                            @click="sheetOpen = true"
+                        >
+                            Filtry
+                            <span
+                                v-if="nActive"
+                                class="mobile-bar__count"
+                            >
+                                {{ nActive }}
+                            </span>
+                        </button>
+                        <select
+                            v-model="filters.sort"
+                            class="select sort-select"
+                            aria-label="Sortowanie"
+                        >
+                            <option value="newest">najnowsze</option>
+                            <option value="fastest">najszybsze</option>
+                            <option value="az">A–Z</option>
+                        </select>
+                    </div>
+                </div>
 
-                <RecipeCard
-                    v-for="recipe in filtered"
-                    :key="recipe.id"
-                    :recipe
-                    @deleted="onDeleted"
+                <ActiveFilters
+                    v-model="filters"
+                    :axes="axes"
                 />
+
+                <div class="results-bar">
+                    <span role="status">
+                        {{
+                            loading
+                                ? 'Wczytywanie…'
+                                : `${results.length} ${recipesLabel(results.length)}`
+                        }}
+                    </span>
+                    <label class="results-bar__sort">
+                        Sortuj
+                        <select
+                            v-model="filters.sort"
+                            class="select sort-select"
+                        >
+                            <option value="newest">najnowsze</option>
+                            <option value="fastest">najszybsze</option>
+                            <option value="az">A–Z</option>
+                        </select>
+                    </label>
+                </div>
+
+                <ul
+                    v-if="loading"
+                    class="grid"
+                    aria-busy="true"
+                >
+                    <li
+                        v-for="n in 6"
+                        :key="n"
+                    >
+                        <RecipeCardSkeleton />
+                    </li>
+                </ul>
+                <div
+                    v-else-if="!results.length"
+                    class="empty"
+                >
+                    <div class="empty__title">Nic nie pasuje</div>
+                    <p class="empty__text">
+                        Usuń część filtrów albo wpisz inne hasło. Szukamy też po składnikach.
+                    </p>
+                    <button
+                        type="button"
+                        class="btn btn--secondary"
+                        @click="clear"
+                    >
+                        Wyczyść filtry
+                    </button>
+                </div>
+                <template v-else>
+                    <ul class="grid">
+                        <li
+                            v-for="r in results.slice(0, shown)"
+                            :key="r.recipe.id"
+                        >
+                            <RecipeCard
+                                :recipe="r.recipe"
+                                :hits="r.hits"
+                            />
+                        </li>
+                    </ul>
+                    <div
+                        v-if="shown < results.length"
+                        class="more"
+                    >
+                        <button
+                            type="button"
+                            class="btn btn--secondary more__btn"
+                            @click="shown += PAGE_SIZE"
+                        >
+                            Pokaż więcej
+                        </button>
+                        <span class="more__count">{{ shown }} z {{ results.length }}</span>
+                    </div>
+                </template>
             </div>
-        </main>
+        </div>
+
+        <FilterSheet
+            v-if="sheetOpen"
+            :count="results.length"
+            :active-count="nActive"
+            @close="sheetOpen = false"
+            @clear="clear"
+        >
+            <FiltersPanel
+                v-model="filters"
+                :axes="axes"
+            />
+        </FilterSheet>
     </div>
 </template>
 
 <style scoped>
-.recipes-layout {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: 40px;
-    padding-top: 48px;
+.list-page {
     padding-bottom: 80px;
-    align-items: start;
 }
-.page-header {
-    padding-bottom: 24px;
-}
-.page-header__kicker {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 0.4px;
-    font-weight: 500;
-    margin-bottom: 14px;
-}
-.page-header__row {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-.page-title {
+.list-page__title {
     font-size: 72px;
     line-height: 0.95;
     letter-spacing: -2.8px;
     font-weight: 500;
-    margin: 0;
+    margin: 56px 0 32px;
 }
-.page-header__count {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--ink-muted);
-    letter-spacing: 0.4px;
-    padding-bottom: 10px;
+.list-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 40px;
 }
-.admin-tabs {
+.list-aside {
+    position: sticky;
+    top: 84px;
+    align-self: start;
+    max-height: calc(100vh - 100px);
     display: flex;
-    gap: 24px;
-    border-bottom: 1px solid var(--rule);
+    flex-direction: column;
+    gap: 16px;
 }
-.admin-tab {
-    background: transparent;
-    border: none;
-    padding: 10px 0;
-    border-bottom: 2px solid transparent;
+.list-aside__scroll {
+    overflow-y: auto;
+    padding: 0 8px 16px 0;
+}
+.search {
+    position: relative;
+}
+.search__icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
     color: var(--ink-muted);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-sans);
-    margin-bottom: -1px;
 }
-.admin-tab--active {
-    border-bottom-color: var(--accent);
+.search__input {
+    width: 100%;
+    height: 44px;
+    background: var(--bg-alt);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-lg);
+    padding: 0 12px 0 38px;
+    font-size: 15px;
     color: var(--ink);
 }
-.admin-tab__count {
-    background: var(--bg-alt);
-    color: var(--ink-muted);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    padding: 2px 7px;
-    border-radius: var(--r-pill);
-    font-weight: 600;
+.search__input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--focus-ring);
 }
-.admin-tab--active .admin-tab__count {
-    background: var(--accent-soft);
-    color: var(--accent);
-}
-.active-filter-bar {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0;
-    padding: 10px 0 14px;
-    border-bottom: 1px solid var(--rule);
-    margin-bottom: 8px;
-    min-height: 49px;
-}
-.active-filter-bar__sep {
-    width: 1px;
-    height: 16px;
-    background: var(--rule-strong);
-    margin: 0 12px;
-    flex-shrink: 0;
-}
-.active-filter-bar__group {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    flex-shrink: 0;
-}
-.active-filter-bar__group-label {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--ink-faint);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    font-weight: 600;
-    margin-right: 1px;
-}
-.active-filter-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    background: var(--accent-soft);
-    border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
-    border-radius: var(--r-pill);
-    padding: 3px 7px 3px 10px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--accent);
-    white-space: nowrap;
-}
-.active-filter-chip__remove {
-    width: 16px;
-    height: 16px;
-    border-radius: var(--r-pill);
-    border: none;
-    cursor: pointer;
-    background: transparent;
-    color: var(--accent);
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    opacity: 0.7;
-    line-height: 1;
-}
-.active-filter-bar__clear {
-    margin-left: auto;
-    background: transparent;
-    border: none;
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    cursor: pointer;
-    padding-left: 14px;
-    flex-shrink: 0;
+.mobile-bar {
+    display: none;
 }
 .results-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 18px;
-    margin-top: 16px;
-}
-.results-bar__count {
-    font-family: var(--font-mono);
-    font-size: 11px;
+    margin: 4px 0 18px;
+    font-size: 14px;
     color: var(--ink-muted);
-    letter-spacing: 0.3px;
 }
 .results-bar__sort {
     display: flex;
     align-items: center;
     gap: 8px;
 }
-.results-bar__sort-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--ink-muted);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    font-weight: 600;
+.sort-select {
+    height: 38px;
+    padding-top: 0;
+    padding-bottom: 0;
+    width: auto;
+    background-color: var(--bg-alt);
+    border-color: var(--rule-strong);
 }
-.recipes-grid {
+.grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
 }
-.card-add {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    min-height: 380px;
-    text-align: center;
-    text-decoration: none;
-    color: inherit;
-    border: 1.5px dashed var(--rule-strong);
-    border-radius: var(--r-lg);
-    background: transparent;
-    transition:
-        border-color 0.15s,
-        background 0.15s;
-}
-.card-add:hover {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-}
-.card-add__icon {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--r-pill);
-    background: var(--accent);
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-.card-add__title {
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: -0.4px;
-}
-.card-add__sub {
-    font-size: 13px;
-    color: var(--ink-muted);
-    margin-top: 6px;
-    line-height: 1.5;
-    max-width: 220px;
-}
-.empty-state {
+.empty {
     background: var(--bg-alt);
     border: 1px dashed var(--rule-strong);
     border-radius: var(--r-lg);
-    padding: 60px 32px;
+    padding: 56px 28px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     text-align: center;
 }
-.empty-state__icon {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--r-pill);
-    background: var(--accent-soft);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent);
-}
-.empty-state__title {
-    font-size: 18px;
+.empty__title {
+    font-size: 19px;
     font-weight: 600;
-    letter-spacing: -0.3px;
-    margin: 0;
 }
-.empty-state__desc {
+.empty__text {
+    font-size: 14px;
+    color: var(--ink-muted);
+    max-width: 340px;
+    line-height: 1.5;
+}
+.more {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 32px;
+}
+.more__btn {
+    padding: 12px 24px;
+}
+.more__count {
     font-size: 13px;
     color: var(--ink-muted);
-    max-width: 320px;
-    line-height: 1.5;
-    margin: 0;
 }
+
+@media (max-width: 1180px) {
+    .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 900px) {
-    .recipes-layout {
-        grid-template-columns: 1fr;
+    .list-page__title {
+        font-size: 44px;
+        letter-spacing: -1.6px;
+        margin: 28px 0 20px;
     }
-    .recipes-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .list-layout {
+        grid-template-columns: minmax(0, 1fr);
     }
-    .page-title {
-        font-size: 48px;
+    .list-aside,
+    .results-bar__sort {
+        display: none;
+    }
+    .mobile-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .mobile-bar__row {
+        display: flex;
+        gap: 8px;
+    }
+    .mobile-bar__filters {
+        flex: 1;
+        height: 44px;
+        border-radius: var(--r-lg);
+        border: 1px solid var(--rule-strong);
+        background: var(--bg-alt);
+        color: var(--ink);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .mobile-bar__count {
+        background: var(--accent);
+        color: var(--on-accent);
+        font-size: 12px;
+        border-radius: var(--r-pill);
+        padding: 1px 8px;
+    }
+    .mobile-bar .sort-select {
+        flex: 1;
+        height: 44px;
+    }
+    .results-bar {
+        margin: 4px 0 14px;
+    }
+    .grid {
+        gap: 16px;
+    }
+}
+
+@media (max-width: 560px) {
+    .grid {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 </style>
