@@ -3,74 +3,96 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 
+// Combobox składnika: ↑ ↓ wybór, Enter zatwierdza, Esc zamyka. Ostatnia opcja „Dodaj do bazy”.
 const props = defineProps<{
-    modelValue: number; // ingredientId
+    id: string;
+    name: string;
     ingredients: IngredientDto[];
+    invalid?: boolean;
 }>();
 
 const emit = defineEmits<{
-    'update:modelValue': [id: number];
+    'update:name': [v: string];
+    select: [ing: IngredientDto];
+    'add-new': [name: string];
 }>();
 
-const query = ref('');
 const open = ref(false);
-const root = ref<HTMLElement | null>(null);
+const hi = ref(0);
+const root = ref<HTMLElement>();
+const listId = computed(() => `${props.id}-list`);
 
-// Sync display name when modelValue changes externally (e.g. on load)
+type Opt = { kind: 'match'; ing: IngredientDto } | { kind: 'add' };
+
+const options = computed<Opt[]>(() => {
+    const q = props.name.trim().toLowerCase();
+    if (!q) return [];
+    const matches = props.ingredients
+        .filter((i) => i.name.toLowerCase().includes(q))
+        .sort(
+            (a, b) =>
+                Number(!a.name.toLowerCase().startsWith(q)) -
+                Number(!b.name.toLowerCase().startsWith(q))
+        )
+        .slice(0, 8);
+    const exact = matches.some((m) => m.name.toLowerCase() === q);
+    return [
+        ...matches.map((ing): Opt => ({ kind: 'match', ing })),
+        ...(exact ? [] : [{ kind: 'add' } as Opt]),
+    ];
+});
+
+const expanded = computed(() => open.value && options.value.length > 0);
+
 watch(
-    () => props.modelValue,
-    (id) => {
-        if (id > 0) {
-            const found = props.ingredients.find((i) => i.id === id);
-            if (found) query.value = found.name;
-        } else {
-            query.value = '';
-        }
-    },
-    { immediate: true }
+    () => props.name,
+    () => (hi.value = 0)
 );
 
-const filtered = computed(() => {
-    const q = query.value.trim().toLowerCase();
-    if (!q) return [];
-    return props.ingredients.filter((i) => i.name.toLowerCase().includes(q));
-});
-
-const grouped = computed(() => {
-    const map = new Map<string, IngredientDto[]>();
-    for (const ing of filtered.value) {
-        const key = ing.type?.name || 'inne';
-        if (!map.has(key)) map.set(key, []);
-        map.get(key)!.push(ing);
+function choose(o: Opt | undefined) {
+    if (!o) return;
+    if (o.kind === 'add') emit('add-new', props.name.trim());
+    else {
+        emit('update:name', o.ing.name);
+        emit('select', o.ing);
     }
-    return [...map.entries()].map(([type, items]) => ({ type, items }));
-});
-
-function onInput(e: Event) {
-    query.value = (e.target as HTMLInputElement).value;
-    open.value = true;
-    // Clear selection if user edits
-    emit('update:modelValue', 0);
-}
-
-function select(ing: IngredientDto) {
-    query.value = ing.name;
-    emit('update:modelValue', ing.id);
     open.value = false;
 }
 
-function onFocus() {
-    if (query.value.trim()) open.value = true;
-}
-
-function onClickOutside(e: MouseEvent) {
-    if (root.value && !root.value.contains(e.target as Node)) {
+function onKey(e: KeyboardEvent) {
+    const n = options.value.length;
+    if (!expanded.value) {
+        if (e.key === 'ArrowDown' && n) {
+            open.value = true;
+            e.preventDefault();
+        }
+        return;
+    }
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        hi.value = (hi.value + 1) % n;
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        hi.value = (hi.value - 1 + n) % n;
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        choose(options.value[hi.value]);
+    } else if (e.key === 'Escape') {
+        e.stopPropagation();
         open.value = false;
     }
 }
 
-onMounted(() => document.addEventListener('mousedown', onClickOutside));
-onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside));
+function onInput(e: Event) {
+    emit('update:name', (e.target as HTMLInputElement).value);
+    open.value = true;
+}
+
+const onDocDown = (e: MouseEvent) => {
+    if (root.value && !root.value.contains(e.target as Node)) open.value = false;
+};
+onMounted(() => document.addEventListener('mousedown', onDocDown));
+onBeforeUnmount(() => document.removeEventListener('mousedown', onDocDown));
 </script>
 
 <template>
@@ -79,116 +101,93 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
         class="ing-suggest"
     >
         <input
-            :value="query"
+            :id="id"
+            :value="name"
             class="input ing-suggest__input"
-            type="text"
+            :class="{ 'is-invalid': invalid }"
+            role="combobox"
+            aria-label="Składnik"
+            aria-autocomplete="list"
+            :aria-expanded="expanded"
+            :aria-controls="listId"
+            :aria-activedescendant="expanded ? `${listId}-${hi}` : undefined"
+            :aria-invalid="invalid || undefined"
             placeholder="np. masło"
             autocomplete="off"
             @input="onInput"
-            @focus="onFocus"
+            @focus="name.trim() && (open = true)"
+            @keydown="onKey"
         />
-
-        <div
-            v-if="open && (grouped.length > 0 || query.trim().length > 0)"
-            class="ing-suggest__dropdown"
+        <ul
+            v-if="expanded"
+            :id="listId"
+            class="ing-suggest__list"
+            role="listbox"
         >
-            <template v-if="grouped.length > 0">
-                <div
-                    v-for="group in grouped"
-                    :key="group.type"
-                >
-                    <div class="ing-suggest__group-label">{{ group.type }}</div>
-                    <button
-                        v-for="ing in group.items"
-                        :key="ing.id"
-                        class="ing-suggest__item"
-                        :class="{ 'ing-suggest__item--active': modelValue === ing.id }"
-                        type="button"
-                        @mousedown.prevent="select(ing)"
-                    >
-                        {{ ing.name }}
-                    </button>
-                </div>
-            </template>
-
-            <div
-                v-if="query.trim().length > 0"
-                class="ing-suggest__add"
+            <li
+                v-for="(o, i) in options"
+                :id="`${listId}-${i}`"
+                :key="o.kind === 'match' ? o.ing.id : 'add'"
+                role="option"
+                class="ing-suggest__opt"
+                :class="{ 'is-hi': i === hi, 'is-add': o.kind === 'add' }"
+                :aria-selected="i === hi"
+                @mousedown.prevent="choose(o)"
+                @mouseenter="hi = i"
             >
-                + Nie ma w bazie? Dodaj „{{ query }}"
-            </div>
-        </div>
+                <template v-if="o.kind === 'add'">+ Dodaj „{{ name.trim() }}” do bazy</template>
+                <template v-else>
+                    <span>{{ o.ing.name }}</span>
+                    <span class="ing-suggest__type">{{ o.ing.type?.name }}</span>
+                </template>
+            </li>
+        </ul>
     </div>
 </template>
 
 <style scoped>
 .ing-suggest {
     position: relative;
-    flex: 1;
+    min-width: 0;
 }
-
 .ing-suggest__input {
-    width: 100%;
     padding: 8px 10px;
-    font-size: 13px;
 }
-
-.ing-suggest__dropdown {
+.ing-suggest__list {
     position: absolute;
-    top: calc(100% + 3px);
+    top: 100%;
     left: 0;
     right: 0;
-    z-index: 200;
+    z-index: var(--z-dropdown);
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
     background: var(--bg-alt);
     border: 1px solid var(--rule-strong);
     border-radius: var(--r-lg);
-    box-shadow: 0 6px 20px rgba(10, 10, 15, 0.12);
-    max-height: 260px;
-    overflow-y: auto;
+    box-shadow: var(--shadow-menu);
+    overflow: hidden;
 }
-
-.ing-suggest__group-label {
-    padding: 6px 12px 4px;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.7px;
-    text-transform: uppercase;
-    font-weight: 600;
-    color: var(--ink-faint);
-    position: sticky;
-    top: 0;
-    background: var(--bg-alt);
-    border-bottom: 1px solid var(--rule);
-}
-
-.ing-suggest__item {
-    display: block;
-    width: 100%;
-    padding: 8px 14px;
+.ing-suggest__opt {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
     font-size: 13px;
-    text-align: left;
     cursor: pointer;
-    color: var(--ink);
-    background: transparent;
-    border: none;
-    font-family: var(--font-sans);
-    font-weight: 400;
 }
-.ing-suggest__item:hover,
-.ing-suggest__item--active {
+.ing-suggest__opt.is-hi {
     background: var(--accent-soft);
 }
-.ing-suggest__item--active {
+.ing-suggest__opt.is-add {
+    color: var(--accent);
     font-weight: 600;
 }
-
-.ing-suggest__add {
-    padding: 8px 14px;
-    font-size: 12px;
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-weight: 600;
+.ing-suggest__opt.is-add:not(:first-child) {
     border-top: 1px solid var(--rule);
-    cursor: default;
+}
+.ing-suggest__type {
+    font-size: 12px;
+    color: var(--ink-muted);
 }
 </style>

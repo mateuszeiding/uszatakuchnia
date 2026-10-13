@@ -1,1357 +1,694 @@
 <script lang="ts" setup>
 import { useQueryClient } from '@tanstack/vue-query';
-import { onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeRouteLeave, useRouter } from 'vue-router';
 
-import IngAutosuggest from './components/IngAutosuggest.vue';
+import FormActionBar, { type BusyAction } from './components/FormActionBar.vue';
+import FormSection from './components/FormSection.vue';
+import IngredientsEditor from './components/IngredientsEditor.vue';
+import PhotoField from './components/PhotoField.vue';
+import StepsEditor from './components/StepsEditor.vue';
+import TaxonomyField from './components/TaxonomyField.vue';
+import {
+    ERROR_ORDER,
+    type FormErrors,
+    fromRecipe,
+    type IIngItem,
+    type IRecipeForm,
+    newForm,
+    PREP_LEADS,
+    toRequest,
+    validate,
+} from './recipeForm';
 
+import UFieldError from '@/components/form/UFieldError.vue';
+import IngredientModal from '@/components/IngredientModal.vue';
 import USpinner from '@/components/USpinner.vue';
-import { fetchIngredients } from '@/data/api/ingredients/fetch';
-import { createRecipe, fetchRecipesWithClient, updateRecipe } from '@/data/api/recipe/fetch';
+import { confirmAction } from '@/composables/useConfirm';
+import { showToast } from '@/composables/useToast';
+import { fetchIngredientsWithClient, invalidateIngredients } from '@/data/api/ingredients/fetch';
+import {
+    createRecipe,
+    deleteRecipe,
+    fetchRecipesWithClient,
+    invalidateRecipes,
+    updateRecipe,
+} from '@/data/api/recipe/fetch';
+import { fetchDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
-import type { IUpsertRecipeRequest } from '@/data/dtos/recipe/RecipeDto';
-import { UNIT_GROUPS, UNIT_OPTIONS } from '@/shared/utils/units';
+import { type IFieldError, type RecipeStatus, STATUS_LABEL } from '@/data/dtos/recipe/RecipeDto';
+import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-const props = defineProps<{ id?: number }>();
+const props = defineProps<{ id?: string | number }>();
 const router = useRouter();
 const qc = useQueryClient();
 
-const saving = ref(false);
+const PANEL = '/admin/recipes';
+const SIDEBAR_AXES_LAST = ['diet', 'practical'];
+
+const loading = ref(true);
+const recipeId = ref<number | null>(props.id ? Number(props.id) : null);
+const isNew = computed(() => recipeId.value == null);
+const form = ref<IRecipeForm>(newForm());
+const saved = ref(JSON.stringify(form.value));
+const status = ref<RecipeStatus>('draft');
+const lastSaved = ref<Date | null>(null);
+const busy = ref<BusyAction>(null);
+const showErrors = ref<'draft' | 'full' | null>(null);
+const serverError = ref('');
+const dicts = ref<IDictionaries>();
 const ingredients = ref<IngredientDto[]>([]);
+const addIng = ref<{ name: string; item: IIngItem } | null>(null);
+let leaving = false;
 
-const name = ref('');
-const tagline = ref('');
-const description = ref('');
-const servings = ref(2);
-const timeMinutes = ref<number | null>(null);
-const difficulty = ref<number | null>(null);
-const kcalPerServing = ref<number | null>(null);
-const categories = ref<string[]>([]);
-const region = ref<string | null>(null);
-const tip = ref('');
-const photoUrl = ref<string | null>(null);
-const photoPreview = ref<string | null>(null);
-
-const diets = ref<Set<string>>(new Set());
-const practical = ref<Set<string>>(new Set());
-const needsPrep = ref(false);
-const status = ref<'draft' | 'published'>('draft');
-
-const DIETS = [
-    'bez glutenu',
-    'bez laktozy',
-    'bez cukru',
-    'wysokobiałkowe',
-    'niskokaloryczne',
-    'keto',
-    'low fodmap',
-];
-const PRACTICAL = [
-    '30 min',
-    '1 patelnia',
-    '1 garnek',
-    'do 5 składników',
-    'można mrozić',
-    'na imprezę',
-    'dla dzieci',
-    'meal prep',
-];
-const REGIONS = [
-    '—',
-    'polska',
-    'włoska',
-    'francuska',
-    'azjatycka',
-    'skandynawska',
-    'śródziemnomorska',
-    'bliski wschód',
-    'meksykańska',
-    'amerykańska',
-];
-
-let _id = 0;
-const uid = () => ++_id;
-
-function splitAmountText(
-    amountText: string | null,
-    amount: number | null,
-    unitField: string | null
-): { qty: number | null; unit: string } {
-    // Prefer numeric amount field if available
-    if (amount != null && unitField) return { qty: amount, unit: unitField };
-    if (amount != null) return { qty: amount, unit: '' };
-    if (!amountText) return { qty: null, unit: '' };
-    // Try to parse old combined amountText like "2 łyżki"
-    const knownUnits = UNIT_OPTIONS.map((u) => u.value).filter(Boolean);
-    const parts = amountText.trim().split(/\s+/);
-    if (parts.length >= 2) {
-        const lastWord = (parts[parts.length - 1] ?? '').toLowerCase();
-        if (knownUnits.includes(lastWord)) {
-            const num = parseFloat(parts.slice(0, -1).join('.').replace(',', '.'));
-            return { qty: isNaN(num) ? null : num, unit: lastWord };
-        }
-    }
-    const num = parseFloat(amountText.replace(',', '.'));
-    return { qty: isNaN(num) ? null : num, unit: '' };
-}
-
-type IngItem = { id: number; ingredientId: number; qty: number | null; unit: string; note: string };
-type IngGroup = { id: number; label: string; items: IngItem[] };
-type StepItem = { id: number; text: string };
-type StepGroup = { id: number; label: string; items: StepItem[] };
-
-const ingGroups = ref<IngGroup[]>([
-    {
-        id: uid(),
-        label: '',
-        items: [{ id: uid(), ingredientId: 0, qty: null, unit: '', note: '' }],
-    },
-]);
-const stepGroups = ref<StepGroup[]>([{ id: uid(), label: '', items: [{ id: uid(), text: '' }] }]);
-
-const CAT_COLORS: Record<string, string> = {
-    ryby: '#3F70A8',
-    mieso: '#B85A2E',
-    wege: '#7A9050',
-    wegan: '#2F6B3F',
-    makarony: '#D9A441',
-    ryz: '#B8946A',
-    zupy: '#C53728',
-    salatki: '#A8B83D',
-    pieczywo: '#7A4A2E',
-    desery: '#D27393',
-    sniadania: '#E89556',
-    przekaski: '#8A4A6D',
-    napoje: '#2F8A8A',
-};
-
-const CATEGORY_LIST = [
-    { key: 'ryby', label: 'ryby' },
-    { key: 'mieso', label: 'mięso' },
-    { key: 'wege', label: 'wege' },
-    { key: 'wegan', label: 'wegan' },
-    { key: 'makarony', label: 'makarony' },
-    { key: 'ryz', label: 'ryż / kasze' },
-    { key: 'zupy', label: 'zupy' },
-    { key: 'salatki', label: 'sałatki' },
-    { key: 'pieczywo', label: 'pieczywo' },
-    { key: 'desery', label: 'desery' },
-    { key: 'sniadania', label: 'śniadania' },
-    { key: 'przekaski', label: 'przekąski' },
-    { key: 'napoje', label: 'napoje' },
-];
+const dirty = computed(() => JSON.stringify(form.value) !== saved.value);
 
 onMounted(async () => {
-    ingredients.value = await fetchIngredients('list');
-
-    if (props.id) {
-        const recipe = await fetchRecipesWithClient(qc, props.id);
-        name.value = recipe.name;
-        tagline.value = recipe.tagline ?? '';
-        description.value = recipe.description ?? '';
-        servings.value = recipe.servings;
-        timeMinutes.value = recipe.timeMinutes;
-        difficulty.value = recipe.difficulty;
-        kcalPerServing.value = recipe.kcalPerServing ?? null;
-        categories.value = recipe.categories ?? [];
-        region.value = recipe.region;
-        needsPrep.value = recipe.needsPrep ?? false;
-        status.value = (recipe.status as 'draft' | 'published') ?? 'draft';
-        diets.value = new Set(recipe.dietTags ?? []);
-        practical.value = new Set(recipe.practicalTags ?? []);
-        photoUrl.value = recipe.photoUrl ?? null;
-        photoPreview.value = recipe.photoUrl ?? null;
-
-        if (recipe.steps.length) {
-            const bySection = new Map<string, StepItem[]>();
-            recipe.steps.forEach((s) => {
-                const key = s.section ?? '';
-                if (!bySection.has(key)) bySection.set(key, []);
-                bySection.get(key)!.push({ id: uid(), text: s.text });
-            });
-            stepGroups.value = [...bySection.entries()].map(([label, items]) => ({
-                id: uid(),
-                label,
-                items,
-            }));
-        }
-
-        if (recipe.ingredients.length) {
-            const bySection = new Map<string, IngItem[]>();
-            recipe.ingredients.forEach((i) => {
-                const key = i.section ?? '';
-                if (!bySection.has(key)) bySection.set(key, []);
-                const { qty, unit } = splitAmountText(i.amountText, i.amount, i.unit);
-                bySection.get(key)!.push({
-                    id: uid(),
-                    ingredientId: i.ingredientId,
-                    qty,
-                    unit,
-                    note: i.note ?? '',
-                });
-            });
-            ingGroups.value = [...bySection.entries()].map(([label, items]) => ({
-                id: uid(),
-                label,
-                items,
-            }));
-        }
+    const [d, ings] = await Promise.all([fetchDictionaries(), fetchIngredientsWithClient(qc)]);
+    dicts.value = d;
+    ingredients.value = ings;
+    if (recipeId.value) {
+        const r = await fetchRecipesWithClient(qc, recipeId.value);
+        form.value = fromRecipe(r);
+        status.value = r.status;
     }
+    saved.value = JSON.stringify(form.value);
+    loading.value = false;
 });
 
-// ─── Photo ────────────────────────────────────────────────────
-function onPhotoFile(e: Event) {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-        photoPreview.value = ev.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-}
-function clearPhoto() {
-    photoPreview.value = null;
-    photoUrl.value = null;
-}
+// ─── Walidacja ────────────────────────────────────────────────
+const validation = computed(() => validate(form.value, dicts.value));
+const errors = computed<FormErrors>(() => {
+    if (showErrors.value === 'full') return validation.value.errors;
+    if (showErrors.value === 'draft' && validation.value.errors.name)
+        return { name: validation.value.errors.name };
+    return {};
+});
+const rowErrors = computed(() => (showErrors.value ? validation.value.rows : {}));
+const errorCount = computed(() =>
+    showErrors.value === 'full' ? Object.keys(validation.value.errors).length : 0
+);
 
-// ─── Ingredient groups ────────────────────────────────────────
-function addIngGroup() {
-    ingGroups.value.push({
-        id: uid(),
-        label: '',
-        items: [{ id: uid(), ingredientId: 0, qty: null, unit: '', note: '' }],
+async function scrollToFirstError() {
+    await nextTick();
+    const hit = ERROR_ORDER.find(([k]) => errors.value[k as keyof FormErrors]);
+    const el = hit && document.getElementById(hit[1]);
+    if (!el) return;
+    window.scrollTo({
+        top: el.getBoundingClientRect().top + window.scrollY - 110,
+        behavior: 'smooth',
     });
-}
-function removeIngGroup(gid: number) {
-    ingGroups.value = ingGroups.value.filter((g) => g.id !== gid);
-}
-function addIngItem(gid: number) {
-    const g = ingGroups.value.find((x) => x.id === gid)!;
-    g.items.push({ id: uid(), ingredientId: 0, qty: null, unit: '', note: '' });
-}
-function removeIngItem(gid: number, iid: number) {
-    const g = ingGroups.value.find((x) => x.id === gid)!;
-    g.items = g.items.filter((i) => i.id !== iid);
+    setTimeout(
+        () =>
+            el
+                .querySelector<HTMLElement>('input,textarea,select,button')
+                ?.focus({ preventScroll: true }),
+        350
+    );
 }
 
-// ─── Step groups ──────────────────────────────────────────────
-function addStepGroup() {
-    stepGroups.value.push({ id: uid(), label: '', items: [{ id: uid(), text: '' }] });
-}
-function removeStepGroup(gid: number) {
-    stepGroups.value = stepGroups.value.filter((g) => g.id !== gid);
-}
-function addStepItem(gid: number) {
-    const g = stepGroups.value.find((x) => x.id === gid)!;
-    g.items.push({ id: uid(), text: '' });
-}
-function removeStepItem(gid: number, iid: number) {
-    const g = stepGroups.value.find((x) => x.id === gid)!;
-    g.items = g.items.filter((i) => i.id !== iid);
-}
-
-function ingGroupPlaceholder(gi: number) {
-    return ingGroups.value.length === 1
-        ? 'Nazwa grupy (opcjonalnie)'
-        : `Grupa ${gi + 1} - np. "Sos"`;
-}
-function stepGroupPlaceholder(gi: number) {
-    return stepGroups.value.length === 1
-        ? 'Nazwa etapu (opcjonalnie)'
-        : `Etap ${gi + 1} - np. "Smażenie"`;
-}
-
-function globalStepIdx(gi: number, ii: number): number {
-    let n = 0;
-    for (let g = 0; g < stepGroups.value.length; g++) {
-        const grp = stepGroups.value[g];
-        if (!grp) continue;
-        for (let i = 0; i < grp.items.length; i++) {
-            n++;
-            if (g === gi && i === ii) return n;
-        }
-    }
-    return n;
-}
-
-function toggleSet(set: Set<string>, v: string) {
-    const n = new Set(set);
-    if (n.has(v)) n.delete(v);
-    else n.add(v);
-    return n;
-}
-
-async function submit() {
-    if (!name.value.trim() || servings.value < 1) return;
-    saving.value = true;
-
-    let stepNo = 0;
-    const body: IUpsertRecipeRequest = {
-        name: name.value.trim(),
-        tagline: tagline.value || null,
-        description: description.value || null,
-        servings: servings.value,
-        timeMinutes: timeMinutes.value,
-        difficulty: difficulty.value,
-        kcalPerServing: kcalPerServing.value,
-        photoUrl: photoUrl.value,
-        categories: categories.value,
-        region: region.value,
-        status: status.value,
-        needsPrep: needsPrep.value,
-        dietTags: [...diets.value],
-        practicalTags: [...practical.value],
-        steps: stepGroups.value.flatMap((g) =>
-            g.items
-                .filter((s) => s.text.trim())
-                .map((s) => ({
-                    stepNo: ++stepNo,
-                    section: g.label || null,
-                    text: s.text.trim(),
-                }))
-        ),
-        ingredients: ingGroups.value.flatMap((g, gi) =>
-            g.items
-                .filter((i) => i.ingredientId > 0)
-                .map((i, ii) => ({
-                    sortOrder: gi * 100 + ii + 1,
-                    section: g.label || null,
-                    ingredientId: i.ingredientId,
-                    amount: i.qty ?? null,
-                    unit: i.unit || null,
-                    note: i.note || null,
-                }))
-        ),
-    };
-
+// ─── Zapis ────────────────────────────────────────────────────
+async function submit(kind: Exclude<BusyAction, null>, nextStatus: RecipeStatus, toast: string) {
+    busy.value = kind;
+    serverError.value = '';
     try {
-        const result = props.id ? await updateRecipe(props.id, body) : await createRecipe(body);
-        router.push({ name: 'recipe-details', params: { id: result.id } });
+        const body = toRequest(form.value, nextStatus);
+        const res = recipeId.value
+            ? await updateRecipe(recipeId.value, body)
+            : await createRecipe(body);
+        const created = recipeId.value == null;
+        recipeId.value = res.id;
+        status.value = nextStatus;
+        saved.value = JSON.stringify(form.value);
+        lastSaved.value = new Date();
+        showErrors.value = null;
+        invalidateRecipes(qc);
+        showToast(toast);
+        if (created) router.replace({ name: 'recipe-edit', params: { id: res.id } });
+    } catch (e) {
+        const data = (e as { response?: { data?: { fields?: IFieldError[] } } }).response?.data;
+        serverError.value = data?.fields?.length
+            ? data.fields.map((f) => f.message).join(' ')
+            : 'Nie udało się zapisać. Spróbuj ponownie.';
     } finally {
-        saving.value = false;
+        busy.value = null;
     }
 }
+
+function saveDraft() {
+    if (validation.value.errors.name) {
+        showErrors.value = 'draft';
+        scrollToFirstError();
+        return;
+    }
+    submit('draft', 'draft', 'Szkic zapisany');
+}
+
+function requireComplete(): boolean {
+    if (!Object.keys(validation.value.errors).length) return true;
+    showErrors.value = 'full';
+    scrollToFirstError();
+    return false;
+}
+
+function publish() {
+    if (requireComplete()) submit('publish', 'published', 'Przepis opublikowany');
+}
+
+function saveChanges() {
+    if (requireComplete()) submit('save', 'published', 'Zmiany zapisane');
+}
+
+async function unpublish() {
+    const ok = await confirmAction({
+        title: 'Cofnąć publikację?',
+        body: 'Przepis zniknie z publicznej listy i wróci do szkiców. Niezapisane zmiany też zostaną zapisane.',
+        confirmLabel: 'Cofnij publikację',
+    });
+    if (ok) submit('unpublish', 'draft', 'Przepis przeniesiony do szkiców');
+}
+
+async function cancel() {
+    if (dirty.value) {
+        const ok = await confirmAction({
+            title: 'Odrzucić niezapisane zmiany?',
+            body: 'Zmiany od ostatniego zapisu przepadną.',
+            confirmLabel: 'Odrzuć i wyjdź',
+            danger: true,
+        });
+        if (!ok) return;
+    }
+    leaving = true;
+    router.push(PANEL);
+}
+
+async function removeRecipe() {
+    if (!recipeId.value) return;
+    const ok = await confirmAction({
+        title: `Usunąć „${form.value.name || 'ten przepis'}”?`,
+        body: 'Przepis zniknie z listy i z panelu. Tej operacji nie da się cofnąć.',
+        confirmLabel: 'Usuń przepis',
+        danger: true,
+    });
+    if (!ok) return;
+    await deleteRecipe(recipeId.value);
+    invalidateRecipes(qc);
+    showToast('Przepis usunięty');
+    leaving = true;
+    router.push(PANEL);
+}
+
+// ─── Ostrzeżenie przy wyjściu ─────────────────────────────────
+const onBeforeUnload = (e: BeforeUnloadEvent) => {
+    if (!dirty.value) return;
+    e.preventDefault();
+    e.returnValue = '';
+};
+onMounted(() => window.addEventListener('beforeunload', onBeforeUnload));
+onBeforeUnmount(() => window.removeEventListener('beforeunload', onBeforeUnload));
+
+onBeforeRouteLeave((to) => {
+    if (leaving || !dirty.value) return true;
+    // przejście /recipes/new → /recipes/:id/edit po pierwszym zapisie
+    if (to.name === 'recipe-edit' && Number(to.params.id) === recipeId.value) return true;
+    return confirmAction({
+        title: 'Wyjść bez zapisywania?',
+        body: 'Zmiany od ostatniego zapisu przepadną.',
+        confirmLabel: 'Wyjdź',
+        danger: true,
+    });
+});
+
+// ─── Składnik spoza bazy ──────────────────────────────────────
+function onIngredientCreated(ing: IngredientDto) {
+    ingredients.value = [...ingredients.value, ing];
+    if (addIng.value) {
+        addIng.value.item.ingredientId = ing.id;
+        addIng.value.item.name = ing.name;
+    }
+    invalidateIngredients(qc);
+    showToast(`„${ing.name}” dodany do bazy`);
+    addIng.value = null;
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────
+const classificationAxes = computed(() =>
+    (dicts.value?.axes ?? []).filter((a) => !SIDEBAR_AXES_LAST.includes(a.code))
+);
+const dietAxis = computed(() => dicts.value?.axes.find((a) => a.code === 'diet'));
+const practicalAxis = computed(() => dicts.value?.axes.find((a) => a.code === 'practical'));
+
+const axisModel = (code: string) => form.value.taxonomy[code] ?? [];
+function setAxis(code: string, ids: number[]) {
+    form.value.taxonomy = { ...form.value.taxonomy, [code]: ids };
+}
+
+const prepSummary = computed(() => {
+    const prepSteps = form.value.stepGroups.flatMap((g) => g.items).filter((s) => s.prep);
+    const maxLead = prepSteps.reduce((m, s) => Math.max(m, PREP_LEADS.indexOf(s.prepLead)), -1);
+    return { count: prepSteps.length, lead: maxLead >= 0 ? PREP_LEADS[maxLead] : null };
+});
 </script>
 
 <template>
     <div class="container upsert-page">
-        <!-- Page header -->
-        <div class="upsert-header">
-            <nav class="upsert-breadcrumb">
-                <RouterLink
-                    to="/recipes"
-                    class="upsert-breadcrumb__link"
+        <header class="upsert-head">
+            <nav
+                class="breadcrumb"
+                aria-label="Ścieżka"
+            >
+                <RouterLink to="/admin">Panel</RouterLink>
+                <span
+                    class="sep"
+                    aria-hidden="true"
                 >
-                    Przepisy
-                </RouterLink>
-                <span class="upsert-breadcrumb__sep">/</span>
-                <span class="upsert-breadcrumb__current">{{ id ? 'Edytuj' : 'Nowy' }}</span>
+                    /
+                </span>
+                <RouterLink :to="PANEL">Przepisy</RouterLink>
+                <span
+                    class="sep"
+                    aria-hidden="true"
+                >
+                    /
+                </span>
+                <span class="current">{{ isNew ? 'Nowy' : 'Edycja' }}</span>
             </nav>
-            <div class="upsert-header__row">
-                <h1 class="upsert-title">{{ id ? 'Edytuj przepis' : 'Nowy przepis' }}</h1>
-                <div class="upsert-status">
+            <div class="upsert-head__row">
+                <div class="upsert-head__title">
+                    <h1 class="upsert-title">{{ isNew ? 'Nowy przepis' : 'Edytuj przepis' }}</h1>
                     <span
-                        class="upsert-status__dot"
-                        :class="
-                            status === 'published'
-                                ? 'upsert-status__dot--pub'
-                                : 'upsert-status__dot--draft'
-                        "
-                    />
-                    {{
-                        status === 'published'
-                            ? 'opublikowany · widoczny publicznie'
-                            : 'szkic · zmiany zapisują się auto'
-                    }}
+                        class="status-pill"
+                        :class="`status-pill--${status}`"
+                    >
+                        <span
+                            class="status-pill__dot"
+                            aria-hidden="true"
+                        />
+                        {{ STATUS_LABEL[status] }}
+                    </span>
                 </div>
+                <button
+                    v-if="!isNew"
+                    type="button"
+                    class="btn btn--danger"
+                    @click="removeRecipe"
+                >
+                    Usuń przepis
+                </button>
             </div>
+        </header>
+
+        <div
+            v-if="loading"
+            class="upsert-loading"
+        >
+            <USpinner :size="22" />
         </div>
 
-        <div class="upsert-body">
-            <!-- LEFT: main content -->
+        <div
+            v-else
+            class="upsert-body"
+        >
             <div class="upsert-main">
-                <!-- 01 Podstawy -->
-                <section class="upsert-section">
-                    <div class="upsert-section__head">
-                        <span class="upsert-section__n">01</span>
-                        <h2 class="upsert-section__title">Podstawy</h2>
-                    </div>
-
-                    <div class="basics-grid">
-                        <!-- Photo zone -->
-                        <label class="photo-zone">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                class="photo-zone__input"
-                                @change="onPhotoFile"
-                            />
-                            <img
-                                v-if="photoPreview"
-                                :src="photoPreview"
-                                class="photo-zone__img"
-                                alt=""
-                            />
-                            <template v-else>
-                                <svg
-                                    width="28"
-                                    height="28"
-                                    viewBox="0 0 28 28"
-                                    fill="none"
-                                >
-                                    <rect
-                                        x="3"
-                                        y="5"
-                                        width="22"
-                                        height="18"
-                                        rx="2"
-                                        stroke="currentColor"
-                                        stroke-width="1.4"
-                                    />
-                                    <circle
-                                        cx="9"
-                                        cy="11"
-                                        r="2"
-                                        stroke="currentColor"
-                                        stroke-width="1.4"
-                                    />
-                                    <path
-                                        d="M3 19l6-5 6 4 4-3 6 5"
-                                        stroke="currentColor"
-                                        stroke-width="1.4"
-                                        stroke-linejoin="round"
-                                    />
-                                </svg>
-                                <span class="photo-zone__label">Dodaj zdjęcie</span>
-                                <span class="photo-zone__hint">1:1 · JPG / PNG / WEBP</span>
-                            </template>
-                            <button
-                                v-if="photoPreview"
-                                class="photo-zone__clear"
-                                @click.prevent="clearPhoto"
+                <FormSection
+                    n="01"
+                    title="Podstawy"
+                >
+                    <div class="basics">
+                        <PhotoField v-model="form.photoUrl" />
+                        <div class="basics__fields">
+                            <div
+                                id="f-name"
+                                class="field"
                             >
-                                ×
-                            </button>
-                        </label>
-
-                        <!-- Name + tagline -->
-                        <div class="basics-fields">
-                            <div class="field">
                                 <label
-                                    for="recipe-name"
+                                    for="in-name"
                                     class="field-label"
                                 >
                                     Nazwa przepisu
                                     <span class="req">*</span>
                                 </label>
                                 <input
-                                    id="recipe-name"
-                                    v-model="name"
-                                    class="input upsert-name-input"
-                                    type="text"
+                                    id="in-name"
+                                    v-model="form.name"
+                                    class="input basics__name"
+                                    :class="{ 'is-invalid': errors.name }"
+                                    :aria-invalid="!!errors.name || undefined"
                                     placeholder="np. Pieczony dorsz z masłem cytrynowym"
                                 />
+                                <UFieldError v-if="errors.name">{{ errors.name }}</UFieldError>
                             </div>
-
                             <div class="field">
                                 <label
-                                    for="recipe-tagline"
+                                    for="in-tagline"
                                     class="field-label"
                                 >
                                     Krótki opis
                                 </label>
-                                <div class="field-hint">
-                                    // jedno-dwa zdania, pokazuje się pod tytułem
-                                </div>
                                 <textarea
-                                    id="recipe-tagline"
-                                    v-model="tagline"
+                                    id="in-tagline"
+                                    v-model="form.tagline"
                                     class="textarea"
                                     rows="3"
-                                    placeholder="Maślany, lekko kwaśny, gotowy w 30 minut. Jedna patelnia."
+                                    placeholder="Maślany, lekko kwaśny, gotowy w 30 minut."
                                 />
+                                <span class="field-hint">Jedno, dwa zdania pod tytułem.</span>
                             </div>
                         </div>
                     </div>
-                </section>
+                </FormSection>
 
-                <!-- 02 Składniki -->
-                <section class="upsert-section">
-                    <div class="upsert-section__head">
-                        <span class="upsert-section__n">02</span>
-                        <h2 class="upsert-section__title">Składniki</h2>
-                    </div>
-                    <div class="upsert-section__hint">
-                        // grupuj jeśli to ma sens (np. „na rybę / sos") — w prostych przepisach
-                        jedna grupa wystarczy
-                    </div>
+                <FormSection
+                    id="f-ingredients"
+                    n="02"
+                    title="Składniki"
+                    hint="Grupuj, jeśli przepis ma części (np. ciasto i krem). Kolejność zmienisz, przeciągając za uchwyt."
+                    :error="errors.ingredients"
+                >
+                    <IngredientsEditor
+                        v-model:groups="form.ingGroups"
+                        :ingredients="ingredients"
+                        :units="dicts?.units ?? []"
+                        :row-errors="rowErrors"
+                        @add-new="(name, item) => (addIng = { name, item })"
+                    />
+                </FormSection>
 
-                    <div class="groups-list">
-                        <div
-                            v-for="(g, gi) in ingGroups"
-                            :key="g.id"
-                            class="group-box"
-                        >
-                            <div class="group-box__head">
-                                <input
-                                    v-model="g.label"
-                                    class="group-box__label-input"
-                                    :placeholder="ingGroupPlaceholder(gi)"
-                                />
-                                <button
-                                    v-if="ingGroups.length > 1"
-                                    class="row-del-btn"
-                                    @click="removeIngGroup(g.id)"
-                                >
-                                    ×
-                                </button>
-                            </div>
+                <FormSection
+                    id="f-steps"
+                    n="03"
+                    title="Kroki"
+                    hint="Jeśli krok trzeba zrobić dużo wcześniej (marynata, namaczanie, wyrastanie), zaznacz „Przygotuj wcześniej”. Przepis dostanie wtedy oznaczenie."
+                    :error="errors.steps"
+                >
+                    <StepsEditor v-model:groups="form.stepGroups" />
+                </FormSection>
 
-                            <div class="ing-rows">
-                                <div
-                                    v-for="item in g.items"
-                                    :key="item.id"
-                                    class="ing-row"
-                                >
-                                    <input
-                                        v-model.number="item.qty"
-                                        class="input input--mono ing-row__qty"
-                                        type="number"
-                                        min="0"
-                                        step="0.1"
-                                        placeholder="0"
-                                    />
-                                    <select
-                                        v-model="item.unit"
-                                        class="select ing-row__unit"
-                                    >
-                                        <option
-                                            value=""
-                                            disabled
-                                        >
-                                            — jed. —
-                                        </option>
-                                        <optgroup
-                                            v-for="group in UNIT_GROUPS"
-                                            :key="group"
-                                            :label="group"
-                                        >
-                                            <option
-                                                v-for="u in UNIT_OPTIONS.filter(
-                                                    (x) => x.group === group
-                                                )"
-                                                :key="u.value"
-                                                :value="u.value"
-                                            >
-                                                {{ u.label }}
-                                            </option>
-                                        </optgroup>
-                                    </select>
-                                    <IngAutosuggest
-                                        v-model="item.ingredientId"
-                                        :ingredients="ingredients"
-                                    />
-
-                                    <button
-                                        class="row-del-btn"
-                                        :disabled="g.items.length <= 1"
-                                        @click="removeIngItem(g.id, item.id)"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            </div>
-
-                            <button
-                                class="ghost-add-btn"
-                                @click="addIngItem(g.id)"
-                            >
-                                + składnik
-                            </button>
-                        </div>
-
-                        <button
-                            class="ghost-add-btn ghost-add-btn--dashed"
-                            @click="addIngGroup"
-                        >
-                            + Dodaj grupę składników
-                        </button>
-                    </div>
-                </section>
-
-                <!-- 03 Kroki -->
-                <section class="upsert-section">
-                    <div class="upsert-section__head">
-                        <span class="upsert-section__n">03</span>
-                        <h2 class="upsert-section__title">Kroki</h2>
-                    </div>
-                    <div class="upsert-section__hint">// grupuj jeśli przepis ma kilka etapów</div>
-
-                    <!-- View mode stub -->
-                    <div class="view-mode-stub">
-                        <span class="view-mode-stub__active">etapy</span>
-                        <span class="view-mode-stub__inactive">
-                            timing
-                            <span class="view-mode-stub__soon">wkrótce</span>
-                        </span>
-                    </div>
-
-                    <div class="groups-list">
-                        <div
-                            v-for="(g, gi) in stepGroups"
-                            :key="g.id"
-                            class="group-box"
-                        >
-                            <div class="group-box__head">
-                                <input
-                                    v-model="g.label"
-                                    class="group-box__label-input"
-                                    :placeholder="stepGroupPlaceholder(gi)"
-                                />
-                                <button
-                                    v-if="stepGroups.length > 1"
-                                    class="row-del-btn"
-                                    @click="removeStepGroup(g.id)"
-                                >
-                                    ×
-                                </button>
-                            </div>
-
-                            <div class="step-rows">
-                                <div
-                                    v-for="(item, ii) in g.items"
-                                    :key="item.id"
-                                    class="step-row"
-                                >
-                                    <span class="step-num-large">{{ globalStepIdx(gi, ii) }}</span>
-                                    <textarea
-                                        v-model="item.text"
-                                        class="textarea"
-                                        rows="2"
-                                        :placeholder="
-                                            globalStepIdx(gi, ii) === 1
-                                                ? 'Rozgrzej piekarnik do 200°C...'
-                                                : 'Następny krok...'
-                                        "
-                                    />
-                                    <button
-                                        class="row-del-btn"
-                                        :disabled="g.items.length <= 1 && stepGroups.length <= 1"
-                                        @click="removeStepItem(g.id, item.id)"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            </div>
-
-                            <button
-                                class="ghost-add-btn"
-                                style="margin-left: 54px"
-                                @click="addStepItem(g.id)"
-                            >
-                                + krok
-                            </button>
-                        </div>
-
-                        <button
-                            class="ghost-add-btn ghost-add-btn--dashed"
-                            @click="addStepGroup"
-                        >
-                            + Dodaj etap
-                        </button>
-                    </div>
-                </section>
-
-                <!-- 04 Wskazówka -->
-                <section class="upsert-section">
-                    <div class="upsert-section__head">
-                        <span class="upsert-section__n">04</span>
-                        <h2 class="upsert-section__title">Wskazówka</h2>
-                        <span class="upsert-section__optional">opcjonalne</span>
-                    </div>
-                    <div class="upsert-section__hint">
-                        // opcjonalna porada na koniec przepisu (np. czego unikać, czym podać)
-                    </div>
-                    <label
-                        for="recipe-tip"
-                        class="sr-only"
-                    >
-                        Wskazówka
-                    </label>
+                <FormSection
+                    n="04"
+                    title="Wskazówka"
+                    optional
+                >
                     <textarea
-                        id="recipe-tip"
-                        v-model="tip"
+                        v-model="form.tip"
                         class="textarea"
                         rows="3"
-                        placeholder="Jeśli filety są bardzo cienkie, skróć pieczenie do 10 minut..."
+                        aria-label="Wskazówka"
+                        placeholder="Jeśli filety są bardzo cienkie, skróć pieczenie do 10 minut…"
                     />
-                </section>
+                </FormSection>
             </div>
 
-            <!-- RIGHT: sticky sidebar -->
-            <aside class="upsert-sidebar">
-                <!-- Status — first -->
+            <aside class="upsert-side">
                 <div class="side-card">
-                    <div class="side-card__title">Status</div>
-                    <div class="status-pill-toggle">
-                        <button
-                            v-for="opt in [
-                                { id: 'draft', label: 'Szkic', dot: 'var(--c-mustard)' },
-                                { id: 'published', label: 'Opublikowany', dot: 'var(--c-sage)' },
-                            ]"
-                            :key="opt.id"
-                            class="status-pill-btn"
-                            :class="{ 'status-pill-btn--active': status === opt.id }"
-                            @click="status = opt.id as 'draft' | 'published'"
-                        >
-                            <span
-                                class="status-pill-dot"
-                                :style="{ background: opt.dot }"
-                            />
-                            {{ opt.label }}
-                        </button>
-                    </div>
-                    <div class="status-hint">
-                        {{
-                            status === 'published'
-                                ? '// widoczny publicznie'
-                                : '// tylko dla administratora'
-                        }}
-                    </div>
-                </div>
-
-                <!-- Klasyfikacja -->
-                <div class="side-card">
-                    <div class="side-card__title">Klasyfikacja</div>
-
-                    <div class="field">
-                        <label
-                            for="cat-picker"
-                            class="field-label"
-                        >
-                            Kategoria
-                            <span class="req">*</span>
-                        </label>
-                        <div
-                            id="cat-picker"
-                            class="cat-picker"
-                        >
-                            <button
-                                v-for="cat in CATEGORY_LIST"
-                                :key="cat.key"
-                                class="cat-pill"
-                                :class="{ 'cat-pill--active': categories.includes(cat.key) }"
-                                :style="`--cat-color: ${CAT_COLORS[cat.key]}`"
-                                @click="
-                                    categories = categories.includes(cat.key)
-                                        ? categories.filter((c) => c !== cat.key)
-                                        : [...categories, cat.key]
-                                "
-                            >
-                                <span
-                                    class="cat-pill__dot"
-                                    :style="{ background: CAT_COLORS[cat.key] }"
-                                />
-                                {{ cat.label }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="field">
-                        <label
-                            for="recipe-region"
-                            class="field-label"
-                        >
-                            Region
-                        </label>
-                        <div class="field-hint">
-                            // opcjonalnie — pokazywany po kropce w odznace
-                        </div>
-                        <select
-                            id="recipe-region"
-                            v-model="region"
-                            class="select"
-                        >
-                            <option
-                                v-for="r in REGIONS"
-                                :key="r"
-                                :value="r === '—' ? null : r"
-                            >
-                                {{ r }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="field">
-                        <label
-                            for="diff-picker"
+                    <h2 class="side-card__title">Klasyfikacja</h2>
+                    <TaxonomyField
+                        v-for="a in classificationAxes"
+                        :key="a.id"
+                        :axis="a"
+                        :hint="
+                            a.code === 'base'
+                                ? 'Główne składniki, po których się szuka.'
+                                : undefined
+                        "
+                        :error="errors[`taxonomy.${a.code}`]"
+                        :model-value="axisModel(a.code)"
+                        @update:model-value="setAxis(a.code, $event)"
+                    />
+                    <div
+                        id="f-difficulty"
+                        class="field"
+                        role="group"
+                        aria-labelledby="f-difficulty-label"
+                    >
+                        <span
+                            id="f-difficulty-label"
                             class="field-label"
                         >
                             Trudność
-                            <span class="req">*</span>
-                        </label>
-                        <div
-                            id="diff-picker"
-                            style="display: flex; gap: 6px"
-                        >
-                            <button
-                                v-for="d in [1, 2, 3]"
-                                :key="d"
-                                class="diff-btn"
-                                :class="{ 'is-active': difficulty === d }"
-                                @click="difficulty = difficulty === d ? null : d"
+                            <span
+                                class="req"
+                                aria-hidden="true"
                             >
-                                <span class="diff-btn__dots">
+                                *
+                            </span>
+                        </span>
+                        <div class="diff-picker">
+                            <button
+                                v-for="(label, i) in ['łatwe', 'średnie', 'trudne']"
+                                :key="label"
+                                type="button"
+                                class="diff-btn"
+                                :class="{
+                                    'is-active': form.difficulty === i + 1,
+                                    'is-invalid': errors.difficulty,
+                                }"
+                                :aria-pressed="form.difficulty === i + 1"
+                                @click="form.difficulty = i + 1"
+                            >
+                                <span
+                                    class="diff-btn__dots"
+                                    aria-hidden="true"
+                                >
                                     <span
-                                        v-for="i in 3"
-                                        :key="i"
+                                        v-for="k in 3"
+                                        :key="k"
                                         class="diff-btn__dot"
-                                        :class="{ 'is-on': i <= d }"
+                                        :class="{ 'is-on': k <= i + 1 }"
                                     />
                                 </span>
-                                {{ { 1: 'Łatwe', 2: 'Średnie', 3: 'Trudne' }[d] }}
+                                {{ label }}
                             </button>
                         </div>
+                        <UFieldError v-if="errors.difficulty">{{ errors.difficulty }}</UFieldError>
                     </div>
                 </div>
 
-                <!-- Czas i porcje -->
                 <div class="side-card">
-                    <div class="side-card__title">Czas i porcje</div>
-                    <div class="two-col-grid">
+                    <h2 class="side-card__title">Czas i porcje</h2>
+                    <div class="side-card__two">
                         <div class="field">
                             <label
-                                for="recipe-time"
+                                for="in-time"
                                 class="field-label"
                             >
                                 Czas (min)
-                                <span class="req">*</span>
                             </label>
                             <input
-                                id="recipe-time"
-                                v-model.number="timeMinutes"
+                                id="in-time"
+                                v-model="form.time"
                                 class="input input--mono"
                                 type="number"
                                 min="1"
-                                placeholder="30"
+                                placeholder="40"
                             />
                         </div>
-                        <div class="field">
+                        <div
+                            id="f-servings"
+                            class="field"
+                        >
                             <label
-                                for="recipe-servings"
+                                for="in-servings"
                                 class="field-label"
                             >
                                 Porcje
                                 <span class="req">*</span>
                             </label>
                             <input
-                                id="recipe-servings"
-                                v-model.number="servings"
+                                id="in-servings"
+                                v-model="form.servings"
                                 class="input input--mono"
+                                :class="{ 'is-invalid': errors.servings }"
+                                :aria-invalid="!!errors.servings || undefined"
                                 type="number"
                                 min="1"
                             />
                         </div>
                     </div>
+                    <UFieldError v-if="errors.servings">{{ errors.servings }}</UFieldError>
                     <div class="field">
                         <label
-                            for="recipe-kcal"
+                            for="in-kcal"
                             class="field-label"
                         >
-                            Kalorie / porcja
+                            Kcal / porcja
                         </label>
-                        <div class="field-hint">// opcjonalnie</div>
                         <input
-                            id="recipe-kcal"
-                            v-model.number="kcalPerServing"
+                            id="in-kcal"
+                            v-model="form.kcal"
                             class="input input--mono"
                             type="number"
                             min="1"
-                            placeholder="np. 490"
+                            placeholder="opcjonalnie"
                         />
                     </div>
                 </div>
 
-                <!-- Atrybuty -->
                 <div class="side-card">
-                    <div class="side-card__title">Atrybuty</div>
-
-                    <div class="attr-group">
-                        <span class="field-label">Diety</span>
-                        <div class="chip-grid">
-                            <button
-                                v-for="d in DIETS"
-                                :key="d"
-                                class="chip"
-                                :class="{ 'is-active': diets.has(d) }"
-                                @click="diets = toggleSet(diets, d)"
-                            >
-                                {{ d }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="attr-group">
-                        <span class="field-label">Praktyczne</span>
-                        <div class="chip-grid">
-                            <button
-                                v-for="p in PRACTICAL"
-                                :key="p"
-                                class="chip chip--mono"
-                                :class="{ 'is-active': practical.has(p) }"
-                                @click="practical = toggleSet(practical, p)"
-                            >
-                                {{ p }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="attr-sep">
-                        <label class="prep-toggle-label">
-                            <input
-                                v-model="needsPrep"
-                                type="checkbox"
-                                class="prep-toggle-input"
-                            />
-                            <span class="prep-toggle-track">
-                                <span class="prep-toggle-thumb" />
+                    <h2 class="side-card__title">Atrybuty</h2>
+                    <TaxonomyField
+                        v-if="dietAxis"
+                        :axis="dietAxis"
+                        strong
+                        :model-value="axisModel('diet')"
+                        @update:model-value="setAxis('diet', $event)"
+                    />
+                    <TaxonomyField
+                        v-if="practicalAxis"
+                        :axis="practicalAxis"
+                        :model-value="axisModel('practical')"
+                        @update:model-value="setAxis('practical', $event)"
+                    />
+                    <div class="prep-summary">
+                        <template v-if="prepSummary.count">
+                            <span class="prep-badge">
+                                wymaga przygotowania{{
+                                    prepSummary.lead ? ` · ${prepSummary.lead}` : ''
+                                }}
                             </span>
-                            <div>
-                                <div class="prep-toggle-text">Wymaga przygotowania</div>
-                                <div class="prep-toggle-sub">// np. marynata dzień wcześniej</div>
-                            </div>
-                        </label>
+                            <span class="field-hint">
+                                Wynika z
+                                {{
+                                    prepSummary.count === 1
+                                        ? '1 kroku'
+                                        : `${prepSummary.count} kroków`
+                                }}
+                                oznaczonych „Przygotuj wcześniej”.
+                            </span>
+                        </template>
+                        <span
+                            v-else
+                            class="field-hint"
+                        >
+                            Oznaczenie „wymaga przygotowania” pojawi się, gdy zaznaczysz taki krok.
+                        </span>
                     </div>
                 </div>
+
+                <UFieldError v-if="serverError">{{ serverError }}</UFieldError>
             </aside>
         </div>
-    </div>
 
-    <!-- Fixed action bar -->
-    <div class="action-bar">
-        <div class="container action-bar__inner">
-            <span class="action-bar__hint">
-                // tryb edycji · zmiany zapisują się automatycznie jako szkic
-            </span>
-            <div style="display: flex; gap: 8px">
-                <RouterLink
-                    to="/recipes"
-                    class="btn btn--ghost"
-                >
-                    Anuluj
-                </RouterLink>
-                <button class="btn btn--secondary">Podgląd</button>
-                <button
-                    class="btn"
-                    :class="[
-                        status === 'published' ? 'btn--pub' : 'btn--accent',
-                        { 'btn--saving': saving },
-                    ]"
-                    :disabled="!name.trim()"
-                    @click="submit"
-                >
-                    <USpinner
-                        v-if="saving"
-                        :size="14"
-                        color="rgba(255,255,255,0.95)"
-                        style="border-color: rgba(255, 255, 255, 0.25)"
-                    />
-                    {{
-                        saving
-                            ? 'Zapisywanie…'
-                            : status === 'published'
-                              ? 'Opublikowany · Zapisz'
-                              : 'Opublikuj przepis'
-                    }}
-                </button>
-            </div>
-        </div>
+        <FormActionBar
+            :status="status"
+            :is-new="isNew"
+            :dirty="dirty"
+            :last-saved="lastSaved"
+            :busy="busy"
+            :error-count="errorCount"
+            @cancel="cancel"
+            @save-draft="saveDraft"
+            @publish="publish"
+            @save="saveChanges"
+            @unpublish="unpublish"
+            @show-errors="scrollToFirstError"
+        />
+
+        <IngredientModal
+            v-if="addIng && dicts"
+            :dicts="dicts"
+            :initial-name="addIng.name"
+            create-label="Dodaj i wstaw"
+            @saved="onIngredientCreated"
+            @close="addIng = null"
+        />
     </div>
 </template>
 
 <style scoped>
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
 .upsert-page {
-    padding-top: 48px;
+    padding-top: 44px;
     padding-bottom: 120px;
 }
-
-/* Header */
-.upsert-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--ink-muted);
+.upsert-head .breadcrumb {
     margin-bottom: 14px;
 }
-.upsert-breadcrumb__link {
-    color: var(--ink-muted);
-    text-decoration: none;
-}
-.upsert-breadcrumb__link:hover {
-    color: var(--ink);
-}
-.upsert-breadcrumb__sep {
-    color: var(--ink-faint);
-}
-.upsert-breadcrumb__current {
-    color: var(--ink);
-    font-weight: 500;
-}
-
-.upsert-header__row {
+.upsert-head__row {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 24px;
-    margin-bottom: 32px;
 }
-.upsert-title {
-    font-size: 56px;
-    line-height: 0.95;
-    letter-spacing: -2.2px;
-    font-weight: 500;
-    margin: 0;
-}
-.upsert-status {
+.upsert-head__title {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--ink-muted);
-    letter-spacing: 0.3px;
-    padding-bottom: 10px;
+    gap: 16px;
 }
-.upsert-status__dot {
-    width: 6px;
-    height: 6px;
+.upsert-title {
+    font-size: 52px;
+    line-height: 1;
+    letter-spacing: -2px;
+    font-weight: 500;
+}
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 8px;
+    padding: 5px 12px;
+    border-radius: var(--r-pill);
+    font-size: 13px;
+    font-weight: 600;
+}
+.status-pill__dot {
+    width: 7px;
+    height: 7px;
     border-radius: var(--r-pill);
 }
-.upsert-status__dot--draft {
+.status-pill--draft {
+    background: var(--prep-soft);
+    color: var(--prep);
+}
+.status-pill--draft .status-pill__dot {
     background: var(--c-mustard);
 }
-.upsert-status__dot--pub {
-    background: var(--c-sage);
+.status-pill--published {
+    background: var(--success-soft);
+    color: var(--success);
 }
-
-/* Body layout */
+.status-pill--published .status-pill__dot {
+    background: var(--success);
+}
+.upsert-loading {
+    display: flex;
+    justify-content: center;
+    padding: 80px 0;
+}
 .upsert-body {
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: minmax(0, 1fr) 360px;
     gap: 40px;
-    align-items: start;
+    margin-top: 32px;
 }
-
 .upsert-main {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 28px;
 }
-
-/* Section cards */
-.upsert-section {
-    background: var(--bg-alt);
-    border: 1px solid var(--rule);
-    border-radius: var(--r-lg);
-    padding: 28px;
-}
-.upsert-section__head {
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-    margin-bottom: 6px;
-}
-.upsert-section__n {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--accent);
-    font-weight: 600;
-}
-.upsert-section__title {
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -0.5px;
-    margin: 0;
-}
-.upsert-section__optional {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--ink-faint);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-.upsert-section__hint {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--ink-muted);
-    letter-spacing: 0.3px;
-    margin-bottom: 22px;
-}
-
-/* Section 01 basics grid */
-.basics-grid {
+.basics {
     display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 220px minmax(0, 1fr);
     gap: 24px;
     align-items: start;
-    margin-top: 22px;
 }
-.basics-fields {
+.basics__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.basics__name {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.4px;
+    padding: 12px 14px;
+}
+.upsert-side {
+    position: sticky;
+    top: 84px;
+    align-self: start;
     display: flex;
     flex-direction: column;
     gap: 16px;
-}
-
-/* Photo zone */
-.photo-zone {
-    aspect-ratio: 1 / 1;
-    width: 100%;
-    background: repeating-linear-gradient(45deg, var(--bg) 0 8px, var(--bg-alt) 8px 9px);
-    border: 1.5px dashed var(--rule-strong);
-    border-radius: var(--r-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    flex-direction: column;
-    gap: 10px;
-    color: var(--ink-muted);
-    position: relative;
-    overflow: hidden;
-}
-.photo-zone__input {
-    display: none;
-}
-.photo-zone__img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.photo-zone__label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink);
-}
-.photo-zone__hint {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--ink-faint);
-    letter-spacing: 0.3px;
-}
-.photo-zone__clear {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(10, 10, 15, 0.6);
-    color: #fff;
-    border: none;
-    border-radius: var(--r-pill);
-    width: 26px;
-    height: 26px;
-    cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1;
-}
-
-/* Name input — larger */
-.upsert-name-input {
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: -0.3px;
-    padding: 12px 14px;
-}
-
-/* Groups */
-.groups-list {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-.group-box {
-    background: var(--bg);
-    border: 1px solid var(--rule);
-    border-radius: var(--r-lg);
-    padding: 16px;
-}
-.group-box__head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-.group-box__label-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    outline: none;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-    font-family: var(--font-mono);
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-    padding: 0;
-}
-.group-box__label-input::placeholder {
-    color: var(--ink-faint);
-    font-weight: 500;
-    text-transform: none;
-}
-
-/* Ingredient rows */
-.ing-rows {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.ing-row {
-    display: grid;
-    grid-template-columns: 90px 120px 1fr 28px;
-    gap: 8px;
-    align-items: center;
-}
-.ing-row__unit {
-    padding: 8px 10px;
-    font-size: 13px;
-}
-.ing-row__qty {
-    padding: 8px 10px;
-}
-.ing-row__name {
-    padding: 8px 10px;
-    font-size: 13px;
-}
-.ing-row__note {
-    padding: 8px 10px;
-    font-size: 12px;
-}
-
-/* Step rows */
-.step-rows {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-.step-row {
-    display: grid;
-    grid-template-columns: 40px 1fr 28px;
-    gap: 14px;
-    align-items: start;
-}
-.step-num-large {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--accent);
-    line-height: 1.4;
-    font-family: var(--font-sans);
-    padding-top: 4px;
-}
-
-/* View mode stub */
-.view-mode-stub {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: var(--bg);
-    border: 1px solid var(--rule);
-    border-radius: var(--r-pill);
-    padding: 4px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    margin-bottom: 18px;
-}
-.view-mode-stub__active {
-    padding: 5px 12px;
-    border-radius: var(--r-pill);
-    background: var(--accent);
-    color: #fff;
-    font-weight: 600;
-}
-.view-mode-stub__inactive {
-    padding: 5px 12px;
-    border-radius: var(--r-pill);
-    color: var(--ink-faint);
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: not-allowed;
-}
-.view-mode-stub__soon {
-    font-size: 9px;
-}
-
-/* Common row controls */
-.row-del-btn {
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--rule);
-    background: var(--bg-alt);
-    border-radius: var(--r-md);
-    font-size: 18px;
-    cursor: pointer;
-    line-height: 1;
-    color: var(--ink-muted);
-    font-family: var(--font-mono);
-    padding: 0;
-    flex-shrink: 0;
-}
-.row-del-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.ghost-add-btn {
-    background: transparent;
-    border: none;
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-    padding: 8px 0;
-    cursor: pointer;
-    margin-top: 8px;
-    display: block;
-}
-.ghost-add-btn--dashed {
-    border: 1px dashed var(--rule-strong);
-    padding: 10px;
-    border-radius: var(--r-md);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-weight: 500;
-    width: 100%;
-    margin-top: 0;
-    text-align: center;
-}
-
-/* Sidebar */
-.upsert-sidebar {
-    position: sticky;
-    top: 90px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
 }
 .side-card {
     background: var(--bg-alt);
@@ -1360,73 +697,41 @@ async function submit() {
     padding: 18px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
 }
 .side-card__title {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
+    letter-spacing: 0;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--rule);
 }
-
-/* Two-col grid for time/servings */
-.two-col-grid {
+.side-card__two {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
-
-/* Category picker */
-.cat-picker {
+.diff-picker {
     display: flex;
-    flex-wrap: wrap;
     gap: 6px;
-    margin-top: 4px;
 }
-.cat-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: transparent;
-    border: 1px solid var(--rule-strong);
-    color: var(--ink);
-    padding: 4px 10px 4px 8px;
-    border-radius: var(--r-pill);
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: var(--font-sans);
-    transition: all 0.12s;
-}
-.cat-pill--active {
-    background: color-mix(in srgb, var(--cat-color) 18%, transparent);
-    border-color: var(--cat-color);
-    font-weight: 600;
-}
-.cat-pill__dot {
-    width: 6px;
-    height: 6px;
-    border-radius: var(--r-pill);
-    flex-shrink: 0;
-}
-
-/* Difficulty */
 .diff-btn {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 6px;
-    background: transparent;
-    border: 1px solid var(--rule-strong);
-    color: var(--ink);
     padding: 10px 6px;
     border-radius: var(--r-md);
-    font-size: 12px;
+    border: 1px solid var(--rule-strong);
+    background: transparent;
+    color: var(--ink);
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    font-family: var(--font-sans);
-    transition: all 0.12s;
+}
+.diff-btn.is-invalid {
+    border-color: var(--danger);
 }
 .diff-btn.is-active {
     background: var(--accent-soft);
@@ -1441,186 +746,27 @@ async function submit() {
     width: 6px;
     height: 6px;
     border-radius: var(--r-pill);
-    background: var(--rule);
     border: 1px solid var(--rule-strong);
 }
 .diff-btn__dot.is-on {
     background: var(--accent);
+    border-color: var(--accent);
 }
-
-/* Chips */
-.chip-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-/* Attrs */
-.attr-group {
+.prep-summary {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-}
-.attr-sep {
-    padding-top: 12px;
-    border-top: 1px solid var(--rule);
-}
-
-/* Action bar */
-.action-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 40;
-    background: rgba(248, 248, 255, 0.92);
-    backdrop-filter: blur(12px);
-    border-top: 1px solid var(--rule);
-}
-[data-theme='dark'] .action-bar {
-    background: rgba(10, 10, 15, 0.92);
-}
-
-.action-bar__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    gap: 4px;
     padding-top: 14px;
-    padding-bottom: 14px;
+    border-top: 1px solid var(--rule);
 }
-.action-bar__hint {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--ink-muted);
-    letter-spacing: 0.3px;
-}
-
-/* Status toggle */
-.status-pill-toggle {
-    display: flex;
-    background: var(--bg);
-    border: 1px solid var(--rule);
-    border-radius: var(--r-lg);
-    padding: 3px;
-    gap: 3px;
-}
-.status-pill-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: var(--r-md);
-    padding: 9px 6px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: var(--font-sans);
-    color: var(--ink);
-    transition: all 0.15s;
-}
-.status-pill-btn--active {
-    background: var(--bg-alt);
-    border-color: var(--rule-strong);
+.prep-badge {
+    align-self: flex-start;
+    font-size: 12px;
     font-weight: 600;
-    box-shadow: 0 1px 3px rgba(10, 10, 15, 0.08);
-}
-.status-pill-dot {
-    width: 7px;
-    height: 7px;
+    color: var(--prep);
+    background: var(--prep-soft);
+    border: 1px solid var(--prep-line);
+    padding: 4px 10px;
     border-radius: var(--r-pill);
-    flex-shrink: 0;
-}
-.status-hint {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--ink-faint);
-    letter-spacing: 0.3px;
-}
-
-/* btn--pub (sage green) */
-.btn--pub {
-    background: var(--c-sage);
-    color: #fff;
-    border: none;
-}
-
-/* NeedsPrep toggle */
-.prep-toggle-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    user-select: none;
-}
-.prep-toggle-input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.prep-toggle-track {
-    width: 32px;
-    height: 18px;
-    border-radius: var(--r-pill);
-    flex-shrink: 0;
-    background: var(--rule-strong);
-    position: relative;
-    transition: background 0.18s;
-    display: inline-block;
-}
-.prep-toggle-input:checked ~ .prep-toggle-track {
-    background: var(--c-mustard);
-}
-.prep-toggle-thumb {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 14px;
-    height: 14px;
-    border-radius: var(--r-pill);
-    background: #fff;
-    transition: left 0.18s;
-    box-shadow: 0 1px 2px rgba(10, 10, 15, 0.18);
-}
-.prep-toggle-input:checked ~ .prep-toggle-track .prep-toggle-thumb {
-    left: 16px;
-}
-.prep-toggle-text {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink);
-    line-height: 1.3;
-}
-.prep-toggle-sub {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--ink-faint);
-    letter-spacing: 0.3px;
-    margin-top: 1px;
-}
-
-@media (max-width: 900px) {
-    .upsert-body {
-        grid-template-columns: 1fr;
-    }
-    .upsert-sidebar {
-        position: static;
-    }
-    .upsert-title {
-        font-size: 40px;
-    }
-    .action-bar__hint {
-        display: none;
-    }
-    .basics-grid {
-        grid-template-columns: 1fr;
-    }
-    .ing-row {
-        grid-template-columns: 70px 100px 1fr 28px;
-    }
 }
 </style>
