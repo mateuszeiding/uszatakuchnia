@@ -1,402 +1,262 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { useQueryClient } from '@tanstack/vue-query';
+import { computed, onMounted, ref } from 'vue';
 
+import UIcon from '@/components/UIcon.vue';
 import USpinner from '@/components/USpinner.vue';
-import { deleteRecipe, fetchRecipes } from '@/data/api/recipe/fetch';
-import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
-import { confirmDialog } from '@/utils/dialog';
+import { confirmAction } from '@/composables/useConfirm';
+import { showToast } from '@/composables/useToast';
+import { deleteRecipe, fetchRecipesWithClient, invalidateRecipes } from '@/data/api/recipe/fetch';
+import {
+    mainDish,
+    type RecipeBaseDto,
+    type RecipeStatus,
+    STATUS_LABEL,
+} from '@/data/dtos/recipe/RecipeDto';
 
+// Jedyna lista przepisów dla admina: zakładki statusów, podgląd / edycja / usuwanie.
+const qc = useQueryClient();
 const recipes = ref<RecipeBaseDto[]>([]);
 const loading = ref(true);
-const tab = ref<'all' | 'pub' | 'draft'>('all');
+const tab = ref<'all' | RecipeStatus>('all');
 const search = ref('');
-fetchRecipes('list', true).then((v) => {
-    recipes.value = v;
-    loading.value = false;
-});
 
-const filtered = computed(() => {
-    let list = recipes.value;
-    if (tab.value === 'pub') list = list.filter((r) => r.status === 'published');
-    if (tab.value === 'draft') list = list.filter((r) => r.status === 'draft');
-    if (search.value.trim()) {
-        const q = search.value.toLowerCase();
-        list = list.filter((r) => r.name.toLowerCase().includes(q));
-    }
-    return list;
-});
+async function load() {
+    recipes.value = await fetchRecipesWithClient(qc, 'list', true);
+    loading.value = false;
+}
+onMounted(load);
 
 const counts = computed(() => ({
     all: recipes.value.length,
-    pub: recipes.value.filter((r) => r.status === 'published').length,
+    published: recipes.value.filter((r) => r.status === 'published').length,
     draft: recipes.value.filter((r) => r.status === 'draft').length,
 }));
 
-async function handleDelete(r: RecipeBaseDto) {
-    if (!confirmDialog(`Usuń przepis „${r.name}"?`)) return;
+const TABS = [
+    { id: 'all', label: 'Wszystkie' },
+    { id: 'published', label: 'Opublikowane' },
+    { id: 'draft', label: 'Szkice' },
+] as const;
+
+const filtered = computed(() => {
+    const q = search.value.trim().toLowerCase();
+    return recipes.value.filter(
+        (r) => (tab.value === 'all' || r.status === tab.value) && r.name.toLowerCase().includes(q)
+    );
+});
+
+async function remove(r: RecipeBaseDto) {
+    const ok = await confirmAction({
+        title: `Usunąć „${r.name}”?`,
+        body:
+            r.status === 'published'
+                ? 'Przepis jest opublikowany i zniknie ze strony. Tej operacji nie da się cofnąć.'
+                : 'Tej operacji nie da się cofnąć.',
+        confirmLabel: 'Usuń przepis',
+        danger: true,
+    });
+    if (!ok) return;
     await deleteRecipe(r.id);
     recipes.value = recipes.value.filter((x) => x.id !== r.id);
-}
-
-function fmtTime(min: number | null) {
-    if (!min) return '—';
-    if (min < 60) return `${min} min`;
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return m ? `${h}h ${m}min` : `${h}h`;
+    invalidateRecipes(qc);
+    showToast('Przepis usunięty');
 }
 </script>
 
 <template>
-    <div class="container admin-recipes-page">
-        <div class="page-header">
-            <div>
-                <div class="kicker">// admin / przepisy</div>
-                <h1 class="page-title">Przepisy</h1>
-            </div>
-            <RouterLink
-                to="/recipes/new"
-                class="btn btn--accent"
-                style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none"
-            >
-                <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 13 13"
-                    fill="none"
-                >
-                    <path
-                        d="M6.5 2v9M2 6.5h9"
-                        stroke="currentColor"
-                        stroke-width="1.6"
-                        stroke-linecap="round"
-                    />
-                </svg>
-                Nowy przepis
-            </RouterLink>
-        </div>
-
-        <div class="toolbar">
-            <div class="tabs">
-                <button
-                    v-for="t in [
-                        { id: 'all', label: 'Wszystkie', n: counts.all },
-                        { id: 'pub', label: 'Opublikowane', n: counts.pub },
-                        { id: 'draft', label: 'Szkice', n: counts.draft },
-                    ] as const"
-                    :key="t.id"
-                    class="tab"
-                    :class="{ 'tab--active': tab === t.id }"
-                    @click="tab = t.id"
-                >
-                    {{ t.label }}
-                    <span class="tab__n">{{ t.n }}</span>
-                </button>
-            </div>
-            <input
-                v-model="search"
-                class="input search-input"
-                placeholder="Szukaj przepisu..."
-            />
-        </div>
-
-        <div class="recipe-table">
-            <div class="recipe-table__head">
-                <span>#</span>
-                <span>Nazwa</span>
-                <span>Kategoria</span>
-                <span>Czas</span>
-                <span>Status</span>
-                <span></span>
-            </div>
-            <div
-                v-if="loading"
-                class="table-spinner"
-            >
-                <USpinner :size="24" />
-                <span class="table-spinner__label">ładowanie danych…</span>
-            </div>
-            <div
-                v-for="r in filtered"
-                v-else
-                :key="r.id"
-                class="recipe-table__row"
-            >
-                <span class="cell-id">#{{ String(r.id).padStart(3, '0') }}</span>
-                <span class="cell-name">
-                    {{ r.name }}
-                    <span
-                        v-if="r.needsPrep"
-                        class="prep-tag"
-                    >
-                        prep+
-                    </span>
-                </span>
-                <span>
-                    <span
-                        v-if="r.categories[0]"
-                        class="badge"
-                        :class="`cat-${r.categories[0]}`"
-                    >
-                        {{ r.categories[0] }}
-                    </span>
-                </span>
-                <span class="cell-meta">{{ fmtTime(r.timeMinutes) }}</span>
-                <span>
-                    <span
-                        class="status-pill"
-                        :class="
-                            r.status === 'published' ? 'status-pill--pub' : 'status-pill--draft'
-                        "
-                    >
-                        {{ r.status === 'published' ? 'live' : 'szkic' }}
-                    </span>
-                </span>
-                <span class="cell-actions">
-                    <RouterLink
-                        :to="{ name: 'recipe-edit', params: { id: r.id } }"
-                        class="action-btn"
-                        title="Edytuj"
-                    >
-                        <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 14 14"
-                            fill="none"
-                        >
-                            <path
-                                d="M2 10.5L10 2.5l1.5 1.5L3.5 12H2v-1.5z"
-                                stroke="currentColor"
-                                stroke-width="1.3"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                    </RouterLink>
-                    <button
-                        class="action-btn action-btn--danger"
-                        title="Usuń"
-                        @click="handleDelete(r)"
-                    >
-                        <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 14 14"
-                            fill="none"
-                        >
-                            <path
-                                d="M3 4h8M5.5 4V2.5h3V4M4 4l0.5 8h5L10 4"
-                                stroke="currentColor"
-                                stroke-width="1.3"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                    </button>
-                </span>
-            </div>
-            <div
-                v-if="!loading && filtered.length === 0"
-                class="empty"
-            >
-                Brak przepisów
-            </div>
-        </div>
+    <h1 class="admin-title">Przepisy</h1>
+    <div
+        class="tabs"
+        role="tablist"
+    >
+        <button
+            v-for="t in TABS"
+            :key="t.id"
+            type="button"
+            role="tab"
+            class="tab"
+            :class="{ 'is-active': tab === t.id }"
+            :aria-selected="tab === t.id"
+            @click="tab = t.id"
+        >
+            {{ t.label }}
+            <span class="count">{{ counts[t.id] }}</span>
+        </button>
     </div>
+    <div class="admin-toolbar">
+        <input
+            v-model="search"
+            type="search"
+            class="input admin-search"
+            aria-label="Szukaj przepisu"
+            placeholder="Szukaj przepisu…"
+        />
+        <RouterLink
+            to="/recipes/new"
+            class="btn btn--accent"
+        >
+            + Nowy przepis
+        </RouterLink>
+    </div>
+
+    <div
+        v-if="loading"
+        class="admin-loading"
+    >
+        <USpinner :size="22" />
+    </div>
+    <table
+        v-else
+        class="data-table"
+    >
+        <thead>
+            <tr>
+                <th class="col-photo"><span class="sr-only">Zdjęcie</span></th>
+                <th>Tytuł</th>
+                <th>Typ dania</th>
+                <th>Status</th>
+                <th class="col-actions"><span class="sr-only">Akcje</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr
+                v-for="r in filtered"
+                :key="r.id"
+            >
+                <td class="col-photo">
+                    <img
+                        v-if="r.photoUrl"
+                        :src="r.photoUrl"
+                        alt=""
+                        class="thumb"
+                    />
+                    <div
+                        v-else
+                        class="photo thumb"
+                    />
+                </td>
+                <td class="cell-title">
+                    <RouterLink :to="{ name: 'recipe-edit', params: { id: r.id } }">
+                        {{ r.name }}
+                    </RouterLink>
+                </td>
+                <td class="cell-dish">
+                    <span
+                        v-if="mainDish(r)"
+                        class="dish"
+                        :class="mainDish(r)?.color ? `cat-${mainDish(r)?.color}` : null"
+                    >
+                        <span
+                            class="dish__dot"
+                            aria-hidden="true"
+                        />
+                        {{ mainDish(r)?.label }}
+                    </span>
+                </td>
+                <td>
+                    <span
+                        class="status-tag"
+                        :class="`status-tag--${r.status}`"
+                    >
+                        {{ STATUS_LABEL[r.status] }}
+                    </span>
+                </td>
+                <td>
+                    <div class="actions">
+                        <RouterLink
+                            v-if="r.status === 'published'"
+                            :to="{ name: 'recipe-details', params: { id: r.id } }"
+                            class="tbl-btn"
+                            :aria-label="`Zobacz „${r.name}”`"
+                            title="Zobacz na stronie"
+                        >
+                            <UIcon name="eye" />
+                        </RouterLink>
+                        <RouterLink
+                            :to="{ name: 'recipe-edit', params: { id: r.id } }"
+                            class="tbl-btn"
+                            :aria-label="`Edytuj „${r.name}”`"
+                            title="Edytuj"
+                        >
+                            <UIcon name="edit" />
+                        </RouterLink>
+                        <button
+                            type="button"
+                            class="tbl-btn tbl-btn--danger"
+                            :aria-label="`Usuń „${r.name}”`"
+                            title="Usuń"
+                            @click="remove(r)"
+                        >
+                            <UIcon name="trash" />
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <tr v-if="!filtered.length">
+                <td
+                    colspan="5"
+                    class="empty-row"
+                >
+                    Brak przepisów
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </template>
 
 <style scoped>
-.admin-recipes-page {
-    padding-top: 48px;
-    padding-bottom: 80px;
-}
-.page-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px;
-    padding-bottom: 28px;
-}
-.kicker {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 0.4px;
-    margin-bottom: 12px;
-}
-.page-title {
-    font-size: 56px;
-    line-height: 0.95;
-    letter-spacing: -2px;
-    font-weight: 500;
-    margin: 0;
-}
-.toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-.tabs {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--rule);
-}
-.tab {
-    background: transparent;
-    border: none;
-    padding: 10px 16px;
-    border-bottom: 2px solid transparent;
-    color: var(--ink-muted);
-    font-size: 13px;
+.admin-title {
+    font-size: 28px;
     font-weight: 600;
-    cursor: pointer;
-    font-family: var(--font-sans);
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    margin-bottom: -1px;
+    letter-spacing: -0.8px;
+    margin-bottom: 22px;
 }
-.tab--active {
-    border-bottom-color: var(--accent);
-    color: var(--ink);
+.admin-toolbar {
+    display: flex;
+    gap: 10px;
+    margin: 16px 0;
 }
-.tab__n {
-    font-family: var(--font-mono);
-    font-size: 10px;
+.admin-search {
+    flex: 1;
+    height: 40px;
     background: var(--bg-alt);
-    color: var(--ink-muted);
-    padding: 2px 6px;
-    border-radius: var(--r-pill);
 }
-.tab--active .tab__n {
-    background: var(--accent-soft);
-    color: var(--accent);
-}
-.search-input {
-    max-width: 280px;
-}
-.recipe-table {
-    background: var(--bg-alt);
-    border: 1px solid var(--rule);
-    border-radius: var(--r-lg);
-    overflow: hidden;
-}
-.recipe-table__head {
-    display: grid;
-    grid-template-columns: 48px 1fr 120px 80px 70px 72px;
-    gap: 14px;
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--rule);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--ink-muted);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-.recipe-table__row {
-    display: grid;
-    grid-template-columns: 48px 1fr 120px 80px 70px 72px;
-    gap: 14px;
-    align-items: center;
-    padding: 12px 20px;
-    border-bottom: 1px solid var(--rule);
-    transition: background 0.1s;
-}
-.recipe-table__row:last-child {
-    border-bottom: none;
-}
-.recipe-table__row:hover {
-    background: var(--bg);
-}
-.cell-id {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--ink-faint);
-}
-.cell-name {
-    font-size: 14px;
-    font-weight: 600;
+.admin-loading {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    overflow: hidden;
+    justify-content: center;
+    padding: 60px 0;
 }
-.prep-tag {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: #d9a441;
-    font-weight: 600;
-    flex-shrink: 0;
+.col-photo {
+    width: 54px;
+    padding-right: 0;
 }
-.cell-meta {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--ink-muted);
+.col-actions {
+    width: 112px;
 }
-.cell-actions {
-    display: flex;
-    gap: 6px;
-    justify-content: flex-end;
-}
-.action-btn {
-    width: 28px;
-    height: 28px;
+.thumb {
+    width: 40px;
+    height: 40px;
     border-radius: var(--r-md);
-    background: var(--bg);
-    border: 1px solid var(--rule);
-    color: var(--ink-muted);
-    cursor: pointer;
+    object-fit: cover;
+}
+.cell-title a {
+    color: var(--ink);
+    font-weight: 600;
+}
+.cell-dish {
+    white-space: nowrap;
+}
+.dish {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: all 0.12s;
+    gap: 6px;
+    font-size: 13px;
 }
-.action-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-}
-.action-btn--danger:hover {
-    border-color: #c53728;
-    color: #c53728;
-}
-.status-pill {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 3px 7px;
-    border-radius: var(--r-sm);
-}
-.status-pill--pub {
-    background: color-mix(in srgb, #2f6b3f 14%, transparent);
-    color: #2f6b3f;
-}
-.status-pill--draft {
-    background: color-mix(in srgb, #d9a441 18%, transparent);
-    color: #d9a441;
-}
-.table-spinner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 24px;
-    gap: 12px;
-}
-.table-spinner__label {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--ink-faint);
-    letter-spacing: 0.3px;
-}
-.empty {
-    padding: 40px;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--ink-muted);
+.dish__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--r-pill);
+    background: var(--cat, var(--accent));
 }
 </style>
