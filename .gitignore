@@ -4,3 +4,4 @@
 .design
 resetdb
 resetdb.exe
+design/*
