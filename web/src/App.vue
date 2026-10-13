@@ -3,6 +3,8 @@ import { onMounted } from 'vue';
 import { RouterView } from 'vue-router';
 
 import './scss/_!import.scss';
+import UConfirmHost from './components/UConfirmHost.vue';
+import UToastHost from './components/UToastHost.vue';
 import UTopBar from './components/UTopBar.vue';
 
 onMounted(() => {
@@ -15,4 +17,6 @@ onMounted(() => {
     <main>
         <RouterView />
     </main>
+    <UConfirmHost />
+    <UToastHost />
 </template>

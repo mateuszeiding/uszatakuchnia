@@ -31,6 +31,23 @@ export class API {
         return response.data;
     }
 
+    /** Wysyła surowe bajty (np. obraz) z raportowaniem postępu 0–100. */
+    public async upload<T>(endpoint: string, file: Blob, onProgress?: (pct: number) => void) {
+        const response = await axios.post<T>(endpoint, file, {
+            baseURL: this.__baseUrl,
+            headers: { 'Content-Type': file.type },
+            onUploadProgress: (e) =>
+                e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)),
+        });
+        return response.data;
+    }
+
+    /** Adres zasobu z API (np. zdjęcia /api/photos/1) — lokalnie API działa na innym porcie. */
+    public static resolveUrl(url: string | null | undefined): string | null {
+        if (!url) return null;
+        return import.meta.env.DEV && url.startsWith('/api/') ? `http://localhost:3000${url}` : url;
+    }
+
     public async put<T>(endpoint: string, body: unknown) {
         const response = await axios.put<T>(endpoint, body, { baseURL: this.__baseUrl });
         return response.data;
@@ -54,5 +71,8 @@ export type EndpointsConfig = {
     recipes: {
         list: string;
         [key: number]: string;
+    };
+    taxonomy: {
+        list: string;
     };
 };

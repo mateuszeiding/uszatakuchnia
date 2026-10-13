@@ -39,29 +39,29 @@ if (dark.value) {
                     >
                         Przepisy
                     </RouterLink>
-                    <RouterLink
-                        to="/challenges"
-                        class="topbar__link"
-                    >
-                        Wyzwania
-                    </RouterLink>
-                    <RouterLink
-                        to="/wiki"
-                        class="topbar__link"
-                    >
-                        Wiki
-                    </RouterLink>
                 </nav>
             </div>
 
             <div class="topbar__right">
                 <button
+                    type="button"
                     class="topbar__theme"
+                    aria-label="Tryb ciemny"
+                    :aria-pressed="dark"
                     @click="toggleTheme"
-                    :aria-label="dark ? 'Tryb jasny' : 'Tryb ciemny'"
                 >
-                    <span class="topbar__theme-label">{{ dark ? 'dark' : 'light' }}</span>
-                    <span class="topbar__theme-dot">{{ dark ? '☾' : '☀' }}</span>
+                    <span
+                        class="topbar__theme-label"
+                        aria-hidden="true"
+                    >
+                        {{ dark ? 'dark' : 'light' }}
+                    </span>
+                    <span
+                        class="topbar__theme-dot"
+                        aria-hidden="true"
+                    >
+                        {{ dark ? '☾' : '☀' }}
+                    </span>
                 </button>
 
                 <template v-if="isAuthenticated">
@@ -69,7 +69,7 @@ if (dark.value) {
                         to="/admin"
                         class="topbar__admin-badge"
                     >
-                        Admin
+                        Panel
                     </RouterLink>
                 </template>
 
@@ -122,7 +122,7 @@ if (dark.value) {
 }
 
 .topbar__link {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     color: var(--ink-dim);
     text-decoration: none;
@@ -163,17 +163,33 @@ if (dark.value) {
     align-items: center;
     justify-content: center;
     color: var(--on-accent);
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .topbar__admin-badge {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--accent);
     background: var(--accent-soft);
     padding: 3px 10px;
     border-radius: var(--r-pill);
     letter-spacing: 0.3px;
+}
+
+@media (max-width: 900px) {
+    .topbar__inner {
+        padding: 12px 20px;
+    }
+    .topbar__nav,
+    .topbar__theme-label {
+        display: none;
+    }
+    .topbar__theme {
+        padding: 4px;
+    }
+    .topbar__right {
+        gap: 8px;
+    }
 }
 </style>

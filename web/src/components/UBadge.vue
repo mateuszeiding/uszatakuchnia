@@ -11,8 +11,11 @@ const catClass: Record<IngredientType, string> = {
     [IngredientType.MEAT]: 'cat-mieso-ing',
     [IngredientType.VEGETABLE]: 'cat-warzywo',
     [IngredientType.FRUIT]: 'cat-owoc',
-    [IngredientType.HERB]: 'cat-ziele',
+    [IngredientType.DAIRY]: 'cat-nabial',
+    [IngredientType.GRAIN]: 'cat-zboze',
+    [IngredientType.LEGUME]: 'cat-straczki',
     [IngredientType.SPICE]: 'cat-przyprawa',
+    [IngredientType.FAT]: 'cat-tluszcz',
     [IngredientType.OTHER]: 'cat-inne',
 };
 </script>

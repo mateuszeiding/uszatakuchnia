@@ -53,28 +53,33 @@
   content: ""; width: 6px; height: 6px; border-radius: var(--r-pill);
   background: var(--cat, var(--accent)); flex-shrink: 0;
 }
-.cat-ryby      { --cat: var(--c-blue); }
-.cat-mieso     { --cat: var(--c-terracotta); }
-.cat-wege      { --cat: var(--c-sage); }
-.cat-wegan     { --cat: var(--c-forest); }
-.cat-makarony  { --cat: var(--c-mustard); }
-.cat-ryz       { --cat: var(--c-wheat); }
-.cat-zupy      { --cat: var(--c-tomato); }
-.cat-salatki   { --cat: var(--c-lime); }
-.cat-pieczywo  { --cat: var(--c-brown); }
-.cat-desery    { --cat: var(--c-pink); }
-.cat-sniadania { --cat: var(--c-coral); }
-.cat-przekaski { --cat: var(--c-plum); }
-.cat-napoje    { --cat: var(--c-teal); }
+/* typ dania → kolor z bazy (taxonomy_values.color = klucz tokenu) */
+.cat-coral      { --cat: var(--c-coral); }
+.cat-tomato     { --cat: var(--c-tomato); }
+.cat-terracotta { --cat: var(--c-terracotta); }
+.cat-lime       { --cat: var(--c-lime); }
+.cat-plum       { --cat: var(--c-plum); }
+.cat-pink       { --cat: var(--c-pink); }
+.cat-brown      { --cat: var(--c-brown); }
+.cat-mustard    { --cat: var(--c-mustard); }
+.cat-teal       { --cat: var(--c-teal); }
+.cat-blue       { --cat: var(--c-blue); }
+.cat-forest     { --cat: var(--c-forest); }
+.cat-sage       { --cat: var(--c-sage); }
+.cat-wheat      { --cat: var(--c-wheat); }
+.cat-olive      { --cat: var(--c-olive); }
 
 /* ingredient type → badge color */
 .cat-ryby-ing   { --cat: var(--c-blue); }
 .cat-mieso-ing  { --cat: var(--c-terracotta); }
 .cat-warzywo    { --cat: var(--c-sage); }
 .cat-owoc       { --cat: var(--c-lime); }
-.cat-ziele      { --cat: var(--c-forest); }
-.cat-przyprawa  { --cat: var(--c-coral); }
-.cat-inne       { --cat: var(--c-wheat); }
+.cat-nabial     { --cat: var(--c-mustard); }
+.cat-zboze      { --cat: var(--c-wheat); }
+.cat-straczki   { --cat: var(--c-olive); }
+.cat-przyprawa  { --cat: var(--c-forest); }
+.cat-tluszcz    { --cat: var(--c-coral); }
+.cat-inne       { --cat: var(--c-brown); }
 
 /* ── BADGE: ATRYBUT (outline) ── */
 .badge-attr {
@@ -108,12 +113,11 @@
 /* ── FIELD + KONTROLKI TEKSTOWE ── */
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field-label {
-  font-family: var(--font-mono); font-size: 10px; color: var(--ink-muted);
+  font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted);
   letter-spacing: 0.6px; text-transform: uppercase; font-weight: 600;
 }
 .field-label .req { color: var(--accent); margin-left: 4px; }
-.field-hint { font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint); letter-spacing: 0.3px; }
-.field-error { font-size: var(--text-small); color: var(--danger); margin-top: 2px; }
+.field-hint { font-family: var(--font-sans); font-size: 12px; color: var(--ink-muted); letter-spacing: 0.3px; }
 
 .input, .textarea, .select {
   width: 100%; background: var(--bg); border: 1px solid var(--rule);
@@ -212,7 +216,7 @@
   background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
 }
 .tip .tip-icon { width: 36px; height: 36px; border-radius: var(--r-pill); background: var(--accent); color: var(--on-accent); display: inline-flex; align-items: center; justify-content: center; }
-.tip .tip-head { font-family: var(--font-mono); font-size: 10px; color: var(--accent); letter-spacing: 0.6px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+.tip .tip-head { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: 0.6px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
 
 /* ── EMPTY STATE ── */
 .empty {
@@ -229,7 +233,7 @@
   font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
 }
 .tab.is-active { color: var(--ink); border-bottom-color: var(--accent); }
-.tab .count { background: var(--bg); color: var(--ink-muted); font-family: var(--font-mono); font-size: 10px; padding: 2px 7px; border-radius: var(--r-pill); font-weight: 600; }
+.tab .count { background: var(--bg); color: var(--ink-muted); font-family: var(--font-mono); font-size: 12px; padding: 2px 7px; border-radius: var(--r-pill); font-weight: 600; }
 .tab.is-active .count { background: var(--accent-soft); color: var(--accent); }
 
 /* ── BREADCRUMB ── */
@@ -244,3 +248,131 @@
 .section-head .n { font-family: var(--font-mono); font-size: var(--text-meta); color: var(--accent); font-weight: 600; }
 .section-head h2 { font-size: var(--text-h3); font-weight: 600; letter-spacing: -0.6px; }
 .section-head .line { flex: 1; height: 1px; background: var(--rule); margin-left: 8px; }
+
+/* ── DOSTĘPNOŚĆ ── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ── BUTTON: danger wypełniony (potwierdzenie usunięcia) ── */
+.btn--danger-fill { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn--danger-fill:hover { background: var(--danger); filter: brightness(1.06); }
+
+/* ── MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: var(--z-overlay);
+  background: rgba(10, 10, 15, 0.52); backdrop-filter: blur(3px);
+}
+.modal {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: var(--z-modal); width: var(--modal-w, 440px); max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px); overflow-y: auto;
+  background: var(--bg-alt); color: var(--ink); border: 1px solid var(--rule);
+  border-radius: var(--r-xl); padding: 28px;
+  display: flex; flex-direction: column; gap: 18px;
+  box-shadow: 0 24px 64px rgba(10, 10, 15, 0.22);
+}
+.modal__eyebrow {
+  font-family: var(--font-mono); font-size: 12px; color: var(--accent);
+  letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;
+}
+.modal__title { font-size: 21px; font-weight: 600; letter-spacing: -0.5px; text-wrap: pretty; }
+.modal__text { font-size: 14px; color: var(--ink-dim); line-height: 1.55; text-wrap: pretty; }
+.modal__footer {
+  display: flex; gap: 8px; justify-content: flex-end;
+  padding-top: 14px; border-top: 1px solid var(--rule);
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%);
+  z-index: var(--z-toast); background: var(--ink); color: var(--bg);
+  padding: 10px 16px; border-radius: var(--r-lg); font-size: 14px; font-weight: 500;
+  box-shadow: 0 8px 24px rgba(10, 10, 15, 0.2);
+}
+
+/* ── BŁĄD POLA ── */
+.field-error {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; color: var(--danger); margin-top: 2px;
+}
+
+/* ── EDYTOR LIST (formularz przepisu) ── */
+.row-icon-btn {
+  width: 30px; height: 30px; flex-shrink: 0; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--rule); background: var(--bg-alt); color: var(--ink-muted);
+  border-radius: var(--r-md); cursor: pointer;
+}
+.row-icon-btn:hover { color: var(--danger); border-color: var(--danger); }
+.row-icon-btn:disabled { opacity: .35; cursor: default; }
+.drag-handle {
+  width: 20px; height: 30px; padding: 0; border: none; background: transparent;
+  color: var(--ink-faint); cursor: grab; border-radius: var(--r-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.drag-handle:active { cursor: grabbing; }
+.drop-line {
+  position: absolute; left: 0; right: 0; height: 2px; z-index: 3;
+  background: var(--accent); border-radius: 2px; pointer-events: none;
+}
+.drop-line--before { top: -4px; }
+.drop-line--after { bottom: -4px; }
+.add-link {
+  align-self: flex-start; background: transparent; border: none; cursor: pointer;
+  color: var(--accent); font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  padding: 8px 0;
+}
+.add-group-btn {
+  width: 100%; background: transparent; cursor: pointer; color: var(--accent);
+  border: 1px dashed var(--rule-strong); border-radius: var(--r-lg); padding: 10px;
+  font-size: 14px; font-weight: 500;
+}
+.add-group-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+/* ── CHIP z kolorem (typ dania) / mocny (diety) ── */
+.chip { gap: 6px; padding: 5px 11px; font-size: 13px; }
+.chip__dot { width: 7px; height: 7px; border-radius: var(--r-pill); background: var(--cat, var(--accent)); }
+.chip--color.is-active {
+  background: color-mix(in srgb, var(--cat) 18%, transparent); color: var(--ink); border-color: var(--cat);
+}
+.chip--strong.is-active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+/* ── TABELA DANYCH (panel) ── */
+.data-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  background: var(--bg-alt); border: 1px solid var(--rule); border-radius: var(--r-xl); overflow: hidden;
+}
+.data-table th {
+  padding: 10px 14px; text-align: left; background: var(--bg); border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;
+  font-weight: 600; color: var(--ink-muted);
+}
+.data-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule); font-size: 14px; vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table .num { text-align: right; font-family: var(--font-mono); font-size: 13px; }
+.data-table .actions { display: flex; gap: 6px; justify-content: flex-end; }
+.data-table .empty-row { text-align: center; color: var(--ink-muted); padding: 40px; }
+
+/* przycisk-ikona w tabeli (edytuj / usuń / podgląd) */
+.tbl-btn {
+  width: 30px; height: 30px; padding: 0; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--rule); background: var(--bg-alt); color: var(--ink-muted);
+  border-radius: var(--r-md); cursor: pointer;
+}
+.tbl-btn:hover { color: var(--ink); border-color: var(--rule-strong); text-decoration: none; }
+.tbl-btn--danger { color: var(--danger); }
+.tbl-btn--danger:hover { color: var(--danger); border-color: var(--danger); }
+
+/* status przepisu */
+.status-tag {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: var(--r-pill);
+}
+.status-tag::before { content: ""; width: 6px; height: 6px; border-radius: var(--r-pill); }
+.status-tag--published { background: var(--success-soft); color: var(--success); }
+.status-tag--published::before { background: var(--success); }
+.status-tag--draft { background: var(--prep-soft); color: var(--prep); }
+.status-tag--draft::before { background: var(--c-mustard); }
