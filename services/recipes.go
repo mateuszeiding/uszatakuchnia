@@ -28,6 +28,12 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest) ([]dtos.FieldErro
 	if req.Servings < 0 {
 		add("servings", "Liczba porcji nie może być ujemna")
 	}
+	if req.TimeMin < 0 {
+		add("time", "Czas nie może być ujemny")
+	}
+	if req.TimeMax != nil && *req.TimeMax < req.TimeMin {
+		add("time", "Górna granica czasu musi być większa od dolnej")
+	}
 	if req.Difficulty != nil && (*req.Difficulty < 1 || *req.Difficulty > 3) {
 		add("difficulty", "Trudność musi być w zakresie 1–3")
 	}
@@ -117,6 +123,9 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest) ([]dtos.FieldErro
 		if req.Servings <= 0 {
 			add("servings", "Podaj liczbę porcji")
 		}
+		if req.TimeMin <= 0 {
+			add("time", "Podaj czas")
+		}
 	}
 
 	return errs, nil
@@ -141,7 +150,8 @@ func ApplyRecipeRequest(e *entities.Recipe, req dtos.UpsertRecipeRequest) {
 	e.Description = req.Description
 	e.Tagline = req.Tagline
 	e.Tip = req.Tip
-	e.TimeMinutes = req.TimeMinutes
+	e.TimeMin = req.TimeMin
+	e.TimeMax = req.TimeMax
 	e.Difficulty = req.Difficulty
 	e.KcalPerServing = req.KcalPerServing
 	e.Status = req.Status

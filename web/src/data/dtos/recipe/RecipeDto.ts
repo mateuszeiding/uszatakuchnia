@@ -17,7 +17,10 @@ export class RecipeBaseDto {
     id: number = 0;
     name: string = '';
     tagline: string | null = null;
-    timeMinutes: number | null = null;
+    /** Czas w minutach; 0 = nie podano (szkic). */
+    timeMin: number = 0;
+    /** Górna granica zakresu; null = bez zakresu. */
+    timeMax: number | null = null;
     difficulty: number | null = null;
     status: RecipeStatus = 'draft';
     /** Wyliczane: przepis ma krok oznaczony jako przygotowanie wcześniej. */
@@ -77,7 +80,8 @@ export interface IUpsertRecipeRequest {
     description?: string | null;
     tagline?: string | null;
     tip?: string | null;
-    timeMinutes?: number | null;
+    timeMin: number;
+    timeMax?: number | null;
     difficulty?: number | null;
     kcalPerServing?: number | null;
     photoUrl?: string | null;

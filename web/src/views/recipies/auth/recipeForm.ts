@@ -4,6 +4,7 @@
 import type { IUpsertRecipeRequest, RecipeDto, RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries, IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 import { parseQty } from '@/shared/utils/quantity';
+import { defaultTimeUnit, fromMinutes, type TimeUnit, toMinutes } from '@/shared/utils/time';
 
 let seq = 0;
 export const uid = () => ++seq;
@@ -42,7 +43,10 @@ export interface IRecipeForm {
     /** Wybrane wartości per kod osi (dish, base, cuisine, diet, practical, …). */
     taxonomy: Record<string, number[]>;
     difficulty: number | null;
+    /** Czas „od” / „do” jako tekst w jednostce timeUnit (np. „2,5” h). */
     time: string;
+    timeMax: string;
+    timeUnit: TimeUnit;
     servings: string;
     kcal: string;
     ingGroups: IGroup<IIngItem>[];
@@ -69,6 +73,8 @@ export const newForm = (): IRecipeForm => ({
     taxonomy: {},
     difficulty: null,
     time: '',
+    timeMax: '',
+    timeUnit: 'min',
     servings: '4',
     kcal: '',
     ingGroups: [{ id: uid(), label: '', items: [blankIng()] }],
@@ -89,6 +95,16 @@ function groupBy<T, R>(
         else out.push({ id: uid(), label, items: [map(it)] });
     }
     return out;
+}
+
+/** Czas z API (minuty) → pola formularza; przy edycji < 60 min w minutach, inaczej w godzinach. */
+function timeFields(min: number, max: number | null) {
+    const timeUnit = defaultTimeUnit(min);
+    return {
+        time: fromMinutes(min, timeUnit),
+        timeMax: max ? fromMinutes(max, timeUnit) : '',
+        timeUnit,
+    };
 }
 
 export function fromRecipe(r: RecipeDto): IRecipeForm {
@@ -121,7 +137,7 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
         photoUrl: r.photoPath,
         taxonomy,
         difficulty: r.difficulty,
-        time: r.timeMinutes ? String(r.timeMinutes) : '',
+        ...timeFields(r.timeMin, r.timeMax),
         servings: r.servings ? String(r.servings) : '',
         kcal: r.kcalPerServing ? String(r.kcalPerServing) : '',
         ingGroups: ingGroups.length ? ingGroups : newForm().ingGroups,
@@ -143,7 +159,8 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
         tagline: orNull(f.tagline),
         tip: orNull(f.tip),
         servings: toInt(f.servings) ?? 0,
-        timeMinutes: toInt(f.time),
+        timeMin: toMinutes(f.time, f.timeUnit),
+        timeMax: f.timeMax.trim() ? toMinutes(f.timeMax, f.timeUnit) || null : null,
         difficulty: f.difficulty,
         kcalPerServing: toInt(f.kcal),
         photoUrl: f.photoUrl ?? '',
@@ -178,7 +195,13 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
 
 export type FormErrors = Partial<
     Record<
-        'name' | 'ingredients' | 'steps' | 'difficulty' | 'servings' | `taxonomy.${string}`,
+        | 'name'
+        | 'ingredients'
+        | 'steps'
+        | 'difficulty'
+        | 'time'
+        | 'servings'
+        | `taxonomy.${string}`,
         string
     >
 >;
@@ -205,6 +228,11 @@ export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IVal
     }
     if (!f.difficulty) errors.difficulty = 'Wybierz trudność.';
     if (!toInt(f.servings)) errors.servings = 'Podaj liczbę porcji.';
+    const tMin = toMinutes(f.time, f.timeUnit);
+    const tMax = f.timeMax.trim() ? toMinutes(f.timeMax, f.timeUnit) : null;
+    if (!tMin) errors.time = 'Podaj czas (np. 40 albo 2,5).';
+    else if (tMax !== null && tMax < tMin)
+        errors.time = 'Górna granica musi być większa od dolnej.';
 
     const items = f.ingGroups.flatMap((g) => g.items);
     for (const it of items) {
@@ -232,5 +260,6 @@ export const ERROR_ORDER: [keyof FormErrors | string, string][] = [
     ['steps', 'f-steps'],
     ['taxonomy.dish', 'f-taxonomy-dish'],
     ['difficulty', 'f-difficulty'],
+    ['time', 'f-time'],
     ['servings', 'f-servings'],
 ];

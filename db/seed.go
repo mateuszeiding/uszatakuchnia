@@ -257,7 +257,8 @@ type RecipeSeed struct {
 	Servings       int
 	Tagline        *string
 	Description    *string
-	TimeMinutes    *int
+	TimeMin        int
+	TimeMax        *int
 	Difficulty     *int
 	KcalPerServing *int
 	Status         string // "draft" | "published"
@@ -360,7 +361,8 @@ func SeedOneRecipe(tx *gorm.DB, seed RecipeSeed) (uint, error) {
 			Servings:       seed.Servings,
 			Description:    seed.Description,
 			Tagline:        seed.Tagline,
-			TimeMinutes:    seed.TimeMinutes,
+			TimeMin:        seed.TimeMin,
+			TimeMax:        seed.TimeMax,
 			Difficulty:     seed.Difficulty,
 			KcalPerServing: seed.KcalPerServing,
 			Status:         status,
@@ -502,12 +504,13 @@ func SeedAll(db *gorm.DB) error {
 
 		recipes := []RecipeSeed{
 			{
-				Name:        "Spaghetti aglio e olio",
-				Servings:    2,
-				Tagline:     strPtr("Trzy składniki, gotowe w 15 minut. Klasyk za który nie wypada przepraszać."),
-				TimeMinutes: intPtr(20),
-				Difficulty:  intPtr(1),
-				Status:      "published",
+				Name:       "Spaghetti aglio e olio",
+				Servings:   2,
+				Tagline:    strPtr("Trzy składniki, gotowe w 15 minut. Klasyk za który nie wypada przepraszać."),
+				TimeMin:    15,
+				TimeMax:    intPtr(20),
+				Difficulty: intPtr(1),
+				Status:     "published",
 				Taxonomy: map[string][]string{
 					"dish":    {"danie główne"},
 					"base":    {"makaron"},
@@ -533,7 +536,7 @@ func SeedAll(db *gorm.DB) error {
 				Name:           "Pieczony łosoś z cytryną i tymiankiem",
 				Servings:       2,
 				Tagline:        strPtr("Maślany, soczysty łosoś gotowy w 20 minut. Jedna blacha, zero bałaganu."),
-				TimeMinutes:    intPtr(25),
+				TimeMin:        25,
 				Difficulty:     intPtr(1),
 				KcalPerServing: intPtr(420),
 				Status:         "published",
@@ -561,7 +564,7 @@ func SeedAll(db *gorm.DB) error {
 				Name:           "Kurczak tikka masala",
 				Servings:       4,
 				Tagline:        strPtr("Kremowy, aromatyczny sos z kurczakiem. Nie potrzebujesz żadnego tandooru."),
-				TimeMinutes:    intPtr(50),
+				TimeMin:        50,
 				Difficulty:     intPtr(2),
 				KcalPerServing: intPtr(510),
 				Status:         "published",
@@ -595,12 +598,12 @@ func SeedAll(db *gorm.DB) error {
 				},
 			},
 			{
-				Name:        "Sałatka z pieczonym boczkiem i szpinakiem",
-				Servings:    2,
-				Tagline:     strPtr("Ciepły dressing, chrupiący boczek i świeży szpinak. Gotowe w 15 minut."),
-				TimeMinutes: intPtr(15),
-				Difficulty:  intPtr(1),
-				Status:      "published",
+				Name:       "Sałatka z pieczonym boczkiem i szpinakiem",
+				Servings:   2,
+				Tagline:    strPtr("Ciepły dressing, chrupiący boczek i świeży szpinak. Gotowe w 15 minut."),
+				TimeMin:    15,
+				Difficulty: intPtr(1),
+				Status:     "published",
 				Taxonomy: map[string][]string{
 					"dish":      {"sałatka"},
 					"base":      {"mięso", "warzywa"},

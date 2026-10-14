@@ -40,7 +40,8 @@ func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 		Description:    e.Description,
 		Tagline:        e.Tagline,
 		Tip:            e.Tip,
-		TimeMinutes:    e.TimeMinutes,
+		TimeMin:        e.TimeMin,
+		TimeMax:        e.TimeMax,
 		Difficulty:     e.Difficulty,
 		KcalPerServing: e.KcalPerServing,
 		Status:         e.Status,
@@ -55,15 +56,16 @@ func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 
 func MapRecipeBaseToDto(e entities.RecipeBase) dtos.RecipeBaseDto {
 	return dtos.RecipeBaseDto{
-		ID:          e.ID,
-		Name:        e.Name,
-		Tagline:     e.Tagline,
-		TimeMinutes: e.TimeMinutes,
-		Difficulty:  e.Difficulty,
-		Status:      e.Status,
-		NeedsPrep:   e.NeedsPrep,
-		Taxonomy:    MapRecipeTaxonomyToDto(e.Taxonomy),
-		Photo:       MapRecipePhotoToDto(e.Photo),
+		ID:         e.ID,
+		Name:       e.Name,
+		Tagline:    e.Tagline,
+		TimeMin:    e.TimeMin,
+		TimeMax:    e.TimeMax,
+		Difficulty: e.Difficulty,
+		Status:     e.Status,
+		NeedsPrep:  e.NeedsPrep,
+		Taxonomy:   MapRecipeTaxonomyToDto(e.Taxonomy),
+		Photo:      MapRecipePhotoToDto(e.Photo),
 	}
 }
 

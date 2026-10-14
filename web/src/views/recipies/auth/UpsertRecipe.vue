@@ -9,6 +9,7 @@ import IngredientsEditor from './components/IngredientsEditor.vue';
 import PhotoField from './components/PhotoField.vue';
 import StepsEditor from './components/StepsEditor.vue';
 import TaxonomyField from './components/TaxonomyField.vue';
+import TimeField from './components/TimeField.vue';
 import {
     ERROR_ORDER,
     type FormErrors,
@@ -466,23 +467,13 @@ const prepSummary = computed(() => {
 
                 <div class="side-card">
                     <h2 class="side-card__title">Czas i porcje</h2>
+                    <TimeField
+                        v-model:time="form.time"
+                        v-model:time-max="form.timeMax"
+                        v-model:unit="form.timeUnit"
+                        :error="errors.time"
+                    />
                     <div class="side-card__two">
-                        <div class="field">
-                            <label
-                                for="in-time"
-                                class="field-label"
-                            >
-                                Czas (min)
-                            </label>
-                            <input
-                                id="in-time"
-                                v-model="form.time"
-                                class="input input--mono"
-                                type="number"
-                                min="1"
-                                placeholder="40"
-                            />
-                        </div>
                         <div
                             id="f-servings"
                             class="field"

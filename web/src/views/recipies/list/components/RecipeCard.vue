@@ -4,7 +4,7 @@ import { computed } from 'vue';
 import { DIFFICULTY } from '../listFilters';
 
 import { cuisineOf, mainDish, type RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
-import { fmtTime } from '@/views/recipies/details/recipeView';
+import { formatTime } from '@/shared/utils/time';
 
 const props = defineProps<{ recipe: RecipeBaseDto; hits?: string[] | null }>();
 
@@ -12,7 +12,7 @@ const dish = computed(() => mainDish(props.recipe));
 const cuisine = computed(() => cuisineOf(props.recipe)?.label);
 const meta = computed(() =>
     [
-        fmtTime(props.recipe.timeMinutes),
+        formatTime(props.recipe.timeMin, props.recipe.timeMax),
         props.recipe.difficulty ? DIFFICULTY[props.recipe.difficulty] : null,
     ]
         .filter(Boolean)

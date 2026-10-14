@@ -26,12 +26,6 @@ export function scaledAmount(ing: RecipeIngredientDto, units: IUnit[], ratio: nu
 
 export const DIFFICULTY = ['', 'łatwe', 'średnie', 'trudne'];
 
-export function fmtTime(min: number | null): string | null {
-    if (!min) return null;
-    if (min < 60) return `${min} min`;
-    return min % 60 === 0 ? `${min / 60} h` : `${Math.floor(min / 60)} h ${min % 60} min`;
-}
-
 export const servingsLabel = (n: number) =>
     n === 1
         ? 'porcja'

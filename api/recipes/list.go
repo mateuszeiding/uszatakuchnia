@@ -19,7 +19,7 @@ func List(w http.ResponseWriter, r *http.Request) {
 	isAdmin := r.URL.Query().Get("admin") == "true"
 
 	query := conn.Model(&entities.Recipe{}).
-		Select(`id, name, tagline, time_minutes, difficulty, status,
+		Select(`id, name, tagline, time_min, time_max, difficulty, status,
 			EXISTS (SELECT 1 FROM recipe_steps s WHERE s.recipe_id = recipes.id AND s.prep) AS needs_prep`).
 		Preload("Photo").
 		Preload("Taxonomy.Value.Axis").

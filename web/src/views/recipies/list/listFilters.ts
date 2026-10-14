@@ -113,7 +113,8 @@ export function applyFilters(
                     : wanted.some((id) => has.has(id));
             if (!ok) return false;
         }
-        if (f.maxTime && !(r.timeMinutes != null && r.timeMinutes <= f.maxTime)) return false;
+        // po czasie minimalnym (czas „od”); przepis bez czasu (0) nie przechodzi filtra
+        if (f.maxTime && !(r.timeMin > 0 && r.timeMin <= f.maxTime)) return false;
         if (f.difficulty && r.difficulty !== f.difficulty) return false;
         if (f.noPrep && r.needsPrep) return false;
         return true;
@@ -121,7 +122,7 @@ export function applyFilters(
 
     const cmp: Record<SortKey, (a: IResult, b: IResult) => number> = {
         newest: (a, b) => b.recipe.id - a.recipe.id,
-        fastest: (a, b) => (a.recipe.timeMinutes ?? 9999) - (b.recipe.timeMinutes ?? 9999),
+        fastest: (a, b) => (a.recipe.timeMin || 9999) - (b.recipe.timeMin || 9999),
         az: (a, b) => a.recipe.name.localeCompare(b.recipe.name, 'pl'),
     };
     return out.sort(cmp[f.sort]);

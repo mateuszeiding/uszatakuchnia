@@ -32,7 +32,9 @@ type SchemaMigration struct {
 func (SchemaMigration) TableName() string { return "schema_migrations" }
 
 // All — migracje w kolejności wykonania. Nowe dopisuj na końcu.
-var All = []Migration{}
+var All = []Migration{
+	recipeTimeRange,
+}
 
 // Run wykonuje migracje, których nie ma jeszcze w schema_migrations.
 func Run(tx *gorm.DB) error {

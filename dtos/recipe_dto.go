@@ -10,7 +10,8 @@ type RecipeDto struct {
 	Description    *string               `json:"description,omitempty"`
 	Tagline        *string               `json:"tagline,omitempty"`
 	Tip            *string               `json:"tip,omitempty"`
-	TimeMinutes    *int                  `json:"timeMinutes,omitempty"`
+	TimeMin        int                   `json:"timeMin"`
+	TimeMax        *int                  `json:"timeMax,omitempty"`
 	Difficulty     *int                  `json:"difficulty,omitempty"`
 	KcalPerServing *int                  `json:"kcalPerServing,omitempty"`
 	Status         string                `json:"status"`
@@ -23,15 +24,16 @@ type RecipeDto struct {
 }
 
 type RecipeBaseDto struct {
-	ID          uint              `json:"id"`
-	Name        string            `json:"name"`
-	Tagline     *string           `json:"tagline,omitempty"`
-	TimeMinutes *int              `json:"timeMinutes,omitempty"`
-	Difficulty  *int              `json:"difficulty,omitempty"`
-	Status      string            `json:"status"`
-	NeedsPrep   bool              `json:"needsPrep"`
-	Taxonomy    RecipeTaxonomyDto `json:"taxonomy"`
-	Photo       *RecipePhotoDto   `json:"photo,omitempty"`
+	ID         uint              `json:"id"`
+	Name       string            `json:"name"`
+	Tagline    *string           `json:"tagline,omitempty"`
+	TimeMin    int               `json:"timeMin"`
+	TimeMax    *int              `json:"timeMax,omitempty"`
+	Difficulty *int              `json:"difficulty,omitempty"`
+	Status     string            `json:"status"`
+	NeedsPrep  bool              `json:"needsPrep"`
+	Taxonomy   RecipeTaxonomyDto `json:"taxonomy"`
+	Photo      *RecipePhotoDto   `json:"photo,omitempty"`
 	// Nazwy składników — wyszukiwarka listy szuka też po nich.
 	IngredientNames []string `json:"ingredientNames"`
 }
@@ -42,7 +44,8 @@ type UpsertRecipeRequest struct {
 	Description    *string `json:"description"`
 	Tagline        *string `json:"tagline"`
 	Tip            *string `json:"tip"`
-	TimeMinutes    *int    `json:"timeMinutes"`
+	TimeMin        int     `json:"timeMin"` // minuty; 0 = nie podano (tylko szkic)
+	TimeMax        *int    `json:"timeMax"`
 	Difficulty     *int    `json:"difficulty"`
 	KcalPerServing *int    `json:"kcalPerServing"`
 	PhotoUrl       *string `json:"photoUrl"`

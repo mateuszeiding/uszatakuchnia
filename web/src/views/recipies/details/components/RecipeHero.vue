@@ -1,9 +1,10 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 
-import { DIFFICULTY, fmtTime, leadText } from '../recipeView';
+import { DIFFICULTY, leadText } from '../recipeView';
 
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
+import { formatTime } from '@/shared/utils/time';
 
 const props = defineProps<{ recipe: RecipeDto; servings: number }>();
 
@@ -63,9 +64,9 @@ function scrollToStep(no: number) {
                 {{ recipe.tagline }}
             </p>
             <dl class="hero__meta">
-                <div v-if="recipe.timeMinutes">
+                <div v-if="recipe.timeMin">
                     <dt>Czas</dt>
-                    <dd>{{ fmtTime(recipe.timeMinutes) }}</dd>
+                    <dd>{{ formatTime(recipe.timeMin, recipe.timeMax) }}</dd>
                 </div>
                 <div v-if="recipe.difficulty">
                     <dt>Trudność</dt>
