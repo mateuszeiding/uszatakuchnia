@@ -4,23 +4,22 @@ package dtos
 type RecipeTaxonomyDto map[string][]TaxonomyValueDto
 
 type RecipeDto struct {
-	ID             uint                  `json:"id"`
-	Name           string                `json:"name"`
-	Servings       int                   `json:"servings"`
-	Description    *string               `json:"description,omitempty"`
-	Tagline        *string               `json:"tagline,omitempty"`
-	Tip            *string               `json:"tip,omitempty"`
-	TimeMin        int                   `json:"timeMin"`
-	TimeMax        *int                  `json:"timeMax,omitempty"`
-	Difficulty     *int                  `json:"difficulty,omitempty"`
-	KcalPerServing *int                  `json:"kcalPerServing,omitempty"`
-	Status         string                `json:"status"`
-	NeedsPrep      bool                  `json:"needsPrep"`
-	Taxonomy       RecipeTaxonomyDto     `json:"taxonomy"`
-	Allergens      []string              `json:"allergens"`
-	Photo          *RecipePhotoDto       `json:"photo,omitempty"`
-	Steps          []RecipeStepDto       `json:"steps"`
-	Ingredients    []RecipeIngredientDto `json:"ingredients"`
+	ID          uint                  `json:"id"`
+	Name        string                `json:"name"`
+	Servings    int                   `json:"servings"`
+	Description *string               `json:"description,omitempty"`
+	Tagline     *string               `json:"tagline,omitempty"`
+	Tip         *string               `json:"tip,omitempty"`
+	TimeMin     int                   `json:"timeMin"`
+	TimeMax     *int                  `json:"timeMax,omitempty"`
+	Difficulty  *int                  `json:"difficulty,omitempty"`
+	Status      string                `json:"status"`
+	NeedsPrep   bool                  `json:"needsPrep"`
+	Taxonomy    RecipeTaxonomyDto     `json:"taxonomy"`
+	Allergens   []string              `json:"allergens"`
+	Photo       *RecipePhotoDto       `json:"photo,omitempty"`
+	Steps       []RecipeStepDto       `json:"steps"`
+	Ingredients []RecipeIngredientDto `json:"ingredients"`
 }
 
 type RecipeBaseDto struct {
@@ -39,17 +38,16 @@ type RecipeBaseDto struct {
 }
 
 type UpsertRecipeRequest struct {
-	Name           string  `json:"name"`
-	Servings       int     `json:"servings"`
-	Description    *string `json:"description"`
-	Tagline        *string `json:"tagline"`
-	Tip            *string `json:"tip"`
-	TimeMin        int     `json:"timeMin"` // minuty; 0 = nie podano (tylko szkic)
-	TimeMax        *int    `json:"timeMax"`
-	Difficulty     *int    `json:"difficulty"`
-	KcalPerServing *int    `json:"kcalPerServing"`
-	PhotoUrl       *string `json:"photoUrl"`
-	Status         string  `json:"status"`
+	Name        string  `json:"name"`
+	Servings    int     `json:"servings"`
+	Description *string `json:"description"`
+	Tagline     *string `json:"tagline"`
+	Tip         *string `json:"tip"`
+	TimeMin     int     `json:"timeMin"` // minuty; 0 = nie podano (tylko szkic)
+	TimeMax     *int    `json:"timeMax"`
+	Difficulty  *int    `json:"difficulty"`
+	PhotoUrl    *string `json:"photoUrl"`
+	Status      string  `json:"status"`
 
 	TaxonomyValueIDs []uint `json:"taxonomyValueIds"`
 

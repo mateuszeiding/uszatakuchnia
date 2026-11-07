@@ -34,6 +34,7 @@ func (SchemaMigration) TableName() string { return "schema_migrations" }
 // All — migracje w kolejności wykonania. Nowe dopisuj na końcu.
 var All = []Migration{
 	recipeTimeRange,
+	dropRecipeKcal,
 }
 
 // Run wykonuje migracje, których nie ma jeszcze w schema_migrations.

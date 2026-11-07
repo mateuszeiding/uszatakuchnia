@@ -14,10 +14,11 @@ type Recipe struct {
 	Tip         *string // wskazówka pod krokami
 
 	// Czas w minutach: od–do. TimeMin 0 = nie podano (szkic); TimeMax nil = bez zakresu.
-	TimeMin        int `gorm:"not null;default:0"`
-	TimeMax        *int
-	Difficulty     *int
-	KcalPerServing *int
+	TimeMin    int `gorm:"not null;default:0"`
+	TimeMax    *int
+	Difficulty *int
+	// Cache makro (services.RecomputeRecipes); nil = brak danych.
+	Nutrition *RecipeNutrition `gorm:"type:jsonb"`
 
 	Status string `gorm:"type:varchar(16);not null;default:'draft'"`
 
@@ -37,6 +38,7 @@ type RecipeBase struct {
 	Difficulty *int
 	Status     string           `gorm:"type:varchar(16);not null"`
 	NeedsPrep  bool             `gorm:"->;-:migration"`
+	Nutrition  *RecipeNutrition `gorm:"->;-:migration"`
 	Photo      *RecipePhoto     `gorm:"foreignKey:RecipeID;references:ID"`
 	Taxonomy   []RecipeTaxonomy `gorm:"foreignKey:RecipeID;references:ID"`
 }

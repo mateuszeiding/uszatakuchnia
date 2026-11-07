@@ -13,6 +13,7 @@ func AutoMigrate(gdb *gorm.DB) error {
 		&entities.IngredientType{},
 		&entities.Ingredient{},
 		&entities.IngredientAllergen{},
+		&entities.IngredientUnitConversion{},
 
 		&entities.TaxonomyAxis{},
 		&entities.TaxonomyValue{},

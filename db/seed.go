@@ -253,16 +253,15 @@ type RecipePhotoSeed struct {
 }
 
 type RecipeSeed struct {
-	Name           string
-	Servings       int
-	Tagline        *string
-	Description    *string
-	TimeMin        int
-	TimeMax        *int
-	Difficulty     *int
-	KcalPerServing *int
-	Status         string // "draft" | "published"
-	Photo          *RecipePhotoSeed
+	Name        string
+	Servings    int
+	Tagline     *string
+	Description *string
+	TimeMin     int
+	TimeMax     *int
+	Difficulty  *int
+	Status      string // "draft" | "published"
+	Photo       *RecipePhotoSeed
 
 	// Klasyfikacja: kod osi → etykiety wartości
 	Taxonomy map[string][]string
@@ -358,14 +357,13 @@ func SeedOneRecipe(tx *gorm.DB, seed RecipeSeed) (uint, error) {
 	var r entities.Recipe
 	if err := tx.Where(entities.Recipe{Name: seed.Name}).
 		Assign(entities.Recipe{
-			Servings:       seed.Servings,
-			Description:    seed.Description,
-			Tagline:        seed.Tagline,
-			TimeMin:        seed.TimeMin,
-			TimeMax:        seed.TimeMax,
-			Difficulty:     seed.Difficulty,
-			KcalPerServing: seed.KcalPerServing,
-			Status:         status,
+			Servings:    seed.Servings,
+			Description: seed.Description,
+			Tagline:     seed.Tagline,
+			TimeMin:     seed.TimeMin,
+			TimeMax:     seed.TimeMax,
+			Difficulty:  seed.Difficulty,
+			Status:      status,
 		}).
 		FirstOrCreate(&r).Error; err != nil {
 		return 0, fmt.Errorf("failed to find or create recipe: %w", err)
@@ -533,13 +531,12 @@ func SeedAll(db *gorm.DB) error {
 				},
 			},
 			{
-				Name:           "Pieczony łosoś z cytryną i tymiankiem",
-				Servings:       2,
-				Tagline:        strPtr("Maślany, soczysty łosoś gotowy w 20 minut. Jedna blacha, zero bałaganu."),
-				TimeMin:        25,
-				Difficulty:     intPtr(1),
-				KcalPerServing: intPtr(420),
-				Status:         "published",
+				Name:       "Pieczony łosoś z cytryną i tymiankiem",
+				Servings:   2,
+				Tagline:    strPtr("Maślany, soczysty łosoś gotowy w 20 minut. Jedna blacha, zero bałaganu."),
+				TimeMin:    25,
+				Difficulty: intPtr(1),
+				Status:     "published",
 				Taxonomy: map[string][]string{
 					"dish": {"danie główne"},
 					"base": {"ryby"},
@@ -561,13 +558,12 @@ func SeedAll(db *gorm.DB) error {
 				},
 			},
 			{
-				Name:           "Kurczak tikka masala",
-				Servings:       4,
-				Tagline:        strPtr("Kremowy, aromatyczny sos z kurczakiem. Nie potrzebujesz żadnego tandooru."),
-				TimeMin:        50,
-				Difficulty:     intPtr(2),
-				KcalPerServing: intPtr(510),
-				Status:         "published",
+				Name:       "Kurczak tikka masala",
+				Servings:   4,
+				Tagline:    strPtr("Kremowy, aromatyczny sos z kurczakiem. Nie potrzebujesz żadnego tandooru."),
+				TimeMin:    50,
+				Difficulty: intPtr(2),
+				Status:     "published",
 				Taxonomy: map[string][]string{
 					"dish":    {"danie główne"},
 					"base":    {"drób"},

@@ -153,7 +153,6 @@ func ApplyRecipeRequest(e *entities.Recipe, req dtos.UpsertRecipeRequest) {
 	e.TimeMin = req.TimeMin
 	e.TimeMax = req.TimeMax
 	e.Difficulty = req.Difficulty
-	e.KcalPerServing = req.KcalPerServing
 	e.Status = req.Status
 }
 

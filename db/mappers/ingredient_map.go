@@ -12,12 +12,12 @@ func MapIngredientToDto(e entities.Ingredient) dtos.IngredientDto {
 	}
 
 	return dtos.IngredientDto{
-		ID:         e.ID,
-		Name:       e.Name,
-		ParentID:   e.ParentID,
-		Allergens:  mapIngredientAllergenCodes(e.Allergens),
-		Type:       ingredientType,
-		Image:      MapImageToDto(&e.Image),
+		ID:        e.ID,
+		Name:      e.Name,
+		ParentID:  e.ParentID,
+		Allergens: mapIngredientAllergenCodes(e.Allergens),
+		Type:      ingredientType,
+		Image:     MapImageToDto(&e.Image),
 	}
 }
 
