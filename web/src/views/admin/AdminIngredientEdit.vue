@@ -5,6 +5,7 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate, useRouter } from 'vue-router';
 
 import ConversionsTable from './components/ConversionsTable.vue';
 import IngredientBasics from './components/IngredientBasics.vue';
+import NutritionStateNote from './components/NutritionStateNote.vue';
 import NutritionTable from './components/NutritionTable.vue';
 import {
     convertibleUnits,
@@ -85,9 +86,12 @@ const parents = computed(() => {
 });
 const parent = computed(() => all.value.find((i) => i.id === form.value.parentId));
 const inherited = computed(() => inheritedFromChildren(children.value));
-const ownCount = computed(
-    () => NUTRIENTS.filter(({ key }) => !('empty' in rowState(form.value.nutrition[key]))).length
+const ownKeys = computed(() =>
+    NUTRIENTS.filter(({ key }) => !('empty' in rowState(form.value.nutrition[key]))).map(
+        (n) => n.key
+    )
 );
+const ownCount = computed(() => ownKeys.value.length);
 const units = computed(() => convertibleUnits(dicts.value?.units ?? []));
 const inheritedConversions = computed(() =>
     (parent.value?.conversions ?? []).map((c) => ({ ...c, inherited: true }))
@@ -226,24 +230,12 @@ onBeforeRouteUpdate(guard);
                         : 'Wpisz zakres, jeśli marki się różnią. Max puste = jedna wartość. Liczby z przecinkiem lub kropką.'
                 }}
             </p>
-            <div
-                v-if="inherited"
-                class="edit__banner"
-            >
-                <strong>Brak własnych danych — zakres wyliczony z podskładników</strong>
-                (najniższe min, najwyższe max):
-                <span
-                    v-for="c in children"
-                    :key="c.id"
-                    class="edit__child"
-                >
-                    <RouterLink :to="`${LIST}/${c.id}`">{{ c.name }}</RouterLink>
-                </span>
-                <span class="edit__banner-note">
-                    Wpisz wartość w wierszu, żeby go nadpisać. Szeroki zakres sugeruje, że w
-                    przepisie lepiej wybrać konkretny podskładnik.
-                </span>
-            </div>
+            <NutritionStateNote
+                :children="children"
+                :own="ownKeys"
+                :name="form.name"
+                :link-base="LIST"
+            />
             <NutritionTable
                 v-model="form.nutrition"
                 :inherited="inherited"
@@ -365,34 +357,6 @@ onBeforeRouteUpdate(guard);
     font-size: 13px;
     line-height: 1.45;
     color: var(--ink-muted);
-}
-.edit__banner {
-    margin-bottom: 16px;
-    padding: 12px 14px;
-    background: var(--info-soft);
-    border-radius: var(--r-lg);
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--ink-dim);
-}
-.edit__banner strong {
-    color: var(--ink);
-    font-weight: 600;
-}
-.edit__banner a {
-    color: var(--ink);
-    text-underline-offset: 3px;
-}
-/* przecinki między podskładnikami i kropka na końcu — bez spacji z formatowania szablonu */
-.edit__child:not(:last-child)::after {
-    content: ', ';
-}
-.edit__child:last-child::after {
-    content: '.';
-}
-.edit__banner-note {
-    display: block;
-    margin-top: 4px;
 }
 .edit__missing {
     color: var(--ink-muted);
