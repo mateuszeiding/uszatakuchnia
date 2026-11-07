@@ -4,24 +4,23 @@ import { computed, ref } from 'vue';
 import UFieldError from './form/UFieldError.vue';
 import UModal from './UModal.vue';
 
-import { createIngredient, updateIngredient } from '@/data/api/ingredients/fetch';
+import { createIngredient } from '@/data/api/ingredients/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Dodawanie (z formularza przepisu / panelu) i edycja składnika w bazie: nazwa, typ, alergeny UE.
+// Szybkie dodanie składnika z formularza przepisu: nazwa, typ, alergeny UE.
+// Edycja (z makro i przelicznikami) jest w panelu — AdminIngredientEdit.
 const props = defineProps<{
     dicts: IDictionaries;
-    /** Edycja istniejącego; brak = nowy składnik. */
-    ingredient?: IngredientDto;
     initialName?: string;
     /** Tekst przycisku dla nowego składnika (z formularza: „Dodaj i wstaw”). */
     createLabel?: string;
 }>();
 const emit = defineEmits<{ saved: [ing: IngredientDto]; close: [] }>();
 
-const name = ref(props.ingredient?.name ?? props.initialName ?? '');
-const typeCode = ref<string>(props.ingredient?.type.code ?? '');
-const allergens = ref<string[]>([...(props.ingredient?.allergens ?? [])]);
+const name = ref(props.initialName ?? '');
+const typeCode = ref('');
+const allergens = ref<string[]>([]);
 const saving = ref(false);
 const error = ref('');
 
@@ -37,15 +36,12 @@ async function save() {
     if (!valid.value || saving.value) return;
     saving.value = true;
     error.value = '';
-    const payload = {
-        name: name.value.trim(),
-        typeCode: typeCode.value,
-        allergens: allergens.value,
-    };
     try {
-        const ing = props.ingredient
-            ? await updateIngredient(props.ingredient.id, payload)
-            : await createIngredient(payload);
+        const ing = await createIngredient({
+            name: name.value.trim(),
+            typeCode: typeCode.value,
+            allergens: allergens.value,
+        });
         emit('saved', ing);
     } catch (e) {
         const status = (e as { response?: { status?: number } }).response?.status;
@@ -60,12 +56,12 @@ async function save() {
 <template>
     <UModal
         eyebrow="Baza składników"
-        :title="ingredient ? `Edytuj „${ingredient.name}”` : 'Nowy składnik'"
+        title="Nowy składnik"
         :width="480"
         @close="emit('close')"
     >
         <p
-            v-if="!ingredient && createLabel"
+            v-if="createLabel"
             class="modal__text"
         >
             Trafi do bazy i od razu do tego wiersza.
@@ -151,13 +147,7 @@ async function save() {
                 :disabled="!valid || saving"
                 @click="save"
             >
-                {{
-                    saving
-                        ? 'Zapisywanie…'
-                        : ingredient
-                          ? 'Zapisz'
-                          : (createLabel ?? 'Dodaj składnik')
-                }}
+                {{ saving ? 'Zapisywanie…' : (createLabel ?? 'Dodaj składnik') }}
             </button>
         </template>
     </UModal>

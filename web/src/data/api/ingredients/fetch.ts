@@ -20,17 +20,22 @@ export const fetchIngredients = (_endpoint: 'list' = 'list') =>
 export const invalidateIngredients = (qc: QueryClient) =>
     qc.invalidateQueries({ queryKey: LIST_KEY });
 
+/** Pełny stan składnika. PUT nadpisuje wszystko — brak nutrition / conversions / parentId = wyczyść. */
 export interface IIngredientPayload {
     name: string;
     typeCode: string;
     allergens: string[];
-    parentId?: number | null;
+    parentId: number | null;
     /** Własne makro na 100 g; pominięty klucz = brak własnych danych. */
-    nutrition?: Macros;
-    conversions?: { unitId: number; gramsMin: number; gramsMax: number | null }[];
+    nutrition: Macros;
+    conversions: { unitId: number; gramsMin: number; gramsMax: number | null }[];
 }
 
-export const createIngredient = (payload: IIngredientPayload): Promise<IngredientDto> =>
+/** Nowy składnik — makro, przeliczniki i rodzic opcjonalne (np. szybkie dodanie z formularza przepisu). */
+export type INewIngredientPayload = Pick<IIngredientPayload, 'name' | 'typeCode' | 'allergens'> &
+    Partial<Pick<IIngredientPayload, 'parentId' | 'nutrition' | 'conversions'>>;
+
+export const createIngredient = (payload: INewIngredientPayload): Promise<IngredientDto> =>
     API.Client.post<IngredientDto>('ingredients', payload);
 
 export const updateIngredient = (id: number, payload: IIngredientPayload): Promise<IngredientDto> =>
