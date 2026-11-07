@@ -103,6 +103,7 @@ function scrollToStep(no: number) {
                         >
                             ~{{ kcal }}
                         </a>
+                        <span class="hero__kcal-note">orientacyjnie</span>
                     </dd>
                 </div>
             </dl>
@@ -248,6 +249,13 @@ function scrollToStep(no: number) {
     font-size: 17px;
     font-weight: 600;
     letter-spacing: -0.3px;
+}
+.hero__kcal-note {
+    margin-left: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-muted);
 }
 .hero__kcal {
     color: inherit;

@@ -16,6 +16,8 @@ import {
 const props = defineProps<{ nutrition: IRecipeNutrition; servings: number }>();
 
 const pp = computed(() => props.nutrition.perPortion);
+const incomplete = computed(() => props.nutrition.incomplete ?? {});
+const hasIncomplete = computed(() => Object.values(incomplete.value).some((v) => v?.length));
 const kcal = computed(() => fmt(pp.value.kcal, 'kcal', 'recipe'));
 const kcalAvg = computed(() => (kcal.value ? nf(avg(kcal.value)) : null));
 const split = computed(() => energySplit(pp.value));
@@ -112,104 +114,134 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
             id="makro-b"
             class="nutri__body"
         >
-            <div v-if="kcal">
-                <div class="nutri__label">Na porcję</div>
-                <div class="nutri__kcal">
-                    <span class="sr-only">około {{ kcalAvg }}</span>
-                    <span
-                        class="nutri__kcal-num"
-                        aria-hidden="true"
-                    >
-                        {{ `~${kcalAvg}` }}
-                    </span>
-                    <span class="nutri__kcal-unit">kcal</span>
-                </div>
-                <div
-                    v-if="!kcal.single"
-                    class="nutri__range"
-                >
-                    zakres {{ nf(kcal.a) }} – {{ nf(kcal.b) }} kcal
-                </div>
-            </div>
-
-            <dl class="nutri__rows">
-                <template
-                    v-for="n in NUTRIENTS.slice(1)"
-                    :key="n.key"
-                >
-                    <dt>{{ n.label }}</dt>
-                    <dd>
-                        <MacroValue
-                            :value="pp[n.key]"
-                            :nutrient="n.key"
-                            mode="recipe"
-                        />
-                    </dd>
-                </template>
-            </dl>
-
-            <figure
-                v-if="split"
-                class="nutri__split"
-            >
-                <figcaption class="nutri__label">Skąd energia · średnio</figcaption>
-                <div
-                    class="nutri__bar"
-                    aria-hidden="true"
-                >
-                    <span
-                        v-for="p in splitParts"
-                        :key="p.key"
-                        :class="`nutri__seg nutri__seg--${p.key}`"
-                        :style="{ width: `${p.pct}%` }"
-                    />
-                </div>
-                <ul class="nutri__legend">
-                    <li
-                        v-for="p in splitParts"
-                        :key="p.key"
-                    >
+            <div class="nutri__cols">
+                <div class="nutri__col">
+                    <div v-if="kcal">
+                        <div class="nutri__label">Na porcję</div>
+                        <div class="nutri__kcal">
+                            <span class="sr-only">około {{ kcalAvg }}</span>
+                            <span
+                                class="nutri__kcal-num"
+                                aria-hidden="true"
+                            >
+                                {{ `~${kcalAvg}` }}
+                            </span>
+                            <span class="nutri__kcal-unit">kcal</span>
+                        </div>
+                        <div
+                            v-if="!kcal.single"
+                            class="nutri__range"
+                        >
+                            zakres {{ nf(kcal.a) }} – {{ nf(kcal.b) }} kcal
+                        </div>
                         <span
-                            :class="`nutri__dot nutri__seg--${p.key}`"
-                            aria-hidden="true"
-                        />
-                        {{ p.label }}
-                        <span class="nutri__pct">~{{ p.pct }}%</span>
-                    </li>
-                </ul>
-            </figure>
+                            v-if="incomplete.kcal?.length"
+                            class="nutri__without"
+                        >
+                            bez: {{ incomplete.kcal.join(', ') }}
+                        </span>
+                    </div>
 
-            <div class="nutri__dish">
-                <div class="nutri__dish-head">
-                    <span class="nutri__label">Całe danie</span>
-                    <span class="nutri__dish-count">{{ servings }} {{ portionsLabel }}</span>
+                    <dl class="nutri__rows">
+                        <template
+                            v-for="n in NUTRIENTS.slice(1)"
+                            :key="n.key"
+                        >
+                            <dt>{{ n.label }}</dt>
+                            <dd>
+                                <MacroValue
+                                    :value="pp[n.key]"
+                                    :nutrient="n.key"
+                                    mode="recipe"
+                                />
+                                <span
+                                    v-if="incomplete[n.key]?.length"
+                                    class="nutri__without"
+                                >
+                                    bez: {{ incomplete[n.key]!.join(', ') }}
+                                </span>
+                            </dd>
+                        </template>
+                    </dl>
                 </div>
-                <dl class="nutri__dish-rows">
-                    <template
-                        v-for="n in NUTRIENTS"
-                        :key="n.key"
+
+                <div class="nutri__col">
+                    <figure
+                        v-if="split"
+                        class="nutri__split"
                     >
-                        <dt>{{ n.label }}</dt>
-                        <dd>
-                            <MacroValue
-                                :value="scaleRange(pp[n.key], servings)"
-                                :nutrient="n.key"
-                                mode="recipe"
-                                size="sm"
-                                muted
+                        <figcaption class="nutri__label">Skąd energia · średnio</figcaption>
+                        <div
+                            class="nutri__bar"
+                            aria-hidden="true"
+                        >
+                            <span
+                                v-for="p in splitParts"
+                                :key="p.key"
+                                :class="`nutri__seg nutri__seg--${p.key}`"
+                                :style="{ width: `${p.pct}%` }"
                             />
-                        </dd>
-                    </template>
-                </dl>
+                        </div>
+                        <ul class="nutri__legend">
+                            <li
+                                v-for="p in splitParts"
+                                :key="p.key"
+                            >
+                                <span
+                                    :class="`nutri__dot nutri__seg--${p.key}`"
+                                    aria-hidden="true"
+                                />
+                                {{ p.label }}
+                                <span class="nutri__pct">~{{ p.pct }}%</span>
+                            </li>
+                        </ul>
+                    </figure>
+
+                    <div class="nutri__dish">
+                        <div class="nutri__dish-head">
+                            <span class="nutri__label">Całe danie</span>
+                            <span class="nutri__dish-count">
+                                {{ servings }} {{ portionsLabel }}
+                            </span>
+                        </div>
+                        <dl class="nutri__dish-rows">
+                            <template
+                                v-for="n in NUTRIENTS"
+                                :key="n.key"
+                            >
+                                <dt>{{ n.label }}</dt>
+                                <dd>
+                                    <MacroValue
+                                        :value="scaleRange(pp[n.key], servings)"
+                                        :nutrient="n.key"
+                                        mode="recipe"
+                                        size="sm"
+                                        muted
+                                    />
+                                </dd>
+                            </template>
+                        </dl>
+                    </div>
+                </div>
             </div>
 
             <p
-                v-if="nutrition.missing.length"
+                v-if="nutrition.missing.length || hasIncomplete"
                 class="nutri__missing"
             >
-                <strong>Nie wliczono:</strong>
-                {{ nutrition.missing.join(', ') }}
-                <span class="nutri__muted">— brak danych lub przelicznika jednostki.</span>
+                <template v-if="nutrition.missing.length">
+                    <strong>Nie wliczono:</strong>
+                    {{ nutrition.missing.join(', ') }}
+                    <span class="nutri__muted">— brak danych lub przelicznika jednostki.</span>
+                </template>
+                <span
+                    v-if="hasIncomplete"
+                    class="nutri__muted nutri__inc-note"
+                    :class="{ 'nutri__inc-note--below': nutrition.missing.length }"
+                >
+                    „bez: …” przy wartości — składnik jest wliczony, ale nie ma tej jednej wartości,
+                    więc ona może być zaniżona.
+                </span>
             </p>
             <p class="nutri__note">
                 Wartości orientacyjne, wyliczone ze składników. Produkty różnych marek się różnią —
@@ -226,6 +258,7 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
     border-radius: var(--r-xl);
     padding: 24px;
     scroll-margin-top: 84px;
+    container-type: inline-size;
 }
 .nutri__h {
     margin: 0;
@@ -340,6 +373,37 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
 .nutri__rows dd {
     margin: 0;
     text-align: right;
+}
+.nutri__without {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+.nutri__inc-note {
+    display: block;
+}
+.nutri__inc-note--below {
+    margin-top: 4px;
+}
+.nutri__cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+/* desktop (prawa kolumna, pod krokami): kcal + wiersze | rozkład energii + całe danie — gdy jest miejsce */
+@container (min-width: 600px) {
+    .nutri__cols {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 32px;
+    }
+}
+.nutri__col {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
 }
 .nutri__split {
     margin: 0;

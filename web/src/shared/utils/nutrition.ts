@@ -20,7 +20,10 @@ export type Macros = Partial<Record<NutrientKey, Range>>;
 
 export interface IRecipeNutrition {
     perPortion: Partial<Record<NutrientKey, SumRange>>;
+    /** Pominięte w całości (brak makro albo przelicznika). */
     missing: string[];
+    /** Wliczone, ale bez danej wartości → „bez: tofu naturalne”. Brak w starym cache. */
+    incomplete?: Partial<Record<NutrientKey, string[]>>;
 }
 
 /** '100g' = dane składnika (kcal co 1, g co 0,1) · 'recipe' = wyliczone (kcal co 10 / co 5 poniżej 100, g co 1 / co 0,5 poniżej 10). */

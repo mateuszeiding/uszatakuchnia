@@ -25,32 +25,32 @@ const cooking = ref(false);
         :recipe="recipe"
         :servings="progress.servings"
     />
+    <!-- Desktop: panel składników (przyklejony) po lewej przez oba wiersze, po prawej kroki, pod nimi makro.
+         Mobile: składniki → makro → kroki. -->
     <div class="recipe-grid">
-        <div
-            class="recipe-side"
-            :class="{ 'recipe-side--nutrition': recipe.nutrition }"
-        >
-            <IngredientsPanel
-                :recipe="recipe"
-                :dicts="dicts"
-                :servings="progress.servings"
-                :checked="progress.ing"
-                @toggle="toggle('ing', $event)"
-                @servings="setServings"
-            />
-            <NutritionCard
-                v-if="recipe.nutrition"
-                :nutrition="recipe.nutrition"
-                :servings="progress.servings"
-            />
-        </div>
+        <IngredientsPanel
+            class="recipe-grid__ing"
+            :recipe="recipe"
+            :dicts="dicts"
+            :servings="progress.servings"
+            :checked="progress.ing"
+            @toggle="toggle('ing', $event)"
+            @servings="setServings"
+        />
         <StepsList
+            class="recipe-grid__steps"
             :recipe="recipe"
             :done="progress.steps"
             :can-reset="hasProgress"
             @toggle="toggle('steps', $event)"
             @cook="cooking = true"
             @reset="reset"
+        />
+        <NutritionCard
+            v-if="recipe.nutrition"
+            class="recipe-grid__nutri"
+            :nutrition="recipe.nutrition"
+            :servings="progress.servings"
         />
     </div>
     <CookMode
@@ -70,26 +70,44 @@ const cooking = ref(false);
 .recipe-grid {
     display: grid;
     grid-template-columns: 340px minmax(0, 1fr);
-    gap: 56px;
+    grid-template-rows: auto 1fr;
+    gap: 28px 56px;
     margin-top: 56px;
     align-items: start;
 }
-.recipe-side {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+.recipe-grid__ing {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+}
+.recipe-grid__steps {
+    grid-column: 2;
+    grid-row: 1;
     min-width: 0;
 }
-/* panel składników jest przyklejony; z kartą makro pod spodem zasłaniałby ją przy przewijaniu */
-.recipe-side--nutrition :deep(.ing-panel) {
-    position: static;
+.recipe-grid__nutri {
+    grid-column: 2;
+    grid-row: 2;
 }
 
 @media (max-width: 900px) {
     .recipe-grid {
         grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
         gap: 40px;
         margin-top: 32px;
+    }
+    .recipe-grid__ing,
+    .recipe-grid__steps,
+    .recipe-grid__nutri {
+        grid-column: auto;
+        grid-row: auto;
+    }
+    .recipe-grid__nutri {
+        order: 1;
+        margin-top: -16px; /* karta zaraz po składnikach (jak w v1: odstęp 24px) */
+    }
+    .recipe-grid__steps {
+        order: 2;
     }
 }
 </style>

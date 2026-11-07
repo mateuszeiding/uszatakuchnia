@@ -106,6 +106,12 @@ const kcal = computed(() => {
                 >
                     {{ kcal }}
                 </span>
+                <span
+                    v-if="kcal"
+                    class="sr-only"
+                >
+                    na porcję, orientacyjnie
+                </span>
             </div>
         </div>
     </RouterLink>
