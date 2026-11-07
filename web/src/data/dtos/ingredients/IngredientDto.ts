@@ -2,6 +2,16 @@ import { ImageDto } from './ImageDto';
 import type { IType } from './IType';
 
 import { IngredientType } from '@/shared/enums/IngredientType';
+import type { Macros } from '@/shared/utils/nutrition';
+
+/** Przelicznik jednostki na gramy; inherited = od składnika nadrzędnego. */
+export interface IConversion {
+    unitId: number;
+    unitName: string;
+    gramsMin: number;
+    gramsMax: number | null;
+    inherited: boolean;
+}
 
 export class IngredientDto {
     id: number = 0;
@@ -19,6 +29,13 @@ export class IngredientDto {
     usedIn: number = 0;
 
     image: ImageDto = new ImageDto({});
+
+    /** Własne makro na 100 g (brak klucza = dziedziczy z podskładników). */
+    nutrition: Macros = {};
+    /** Makro na 100 g do wyświetlenia: własne albo odziedziczone. */
+    resolvedNutrition: Macros = {};
+    /** Przeliczniki: własne + odziedziczone. */
+    conversions: IConversion[] = [];
 
     constructor(obj: Partial<IngredientDto>) {
         Object.assign(this, obj);

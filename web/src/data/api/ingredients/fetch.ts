@@ -3,6 +3,7 @@ import { type QueryClient, useQueryClient } from '@tanstack/vue-query';
 import { API } from '../API';
 
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
+import type { Macros } from '@/shared/utils/nutrition';
 
 const LIST_KEY = ['ingredients/list'];
 
@@ -23,6 +24,10 @@ export interface IIngredientPayload {
     name: string;
     typeCode: string;
     allergens: string[];
+    parentId?: number | null;
+    /** Własne makro na 100 g; pominięty klucz = brak własnych danych. */
+    nutrition?: Macros;
+    conversions?: { unitId: number; gramsMin: number; gramsMax: number | null }[];
 }
 
 export const createIngredient = (payload: IIngredientPayload): Promise<IngredientDto> =>

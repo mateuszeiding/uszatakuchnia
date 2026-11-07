@@ -3,6 +3,7 @@ import { RecipeStepDto } from './RecipeStepDto';
 
 import { API } from '@/data/api/API';
 import type { ITaxonomyValue, RecipeTaxonomy } from '@/data/dtos/taxonomy/DictionariesDto';
+import type { IRecipeNutrition, SumRange } from '@/shared/utils/nutrition';
 
 type BackendRecipePhoto = { url: string } | null;
 
@@ -30,6 +31,8 @@ export class RecipeBaseDto {
     photoUrl: string | null = null;
     /** Adres zapisany w bazie (np. /api/photos/1) — do odesłania przy zapisie. */
     photoPath: string | null = null;
+    /** Kcal na porcję (zakres); null = brak danych. */
+    kcal: SumRange | null = null;
     /** Nazwy składników (lista — wyszukiwanie po składnikach). */
     ingredientNames: string[] = [];
 
@@ -57,7 +60,8 @@ export class RecipeDto extends RecipeBaseDto {
     servings: number = 1;
     description: string | null = null;
     tip: string | null = null;
-    kcalPerServing: number | null = null;
+    /** Makro na porcję wyliczone ze składników; null = brak danych. */
+    nutrition: IRecipeNutrition | null = null;
     /** Kody alergenów wyliczone ze składników. */
     allergens: string[] = [];
 
@@ -83,7 +87,6 @@ export interface IUpsertRecipeRequest {
     timeMin: number;
     timeMax?: number | null;
     difficulty?: number | null;
-    kcalPerServing?: number | null;
     photoUrl?: string | null;
     status: RecipeStatus;
     taxonomyValueIds: number[];

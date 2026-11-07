@@ -497,22 +497,6 @@ const prepSummary = computed(() => {
                         </div>
                     </div>
                     <UFieldError v-if="errors.servings">{{ errors.servings }}</UFieldError>
-                    <div class="field">
-                        <label
-                            for="in-kcal"
-                            class="field-label"
-                        >
-                            Kcal / porcja
-                        </label>
-                        <input
-                            id="in-kcal"
-                            v-model="form.kcal"
-                            class="input input--mono"
-                            type="number"
-                            min="1"
-                            placeholder="opcjonalnie"
-                        />
-                    </div>
                 </div>
 
                 <div class="side-card">

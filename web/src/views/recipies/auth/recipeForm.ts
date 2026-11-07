@@ -48,7 +48,6 @@ export interface IRecipeForm {
     timeMax: string;
     timeUnit: TimeUnit;
     servings: string;
-    kcal: string;
     ingGroups: IGroup<IIngItem>[];
     stepGroups: IGroup<IStepItem>[];
 }
@@ -76,7 +75,6 @@ export const newForm = (): IRecipeForm => ({
     timeMax: '',
     timeUnit: 'min',
     servings: '4',
-    kcal: '',
     ingGroups: [{ id: uid(), label: '', items: [blankIng()] }],
     stepGroups: [{ id: uid(), label: '', items: [blankStep()] }],
 });
@@ -139,7 +137,6 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
         difficulty: r.difficulty,
         ...timeFields(r.timeMin, r.timeMax),
         servings: r.servings ? String(r.servings) : '',
-        kcal: r.kcalPerServing ? String(r.kcalPerServing) : '',
         ingGroups: ingGroups.length ? ingGroups : newForm().ingGroups,
         stepGroups: stepGroups.length ? stepGroups : newForm().stepGroups,
     };
@@ -162,7 +159,6 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
         timeMin: toMinutes(f.time, f.timeUnit),
         timeMax: f.timeMax.trim() ? toMinutes(f.timeMax, f.timeUnit) || null : null,
         difficulty: f.difficulty,
-        kcalPerServing: toInt(f.kcal),
         photoUrl: f.photoUrl ?? '',
         status,
         taxonomyValueIds: Object.values(f.taxonomy).flat(),

@@ -89,10 +89,6 @@ function scrollToStep(no: number) {
                     <dt>Porcje</dt>
                     <dd>{{ servings }}</dd>
                 </div>
-                <div v-if="recipe.kcalPerServing">
-                    <dt>Kcal / porcja</dt>
-                    <dd>{{ recipe.kcalPerServing }}</dd>
-                </div>
             </dl>
             <div
                 v-if="prepSteps.length"
