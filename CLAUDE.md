@@ -35,7 +35,17 @@ Projekt używa Prettier przez `eslint-plugin-prettier`. Nie commituj kodu bez pr
 ### DS (Design System)
 - Tokeny: `web/src/scss/config/_tokens.scss`
 - Komponenty: `web/src/scss/config/_components.scss`
-- Designy źródłowe (JSX): `C:\Users\eidin\.claude\projects\C--Users-eidin-Repos-uszatakuchnia\design-extracted\uszatakuchnia\project\`
+- Designy źródłowe: `.design/` w roocie repo (handoff, decyzje, prototypy JSX). To jedyne źródło prawdy — `design/` i kopie w `~/.claude/...` są nieaktualne.
+
+## Wdrażanie designu
+
+Design przygotowuje Claude Design w `.design/` (`Handoff - Claude Code.md`, `Decyzje i backlog.md`, prototypy `*.jsx`).
+- Każdy punkt **checklisty odbioru** z handoffu = zadanie w planie. Raport końcowy odhacza checklistę: zrobione / pominięte + powód. Niedokończonego zadania nie zostawiaj bez słowa.
+- Prototyp to referencja wyglądu i zachowania, nie kod do kopiowania — ale funkcje wskazane w handoffie jako „1:1” przenoś 1:1.
+- Jeśli design koliduje z istniejącym zachowaniem albo decyzją z `Decyzje i backlog.md` (np. przyklejony panel, kolejność sekcji) — nie rozwiązuj po cichu. Opisz kolizję i zapytaj.
+- Decyzje podjęte samodzielnie (czego design nie rozstrzygnął) wypisz na końcu raportu jako „do potwierdzenia”.
+- Przed commitem UI porównaj zrzut ekranu z artboardem: light, dark, 375 px.
+- Tokeny: `_tokens.scss` jest źródłem prawdy. Jeśli prototyp używa innej wartości, bierz token i zgłoś rozjazd.
 
 ## Zasady kodu — Backend (Go)
 
