@@ -209,7 +209,7 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
             >
                 <strong>Nie wliczono:</strong>
                 {{ nutrition.missing.join(', ') }}
-                <span class="nutri__muted">— brak danych o tych składnikach.</span>
+                <span class="nutri__muted">— brak danych lub przelicznika jednostki.</span>
             </p>
             <p class="nutri__note">
                 Wartości orientacyjne, wyliczone ze składników. Produkty różnych marek się różnią —
