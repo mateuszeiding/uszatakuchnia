@@ -45,7 +45,8 @@ func testIndex() *NutritionIndex {
 			4: {unitSzt: rng(50, 65)},
 			5: {unitLyzka: rng(10), unitMl: rng(0.92)},
 		},
-		Names: map[uint]string{1: "makaron", 2: "spaghetti", 3: "fusilli", 4: "jajko", 5: "oliwa", 6: "oregano"},
+		NoQtyUnits: map[uint]bool{unitDoSmaku: true},
+		Names:      map[uint]string{1: "makaron", 2: "spaghetti", 3: "fusilli", 4: "jajko", 5: "oliwa", 6: "oregano"},
 		UnitIDByName: map[string]uint{
 			"g": unitG, "kg": unitKg, "ml": unitMl, "l": unitL, "sztuka": unitSzt, "łyżka": unitLyzka, "do smaku": unitDoSmaku,
 		},

@@ -27,6 +27,7 @@ func LoadNutritionIndex(tx *gorm.DB) (*NutritionIndex, error) {
 		Parent:       map[uint]*uint{},
 		Conversions:  map[uint]map[uint]entities.MacroRange{},
 		Names:        map[uint]string{},
+		NoQtyUnits:   map[uint]bool{},
 		UnitIDByName: map[string]uint{},
 	}
 	for _, ing := range ings {
@@ -53,6 +54,9 @@ func LoadNutritionIndex(tx *gorm.DB) (*NutritionIndex, error) {
 	}
 	for _, u := range units {
 		ix.UnitIDByName[u.Name] = u.ID
+		if u.NoQty {
+			ix.NoQtyUnits[u.ID] = true
+		}
 	}
 	return ix, nil
 }

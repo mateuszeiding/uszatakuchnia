@@ -12,6 +12,7 @@ type NutritionIndex struct {
 	Parent       map[uint]*uint
 	Conversions  map[uint]map[uint]entities.MacroRange // składnik → jednostka → gramy
 	Names        map[uint]string
+	NoQtyUnits   map[uint]bool // jednostki „do smaku”
 	UnitIDByName map[string]uint
 }
 
