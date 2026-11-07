@@ -3,6 +3,7 @@ import { ref } from 'vue';
 
 import CookMode from './CookMode.vue';
 import IngredientsPanel from './IngredientsPanel.vue';
+import NutritionCard from './NutritionCard.vue';
 import RecipeHero from './RecipeHero.vue';
 import StepsList from './StepsList.vue';
 
@@ -25,14 +26,24 @@ const cooking = ref(false);
         :servings="progress.servings"
     />
     <div class="recipe-grid">
-        <IngredientsPanel
-            :recipe="recipe"
-            :dicts="dicts"
-            :servings="progress.servings"
-            :checked="progress.ing"
-            @toggle="toggle('ing', $event)"
-            @servings="setServings"
-        />
+        <div
+            class="recipe-side"
+            :class="{ 'recipe-side--nutrition': recipe.nutrition }"
+        >
+            <IngredientsPanel
+                :recipe="recipe"
+                :dicts="dicts"
+                :servings="progress.servings"
+                :checked="progress.ing"
+                @toggle="toggle('ing', $event)"
+                @servings="setServings"
+            />
+            <NutritionCard
+                v-if="recipe.nutrition"
+                :nutrition="recipe.nutrition"
+                :servings="progress.servings"
+            />
+        </div>
         <StepsList
             :recipe="recipe"
             :done="progress.steps"
@@ -62,6 +73,16 @@ const cooking = ref(false);
     gap: 56px;
     margin-top: 56px;
     align-items: start;
+}
+.recipe-side {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+/* panel składników jest przyklejony; z kartą makro pod spodem zasłaniałby ją przy przewijaniu */
+.recipe-side--nutrition :deep(.ing-panel) {
+    position: static;
 }
 
 @media (max-width: 900px) {

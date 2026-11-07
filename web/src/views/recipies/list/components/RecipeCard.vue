@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import { DIFFICULTY } from '../listFilters';
 
 import { cuisineOf, mainDish, type RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
+import { avg, fmt, nf } from '@/shared/utils/nutrition';
 import { formatTime } from '@/shared/utils/time';
 
 const props = defineProps<{ recipe: RecipeBaseDto; hits?: string[] | null }>();
@@ -18,6 +19,10 @@ const meta = computed(() =>
         .filter(Boolean)
         .join(' · ')
 );
+const kcal = computed(() => {
+    const f = fmt(props.recipe.kcal, 'kcal', 'recipe');
+    return f ? `~${nf(avg(f))} kcal` : null;
+});
 </script>
 
 <template>
@@ -91,10 +96,16 @@ const meta = computed(() =>
                 <mark>{{ hits.join(', ') }}</mark>
             </div>
             <div
-                v-if="meta"
+                v-if="meta || kcal"
                 class="r-card__meta"
             >
-                {{ meta }}
+                {{ meta && kcal ? `${meta} · ` : meta }}
+                <span
+                    v-if="kcal"
+                    class="r-card__kcal"
+                >
+                    {{ kcal }}
+                </span>
             </div>
         </div>
     </RouterLink>
@@ -182,5 +193,8 @@ const meta = computed(() =>
 .r-card__meta {
     font-size: 13px;
     color: var(--ink-muted);
+}
+.r-card__kcal {
+    font-family: var(--font-mono);
 }
 </style>

@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import { DIFFICULTY, leadText } from '../recipeView';
 
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
+import { avg, fmt, nf } from '@/shared/utils/nutrition';
 import { formatTime } from '@/shared/utils/time';
 
 const props = defineProps<{ recipe: RecipeDto; servings: number }>();
@@ -13,6 +14,10 @@ const cuisine = computed(() => props.recipe.taxonomy.cuisine?.[0]?.label);
 const diets = computed(() => props.recipe.taxonomy.diet ?? []);
 const practical = computed(() => props.recipe.taxonomy.practical ?? []);
 const prepSteps = computed(() => props.recipe.steps.filter((s) => s.prep));
+const kcal = computed(() => {
+    const f = fmt(props.recipe.nutrition?.perPortion.kcal, 'kcal', 'recipe');
+    return f ? nf(avg(f)) : null;
+});
 
 function scrollToStep(no: number) {
     const el = document.getElementById(`step-${no}`);
@@ -88,6 +93,17 @@ function scrollToStep(no: number) {
                 <div>
                     <dt>Porcje</dt>
                     <dd>{{ servings }}</dd>
+                </div>
+                <div v-if="kcal">
+                    <dt>Kcal / porcja</dt>
+                    <dd>
+                        <a
+                            href="#makro"
+                            class="hero__kcal"
+                        >
+                            ~{{ kcal }}
+                        </a>
+                    </dd>
                 </div>
             </dl>
             <div
@@ -232,6 +248,16 @@ function scrollToStep(no: number) {
     font-size: 17px;
     font-weight: 600;
     letter-spacing: -0.3px;
+}
+.hero__kcal {
+    color: inherit;
+    font-family: var(--font-mono);
+    text-decoration: underline;
+    text-decoration-color: var(--rule-strong);
+    text-underline-offset: 4px;
+}
+.hero__kcal:hover {
+    text-decoration-color: currentColor;
 }
 .hero__diff {
     display: inline-flex;
