@@ -91,7 +91,10 @@ func putDetailed(w http.ResponseWriter, r *http.Request) {
 		if err := tx.Save(&entity).Error; err != nil {
 			return err
 		}
-		return services.ReplaceRecipeChildren(tx, entity.ID, req)
+		if err := services.ReplaceRecipeChildren(tx, entity.ID, req); err != nil {
+			return err
+		}
+		return services.RecomputeRecipes(tx, entity.ID)
 	}); err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return

@@ -47,6 +47,7 @@ func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 		NeedsPrep:   recipeNeedsPrep(e.Steps),
 		Taxonomy:    MapRecipeTaxonomyToDto(e.Taxonomy),
 		Allergens:   recipeAllergens(e.Ingredients),
+		Nutrition:   e.Nutrition,
 		Photo:       MapRecipePhotoToDto(e.Photo),
 		Steps:       MapRecipeStepArrayToDto(e.Steps),
 		Ingredients: MapRecipeIngredientArrayToDto(e.Ingredients),
@@ -65,7 +66,18 @@ func MapRecipeBaseToDto(e entities.RecipeBase) dtos.RecipeBaseDto {
 		NeedsPrep:  e.NeedsPrep,
 		Taxonomy:   MapRecipeTaxonomyToDto(e.Taxonomy),
 		Photo:      MapRecipePhotoToDto(e.Photo),
+		Kcal:       recipeKcal(e.Nutrition),
 	}
+}
+
+func recipeKcal(n *entities.RecipeNutrition) *entities.SumRange {
+	if n == nil {
+		return nil
+	}
+	if k, ok := n.PerPortion["kcal"]; ok {
+		return &k
+	}
+	return nil
 }
 
 func MapRecipeArrayToDto(a []entities.Recipe) []dtos.RecipeDto {

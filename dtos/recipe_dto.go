@@ -1,25 +1,29 @@
 package dtos
 
+import "uszatakuchnia/db/entities"
+
 // RecipeTaxonomyDto — wartości klasyfikacji pogrupowane po kodzie osi (dish, base, cuisine, diet, practical).
 type RecipeTaxonomyDto map[string][]TaxonomyValueDto
 
 type RecipeDto struct {
-	ID          uint                  `json:"id"`
-	Name        string                `json:"name"`
-	Servings    int                   `json:"servings"`
-	Description *string               `json:"description,omitempty"`
-	Tagline     *string               `json:"tagline,omitempty"`
-	Tip         *string               `json:"tip,omitempty"`
-	TimeMin     int                   `json:"timeMin"`
-	TimeMax     *int                  `json:"timeMax,omitempty"`
-	Difficulty  *int                  `json:"difficulty,omitempty"`
-	Status      string                `json:"status"`
-	NeedsPrep   bool                  `json:"needsPrep"`
-	Taxonomy    RecipeTaxonomyDto     `json:"taxonomy"`
-	Allergens   []string              `json:"allergens"`
-	Photo       *RecipePhotoDto       `json:"photo,omitempty"`
-	Steps       []RecipeStepDto       `json:"steps"`
-	Ingredients []RecipeIngredientDto `json:"ingredients"`
+	ID          uint              `json:"id"`
+	Name        string            `json:"name"`
+	Servings    int               `json:"servings"`
+	Description *string           `json:"description,omitempty"`
+	Tagline     *string           `json:"tagline,omitempty"`
+	Tip         *string           `json:"tip,omitempty"`
+	TimeMin     int               `json:"timeMin"`
+	TimeMax     *int              `json:"timeMax,omitempty"`
+	Difficulty  *int              `json:"difficulty,omitempty"`
+	Status      string            `json:"status"`
+	NeedsPrep   bool              `json:"needsPrep"`
+	Taxonomy    RecipeTaxonomyDto `json:"taxonomy"`
+	Allergens   []string          `json:"allergens"`
+	// Makro na porcję wyliczone ze składników; null = brak danych.
+	Nutrition   *entities.RecipeNutrition `json:"nutrition"`
+	Photo       *RecipePhotoDto           `json:"photo,omitempty"`
+	Steps       []RecipeStepDto           `json:"steps"`
+	Ingredients []RecipeIngredientDto     `json:"ingredients"`
 }
 
 type RecipeBaseDto struct {
@@ -33,6 +37,8 @@ type RecipeBaseDto struct {
 	NeedsPrep  bool              `json:"needsPrep"`
 	Taxonomy   RecipeTaxonomyDto `json:"taxonomy"`
 	Photo      *RecipePhotoDto   `json:"photo,omitempty"`
+	// Kcal na porcję (zakres); null = brak danych.
+	Kcal *entities.SumRange `json:"kcal"`
 	// Nazwy składników — wyszukiwarka listy szuka też po nich.
 	IngredientNames []string `json:"ingredientNames"`
 }

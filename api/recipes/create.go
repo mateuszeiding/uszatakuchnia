@@ -51,7 +51,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		if err := tx.Create(&recipe).Error; err != nil {
 			return err
 		}
-		return services.ReplaceRecipeChildren(tx, recipe.ID, req)
+		if err := services.ReplaceRecipeChildren(tx, recipe.ID, req); err != nil {
+			return err
+		}
+		return services.RecomputeRecipes(tx, recipe.ID)
 	}); err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
