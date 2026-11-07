@@ -16,11 +16,25 @@ type NutritionIndex struct {
 	UnitIDByName map[string]uint
 }
 
-// Jednostki przeliczane bez wierszy w ingredient_unit_conversions. ml / l tylko gdy składnik nie ma własnego przelicznika.
+// Jednostki przeliczane bez wierszy w ingredient_unit_conversions. ml / l (gęstość wody) tylko gdy składnik nie ma przelicznika ml ani l.
 var (
 	fixedGrams    = map[string]float64{"g": 1, "kg": 1000}
 	fallbackGrams = map[string]float64{"ml": 1, "l": 1000}
+	// Gdy ml / l nie ma przelicznika (własnego ani odziedziczonego), wyprowadzamy go z drugiej jednostki objętości.
+	volumeSiblings = map[string]struct {
+		unit   string
+		factor float64
+	}{"l": {"ml", 1000}, "ml": {"l", 0.001}}
 )
+
+func scaleRange(r entities.MacroRange, f float64) entities.MacroRange {
+	out := entities.MacroRange{Min: r.Min * f}
+	if r.Max != nil {
+		m := *r.Max * f
+		out.Max = &m
+	}
+	return out
+}
 
 // ResolveMacros — per wartość: własna, a jeśli jej brak, z podskładników (najniższe min, najwyższe max).
 func (ix *NutritionIndex) ResolveMacros(id uint) Macros {
@@ -104,6 +118,13 @@ func (ix *NutritionIndex) GramsPerUnit(id uint, unitID *uint, unitName string) (
 	}
 	if r, ok := ix.ResolveConversion(id, *unitID); ok {
 		return r, true
+	}
+	if v, ok := volumeSiblings[unitName]; ok {
+		if sibID, ok := ix.UnitIDByName[v.unit]; ok {
+			if r, ok := ix.ResolveConversion(id, sibID); ok {
+				return scaleRange(r, v.factor), true
+			}
+		}
 	}
 	if g, ok := fallbackGrams[unitName]; ok {
 		return entities.MacroRange{Min: g}, true

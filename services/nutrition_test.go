@@ -29,7 +29,7 @@ const (
 	unitDoSmaku
 )
 
-// Drzewko: makaron(1) → spaghetti(2), fusilli(3); jajko(4); oliwa(5); oregano(6, bez danych).
+// Drzewko: makaron(1) → spaghetti(2), fusilli(3); jajko(4); oliwa(5) → oliwa extra virgin(8); oregano(6, bez danych); mleko(7, przelicznik tylko dla l).
 func testIndex() *NutritionIndex {
 	return &NutritionIndex{
 		Own: map[uint]Macros{
@@ -39,14 +39,15 @@ func testIndex() *NutritionIndex {
 			5: {"kcal": rng(884), "fat": rng(100)},
 		},
 		Children: map[uint][]uint{1: {2, 3}},
-		Parent:   map[uint]*uint{2: up(1), 3: up(1)},
+		Parent:   map[uint]*uint{2: up(1), 3: up(1), 8: up(5)},
 		Conversions: map[uint]map[uint]entities.MacroRange{
 			1: {unitLyzka: rng(15)},
 			4: {unitSzt: rng(50, 65)},
 			5: {unitLyzka: rng(10), unitMl: rng(0.92)},
+			7: {unitL: rng(1030, 1040)},
 		},
 		NoQtyUnits: map[uint]bool{unitDoSmaku: true},
-		Names:      map[uint]string{1: "makaron", 2: "spaghetti", 3: "fusilli", 4: "jajko", 5: "oliwa", 6: "oregano"},
+		Names:      map[uint]string{1: "makaron", 2: "spaghetti", 3: "fusilli", 4: "jajko", 5: "oliwa", 6: "oregano", 7: "mleko", 8: "oliwa extra virgin"},
 		UnitIDByName: map[string]uint{
 			"g": unitG, "kg": unitKg, "ml": unitMl, "l": unitL, "sztuka": unitSzt, "łyżka": unitLyzka, "do smaku": unitDoSmaku,
 		},
@@ -123,6 +124,9 @@ func TestGramsPerUnit(t *testing.T) {
 		{"ml bez przelicznika", 2, up(unitMl), "ml", true, 1, nil},
 		{"l bez przelicznika", 2, up(unitL), "l", true, 1000, nil},
 		{"ml z przelicznikiem", 5, up(unitMl), "ml", true, 0.92, nil},
+		{"l z przelicznika ml", 5, up(unitL), "l", true, 920, nil},
+		{"ml z przelicznika l", 7, up(unitMl), "ml", true, 1.03, fp(1.04)},
+		{"l z przelicznika ml u rodzica", 8, up(unitL), "l", true, 920, nil},
 		{"łyżka u rodzica", 2, up(unitLyzka), "łyżka", true, 15, nil},
 		{"brak jednostki = sztuka", 4, nil, "", true, 50, fp(65)},
 		{"brak przelicznika", 6, up(unitLyzka), "łyżka", false, 0, nil},
