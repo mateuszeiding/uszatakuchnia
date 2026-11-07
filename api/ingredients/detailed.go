@@ -11,6 +11,8 @@ import (
 	"uszatakuchnia/dtos"
 	resp "uszatakuchnia/http"
 	"uszatakuchnia/services"
+
+	"gorm.io/gorm"
 )
 
 // Detailed — PUT/DELETE /api/ingredients/:id
@@ -65,7 +67,13 @@ func deleteIngredient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := conn.Delete(&ing).Error; err != nil {
+	// Usunięcie zmienia drzewko (dziedziczone makro i przeliczniki) — przelicz makro przepisów.
+	if err := conn.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Delete(&ing).Error; err != nil {
+			return err
+		}
+		return services.RecomputeRecipes(tx)
+	}); err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
