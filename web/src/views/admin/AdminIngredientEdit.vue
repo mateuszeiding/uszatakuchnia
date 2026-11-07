@@ -169,7 +169,9 @@ onBeforeRouteUpdate(guard);
             <RouterLink :to="`${LIST}/${parent.id}`">{{ parent.name }}</RouterLink>
             <span aria-hidden="true">/</span>
         </template>
-        <span class="crumbs__current">{{ current?.name ?? 'Nowy składnik' }}</span>
+        <span class="crumbs__current">
+            {{ ingredientId != null ? current?.name : 'Nowy składnik' }}
+        </span>
     </nav>
     <h1 class="admin-title">{{ ingredientId != null ? 'Edytuj składnik' : 'Nowy składnik' }}</h1>
 
@@ -230,13 +232,13 @@ onBeforeRouteUpdate(guard);
             >
                 <strong>Brak własnych danych — zakres wyliczony z podskładników</strong>
                 (najniższe min, najwyższe max):
-                <template
-                    v-for="(c, i) in children"
+                <span
+                    v-for="c in children"
                     :key="c.id"
+                    class="edit__child"
                 >
                     <RouterLink :to="`${LIST}/${c.id}`">{{ c.name }}</RouterLink>
-                    {{ i < children.length - 1 ? ', ' : '.' }}
-                </template>
+                </span>
                 <span class="edit__banner-note">
                     Wpisz wartość w wierszu, żeby go nadpisać. Szeroki zakres sugeruje, że w
                     przepisie lepiej wybrać konkretny podskładnik.
@@ -380,6 +382,13 @@ onBeforeRouteUpdate(guard);
 .edit__banner a {
     color: var(--ink);
     text-underline-offset: 3px;
+}
+/* przecinki między podskładnikami i kropka na końcu — bez spacji z formatowania szablonu */
+.edit__child:not(:last-child)::after {
+    content: ', ';
+}
+.edit__child:last-child::after {
+    content: '.';
 }
 .edit__banner-note {
     display: block;
