@@ -232,3 +232,45 @@ func TestComputeNothing(t *testing.T) {
 		t.Errorf("want nil, got %+v", n)
 	}
 }
+
+func TestComputeIncomplete(t *testing.T) {
+	ix := testIndex()
+	ix.Own[9] = Macros{"kcal": rng(120, 145)}
+	ix.Names[9] = "tofu naturalne"
+	n := ix.Compute([]NutritionLine{
+		line(9, "200", up(unitG), "g"),
+		line(9, "100", up(unitG), "g"), // duplikat — nazwa raz
+	}, 2)
+	if got := n.PerPortion["kcal"]; !near(got.Min, 180) || !near(got.Max, 217.5) {
+		t.Errorf("kcal = %+v, want 180–217,5", got)
+	}
+	want := map[string][]string{}
+	for _, k := range entities.NutrientKeys {
+		if k != "kcal" {
+			want[k] = []string{"tofu naturalne"}
+		}
+	}
+	if !reflect.DeepEqual(n.Incomplete, want) {
+		t.Errorf("incomplete = %v, want %v", n.Incomplete, want)
+	}
+	if len(n.Missing) != 0 {
+		t.Errorf("missing = %v", n.Missing)
+	}
+}
+
+func TestComputeIncompleteMixed(t *testing.T) {
+	ix := testIndex()
+	n := ix.Compute([]NutritionLine{
+		line(4, "1", up(unitSzt), "sztuka"), // jajko: kcal + białko
+		line(5, "10", up(unitG), "g"),       // oliwa: kcal + tłuszcz
+	}, 1)
+	if _, ok := n.Incomplete["kcal"]; ok {
+		t.Errorf("kcal mają wszystkie, a incomplete = %v", n.Incomplete["kcal"])
+	}
+	if !reflect.DeepEqual(n.Incomplete["protein"], []string{"oliwa"}) {
+		t.Errorf("protein = %v, want [oliwa]", n.Incomplete["protein"])
+	}
+	if !reflect.DeepEqual(n.Incomplete["fiber"], []string{"jajko", "oliwa"}) {
+		t.Errorf("fiber = %v, want [jajko oliwa]", n.Incomplete["fiber"])
+	}
+}

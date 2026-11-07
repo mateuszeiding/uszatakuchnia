@@ -35,6 +35,7 @@ func (SchemaMigration) TableName() string { return "schema_migrations" }
 var All = []Migration{
 	recipeTimeRange,
 	dropRecipeKcal,
+	recomputeNutrition,
 }
 
 // Run wykonuje migracje, których nie ma jeszcze w schema_migrations.

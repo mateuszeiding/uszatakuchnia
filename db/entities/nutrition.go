@@ -32,7 +32,9 @@ type SumRange struct {
 // RecipeNutrition — cache makro przepisu w recipes.nutrition (jsonb).
 type RecipeNutrition struct {
 	PerPortion map[string]SumRange `json:"perPortion"`
-	Missing    []string            `json:"missing"`
+	Missing    []string            `json:"missing"` // pominięte w całości (brak makro albo przelicznika)
+	// Wliczone do sum, ale bez danej wartości: nutrient → nazwy składników („bez: tofu naturalne”).
+	Incomplete map[string][]string `json:"incomplete"`
 }
 
 func (n RecipeNutrition) Value() (driver.Value, error) {

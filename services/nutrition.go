@@ -143,11 +143,14 @@ type NutritionLine struct {
 }
 
 // Compute — makro na porcję jako suma zakresów (min×min, max×max). Pomija opcjonalne, „do smaku” i pozycje bez ilości;
-// pozycje bez makro lub bez przelicznika trafiają do Missing. Nil, gdy nic nie dało się policzyć.
+// pozycje bez makro lub bez przelicznika trafiają do Missing, a wliczone bez części wartości — do Incomplete.
+// Nil, gdy nic nie dało się policzyć.
 func (ix *NutritionIndex) Compute(lines []NutritionLine, servings int) *entities.RecipeNutrition {
 	sum := map[string]*entities.SumRange{}
 	missing := []string{}
 	seenMissing := map[string]bool{}
+	incomplete := map[string][]string{}
+	seenIncomplete := map[[2]string]bool{} // [wartość, nazwa]
 	contributed := false
 
 	for _, l := range lines {
@@ -156,8 +159,8 @@ func (ix *NutritionIndex) Compute(lines []NutritionLine, servings int) *entities
 		}
 		grams, okGrams := ix.GramsPerUnit(l.IngredientID, l.UnitID, l.UnitName)
 		macros := ix.ResolveMacros(l.IngredientID)
+		name := ix.Names[l.IngredientID]
 		if !okGrams || len(macros) == 0 {
-			name := ix.Names[l.IngredientID]
 			if !seenMissing[name] {
 				seenMissing[name] = true
 				missing = append(missing, name)
@@ -165,6 +168,13 @@ func (ix *NutritionIndex) Compute(lines []NutritionLine, servings int) *entities
 			continue
 		}
 		contributed = true
+		for _, k := range entities.NutrientKeys {
+			if _, ok := macros[k]; ok || seenIncomplete[[2]string{k, name}] {
+				continue
+			}
+			seenIncomplete[[2]string{k, name}] = true
+			incomplete[k] = append(incomplete[k], name)
+		}
 		gMin, gMax := l.Qty.Min*grams.Min, l.Qty.Max*grams.Upper()
 		for k, v := range macros {
 			s := sum[k]
@@ -187,5 +197,5 @@ func (ix *NutritionIndex) Compute(lines []NutritionLine, servings int) *entities
 	for k, s := range sum {
 		per[k] = entities.SumRange{Min: s.Min / float64(servings), Max: s.Max / float64(servings)}
 	}
-	return &entities.RecipeNutrition{PerPortion: per, Missing: missing}
+	return &entities.RecipeNutrition{PerPortion: per, Missing: missing, Incomplete: incomplete}
 }
