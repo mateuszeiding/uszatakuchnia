@@ -355,6 +355,19 @@
 .data-table .actions { display: flex; gap: 6px; justify-content: flex-end; }
 .data-table .empty-row { text-align: center; color: var(--ink-muted); padding: 40px; }
 
+/* tabela edycji w panelu (makro, przeliczniki): pola w komórkach */
+.admin-grid { border: 1px solid var(--rule); border-radius: var(--r-lg); border-collapse: separate; border-spacing: 0; overflow: hidden; }
+.admin-grid th, .admin-grid td { vertical-align: top; padding: 8px 10px; }
+.admin-grid thead th { background: var(--bg); }
+.admin-grid__label { width: 150px; }
+.admin-grid__num { width: 130px; }
+.admin-grid__act { width: 46px; }
+.admin-grid__opt { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.admin-grid tbody th { background: none; padding-top: 16px; font-family: var(--font-sans); font-size: 14px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--ink); }
+.admin-grid__preview { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 8px; font-size: 13px; }
+.admin-grid__own { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.admin-grid__err { display: block; padding-top: 8px; font-size: 12px; font-weight: 500; color: var(--danger); }
+
 /* przycisk-ikona w tabeli (edytuj / usuń / podgląd) */
 .tbl-btn {
   width: 30px; height: 30px; padding: 0; flex-shrink: 0;

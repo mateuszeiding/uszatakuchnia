@@ -2,7 +2,6 @@
 import { useQueryClient } from '@tanstack/vue-query';
 import { computed, onMounted, ref } from 'vue';
 
-import IngredientModal from '@/components/IngredientModal.vue';
 import UIcon from '@/components/UIcon.vue';
 import UModal from '@/components/UModal.vue';
 import USpinner from '@/components/USpinner.vue';
@@ -24,7 +23,6 @@ const dicts = ref<IDictionaries>();
 const loading = ref(true);
 const search = ref('');
 const onlyAllergens = ref(false);
-const editing = ref<{ ingredient?: IngredientDto } | null>(null);
 const blocked = ref<IngredientDto | null>(null);
 
 onMounted(async () => {
@@ -49,18 +47,6 @@ const filtered = computed(() => {
 });
 
 const plural = (n: number) => (n === 1 ? 'przepisie' : 'przepisach');
-
-function onSaved(ing: IngredientDto) {
-    const existing = ingredients.value.find((i) => i.id === ing.id);
-    if (existing) Object.assign(existing, { ...ing, usedIn: existing.usedIn });
-    else
-        ingredients.value = [...ingredients.value, ing].sort((a, b) =>
-            a.name.localeCompare(b.name, 'pl')
-        );
-    invalidateIngredients(qc);
-    showToast(existing ? 'Składnik zapisany' : 'Składnik dodany');
-    editing.value = null;
-}
 
 async function remove(ing: IngredientDto) {
     if (ing.usedIn > 0) {
@@ -104,14 +90,12 @@ async function remove(ing: IngredientDto) {
         >
             z alergenami
         </button>
-        <button
-            type="button"
+        <RouterLink
+            to="/admin/ingredients/new"
             class="btn btn--accent"
-            :disabled="!dicts"
-            @click="editing = {}"
         >
             + Nowy składnik
-        </button>
+        </RouterLink>
     </div>
 
     <div
@@ -163,15 +147,14 @@ async function remove(ing: IngredientDto) {
                 <td class="num">{{ ing.usedIn }}</td>
                 <td>
                     <div class="actions">
-                        <button
-                            type="button"
+                        <RouterLink
+                            :to="`/admin/ingredients/${ing.id}`"
                             class="tbl-btn"
                             :aria-label="`Edytuj ${ing.name}`"
                             title="Edytuj"
-                            @click="editing = { ingredient: ing }"
                         >
                             <UIcon name="edit" />
-                        </button>
+                        </RouterLink>
                         <button
                             type="button"
                             class="tbl-btn tbl-btn--danger"
@@ -194,14 +177,6 @@ async function remove(ing: IngredientDto) {
             </tr>
         </tbody>
     </table>
-
-    <IngredientModal
-        v-if="editing && dicts"
-        :dicts="dicts"
-        :ingredient="editing.ingredient"
-        @saved="onSaved"
-        @close="editing = null"
-    />
 
     <UModal
         v-if="blocked"

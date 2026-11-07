@@ -2,6 +2,7 @@ import { authGuard } from '@auth0/auth0-vue';
 import RecipesView from '@view/recipies/list/RecipesView.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
+import AdminIngredientEdit from '@/views/admin/AdminIngredientEdit.vue';
 import AdminIngredients from '@/views/admin/AdminIngredients.vue';
 import AdminLayout from '@/views/admin/AdminLayout.vue';
 import AdminRecipes from '@/views/admin/AdminRecipes.vue';
@@ -37,6 +38,8 @@ const router = createRouter({
                 { path: '', redirect: '/admin/recipes' },
                 { path: 'recipes', component: AdminRecipes },
                 { path: 'ingredients', component: AdminIngredients },
+                { path: 'ingredients/new', component: AdminIngredientEdit },
+                { path: 'ingredients/:id(\\d+)', component: AdminIngredientEdit, props: true },
                 { path: 'taxonomy', component: AdminTaxonomy },
                 // stare adresy
                 { path: 'settings', redirect: '/admin/taxonomy' },
