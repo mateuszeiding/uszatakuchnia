@@ -59,9 +59,10 @@ export function unitLabel(
 }
 
 // ─── Skalowanie ───────────────────────────────────────────────
-const COUNT = new Set(['sztuka', 'ząbek', 'listek', 'plaster', 'pęczek', 'filet', '']);
-const SPOON = new Set(['łyżka', 'łyżeczka', 'szklanka', 'szczypta', 'garść']);
+export const COUNT = new Set(['sztuka', 'ząbek', 'listek', 'plaster', 'pęczek', 'filet', '']);
+export const SPOON = new Set(['łyżka', 'łyżeczka', 'szklanka', 'szczypta', 'garść']);
 const QUARTERS: Record<string, string> = { '0.25': '¼', '0.5': '½', '0.75': '¾' };
+const THIRDS: Record<string, string> = { '0.33': '⅓', '0.67': '⅔' };
 
 function quarters(v: number): string {
     const q = Math.max(0.25, Math.round(v * 4) / 4);
@@ -70,8 +71,16 @@ function quarters(v: number): string {
     return frac ? `${whole || ''}${frac}` : String(whole);
 }
 
-function fmtNum(v: number, unit: string): string {
-    if (SPOON.has(unit) || (COUNT.has(unit) && v < 1)) return quarters(v);
+/** Łyżki / szklanki / sztuki: tercje (⅓ ⅔), a poza nimi ćwiartki. */
+function fraction(v: number): string {
+    const whole = Math.floor(v);
+    const third = THIRDS[(v - whole).toFixed(2)];
+    return third ? `${whole || ''}${third}` : quarters(v);
+}
+
+/** Liczba do wyświetlenia: ułamki tylko dla łyżek/szklanek i sztuk < 1; g / ml / l zawsze dziesiętnie. */
+export function fmtNum(v: number, unit: string): string {
+    if (SPOON.has(unit) || (COUNT.has(unit) && v < 1)) return fraction(v);
     if (v < 10 && !Number.isInteger(v))
         return (Math.round(v * 10) / 10).toString().replace('.', ',');
     if (v >= 50) return String(Math.round(v / 5) * 5);
@@ -81,6 +90,7 @@ function fmtNum(v: number, unit: string): string {
 /**
  * Skaluje ilość o `ratio` i zwraca tekst ilości + odmienioną jednostkę.
  * Jednostki sztukowe zaokrąglane do całości albo zakresu (1,5 cebuli → „1–2 sztuki”).
+ * Zawsze formatuje — także przy bazowej liczbie porcji („1/2” → „½”, „1 1/2” → „1½”).
  */
 export function scaleQuantity(
     raw: string | null,
@@ -92,8 +102,6 @@ export function scaleQuantity(
     const q = parseQty(raw);
     if (!q.ok) return { qty: raw ?? '', unit: name };
     if (q.empty) return { qty: '', unit: name };
-    if (ratio === 1) return { qty: raw!.trim(), unit: unitLabel(unit, unitName, q.max) };
-
     let lo = q.min * ratio;
     let hi = q.max * ratio;
     if (COUNT.has(name) && lo >= 1) {

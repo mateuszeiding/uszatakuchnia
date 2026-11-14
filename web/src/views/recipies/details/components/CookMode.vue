@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { leadText, scaledAmount, servingsLabel } from '../recipeView';
 
+import QtyText from '@/components/QtyText.vue';
 import UModal from '@/components/UModal.vue';
 import { useWakeLock } from '@/composables/useWakeLock';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
@@ -82,8 +83,7 @@ onBeforeUnmount(() => {
 });
 
 function amount(ing: RecipeDto['ingredients'][number]) {
-    const s = scaledAmount(ing, props.dicts?.units ?? [], ratio.value);
-    return [s.qty, s.unit].filter(Boolean).join(' ');
+    return scaledAmount(ing, props.dicts?.units ?? [], ratio.value);
 }
 </script>
 
@@ -205,7 +205,10 @@ function amount(ing: RecipeDto['ingredients'][number]) {
                         :aria-checked="checkedIng.includes(ing.sortOrder)"
                         @click="emit('toggle-ing', ing.sortOrder)"
                     >
-                        <span class="cook-ing__qty">{{ amount(ing) }}</span>
+                        <span class="cook-ing__qty">
+                            <QtyText :text="amount(ing).qty" />
+                            {{ amount(ing).unit }}
+                        </span>
                         <span>
                             {{ ing.ingredientName }}{{ ing.optional ? ' (opcjonalnie)' : '' }}
                         </span>

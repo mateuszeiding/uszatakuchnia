@@ -3,6 +3,7 @@ import { computed } from 'vue';
 
 import { bySection, scaledAmount } from '../recipeView';
 
+import QtyText from '@/components/QtyText.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
@@ -18,8 +19,7 @@ const ratio = computed(() => (props.recipe.servings ? props.servings / props.rec
 const sections = computed(() => bySection(props.recipe.ingredients));
 
 function amount(ing: RecipeDto['ingredients'][number]) {
-    const s = scaledAmount(ing, props.dicts?.units ?? [], ratio.value);
-    return [s.qty, s.unit].filter(Boolean).join(' ');
+    return scaledAmount(ing, props.dicts?.units ?? [], ratio.value);
 }
 
 /** Alergen → składniki, z których pochodzi (kolejność listy UE). */
@@ -127,7 +127,8 @@ const allergens = computed(() =>
                             </svg>
                         </span>
                         <span class="ing-item__qty">
-                            {{ amount(ing) }}
+                            <QtyText :text="amount(ing).qty" />
+                            {{ amount(ing).unit }}
                             <span
                                 v-if="ing.note"
                                 class="ing-item__note"
