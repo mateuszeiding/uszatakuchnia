@@ -1,9 +1,12 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-import { bySection, scaledAmount } from '../recipeView';
+import { alsoIn, ingredientGroups, scaledAmount } from '../recipeView';
 
-import QtyText from '@/components/QtyText.vue';
+import IngGroupHeader from './IngGroupHeader.vue';
+import IngRow from './IngRow.vue';
+import ServingsStepper from './ServingsStepper.vue';
+
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
@@ -16,11 +19,17 @@ const props = defineProps<{
 const emit = defineEmits<{ toggle: [sortOrder: number]; servings: [n: number] }>();
 
 const ratio = computed(() => (props.recipe.servings ? props.servings / props.recipe.servings : 1));
-const sections = computed(() => bySection(props.recipe.ingredients));
+const groups = computed(() => ingredientGroups(props.recipe.ingredients));
+const shopLink = computed(() => ({
+    path: `/recipes/${props.recipe.id}/zakupy`,
+    query: { porcje: String(props.servings) },
+}));
 
 function amount(ing: RecipeDto['ingredients'][number]) {
     return scaledAmount(ing, props.dicts?.units ?? [], ratio.value);
 }
+const doneIn = (items: RecipeDto['ingredients']) =>
+    items.filter((i) => props.checked.includes(i.sortOrder)).length;
 
 /** Alergen → składniki, z których pochodzi (kolejność listy UE). */
 const allergens = computed(() =>
@@ -33,6 +42,21 @@ const allergens = computed(() =>
         }))
         .filter((a) => a.sources.length)
 );
+
+// Desktop: lista przewija się w panelu — gradient na dole tylko, gdy coś jest jeszcze niżej.
+const list = ref<HTMLElement>();
+const more = ref(false);
+const measure = () => {
+    const el = list.value;
+    more.value = !!el && el.scrollHeight - el.scrollTop - el.clientHeight > 2;
+};
+let ro: ResizeObserver | undefined;
+onMounted(() => {
+    measure();
+    ro = new ResizeObserver(measure);
+    if (list.value) ro.observe(list.value);
+});
+onBeforeUnmount(() => ro?.disconnect());
 </script>
 
 <template>
@@ -40,263 +64,226 @@ const allergens = computed(() =>
         class="ing-panel"
         aria-labelledby="h-ing"
     >
-        <h2
-            id="h-ing"
-            class="ing-panel__title"
+        <div class="ing-panel__head">
+            <h2
+                id="h-ing"
+                class="ing-panel__title"
+            >
+                Składniki
+                <span
+                    v-if="groups.single"
+                    class="ing-panel__single"
+                >
+                    · {{ groups.single.toLowerCase() }}
+                </span>
+            </h2>
+            <RouterLink
+                :to="shopLink"
+                class="btn btn--secondary btn--sm ing-panel__shop ing-panel__shop--top"
+            >
+                <svg
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                >
+                    <path
+                        d="M1.5 2h2l1.6 8.2a1 1 0 001 .8h6.3a1 1 0 001-.8L14.5 5H4.3"
+                        stroke="currentColor"
+                        stroke-width="1.4"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                    <circle
+                        cx="6.5"
+                        cy="13.5"
+                        r="1"
+                        fill="currentColor"
+                    />
+                    <circle
+                        cx="12"
+                        cy="13.5"
+                        r="1"
+                        fill="currentColor"
+                    />
+                </svg>
+                Lista zakupów
+            </RouterLink>
+        </div>
+        <ServingsStepper
+            class="ing-panel__servings"
+            :value="servings"
+            @set="emit('servings', $event)"
+        />
+
+        <div
+            class="ing-panel__scroll"
+            :class="{ 'has-more': more }"
         >
-            Składniki
-        </h2>
-        <div class="servings">
-            <span
-                id="lbl-serv"
-                class="servings__label"
-            >
-                Porcje
-            </span>
             <div
-                class="servings__ctrl"
-                role="group"
-                aria-labelledby="lbl-serv"
+                ref="list"
+                class="ing-panel__list"
+                @scroll.passive="measure"
             >
-                <button
-                    type="button"
-                    class="servings__btn"
-                    aria-label="Mniej porcji"
-                    :disabled="servings <= 1"
-                    @click="emit('servings', servings - 1)"
+                <div
+                    v-for="(sec, si) in groups.sections"
+                    :key="si"
                 >
-                    −
-                </button>
-                <output
-                    class="servings__value"
-                    aria-live="polite"
+                    <IngGroupHeader
+                        v-if="groups.grouped && sec.label"
+                        class="ing-panel__ghead"
+                        :label="sec.label"
+                        :count="sec.items.length"
+                        :done="doneIn(sec.items)"
+                    />
+                    <ul class="ing-list">
+                        <IngRow
+                            v-for="ing in sec.items"
+                            :key="ing.sortOrder"
+                            :ing="ing"
+                            :amount="amount(ing)"
+                            :checked="checked.includes(ing.sortOrder)"
+                            :also="alsoIn(ing, recipe.ingredients)"
+                            @toggle="emit('toggle', ing.sortOrder)"
+                        />
+                    </ul>
+                </div>
+
+                <div
+                    v-if="allergens.length"
+                    class="allergens"
                 >
-                    {{ servings }}
-                </output>
-                <button
-                    type="button"
-                    class="servings__btn"
-                    aria-label="Więcej porcji"
-                    :disabled="servings >= 20"
-                    @click="emit('servings', servings + 1)"
-                >
-                    +
-                </button>
+                    <h3 class="allergens__title">Alergeny</h3>
+                    <ul class="allergens__list">
+                        <li
+                            v-for="a in allergens"
+                            :key="a.label"
+                        >
+                            <strong>{{ a.label }}</strong>
+                            <span class="allergens__src">· {{ a.sources.join(', ') }}</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
 
-        <div
-            v-for="(sec, si) in sections"
-            :key="si"
+        <RouterLink
+            :to="shopLink"
+            class="btn btn--secondary ing-panel__shop ing-panel__shop--bottom"
         >
-            <h3
-                v-if="sec.label"
-                class="ing-panel__group"
+            <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
             >
-                {{ sec.label }}
-            </h3>
-            <ul class="ing-list">
-                <li
-                    v-for="ing in sec.items"
-                    :key="ing.sortOrder"
-                >
-                    <button
-                        type="button"
-                        role="checkbox"
-                        class="ing-item"
-                        :class="{ 'is-done': checked.includes(ing.sortOrder) }"
-                        :aria-checked="checked.includes(ing.sortOrder)"
-                        @click="emit('toggle', ing.sortOrder)"
-                    >
-                        <span
-                            class="ing-item__box"
-                            aria-hidden="true"
-                        >
-                            <svg
-                                v-if="checked.includes(ing.sortOrder)"
-                                width="9"
-                                height="9"
-                                viewBox="0 0 10 10"
-                            >
-                                <path
-                                    d="M2 5.2L4.2 7.4L8 3.4"
-                                    stroke="#fff"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
-                        </span>
-                        <span class="ing-item__qty">
-                            <QtyText :text="amount(ing).qty" />
-                            {{ amount(ing).unit }}
-                            <span
-                                v-if="ing.note"
-                                class="ing-item__note"
-                            >
-                                {{ ing.note }}
-                            </span>
-                        </span>
-                        <span class="ing-item__name">
-                            {{ ing.ingredientName }}
-                            <em
-                                v-if="ing.optional"
-                                class="ing-item__opt"
-                            >
-                                (opcjonalnie)
-                            </em>
-                        </span>
-                    </button>
-                </li>
-            </ul>
-        </div>
-
-        <div
-            v-if="allergens.length"
-            class="allergens"
-        >
-            <h3 class="ing-panel__group ing-panel__group--plain">Alergeny</h3>
-            <ul class="allergens__list">
-                <li
-                    v-for="a in allergens"
-                    :key="a.label"
-                >
-                    <strong>{{ a.label }}</strong>
-                    <span class="allergens__src">· {{ a.sources.join(', ') }}</span>
-                </li>
-            </ul>
-        </div>
+                <path
+                    d="M1.5 2h2l1.6 8.2a1 1 0 001 .8h6.3a1 1 0 001-.8L14.5 5H4.3"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
+                <circle
+                    cx="6.5"
+                    cy="13.5"
+                    r="1"
+                    fill="currentColor"
+                />
+                <circle
+                    cx="12"
+                    cy="13.5"
+                    r="1"
+                    fill="currentColor"
+                />
+            </svg>
+            Lista zakupów
+        </RouterLink>
     </section>
 </template>
 
 <style scoped>
+/* Desktop: panel przyklejony, nie wyższy niż okno; licznik porcji stoi, przewija się sama lista. */
 .ing-panel {
     position: sticky;
     top: 84px;
+    max-height: calc(100vh - 84px - 24px);
     background: var(--bg-alt);
     border: 1px solid var(--rule);
     border-radius: var(--r-xl);
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 16px;
+}
+.ing-panel__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 .ing-panel__title {
     font-size: 26px;
     font-weight: 500;
     letter-spacing: -0.8px;
 }
-.servings {
-    background: var(--bg);
-    border: 1px solid var(--rule);
-    border-radius: var(--r-lg);
-    padding: 8px 8px 8px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.servings__label {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink-dim);
-}
-.servings__ctrl {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-.servings__btn {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--r-md);
-    background: var(--bg-alt);
-    border: 1px solid var(--rule);
-    color: var(--ink);
-    font-size: 18px;
-    cursor: pointer;
-}
-.servings__btn:disabled {
-    background: transparent;
-    color: var(--ink-faint);
-    cursor: default;
-}
-.servings__value {
-    min-width: 40px;
-    text-align: center;
-    font-size: 22px;
-    font-weight: 600;
-}
-.ing-panel__group {
-    font-family: var(--font-mono);
-    font-size: 12px;
+.ing-panel__single {
+    font-size: 15px;
+    letter-spacing: 0;
     color: var(--ink-muted);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    font-weight: 600;
-    padding-bottom: 8px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid var(--rule);
 }
-.ing-panel__group--plain {
-    border: none;
-    padding: 0;
-    margin-bottom: 8px;
+.ing-panel__shop {
+    gap: 7px;
+    white-space: nowrap;
+}
+.ing-panel__shop--bottom {
+    display: none;
+}
+.ing-panel__scroll {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+.ing-panel__list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+.ing-panel__scroll.has-more::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 6px;
+    bottom: 0;
+    height: 36px;
+    background: linear-gradient(to bottom, transparent, var(--bg-alt));
+    pointer-events: none;
+}
+/* nagłówek grupy przykleja się u góry przewijanej listy */
+.ing-panel__ghead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg-alt);
+    padding-top: 8px;
 }
 .ing-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
-.ing-item {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 18px 92px minmax(0, 1fr);
-    gap: 10px;
-    align-items: baseline;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--rule);
-    padding: 8px 0;
-    cursor: pointer;
-    text-align: left;
-    color: var(--ink);
-}
-.ing-item__box {
-    width: 16px;
-    height: 16px;
-    border-radius: var(--r-sm);
-    border: 1.5px solid var(--rule-strong);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    align-self: center;
-}
-.ing-item.is-done .ing-item__box {
-    background: var(--accent);
-    border-color: var(--accent);
-}
-.ing-item__qty {
+.allergens__title {
     font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-}
-.ing-item__note {
-    display: block;
     font-size: 12px;
-    font-weight: 400;
     color: var(--ink-muted);
-}
-.ing-item__name {
-    font-size: 15px;
-    line-height: 1.4;
-    color: var(--ink-dim);
-}
-.ing-item__opt {
-    color: var(--ink-muted);
-}
-.ing-item.is-done .ing-item__qty,
-.ing-item.is-done .ing-item__name {
-    color: var(--ink-muted);
-    text-decoration: line-through;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 8px;
 }
 .allergens__list {
     list-style: none;
@@ -319,16 +306,32 @@ const allergens = computed(() =>
 @media (max-width: 900px) {
     .ing-panel {
         position: static;
+        max-height: none;
         padding: 20px;
     }
-    /* licznik porcji przyklejony pod paskiem nawigacji podczas przewijania listy */
-    .servings {
+    .ing-panel__list {
+        overflow: visible;
+        padding-right: 0;
+    }
+    .ing-panel__scroll.has-more::after {
+        content: none;
+    }
+    /* licznik porcji przyklejony pod paskiem nawigacji, nagłówek grupy pod licznikiem (64 + 54 px) */
+    .ing-panel__servings {
         position: sticky;
         top: 64px;
         z-index: 2;
     }
-    .ing-item {
-        padding: 11px 0;
+    .ing-panel__ghead {
+        top: 118px;
+    }
+    .ing-panel__shop--top {
+        display: none;
+    }
+    .ing-panel__shop--bottom {
+        display: inline-flex;
+        width: 100%;
+        justify-content: center;
     }
 }
 </style>

@@ -19,6 +19,24 @@ export function bySection<T extends { section: string | null }>(items: T[]): ISe
     return out;
 }
 
+/** Inne grupy, w których występuje ten sam składnik (małymi literami) — dopisek „też: …”. */
+export function alsoIn(ing: RecipeIngredientDto, all: RecipeIngredientDto[]): string[] {
+    if (!ing.section) return [];
+    const out = all
+        .filter(
+            (x) => x.ingredientId === ing.ingredientId && x.section && x.section !== ing.section
+        )
+        .map((x) => x.section!.toLowerCase());
+    return [...new Set(out)];
+}
+
+/** Grupy do wyświetlenia: >1 grupa → nagłówki; jedna nazwana → nazwa przy tytule; bez grup → sama lista. */
+export function ingredientGroups(items: RecipeIngredientDto[]) {
+    const sections = bySection(items);
+    const single = sections.length === 1 ? sections[0]!.label : null;
+    return { sections, grouped: sections.length > 1, single };
+}
+
 export function scaledAmount(ing: RecipeIngredientDto, units: IUnit[], ratio: number) {
     const unit = units.find((u) => u.id === ing.unitId);
     return scaleQuantity(ing.quantity, ing.unit, unit, ratio);

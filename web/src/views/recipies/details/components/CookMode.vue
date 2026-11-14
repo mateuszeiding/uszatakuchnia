@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-import { leadText, scaledAmount, servingsLabel } from '../recipeView';
+import { alsoIn, ingredientGroups, leadText, scaledAmount, servingsLabel } from '../recipeView';
 
-import QtyText from '@/components/QtyText.vue';
+import IngGroupHeader from './IngGroupHeader.vue';
+import IngRow from './IngRow.vue';
+
 import UModal from '@/components/UModal.vue';
 import { useWakeLock } from '@/composables/useWakeLock';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
@@ -32,6 +34,7 @@ const root = ref<HTMLElement>();
 
 const step = computed(() => steps.value[i.value]!);
 const last = computed(() => i.value === steps.value.length - 1);
+const groups = computed(() => ingredientGroups(props.recipe.ingredients));
 const ratio = computed(() => (props.recipe.servings ? props.servings / props.recipe.servings : 1));
 
 function next() {
@@ -192,29 +195,31 @@ function amount(ing: RecipeDto['ingredients'][number]) {
             :width="480"
             @close="showIng = false"
         >
-            <ul class="cook-ing">
-                <li
-                    v-for="ing in recipe.ingredients"
-                    :key="ing.sortOrder"
+            <div class="cook-ing">
+                <div
+                    v-for="(sec, si) in groups.sections"
+                    :key="si"
                 >
-                    <button
-                        type="button"
-                        role="checkbox"
-                        class="cook-ing__item"
-                        :class="{ 'is-done': checkedIng.includes(ing.sortOrder) }"
-                        :aria-checked="checkedIng.includes(ing.sortOrder)"
-                        @click="emit('toggle-ing', ing.sortOrder)"
-                    >
-                        <span class="cook-ing__qty">
-                            <QtyText :text="amount(ing).qty" />
-                            {{ amount(ing).unit }}
-                        </span>
-                        <span>
-                            {{ ing.ingredientName }}{{ ing.optional ? ' (opcjonalnie)' : '' }}
-                        </span>
-                    </button>
-                </li>
-            </ul>
+                    <IngGroupHeader
+                        v-if="groups.grouped && sec.label"
+                        :label="sec.label"
+                        :count="sec.items.length"
+                        :done="sec.items.filter((x) => checkedIng.includes(x.sortOrder)).length"
+                    />
+                    <ul class="cook-ing__list">
+                        <IngRow
+                            v-for="ing in sec.items"
+                            :key="ing.sortOrder"
+                            :ing="ing"
+                            :amount="amount(ing)"
+                            :checked="checkedIng.includes(ing.sortOrder)"
+                            :also="alsoIn(ing, recipe.ingredients)"
+                            roomy
+                            @toggle="emit('toggle-ing', ing.sortOrder)"
+                        />
+                    </ul>
+                </div>
+            </div>
         </UModal>
     </Teleport>
 </template>
@@ -359,33 +364,15 @@ function amount(ing: RecipeDto['ingredients'][number]) {
     padding-bottom: 10px;
 }
 .cook-ing {
+    max-height: 60vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+.cook-ing__list {
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 60vh;
-    overflow-y: auto;
-}
-.cook-ing__item {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 100px minmax(0, 1fr);
-    gap: 10px;
-    padding: 12px 0;
-    border: none;
-    border-bottom: 1px solid var(--rule);
-    background: transparent;
-    text-align: left;
-    cursor: pointer;
-    color: var(--ink);
-    font-size: 16px;
-}
-.cook-ing__item.is-done {
-    color: var(--ink-muted);
-    text-decoration: line-through;
-}
-.cook-ing__qty {
-    font-family: var(--font-mono);
-    font-weight: 600;
-    font-size: 14px;
 }
 </style>
