@@ -1,0 +1,118 @@
+<script lang="ts" setup>
+import { useQueryClient } from '@tanstack/vue-query';
+import { computed, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+
+import ShoppingList from './components/ShoppingList.vue';
+
+import USpinner from '@/components/USpinner.vue';
+import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
+import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
+import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
+import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+
+// /recipes/:id/zakupy — lista zakupów przepisu (telefon w sklepie, desktop, wydruk).
+const props = defineProps<{ id: string | number }>();
+
+const recipe = ref<RecipeDto>();
+const dicts = ref<IDictionaries>();
+const loading = ref(true);
+const failed = ref(false);
+
+const qc = useQueryClient();
+const route = useRoute();
+const router = useRouter();
+
+/** Porcje z adresu (?porcje=) — link z panelu albo udostępniony; null = weź z postępu przepisu. */
+const urlServings = computed(() => {
+    const n = Number(route.query.porcje);
+    return Number.isInteger(n) && n >= 1 && n <= 20 ? n : null;
+});
+
+async function load(id: number) {
+    loading.value = true;
+    failed.value = false;
+    try {
+        [recipe.value, dicts.value] = await Promise.all([
+            fetchRecipesWithClient(qc, id),
+            fetchDictionariesWithClient(qc),
+        ]);
+        document.title = `Lista zakupów · ${recipe.value.name} · uszatakuchnia`;
+    } catch {
+        failed.value = true;
+    } finally {
+        loading.value = false;
+    }
+}
+
+watch(
+    () => Number(props.id),
+    (id) => load(id),
+    { immediate: true }
+);
+
+const onServings = (n: number) => router.replace({ query: { ...route.query, porcje: String(n) } });
+</script>
+
+<template>
+    <div class="shop-page">
+        <div
+            v-if="loading"
+            class="shop-page__state"
+        >
+            <USpinner :size="28" />
+            <span>ładowanie listy zakupów…</span>
+        </div>
+        <div
+            v-else-if="failed || !recipe"
+            class="shop-page__state"
+        >
+            Nie udało się wczytać przepisu.
+            <RouterLink :to="`/recipes/${id}`">← Przepis</RouterLink>
+        </div>
+        <ShoppingList
+            v-else
+            :key="recipe.id"
+            :recipe="recipe"
+            :dicts="dicts"
+            :url-servings="urlServings"
+            @servings="onServings"
+        />
+    </div>
+</template>
+
+<style lang="scss" scoped>
+@use '@/scss/mixins/media' as m;
+
+.shop-page__state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 80px 16px;
+    color: var(--ink-muted);
+    font-size: 14px;
+}
+
+/* wydruk: bez paska nawigacji, czarno-biało niezależnie od motywu */
+@include m.print {
+    :global(.topbar) {
+        display: none;
+    }
+    :global(body) {
+        background: #fff;
+    }
+    .shop-page {
+        --bg: #fff;
+        --bg-alt: #fff;
+        --ink: #000;
+        --ink-dim: #000;
+        --ink-muted: #444;
+        --rule: #bbb;
+        --rule-strong: #000;
+        --accent: #000;
+        color: #000;
+        background: #fff;
+    }
+}
+</style>

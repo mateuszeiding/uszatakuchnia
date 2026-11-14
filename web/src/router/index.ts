@@ -9,6 +9,7 @@ import AdminRecipes from '@/views/admin/AdminRecipes.vue';
 import AdminTaxonomy from '@/views/admin/AdminTaxonomy.vue';
 import UpsertRecipe from '@/views/recipies/auth/UpsertRecipe.vue';
 import RecipeDetails from '@/views/recipies/details/RecipeDetails.vue';
+import ShoppingListView from '@/views/recipies/shopping/ShoppingListView.vue';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,6 +24,12 @@ const router = createRouter({
         { path: '/recipes', component: RecipesView },
         { path: '/recipes/new', component: UpsertRecipe, beforeEnter: authGuard },
         { path: '/recipes/:id', name: 'recipe-details', component: RecipeDetails, props: true },
+        {
+            path: '/recipes/:id/zakupy',
+            name: 'recipe-shopping',
+            component: ShoppingListView,
+            props: true,
+        },
         {
             path: '/recipes/:id/edit',
             name: 'recipe-edit',
