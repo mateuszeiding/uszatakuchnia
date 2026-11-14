@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"uszatakuchnia/db/entities"
+	"uszatakuchnia/dtos"
 )
 
 func fp(v float64) *float64 { return &v }
@@ -272,5 +273,25 @@ func TestComputeIncompleteMixed(t *testing.T) {
 	}
 	if !reflect.DeepEqual(n.Incomplete["fiber"], []string{"jajko", "oliwa"}) {
 		t.Errorf("fiber = %v, want [jajko oliwa]", n.Incomplete["fiber"])
+	}
+}
+
+func TestFillGramsPerUnit(t *testing.T) {
+	ix := testIndex()
+	str := func(s string) *string { return &s }
+	items := []dtos.RecipeIngredientDto{
+		{IngredientID: 2, UnitID: up(unitG), Unit: str("g")},
+		{IngredientID: 4, UnitID: up(unitSzt), Unit: str("sztuka")},
+		{IngredientID: 2, UnitID: up(unitLyzka), Unit: str("łyżka")}, // przelicznik u rodzica
+		{IngredientID: 6, UnitID: up(unitLyzka), Unit: str("łyżka")}, // brak przelicznika
+		{IngredientID: 2, UnitID: up(unitMl), Unit: str("ml")},       // ml jak woda
+		{IngredientID: 6, UnitID: up(unitDoSmaku), Unit: str("do smaku")},
+	}
+	FillGramsPerUnit(items, ix)
+	want := []*dtos.GramsRangeDto{{Min: 1, Max: 1}, {Min: 50, Max: 65}, {Min: 15, Max: 15}, nil, {Min: 1, Max: 1}, nil}
+	for i, w := range want {
+		if !reflect.DeepEqual(items[i].GramsPerUnit, w) {
+			t.Errorf("%d: got %+v, want %+v", i, items[i].GramsPerUnit, w)
+		}
 	}
 }

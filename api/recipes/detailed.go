@@ -42,6 +42,7 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		Preload("Steps", func(tx *gorm.DB) *gorm.DB { return tx.Order("step_no") }).
 		Preload("Ingredients", func(tx *gorm.DB) *gorm.DB { return tx.Order("sort_order") }).
 		Preload("Ingredients.Ingredient.Allergens").
+		Preload("Ingredients.Ingredient.Type").
 		Preload("Ingredients.Unit").
 		Preload("Taxonomy.Value.Axis").
 		Find(&entity, id).Error; err != nil {
@@ -53,7 +54,15 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp.JSON(w, http.StatusOK, mappers.MapRecipeToDto(entity))
+	dto := mappers.MapRecipeToDto(entity)
+	ix, err := services.LoadNutritionIndex(conn)
+	if err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	services.FillGramsPerUnit(dto.Ingredients, ix)
+
+	resp.JSON(w, http.StatusOK, dto)
 }
 
 func putDetailed(w http.ResponseWriter, r *http.Request) {

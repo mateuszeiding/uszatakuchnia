@@ -14,4 +14,20 @@ type RecipeIngredientDto struct {
 	Optional bool    `json:"optional"`
 
 	Allergens []string `json:"allergens"` // kody alergenów składnika (do listy „Alergeny” w przepisie)
+
+	// Dział w sklepie (lista zakupów).
+	IngredientType IngredientTypeRefDto `json:"ingredientType"`
+	// Ile gramów to 1 jednostka tej pozycji; nil = nie da się przeliczyć (lista zakupów sumuje różne jednostki przez gramy).
+	GramsPerUnit *GramsRangeDto `json:"gramsPerUnit"`
+}
+
+type IngredientTypeRefDto struct {
+	Code  string `json:"code"`
+	Label string `json:"label"`
+}
+
+// GramsRangeDto — gramy na jednostkę; Max = Min dla pojedynczej wartości.
+type GramsRangeDto struct {
+	Min float64 `json:"min"`
+	Max float64 `json:"max"`
 }

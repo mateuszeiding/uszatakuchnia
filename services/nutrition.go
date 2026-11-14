@@ -1,6 +1,9 @@
 package services
 
-import "uszatakuchnia/db/entities"
+import (
+	"uszatakuchnia/db/entities"
+	"uszatakuchnia/dtos"
+)
 
 // Macros — makro na 100 g po kluczu z entities.NutrientKeys; brak klucza = brak danych.
 type Macros map[string]entities.MacroRange
@@ -130,6 +133,27 @@ func (ix *NutritionIndex) GramsPerUnit(id uint, unitID *uint, unitName string) (
 		return entities.MacroRange{Min: g}, true
 	}
 	return entities.MacroRange{}, false
+}
+
+// FillGramsPerUnit — gramy na 1 jednostkę każdej pozycji przepisu (lista zakupów przelicza przez nie różne jednostki).
+// Te same reguły co w makro: g / kg stałe, ml / l z przelicznika albo jak woda, brak przelicznika → nil. „Do smaku” → nil.
+func FillGramsPerUnit(items []dtos.RecipeIngredientDto, ix *NutritionIndex) {
+	for i := range items {
+		it := &items[i]
+		it.GramsPerUnit = nil
+		if it.UnitID != nil && ix.NoQtyUnits[*it.UnitID] {
+			continue
+		}
+		name := ""
+		if it.Unit != nil {
+			name = *it.Unit
+		}
+		g, ok := ix.GramsPerUnit(it.IngredientID, it.UnitID, name)
+		if !ok {
+			continue
+		}
+		it.GramsPerUnit = &dtos.GramsRangeDto{Min: g.Min, Max: g.Upper()}
+	}
 }
 
 // NutritionLine — pozycja przepisu do wyliczenia makro.

@@ -31,7 +31,8 @@ func recipeNeedsPrep(steps []entities.RecipeStep) bool {
 	return false
 }
 
-// MapRecipeToDto wymaga preloadów: Photo, Steps, Ingredients.Ingredient.Allergens, Ingredients.Unit, Taxonomy.Value.Axis.
+// MapRecipeToDto wymaga preloadów: Photo, Steps, Ingredients.Ingredient.Allergens, Ingredients.Ingredient.Type, Ingredients.Unit, Taxonomy.Value.Axis.
+// gramsPerUnit składników uzupełnia services.FillGramsPerUnit.
 func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 	return dtos.RecipeDto{
 		ID:          e.ID,

@@ -14,6 +14,10 @@ export class RecipeIngredientDto {
     optional: boolean = false;
     /** Kody alergenów składnika. */
     allergens: string[] = [];
+    /** Dział w sklepie (typ składnika) — lista zakupów. */
+    ingredientType: { code: string; label: string } = { code: 'OTHER', label: 'inne' };
+    /** Ile gramów to 1 jednostka tej pozycji; null = nie da się przeliczyć. */
+    gramsPerUnit: { min: number; max: number } | null = null;
 
     constructor(obj: Partial<RecipeIngredientDto>) {
         Object.assign(this, obj);
