@@ -31,15 +31,21 @@ function amount(ing: RecipeDto['ingredients'][number]) {
 const doneIn = (items: RecipeDto['ingredients']) =>
     items.filter((i) => props.checked.includes(i.sortOrder)).length;
 
-/** Alergen → składniki, z których pochodzi (kolejność listy UE). */
+/** Alergen → składniki, z których pochodzi (kolejność listy UE). Składnik z kilku grup — raz;
+ *  „(opcj.)” tylko, gdy jest opcjonalny we wszystkich wystąpieniach. */
 const allergens = computed(() =>
     (props.dicts?.allergens ?? [])
-        .map((a) => ({
-            label: a.label,
-            sources: props.recipe.ingredients
-                .filter((i) => i.allergens.includes(a.code))
-                .map((i) => i.ingredientName + (i.optional ? ' (opcj.)' : '')),
-        }))
+        .map((a) => {
+            const by = new Map<number, { name: string; optional: boolean }>();
+            for (const i of props.recipe.ingredients) {
+                if (!i.allergens.includes(a.code)) continue;
+                const seen = by.get(i.ingredientId);
+                if (seen) seen.optional &&= i.optional;
+                else by.set(i.ingredientId, { name: i.ingredientName, optional: i.optional });
+            }
+            const sources = [...by.values()].map((s) => s.name + (s.optional ? ' (opcj.)' : ''));
+            return { label: a.label, sources };
+        })
         .filter((a) => a.sources.length)
 );
 
