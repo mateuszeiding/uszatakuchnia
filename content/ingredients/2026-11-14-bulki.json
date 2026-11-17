@@ -1,0 +1,99 @@
+[
+  {
+    "name": "Drożdże suche",
+    "typeCode": "OTHER",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 325, "max": null },
+      "protein": { "min": 40, "max": null },
+      "fat": { "min": 7.6, "max": null },
+      "carbs": { "min": 41, "max": null },
+      "fiber": { "min": 27, "max": null }
+    },
+    "conversions": [{ "unit": "łyżeczka", "gramsMin": 3, "gramsMax": 4 }]
+  },
+  {
+    "name": "Mąka pszenna typ 550",
+    "typeCode": "GRAIN",
+    "allergens": ["gluten"],
+    "nutrition": {
+      "kcal": { "min": 340, "max": 350 },
+      "protein": { "min": 10, "max": 11 },
+      "fat": { "min": 1.2, "max": 1.5 },
+      "carbs": { "min": 71, "max": 73 },
+      "fiber": { "min": 2.5, "max": 3 }
+    },
+    "conversions": [
+      { "unit": "szklanka", "gramsMin": 130, "gramsMax": 150 },
+      { "unit": "łyżka", "gramsMin": 8, "gramsMax": 10 }
+    ]
+  },
+  {
+    "name": "Woda",
+    "typeCode": "OTHER",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 0, "max": null },
+      "protein": { "min": 0, "max": null },
+      "fat": { "min": 0, "max": null },
+      "carbs": { "min": 0, "max": null },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "ml", "gramsMin": 1, "gramsMax": null },
+      { "unit": "szklanka", "gramsMin": 250, "gramsMax": null },
+      { "unit": "łyżka", "gramsMin": 15, "gramsMax": null }
+    ]
+  },
+  {
+    "name": "Cukier biały",
+    "typeCode": "OTHER",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 400, "max": null },
+      "protein": { "min": 0, "max": null },
+      "fat": { "min": 0, "max": null },
+      "carbs": { "min": 100, "max": null },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "łyżeczka", "gramsMin": 4, "gramsMax": 5 },
+      { "unit": "łyżka", "gramsMin": 12, "gramsMax": 15 },
+      { "unit": "szklanka", "gramsMin": 200, "gramsMax": null }
+    ]
+  },
+  {
+    "name": "Mleko",
+    "typeCode": "DAIRY",
+    "allergens": ["milk"],
+    "nutrition": {
+      "kcal": { "min": 50, "max": 61 },
+      "protein": { "min": 3.2, "max": 3.4 },
+      "fat": { "min": 2, "max": 3.2 },
+      "carbs": { "min": 4.7, "max": 4.9 },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "ml", "gramsMin": 1.03, "gramsMax": null },
+      { "unit": "łyżeczka", "gramsMin": 5, "gramsMax": null },
+      { "unit": "łyżka", "gramsMin": 15, "gramsMax": null },
+      { "unit": "szklanka", "gramsMin": 250, "gramsMax": 258 }
+    ]
+  },
+  {
+    "name": "Sezam",
+    "typeCode": "OTHER",
+    "allergens": ["sesame"],
+    "nutrition": {
+      "kcal": { "min": 565, "max": 575 },
+      "protein": { "min": 17, "max": 18 },
+      "fat": { "min": 48, "max": 50 },
+      "carbs": { "min": 23, "max": null },
+      "fiber": { "min": 11, "max": 12 }
+    },
+    "conversions": [
+      { "unit": "łyżeczka", "gramsMin": 3, "gramsMax": null },
+      { "unit": "łyżka", "gramsMin": 9, "gramsMax": null }
+    ]
+  }
+]
