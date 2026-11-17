@@ -5,23 +5,25 @@ import { ingredientGroups, scaledAmount } from '../recipeView';
 
 import IngGroupHeader from './IngGroupHeader.vue';
 import IngRow from './IngRow.vue';
+import IngRowSkeleton from './IngRowSkeleton.vue';
 import ServingsStepper from './ServingsStepper.vue';
 
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
 const props = defineProps<{
-    recipe: RecipeDto;
+    /** null = ładowanie: nagłówek i licznik porcji w tym samym miejscu, szkielety wierszy. */
+    recipe: RecipeDto | null;
     dicts: IDictionaries | undefined;
     servings: number;
     checked: number[];
 }>();
 const emit = defineEmits<{ toggle: [sortOrder: number]; servings: [n: number] }>();
 
-const ratio = computed(() => (props.recipe.servings ? props.servings / props.recipe.servings : 1));
-const groups = computed(() => ingredientGroups(props.recipe.ingredients));
+const ratio = computed(() => (props.recipe?.servings ? props.servings / props.recipe.servings : 1));
+const groups = computed(() => ingredientGroups(props.recipe?.ingredients ?? []));
 const shopLink = computed(() => ({
-    path: `/recipes/${props.recipe.id}/zakupy`,
+    path: `/recipes/${props.recipe?.id ?? 0}/zakupy`,
     query: { porcje: String(props.servings) },
 }));
 
@@ -37,7 +39,7 @@ const allergens = computed(() =>
     (props.dicts?.allergens ?? [])
         .map((a) => {
             const by = new Map<number, { name: string; optional: boolean }>();
-            for (const i of props.recipe.ingredients) {
+            for (const i of props.recipe?.ingredients ?? []) {
                 if (!i.allergens.includes(a.code)) continue;
                 const seen = by.get(i.ingredientId);
                 if (seen) seen.optional &&= i.optional;
@@ -69,6 +71,8 @@ onBeforeUnmount(() => ro?.disconnect());
     <section
         class="ing-panel"
         aria-labelledby="h-ing"
+        :aria-busy="!recipe"
+        :inert="!recipe"
     >
         <div class="ing-panel__head">
             <h2
@@ -130,6 +134,16 @@ onBeforeUnmount(() => ro?.disconnect());
                 class="ing-panel__list"
                 @scroll.passive="measure"
             >
+                <ul
+                    v-if="!recipe"
+                    class="ing-list"
+                >
+                    <IngRowSkeleton
+                        v-for="n in 8"
+                        :key="n"
+                        :wide="n % 3 === 0"
+                    />
+                </ul>
                 <div
                     v-for="(sec, si) in groups.sections"
                     :key="si"

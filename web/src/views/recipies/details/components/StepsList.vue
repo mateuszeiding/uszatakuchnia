@@ -6,21 +6,26 @@ import { bySection, leadText } from '../recipeView';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 
 const props = defineProps<{
-    recipe: RecipeDto;
+    /** null = ładowanie: ten sam nagłówek i karty kroków ze szkieletem tekstu. */
+    recipe: RecipeDto | null;
     done: number[];
     canReset: boolean;
 }>();
 const emit = defineEmits<{ toggle: [stepNo: number]; cook: []; reset: [] }>();
 
-const sections = computed(() => bySection(props.recipe.steps));
-const total = computed(() => props.recipe.steps.length);
+const sections = computed(() => bySection(props.recipe?.steps ?? []));
+const total = computed(() => props.recipe?.steps.length ?? 0);
 const doneCount = computed(
-    () => props.recipe.steps.filter((s) => props.done.includes(s.stepNo)).length
+    () => (props.recipe?.steps ?? []).filter((s) => props.done.includes(s.stepNo)).length
 );
 </script>
 
 <template>
-    <section aria-labelledby="h-steps">
+    <section
+        aria-labelledby="h-steps"
+        :aria-busy="!recipe"
+        :inert="!recipe"
+    >
         <div class="steps-head">
             <div class="steps-head__row">
                 <h2
@@ -30,7 +35,18 @@ const doneCount = computed(
                     Kroki
                 </h2>
                 <div class="steps-head__actions">
-                    <span class="steps-head__count">{{ doneCount }} z {{ total }}</span>
+                    <span
+                        v-if="!recipe"
+                        class="steps-head__count"
+                    >
+                        <span class="sk steps-sk__count" />
+                    </span>
+                    <span
+                        v-else
+                        class="steps-head__count"
+                    >
+                        {{ doneCount }} z {{ total }}
+                    </span>
                     <button
                         v-if="canReset"
                         type="button"
@@ -40,7 +56,7 @@ const doneCount = computed(
                         Zacznij od nowa
                     </button>
                     <button
-                        v-if="total"
+                        v-if="total || !recipe"
                         type="button"
                         class="btn btn--accent"
                         @click="emit('cook')"
@@ -65,6 +81,25 @@ const doneCount = computed(
         </div>
 
         <div class="steps">
+            <ol
+                v-if="!recipe"
+                class="steps__list"
+                aria-hidden="true"
+            >
+                <li
+                    v-for="n in 3"
+                    :key="n"
+                    class="step"
+                >
+                    <span class="step__check">{{ n }}</span>
+                    <div class="step__body">
+                        <p class="step__text">
+                            <span class="sk steps-sk__line" />
+                            <span class="sk steps-sk__line steps-sk__line--short" />
+                        </p>
+                    </div>
+                </li>
+            </ol>
             <div
                 v-for="(sec, si) in sections"
                 :key="si"
@@ -123,7 +158,7 @@ const doneCount = computed(
         </div>
 
         <aside
-            v-if="recipe.tip"
+            v-if="recipe?.tip"
             class="tip-box"
         >
             <div class="tip-box__head">Wskazówka</div>
@@ -133,6 +168,23 @@ const doneCount = computed(
 </template>
 
 <style scoped>
+/* szkielet: wypełnienia w liniach tekstu (17 px × 1,6) */
+.steps-sk__line {
+    display: block;
+    height: 27.2px;
+    background-clip: content-box;
+    padding: 7px 0;
+    width: 88%;
+}
+.steps-sk__line--short {
+    width: 52%;
+}
+.steps-sk__count {
+    display: inline-block;
+    width: 36px;
+    height: 11px;
+    vertical-align: middle;
+}
 .steps-head {
     margin-bottom: 22px;
 }

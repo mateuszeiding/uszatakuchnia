@@ -5,19 +5,21 @@ import { DIFFICULTY, leadText } from '../recipeView';
 
 import UsefulRecipes from './UsefulRecipes.vue';
 
+import USpinner from '@/components/USpinner.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import { avg, fmt, nf } from '@/shared/utils/nutrition';
 import { formatTime } from '@/shared/utils/time';
 
-const props = defineProps<{ recipe: RecipeDto; servings: number }>();
+// recipe null = ładowanie: ten sam .hero (zdjęcie 1:1, metadane) ze szkieletami w miejscu treści.
+const props = defineProps<{ recipe: RecipeDto | null; servings: number }>();
 
-const dish = computed(() => props.recipe.taxonomy.dish ?? []);
-const cuisine = computed(() => props.recipe.taxonomy.cuisine?.[0]?.label);
-const diets = computed(() => props.recipe.taxonomy.diet ?? []);
-const practical = computed(() => props.recipe.taxonomy.practical ?? []);
-const prepSteps = computed(() => props.recipe.steps.filter((s) => s.prep));
+const dish = computed(() => props.recipe?.taxonomy.dish ?? []);
+const cuisine = computed(() => props.recipe?.taxonomy.cuisine?.[0]?.label);
+const diets = computed(() => props.recipe?.taxonomy.diet ?? []);
+const practical = computed(() => props.recipe?.taxonomy.practical ?? []);
+const prepSteps = computed(() => props.recipe?.steps.filter((s) => s.prep) ?? []);
 const kcal = computed(() => {
-    const f = fmt(props.recipe.nutrition?.perPortion.kcal, 'kcal', 'recipe');
+    const f = fmt(props.recipe?.nutrition?.perPortion.kcal, 'kcal', 'recipe');
     return f ? nf(avg(f)) : null;
 });
 
@@ -33,7 +35,56 @@ function scrollToStep(no: number) {
 </script>
 
 <template>
-    <div class="hero">
+    <div
+        v-if="!recipe"
+        class="hero"
+        aria-busy="true"
+    >
+        <div class="hero__photo hero__photo--sk">
+            <div class="sk hero__sk-fill" />
+            <div
+                class="hero__loading"
+                role="status"
+            >
+                <USpinner :size="28" />
+                <span>ładowanie przepisu…</span>
+            </div>
+        </div>
+        <div
+            class="hero__text"
+            aria-hidden="true"
+        >
+            <div class="hero__flags">
+                <span class="badge hero__sk-badge">
+                    <span class="sk hero__sk-pill" />
+                    &nbsp;
+                </span>
+            </div>
+            <div class="hero__title"><span class="sk hero__sk-title">&nbsp;</span></div>
+            <dl class="hero__meta">
+                <div>
+                    <dt>Czas</dt>
+                    <dd><span class="sk hero__sk-dd">&nbsp;</span></dd>
+                </div>
+                <div>
+                    <dt>Trudność</dt>
+                    <dd><span class="sk hero__sk-dd">&nbsp;</span></dd>
+                </div>
+                <div>
+                    <dt>Porcje</dt>
+                    <dd><span class="sk hero__sk-dd hero__sk-dd--short">&nbsp;</span></dd>
+                </div>
+                <div>
+                    <dt>Kcal / porcja</dt>
+                    <dd><span class="sk hero__sk-dd">&nbsp;</span></dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+    <div
+        v-else
+        class="hero"
+    >
         <div class="hero__photo">
             <img
                 v-if="recipe.photoUrl"
@@ -194,7 +245,8 @@ function scrollToStep(no: number) {
     overflow: hidden;
 }
 .hero__photo img,
-.hero__placeholder {
+.hero__placeholder,
+.hero__sk-fill {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -341,6 +393,52 @@ function scrollToStep(no: number) {
     color: var(--ink);
     font-weight: 600;
     border: 1.5px solid var(--rule-strong);
+}
+
+/* szkielet: te same klasy co treść, wypełnienia .sk w miejscu tekstu */
+.hero__photo--sk {
+    position: relative;
+}
+.hero__sk-fill {
+    border-radius: 0;
+}
+.hero__loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--ink-muted);
+}
+.hero__sk-badge {
+    position: relative;
+    width: 110px;
+    color: transparent;
+    background: transparent;
+    border-color: transparent;
+}
+.hero__sk-badge::before {
+    visibility: hidden;
+}
+.hero__sk-pill {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-pill);
+}
+.hero__sk-title {
+    display: inline-block;
+    width: 70%;
+    border-radius: var(--r-lg);
+}
+.hero__sk-dd {
+    display: inline-block;
+    width: 64px;
+}
+.hero__sk-dd--short {
+    width: 24px;
 }
 
 @media (max-width: 900px) {

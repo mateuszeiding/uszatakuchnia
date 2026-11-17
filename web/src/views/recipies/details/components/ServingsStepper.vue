@@ -37,7 +37,11 @@ const id = useId();
                 class="servings__value"
                 aria-live="polite"
             >
-                {{ value }}
+                <span
+                    v-if="!value"
+                    class="sk servings__sk"
+                />
+                <template v-else>{{ value }}</template>
             </output>
             <button
                 type="button"
@@ -86,6 +90,12 @@ const id = useId();
     background: transparent;
     color: var(--ink-faint);
     cursor: default;
+}
+.servings__sk {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
 }
 .servings__value {
     min-width: 40px;

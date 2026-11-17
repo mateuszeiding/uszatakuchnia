@@ -3,8 +3,8 @@ import { useQueryClient } from '@tanstack/vue-query';
 import { ref, watch } from 'vue';
 
 import RecipeBody from './components/RecipeBody.vue';
+import RecipeBodySkeleton from './components/RecipeBodySkeleton.vue';
 
-import USpinner from '@/components/USpinner.vue';
 import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
@@ -51,13 +51,7 @@ watch(
             ← Wszystkie przepisy
         </RouterLink>
 
-        <div
-            v-if="loading"
-            class="recipe-page__state"
-        >
-            <USpinner :size="28" />
-            <span>ładowanie przepisu…</span>
-        </div>
+        <RecipeBodySkeleton v-if="loading" />
         <div
             v-else-if="failed || !recipe"
             class="recipe-page__state"
