@@ -10,6 +10,8 @@ defineProps<{
     servings: number;
     done: number;
     total: number;
+    /** Ładowanie: ten sam nagłówek, szkielet w miejscu nazwy przepisu, porcji i licznika. */
+    loading?: boolean;
 }>();
 const emit = defineEmits<{ servings: [n: number] }>();
 
@@ -69,6 +71,10 @@ const print = () => window.print();
                 <div class="head__titlebox">
                     <h1 class="head__title">Lista zakupów</h1>
                     <p class="head__recipe">
+                        <span
+                            v-if="loading"
+                            class="sk head__sk-name"
+                        />
                         {{ recipeName }}
                         <span class="head__print-only">
                             · {{ servings }} {{ servingsLabel(servings) }}
@@ -102,7 +108,13 @@ const print = () => window.print();
                         :style="{ width: `${total ? (done / total) * 100 : 0}%` }"
                     />
                 </div>
-                <span class="head__count">{{ done }} z {{ total }}</span>
+                <span class="head__count">
+                    <span
+                        v-if="loading"
+                        class="sk head__sk-count"
+                    />
+                    <template v-else>{{ done }} z {{ total }}</template>
+                </span>
             </div>
         </div>
     </header>
@@ -110,6 +122,20 @@ const print = () => window.print();
 
 <style lang="scss" scoped>
 @use '@/scss/mixins/media' as m;
+
+/* szkielet nazwy przepisu i licznika (ładowanie) */
+.head__sk-name {
+    display: inline-block;
+    width: 180px;
+    height: 12px;
+    vertical-align: middle;
+}
+.head__sk-count {
+    display: inline-block;
+    width: 34px;
+    height: 10px;
+    vertical-align: middle;
+}
 
 .head {
     background: var(--bg);

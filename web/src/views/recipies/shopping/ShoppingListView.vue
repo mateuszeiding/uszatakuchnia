@@ -4,8 +4,8 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import ShoppingList from './components/ShoppingList.vue';
+import ShoppingListSkeleton from './components/ShoppingListSkeleton.vue';
 
-import USpinner from '@/components/USpinner.vue';
 import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
@@ -56,13 +56,10 @@ const onServings = (n: number) => router.replace({ query: { ...route.query, porc
 
 <template>
     <div class="shop-page">
-        <div
+        <ShoppingListSkeleton
             v-if="loading"
-            class="shop-page__state"
-        >
-            <USpinner :size="28" />
-            <span>ładowanie listy zakupów…</span>
-        </div>
+            :recipe-id="Number(id)"
+        />
         <div
             v-else-if="failed || !recipe"
             class="shop-page__state"
