@@ -28,6 +28,7 @@ import {
     invalidateIngredients,
     updateIngredient,
 } from '@/data/api/ingredients/fetch';
+import { invalidateRecipes } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
@@ -110,6 +111,8 @@ async function save() {
         if (ingredientId.value != null) await updateIngredient(ingredientId.value, payload);
         else await createIngredient(payload);
         await invalidateIngredients(qc);
+        // makro składnika zmienia kcal na kartach listy przepisów (cache 60 s)
+        invalidateRecipes(qc);
         showToast(ingredientId.value != null ? 'Składnik zapisany' : 'Składnik dodany');
         leaving = true;
         router.push(LIST);

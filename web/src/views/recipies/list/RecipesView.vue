@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router';
 import ActiveFilters from './components/ActiveFilters.vue';
 import FilterSheet from './components/FilterSheet.vue';
 import FiltersPanel from './components/FiltersPanel.vue';
+import FiltersSkeleton from './components/FiltersSkeleton.vue';
 import RecipeCard from './components/RecipeCard.vue';
 import RecipeCardSkeleton from './components/RecipeCardSkeleton.vue';
 import {
@@ -19,8 +20,8 @@ import {
     toQuery,
 } from './listFilters';
 
-import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
-import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
+import { cachedRecipeList, fetchRecipesWithClient } from '@/data/api/recipe/fetch';
+import { cachedDictionaries, fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
 
@@ -28,29 +29,40 @@ const route = useRoute();
 const router = useRouter();
 const qc = useQueryClient();
 
-const recipes = ref<RecipeBaseDto[]>([]);
-const axes = ref<ITaxonomyAxis[]>([]);
-const loading = ref(true);
-const filters = ref<IListFilters>(emptyFilters());
+// Słowniki i przepisy ładowane niezależnie: filtry nie czekają na listę, siatka nie czeka na słowniki.
+// Dane z cache (powrót z przepisu) od razu — bez szkieletów; odświeżenie w tle.
+const cachedList = cachedRecipeList(qc);
+const cachedDicts = cachedDictionaries(qc);
+
+const recipes = ref<RecipeBaseDto[]>(cachedList ?? []);
+const loading = ref(!cachedList);
+const axes = ref<ITaxonomyAxis[]>(cachedDicts?.axes ?? []);
+const filtersReady = ref(!!cachedDicts);
+const filters = ref<IListFilters>(
+    cachedDicts ? readQuery(route.query, cachedDicts.axes) : emptyFilters()
+);
 const shown = ref(PAGE_SIZE);
 const sheetOpen = ref(false);
 
-onMounted(async () => {
-    const [list, dicts] = await Promise.all([
-        fetchRecipesWithClient(qc, 'list'),
-        fetchDictionariesWithClient(qc),
-    ]);
-    recipes.value = list;
-    axes.value = dicts.axes;
-    filters.value = readQuery(route.query, dicts.axes);
-    loading.value = false;
+onMounted(() => {
+    fetchDictionariesWithClient(qc).then((dicts) => {
+        axes.value = dicts.axes;
+        if (!filtersReady.value) {
+            filters.value = readQuery(route.query, dicts.axes);
+            filtersReady.value = true;
+        }
+    });
+    fetchRecipesWithClient(qc, 'list').then((list) => {
+        recipes.value = list;
+        loading.value = false;
+    });
 });
 
 // Stan filtrów → URL (replace: bez zaśmiecania historii), nowe filtry = od pierwszej strony.
 watch(
     filters,
     (f) => {
-        if (loading.value) return;
+        if (!filtersReady.value) return;
         router.replace({ query: toQuery(f) });
         shown.value = PAGE_SIZE;
     },
@@ -102,9 +114,11 @@ const clear = () => (filters.value = emptyFilters(filters.value.sort));
                 </div>
                 <div class="list-aside__scroll">
                     <FiltersPanel
+                        v-if="filtersReady"
                         v-model="filters"
                         :axes="axes"
                     />
+                    <FiltersSkeleton v-else />
                 </div>
             </aside>
 
@@ -291,6 +305,8 @@ const clear = () => (filters.value = emptyFilters(filters.value.sort));
 }
 .list-aside__scroll {
     overflow-y: auto;
+    /* miejsce na pasek zarezerwowane zawsze — szerokość panelu ta sama z paskiem i bez */
+    scrollbar-gutter: stable;
     padding: 0 8px 16px 0;
 }
 .search {

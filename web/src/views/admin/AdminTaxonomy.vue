@@ -6,6 +6,7 @@ import UnitsTable from './components/UnitsTable.vue';
 import ValuesTable from './components/ValuesTable.vue';
 
 import USpinner from '@/components/USpinner.vue';
+import { invalidateRecipes } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient, invalidateDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
@@ -27,6 +28,8 @@ async function load() {
     dicts.value = await fetchDictionariesWithClient(qc);
 }
 async function reload() {
+    // etykiety / kolory / przeniesione wartości są też na kartach listy przepisów (cache 60 s)
+    invalidateRecipes(qc);
     await invalidateDictionaries(qc);
     await load();
 }
