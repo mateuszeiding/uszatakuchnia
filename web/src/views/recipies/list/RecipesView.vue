@@ -6,7 +6,6 @@ import { useRoute, useRouter } from 'vue-router';
 import ActiveFilters from './components/ActiveFilters.vue';
 import FilterSheet from './components/FilterSheet.vue';
 import FiltersPanel from './components/FiltersPanel.vue';
-import FiltersSkeleton from './components/FiltersSkeleton.vue';
 import RecipeCard from './components/RecipeCard.vue';
 import RecipeCardSkeleton from './components/RecipeCardSkeleton.vue';
 import {
@@ -63,6 +62,29 @@ watch(
 );
 
 const results = computed(() => applyFilters(recipes.value, filters.value, axes.value));
+
+// Ile szkieletów kart: tyle, ile kart było ostatnio na liście (maks. jedna strona) — po załadowaniu
+// siatka ma tę samą wysokość. Pierwsza wizyta: 6.
+const SK_KEY = 'uk:list-skeletons';
+const skeletons = (() => {
+    try {
+        const n = Number(localStorage.getItem(SK_KEY));
+        return Number.isInteger(n) && n >= 1 && n <= PAGE_SIZE ? n : 6;
+    } catch {
+        return 6;
+    }
+})();
+watch(
+    () => (loading.value ? null : Math.min(results.value.length, shown.value)),
+    (n) => {
+        if (n == null || n < 1) return;
+        try {
+            localStorage.setItem(SK_KEY, String(n));
+        } catch {
+            /* brak localStorage — zostaje domyślne */
+        }
+    }
+);
 const nActive = computed(() => activeCount(filters.value));
 const clear = () => (filters.value = emptyFilters(filters.value.sort));
 </script>
@@ -107,11 +129,10 @@ const clear = () => (filters.value = emptyFilters(filters.value.sort));
                 </div>
                 <div class="list-aside__scroll">
                     <FiltersPanel
-                        v-if="filtersReady"
                         v-model="filters"
                         :axes="axes"
+                        :loading="!filtersReady"
                     />
-                    <FiltersSkeleton v-else />
                 </div>
             </aside>
 
@@ -205,7 +226,7 @@ const clear = () => (filters.value = emptyFilters(filters.value.sort));
                     aria-busy="true"
                 >
                     <li
-                        v-for="n in 6"
+                        v-for="n in skeletons"
                         :key="n"
                     >
                         <RecipeCardSkeleton />

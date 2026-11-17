@@ -6,7 +6,13 @@ import { DIFFICULTY, type IListFilters, TIMES } from '../listFilters';
 import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
 
 // Panel filtrów (sidebar na desktopie, zawartość bottom sheetu na mobile).
-const props = defineProps<{ axes: ITaxonomyAxis[] }>();
+// loading: słowniki jeszcze się wczytują — sekcje statyczne (przełącznik, czas, trudność) są od razu prawdziwe,
+// sekcje osi to szkielety w tych samych miejscach, z tymi samymi klasami (legenda, chipy) i liczbą rzędów
+// chipów jak po załadowaniu → panel ma od początku docelową wysokość.
+const props = defineProps<{ axes: ITaxonomyAxis[]; loading?: boolean }>();
+
+/** Rzędy chipów w panelu 242 px (słowniki z 17.11: 9 / 9 / 11 / 11 / 7 wartości). */
+const SK_ROWS = { dish: 5, diet: 5, rest: [4, 5, 4] };
 const f = defineModel<IListFilters>({ required: true });
 
 // Kolejność jak w prototypie: typ dania, czas, trudność, diety, potem reszta osi.
@@ -29,7 +35,10 @@ function toggle(code: string, id: number) {
 </script>
 
 <template>
-    <div class="filters">
+    <div
+        class="filters"
+        :inert="loading"
+    >
         <label class="filters__switch">
             <span>Bez przygotowania wcześniej</span>
             <input
@@ -44,6 +53,29 @@ function toggle(code: string, id: number) {
             />
         </label>
 
+        <div
+            v-if="loading"
+            class="filters__group"
+            aria-hidden="true"
+        >
+            <div class="filters__legend"><span class="sk fsk__legend" /></div>
+            <div class="filters__chips">
+                <div
+                    v-for="r in SK_ROWS.dish"
+                    :key="r"
+                    class="fsk__row"
+                >
+                    <span
+                        v-for="c in r % 2 ? 3 : 2"
+                        :key="c"
+                        class="chip fsk__chip"
+                    >
+                        <span class="sk fsk__fill" />
+                        &nbsp;
+                    </span>
+                </div>
+            </div>
+        </div>
         <fieldset
             v-if="dish"
             class="filters__group"
@@ -105,6 +137,30 @@ function toggle(code: string, id: number) {
             </div>
         </fieldset>
 
+        <div
+            v-if="loading"
+            class="filters__group"
+            aria-hidden="true"
+        >
+            <div class="filters__legend"><span class="sk fsk__legend" /></div>
+            <p class="filters__hint">Przepis spełnia wszystkie zaznaczone.</p>
+            <div class="filters__chips">
+                <div
+                    v-for="r in SK_ROWS.diet"
+                    :key="r"
+                    class="fsk__row"
+                >
+                    <span
+                        v-for="c in r % 2 ? 3 : 2"
+                        :key="c"
+                        class="chip fsk__chip"
+                    >
+                        <span class="sk fsk__fill" />
+                        &nbsp;
+                    </span>
+                </div>
+            </div>
+        </div>
         <fieldset
             v-if="diet"
             class="filters__group"
@@ -126,6 +182,30 @@ function toggle(code: string, id: number) {
             </div>
         </fieldset>
 
+        <div
+            v-for="(n, i) in loading ? SK_ROWS.rest : []"
+            :key="`sk-${i}`"
+            class="filters__group"
+            aria-hidden="true"
+        >
+            <div class="filters__legend"><span class="sk fsk__legend" /></div>
+            <div class="filters__chips">
+                <div
+                    v-for="r in n"
+                    :key="r"
+                    class="fsk__row"
+                >
+                    <span
+                        v-for="c in r % 2 ? 3 : 2"
+                        :key="c"
+                        class="chip fsk__chip"
+                    >
+                        <span class="sk fsk__fill" />
+                        &nbsp;
+                    </span>
+                </div>
+            </div>
+        </div>
         <fieldset
             v-for="a in rest"
             :key="a.id"
@@ -219,5 +299,38 @@ input:focus-visible + .filters__track {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+}
+/* szkielet: prawdziwe .chip / .filters__legend (te same wysokości), treść przezroczysta */
+.fsk__row {
+    flex-basis: 100%;
+    display: flex;
+    gap: 6px;
+}
+.fsk__chip {
+    position: relative;
+    width: 72px;
+    color: transparent;
+    background: transparent;
+    border-color: transparent;
+}
+.fsk__fill {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-pill);
+}
+.fsk__chip:nth-child(2) {
+    width: 96px;
+}
+.fsk__chip:nth-child(3) {
+    width: 58px;
+}
+.fsk__row:nth-child(even) .fsk__chip:first-child {
+    width: 110px;
+}
+.fsk__legend {
+    display: inline-block;
+    width: 88px;
+    height: 12px;
+    vertical-align: middle;
 }
 </style>

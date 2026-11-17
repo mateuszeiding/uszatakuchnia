@@ -137,12 +137,15 @@ const kcal = computed(() => {
     box-shadow: var(--shadow-card);
 }
 .r-card__photo {
+    /* kwadrat bez linii pod spodem (linia dochodzi) — ten sam wymiar w szkielecie */
+    box-sizing: content-box;
     aspect-ratio: 1 / 1;
     position: relative;
     border-bottom: 1px solid var(--rule);
 }
 .r-card__photo img,
 .r-card__placeholder {
+    display: block; /* inline img dokładał linię tekstu — zdjęcie było o 1 px wyższe niż 1:1 */
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -185,6 +188,8 @@ const kcal = computed(() => {
     line-height: 1.25;
     text-wrap: balance;
     flex: 1;
+    /* dwie linie zarezerwowane — karta ma tę samą wysokość co szkielet i sąsiednie karty */
+    min-height: calc(2 * 1.25em);
 }
 .r-card__hits {
     font-size: 13px;
@@ -198,6 +203,7 @@ const kcal = computed(() => {
 }
 .r-card__meta {
     font-size: 13px;
+    line-height: 20px; /* stała — mono w kcal nie podnosi linii; tyle samo w szkielecie */
     color: var(--ink-muted);
 }
 .r-card__kcal {
