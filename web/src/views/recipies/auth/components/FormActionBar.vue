@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 
-import USpinner from '@/components/USpinner.vue';
+import BusyLabel from '@/components/BusyLabel.vue';
 import type { RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
 
 export type BusyAction = 'draft' | 'publish' | 'save' | 'unpublish' | null;
@@ -92,11 +92,10 @@ const state = computed<{ kind: 'error' | 'dirty' | 'saved' | 'idle'; text: strin
                         :disabled="!!busy"
                         @click="emit('unpublish')"
                     >
-                        <USpinner
-                            v-if="busy === 'unpublish'"
-                            :size="14"
+                        <BusyLabel
+                            :busy="busy === 'unpublish'"
+                            label="Cofnij publikację"
                         />
-                        Cofnij publikację
                     </button>
                     <button
                         type="button"
@@ -104,12 +103,12 @@ const state = computed<{ kind: 'error' | 'dirty' | 'saved' | 'idle'; text: strin
                         :disabled="!!busy || !dirty"
                         @click="emit('save')"
                     >
-                        <USpinner
-                            v-if="busy === 'save'"
-                            :size="14"
-                            color="#fff"
+                        <BusyLabel
+                            :busy="busy === 'save'"
+                            label="Zapisz zmiany"
+                            busy-label="Zapisywanie…"
+                            spinner-color="#fff"
                         />
-                        {{ busy === 'save' ? 'Zapisywanie…' : 'Zapisz zmiany' }}
                     </button>
                 </template>
                 <template v-else>
@@ -119,11 +118,11 @@ const state = computed<{ kind: 'error' | 'dirty' | 'saved' | 'idle'; text: strin
                         :disabled="!!busy || (!dirty && !isNew)"
                         @click="emit('save-draft')"
                     >
-                        <USpinner
-                            v-if="busy === 'draft'"
-                            :size="14"
+                        <BusyLabel
+                            :busy="busy === 'draft'"
+                            label="Zapisz szkic"
+                            busy-label="Zapisywanie…"
                         />
-                        {{ busy === 'draft' ? 'Zapisywanie…' : 'Zapisz szkic' }}
                     </button>
                     <button
                         type="button"
@@ -131,12 +130,12 @@ const state = computed<{ kind: 'error' | 'dirty' | 'saved' | 'idle'; text: strin
                         :disabled="!!busy"
                         @click="emit('publish')"
                     >
-                        <USpinner
-                            v-if="busy === 'publish'"
-                            :size="14"
-                            color="#fff"
+                        <BusyLabel
+                            :busy="busy === 'publish'"
+                            label="Opublikuj"
+                            busy-label="Publikowanie…"
+                            spinner-color="#fff"
                         />
-                        {{ busy === 'publish' ? 'Publikowanie…' : 'Opublikuj' }}
                     </button>
                 </template>
             </div>

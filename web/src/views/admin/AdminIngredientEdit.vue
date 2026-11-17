@@ -19,6 +19,7 @@ import {
     validateForm,
 } from './ingredientForm';
 
+import BusyLabel from '@/components/BusyLabel.vue';
 import USpinner from '@/components/USpinner.vue';
 import { confirmAction } from '@/composables/useConfirm';
 import { showToast } from '@/composables/useToast';
@@ -298,7 +299,12 @@ onBeforeRouteUpdate(guard);
                 :class="{ 'btn--saving': saving }"
                 :disabled="saving"
             >
-                {{ saving ? 'Zapisywanie…' : 'Zapisz składnik' }}
+                <BusyLabel
+                    :busy="saving"
+                    label="Zapisz składnik"
+                    busy-label="Zapisywanie…"
+                    spinner-color="#fff"
+                />
             </button>
         </div>
     </form>
