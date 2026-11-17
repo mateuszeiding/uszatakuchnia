@@ -45,7 +45,8 @@ const unitLabel = computed(() => props.unit ?? (props.nutrient === 'kcal' ? 'kca
                 v-else
                 aria-hidden="true"
             >
-                {{ nf(f.a) }} – {{ nf(f.b) }} {{ unitLabel }}
+                <span class="macro-val__range">{{ nf(f.a) }} – {{ nf(f.b) }} {{ unitLabel }}</span>
+                {{ ' ' }}
                 <span class="macro-val__avg">(~{{ nf(f.m) }})</span>
             </span>
         </template>
@@ -75,6 +76,11 @@ const unitLabel = computed(() => props.unit ?? (props.nutrient === 'kcal' ? 'kca
 .macro-val.is-muted {
     font-weight: 400;
     color: var(--ink-dim);
+}
+/* zakres i średnia się nie łamią; gdy brak miejsca, „(~33)” schodzi do następnej linii */
+.macro-val__range,
+.macro-val__avg {
+    white-space: nowrap;
 }
 .macro-val__avg,
 .macro-val__empty {

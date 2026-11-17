@@ -362,10 +362,11 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
     color: var(--ink-muted);
     margin-top: 6px;
 }
+/* etykieta tyle, ile potrzebuje (nie wchodzi pod wartość), wartość zawija się w swojej kolumnie */
 .nutri__rows {
     margin: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
     border-top: 1px solid var(--rule);
 }
 .nutri__rows dt,
@@ -379,6 +380,7 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
 }
 .nutri__rows dd {
     margin: 0;
+    padding-left: 12px;
     text-align: right;
 }
 .nutri__without {
@@ -399,11 +401,12 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
     gap: 18px;
     align-items: start;
 }
-/* desktop (prawa kolumna, pod krokami): kcal + wiersze | rozkład energii + całe danie — gdy jest miejsce */
-@container (min-width: 600px) {
+/* dwie kolumny jak w mk-main.jsx (wide): kcal + B/T/W/błonnik | „Skąd energia” + „Całe danie” —
+   gdy obie się mieszczą (karta ≥ 420 px treści, okno od ~970 px); węziej jedna kolumna */
+@container (min-width: 420px) {
     .nutri__cols {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 32px;
+        gap: 28px;
     }
 }
 .nutri__col {
@@ -481,7 +484,8 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
 .nutri__dish-rows {
     margin: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 12px;
     row-gap: 4px;
     font-size: 12px;
 }
@@ -491,6 +495,10 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
 .nutri__dish-rows dd {
     margin: 0;
     text-align: right;
+}
+.nutri__rows :deep(.macro-val),
+.nutri__dish-rows :deep(.macro-val) {
+    white-space: normal;
 }
 .nutri__missing {
     margin: 0;
