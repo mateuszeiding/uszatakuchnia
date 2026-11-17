@@ -70,15 +70,23 @@ AutoMigrate tego nie zrobi (stara kolumna zostaje, nowa jest pusta). Każda taka
 - musi działać też na świeżej bazie (resetdb) — sprawdzaj `HasColumn` / `HasTable`,
 - wdrożonej migracji nie edytujesz — poprawka = nowa migracja.
 
-Dopóki w bazie są tylko dane z seeda, zamiast migracji wystarczy `resetdb`. Od pierwszych prawdziwych danych — zawsze migracja.
+**Od 14.11.2026 w bazie są prawdziwe dane — każda zmiana danych/schematu idzie przez migrację. `resetdb` jako skrót odpada.**
 
-### Reset lokalnej bazy (niszczy dane)
+### Reset bazy (niszczy dane) — NIE URUCHAMIAĆ
 ```
 go run ./cmd/resetdb
 ```
-Drop → migrate → seed. Tylko lokalnie, nigdy na produkcji.
+Drop → migrate → seed. `.env.local` wskazuje na **produkcyjną** bazę Neon, więc ten skrypt wyczyściłby produkcję. Nie odpalaj go bez osobnej, lokalnej bazy podstawionej w `DB_DATABASE_URL`.
 
 Oba skrypty wymagają `DB_DATABASE_URL` z `.env.local`.
+
+## Przepisy dodawane przez Claude (backup)
+
+Przepisy wprowadzane przez API (nie przez formularz) mają kopię w `content/`:
+- `content/recipes/<slug>.json` — przepis z nazwami składników, jednostek i wartości taksonomii (nie ID), więc da się go odtworzyć na każdej bazie,
+- `content/ingredients/<data>-<temat>.json` — składniki założone przy okazji (makro na 100 g, przeliczniki).
+
+Poprawki zrobione potem w aplikacji nie wracają do tych plików — to backup stanu z dnia dodania.
 
 ## Uruchamianie lokalnie
 
@@ -87,4 +95,4 @@ cd web && pnpm dev          # frontend
 vercel dev                  # backend (Vercel CLI)
 ```
 
-Zmienne środowiskowe: `.env.local` w rocie projektu (`DB_DATABASE_URL`, `AUTH0_*`, itd.).
+Zmienne środowiskowe: `.env.local` w rocie projektu (`DB_DATABASE_URL`, `AUTH0_*`, itd.). Uwaga: baza z `.env.local` to produkcja.
