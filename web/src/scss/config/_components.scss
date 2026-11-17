@@ -125,6 +125,8 @@
   font-size: 14px; color: var(--ink); font-family: var(--font-sans);
   outline: none; transition: border-color .15s, box-shadow .15s;
 }
+/* stała linia: pole ma tę samą wysokość puste (placeholder), z wartością i jako select (40 px) */
+.input, .select { line-height: 18px; }
 .input--mono { font-family: var(--font-mono); }
 .textarea { line-height: 1.55; resize: vertical; min-height: 72px; }
 .input:focus, .textarea:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }

@@ -32,6 +32,7 @@ import { invalidateRecipes } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { LOADING_DICTIONARIES } from '@/data/dtos/taxonomy/loadingDictionaries';
 import { NUTRIENTS } from '@/shared/utils/nutrition';
 
 // Edycja składnika jako osobna strona: podstawowe, makro na 100 g (z dziedziczeniem), przeliczniki jednostek.
@@ -177,30 +178,41 @@ onBeforeRouteUpdate(guard);
             <span aria-hidden="true">/</span>
         </template>
         <span class="crumbs__current">
+            <span
+                v-if="loading && ingredientId != null"
+                class="sk crumbs__sk"
+            />
             {{ ingredientId != null ? current?.name : 'Nowy składnik' }}
         </span>
     </nav>
     <h1 class="admin-title">{{ ingredientId != null ? 'Edytuj składnik' : 'Nowy składnik' }}</h1>
 
-    <div
-        v-if="loading"
-        class="admin-loading"
-    >
-        <USpinner :size="22" />
-    </div>
     <p
-        v-else-if="notFound"
+        v-if="!loading && notFound"
         class="edit__missing"
     >
         Nie ma takiego składnika.
         <RouterLink :to="LIST">Wróć do listy</RouterLink>
     </p>
+    <!-- ładowanie: ten sam formularz (sekcje 01–03, pola, tabela makro, 14 alergenów) nieaktywny,
+         z pustymi polami — układ jak po załadowaniu; spinner nad formularzem, poza układem -->
     <form
-        v-else-if="dicts"
+        v-else-if="dicts || loading"
         class="edit"
+        :class="{ 'is-loading': loading }"
+        :inert="loading"
+        :aria-busy="loading"
         novalidate
         @submit.prevent="save"
     >
+        <div
+            v-if="loading"
+            class="edit__loading"
+            role="status"
+            aria-label="Wczytywanie składnika"
+        >
+            <USpinner :size="22" />
+        </div>
         <section class="edit__section">
             <div class="edit__head">
                 <span class="edit__no">01</span>
@@ -208,7 +220,7 @@ onBeforeRouteUpdate(guard);
             </div>
             <IngredientBasics
                 v-model="form"
-                :dicts="dicts"
+                :dicts="dicts ?? LOADING_DICTIONARIES"
                 :parents="parents"
                 :child-count="children.length"
                 :errors="errors"
@@ -313,12 +325,28 @@ onBeforeRouteUpdate(guard);
     letter-spacing: -0.8px;
     margin: 10px 0 22px;
 }
-.admin-loading {
+.crumbs__sk {
+    display: inline-block;
+    width: 90px;
+    height: 11px;
+    vertical-align: middle;
+}
+.edit__loading {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 120px;
+    z-index: 1;
     display: flex;
     justify-content: center;
-    padding: 60px 0;
+    pointer-events: none;
+}
+/* ładowanie: chipy alergenów bez etykiet (sam kształt) */
+.edit.is-loading :deep(.chip) {
+    color: transparent;
 }
 .edit {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 16px;
