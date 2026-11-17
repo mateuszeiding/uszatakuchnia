@@ -181,3 +181,18 @@ describe('kolejność jednostek', () => {
         expect(sumText(it.sum)).toBe('¾ szklanki + 100 ml');
     });
 });
+
+describe('skipShopping', () => {
+    it('składnik oznaczony „nie dodawaj do listy” (woda) jest pomijany', () => {
+        const items = buildShopping(
+            [
+                line('Ciasto', 1, 'mąka', '500', 'g'),
+                line('Ciasto', 30, 'woda', '240', 'ml', { skipShopping: true }),
+                line('Zaczyn', 30, 'woda', '50', 'ml', { skipShopping: true }),
+            ],
+            units,
+            1
+        );
+        expect(items.map((i) => i.name)).toEqual(['mąka']);
+    });
+});

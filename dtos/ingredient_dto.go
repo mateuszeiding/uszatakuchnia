@@ -10,6 +10,8 @@ type IngredientDto struct {
 	UsedIn    int       `json:"usedIn"`    // liczba przepisów (tylko lista)
 	Type      TypeDto   `json:"type"`
 	Image     *ImageDto `json:"image"`
+	// Nie dodawaj do listy zakupów (np. woda).
+	SkipShopping bool `json:"skipShopping"`
 
 	// Makro na 100 g: własne oraz wynikowe (własne albo odziedziczone z podskładników), po kluczu z entities.NutrientKeys.
 	Nutrition         map[string]entities.MacroRange `json:"nutrition"`
@@ -28,12 +30,13 @@ type ConversionDto struct {
 
 // IngredientRequest — tworzenie i edycja składnika (panel). Brak klucza w Nutrition = brak własnych danych.
 type IngredientRequest struct {
-	Name        string                         `json:"name"`
-	TypeCode    string                         `json:"typeCode"`
-	Allergens   []string                       `json:"allergens"`
-	ParentID    *uint                          `json:"parentId"`
-	Nutrition   map[string]entities.MacroRange `json:"nutrition"`
-	Conversions []ConversionRequest            `json:"conversions"`
+	Name         string                         `json:"name"`
+	TypeCode     string                         `json:"typeCode"`
+	Allergens    []string                       `json:"allergens"`
+	ParentID     *uint                          `json:"parentId"`
+	SkipShopping bool                           `json:"skipShopping"`
+	Nutrition    map[string]entities.MacroRange `json:"nutrition"`
+	Conversions  []ConversionRequest            `json:"conversions"`
 }
 
 type ConversionRequest struct {

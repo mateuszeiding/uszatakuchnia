@@ -9,6 +9,9 @@ type Ingredient struct {
 	TypeID uint           `gorm:"not null;index:ix_ingredients_type"`
 	Type   IngredientType `gorm:"foreignKey:TypeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 
+	// Nie dodawaj do listy zakupów (np. woda).
+	SkipShopping bool `gorm:"not null;default:false"`
+
 	// Makro na 100 g, orientacyjnie (marki się różnią). *Min nil = brak własnych danych (dziedziczy z podskładników),
 	// *Max nil = jedna wartość.
 	KcalMin    *float64 `gorm:"type:numeric"`

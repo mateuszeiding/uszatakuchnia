@@ -25,6 +25,8 @@ export class RecipeIngredientDto {
     allergens: string[] = [];
     /** Dział w sklepie (typ składnika) — lista zakupów. */
     ingredientType: { code: string; label: string } = { code: 'OTHER', label: 'inne' };
+    /** Składnik pomijany na liście zakupów (np. woda). */
+    skipShopping: boolean = false;
     /** Ile gramów to 1 jednostka tej pozycji; null = nie da się przeliczyć. */
     gramsPerUnit: { min: number; max: number } | null = null;
     /** Link do przepisu; szkic też przychodzi — strona publiczna go nie pokazuje (publicLink). */

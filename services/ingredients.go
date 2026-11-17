@@ -87,6 +87,7 @@ func SaveIngredient(tx *gorm.DB, ing *entities.Ingredient, req dtos.IngredientRe
 	ing.Name = strings.TrimSpace(req.Name)
 	ing.TypeID = typeID
 	ing.ParentID = req.ParentID
+	ing.SkipShopping = req.SkipShopping
 	for _, k := range entities.NutrientKeys {
 		if r, ok := req.Nutrition[k]; ok {
 			ing.SetMacro(k, &r)

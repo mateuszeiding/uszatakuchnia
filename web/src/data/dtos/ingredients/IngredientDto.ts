@@ -23,6 +23,8 @@ export class IngredientDto {
         code: IngredientType.OTHER,
     };
 
+    /** Nie dodawaj do listy zakupów (np. woda). */
+    skipShopping: boolean = false;
     /** Kody alergenów UE (patrz IDictionaries.allergens). */
     allergens: string[] = [];
     /** W ilu przepisach użyty (tylko z listy). */

@@ -22,6 +22,7 @@ func MapRecipeIngredientToDto(e entities.RecipeIngredient) dtos.RecipeIngredient
 		Optional:       e.Optional,
 		Allergens:      mapIngredientAllergenCodes(e.Ingredient.Allergens),
 		IngredientType: dtos.IngredientTypeRefDto{Code: e.Ingredient.Type.Code, Label: e.Ingredient.Type.Name},
+		SkipShopping:   e.Ingredient.SkipShopping,
 		LinkedRecipe:   mapLinkedRecipe(e.LinkedRecipe),
 	}
 }

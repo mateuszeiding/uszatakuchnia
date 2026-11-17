@@ -3,7 +3,8 @@
 // 1) ten sam składnik (ingredientId) z różnych grup → jedna pozycja;
 // 2) ta sama jednostka → suma (min i max osobno);
 // 3) różne jednostki → obok siebie: „550 g + 2 łyżki” (bez przeliczania, 16.11);
-// 4) „do smaku” → tylko gdy nic innego.
+// 4) „do smaku” → tylko gdy nic innego;
+// 5) składniki z skipShopping (np. woda) pomijane.
 // Formatowanie liczb wspólne ze stroną przepisu (quantity.ts: ułamki, tercje); w sklepie sztuki w górę.
 
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
@@ -119,6 +120,7 @@ export function buildShopping(
 ): IShopItem[] {
     const by = new Map<number, { ing: RecipeIngredientDto; parts: IShopPart[] }>();
     for (const x of lines) {
+        if (x.skipShopping) continue; // np. woda — nie kupujemy
         const k = x.ingredientId;
         if (!by.has(k)) by.set(k, { ing: x, parts: [] });
         by.get(k)!.parts.push(toPart(x, units, ratio));

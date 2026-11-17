@@ -18,6 +18,8 @@ func MapIngredientToDto(e entities.Ingredient) dtos.IngredientDto {
 		Allergens: mapIngredientAllergenCodes(e.Allergens),
 		Type:      ingredientType,
 		Image:     MapImageToDto(&e.Image),
+
+		SkipShopping: e.SkipShopping,
 	}
 }
 

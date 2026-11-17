@@ -37,6 +37,7 @@ var All = []Migration{
 	dropRecipeKcal,
 	recomputeNutrition,
 	recipeIngredientLink,
+	ingredientSkipShopping,
 }
 
 // Run wykonuje migracje, których nie ma jeszcze w schema_migrations.

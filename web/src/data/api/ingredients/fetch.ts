@@ -26,6 +26,8 @@ export interface IIngredientPayload {
     typeCode: string;
     allergens: string[];
     parentId: number | null;
+    /** Nie dodawaj do listy zakupów (np. woda). */
+    skipShopping: boolean;
     /** Własne makro na 100 g; pominięty klucz = brak własnych danych. */
     nutrition: Macros;
     conversions: { unitId: number; gramsMin: number; gramsMax: number | null }[];
@@ -33,7 +35,7 @@ export interface IIngredientPayload {
 
 /** Nowy składnik — makro, przeliczniki i rodzic opcjonalne (np. szybkie dodanie z formularza przepisu). */
 export type INewIngredientPayload = Pick<IIngredientPayload, 'name' | 'typeCode' | 'allergens'> &
-    Partial<Pick<IIngredientPayload, 'parentId' | 'nutrition' | 'conversions'>>;
+    Partial<Pick<IIngredientPayload, 'parentId' | 'nutrition' | 'conversions' | 'skipShopping'>>;
 
 export const createIngredient = (payload: INewIngredientPayload): Promise<IngredientDto> =>
     API.Client.post<IngredientDto>('ingredients', payload);

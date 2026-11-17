@@ -5,7 +5,7 @@ import UFieldError from '@/components/form/UFieldError.vue';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// 01 Podstawowe: nazwa, składnik nadrzędny, typ, alergeny UE.
+// 01 Podstawowe: nazwa, składnik nadrzędny, typ, alergeny UE, „nie dodawaj do listy zakupów”.
 defineProps<{
     dicts: IDictionaries;
     /** Dozwoleni rodzice (bez samego składnika i jego potomków). */
@@ -124,6 +124,28 @@ function toggleAllergen(code: string) {
                 </button>
             </div>
             <span class="field-hint">Pokazywane w przepisie. Zostaw puste, jeśli brak.</span>
+        </div>
+        <div class="field">
+            <label
+                class="switch"
+                for="ing-skip-shopping"
+            >
+                <input
+                    id="ing-skip-shopping"
+                    v-model="form.skipShopping"
+                    type="checkbox"
+                    role="switch"
+                    aria-describedby="ing-skip-shopping-hint"
+                />
+                <span class="track" />
+                <span>Nie dodawaj do listy zakupów</span>
+            </label>
+            <span
+                id="ing-skip-shopping-hint"
+                class="field-hint"
+            >
+                np. woda — w przepisie zostaje, na liście zakupów się nie pojawi.
+            </span>
         </div>
     </div>
 </template>

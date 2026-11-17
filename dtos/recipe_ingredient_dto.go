@@ -17,6 +17,8 @@ type RecipeIngredientDto struct {
 
 	// Dział w sklepie (lista zakupów).
 	IngredientType IngredientTypeRefDto `json:"ingredientType"`
+	// Składnik pomijany na liście zakupów (np. woda).
+	SkipShopping bool `json:"skipShopping"`
 	// Ile gramów to 1 jednostka tej pozycji; nil = nie da się przeliczyć (lista zakupów sumuje różne jednostki przez gramy).
 	GramsPerUnit *GramsRangeDto `json:"gramsPerUnit"`
 

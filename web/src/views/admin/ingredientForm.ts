@@ -22,6 +22,7 @@ export interface IIngredientForm {
     typeCode: string;
     parentId: number | null;
     allergens: string[];
+    skipShopping: boolean;
     nutrition: Record<NutrientKey, IRangeInput>;
     conversions: IConvRow[];
 }
@@ -72,6 +73,7 @@ export function formFromIngredient(ing?: IngredientDto): IIngredientForm {
         typeCode: ing?.type.code ?? '',
         parentId: ing?.parentId ?? null,
         allergens: [...(ing?.allergens ?? [])],
+        skipShopping: ing?.skipShopping ?? false,
         nutrition,
         conversions: (ing?.conversions ?? [])
             .filter((c) => !c.inherited)
@@ -123,6 +125,7 @@ export function toPayload(f: IIngredientForm): IIngredientPayload {
         typeCode: f.typeCode,
         allergens: f.allergens,
         parentId: f.parentId,
+        skipShopping: f.skipShopping,
         nutrition,
         conversions: f.conversions.flatMap((c) => {
             const st = rowState(c);
