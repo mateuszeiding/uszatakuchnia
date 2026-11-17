@@ -158,7 +158,7 @@ if (dark.value) {
     width: 22px;
     height: 22px;
     border-radius: var(--r-pill);
-    background: var(--accent);
+    background: var(--accent-fill);
     display: inline-flex;
     align-items: center;
     justify-content: center;

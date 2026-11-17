@@ -17,8 +17,8 @@
 .btn:hover { background: var(--ink-dim); text-decoration: none; }
 .btn:disabled, .btn.is-disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
 .btn--saving { opacity: .75; cursor: not-allowed; pointer-events: none; }
-.btn--accent { background: var(--accent); color: var(--on-accent); }
-.btn--accent:hover { background: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-accent); }
+.btn--accent { background: var(--accent-fill); color: var(--on-accent); }
+.btn--accent:hover { background: var(--accent-fill); transform: translateY(-1px); box-shadow: var(--shadow-accent); }
 .btn--secondary { background: var(--bg-alt); color: var(--ink); border-color: var(--rule-strong); }
 .btn--secondary:hover { background: var(--bg); }
 .btn--ghost { background: transparent; color: var(--ink-dim); }
@@ -39,7 +39,7 @@
 .icon-btn:hover { background: var(--bg-alt); }
 .icon-btn--accent { color: var(--accent); }
 .icon-btn--accent:hover { background: var(--accent-soft); }
-.icon-btn--accent.is-active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.icon-btn--accent.is-active { background: var(--accent-fill); color: var(--on-accent); border-color: var(--accent-fill); }
 .icon-btn:disabled { opacity: .45; cursor: not-allowed; }
 
 /* ── BADGE: KATEGORIA ── */
@@ -215,7 +215,7 @@
   padding: 24px 26px; border-radius: var(--r-lg);
   background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
 }
-.tip .tip-icon { width: 36px; height: 36px; border-radius: var(--r-pill); background: var(--accent); color: var(--on-accent); display: inline-flex; align-items: center; justify-content: center; }
+.tip .tip-icon { width: 36px; height: 36px; border-radius: var(--r-pill); background: var(--accent-fill); color: var(--on-accent); display: inline-flex; align-items: center; justify-content: center; }
 .tip .tip-head { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: 0.6px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
 
 /* ── EMPTY STATE ── */
@@ -337,7 +337,7 @@
 .chip--color.is-active {
   background: color-mix(in srgb, var(--cat) 18%, transparent); color: var(--ink); border-color: var(--cat);
 }
-.chip--strong.is-active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.chip--strong.is-active { background: var(--accent-fill); color: var(--on-accent); border-color: var(--accent-fill); }
 
 /* ── TABELA DANYCH (panel) ── */
 .data-table {

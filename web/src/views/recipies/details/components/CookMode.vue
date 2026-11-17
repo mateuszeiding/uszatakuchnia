@@ -350,7 +350,7 @@ function amount(ing: RecipeDto['ingredients'][number]) {
     font-size: 18px;
     font-weight: 600;
     cursor: pointer;
-    background: var(--accent);
+    background: var(--accent-fill);
     color: var(--on-accent);
     border: none;
 }

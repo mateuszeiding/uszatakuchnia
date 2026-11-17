@@ -447,7 +447,7 @@ const clear = () => (filters.value = emptyFilters(filters.value.sort));
         gap: 8px;
     }
     .mobile-bar__count {
-        background: var(--accent);
+        background: var(--accent-fill);
         color: var(--on-accent);
         font-size: 12px;
         border-radius: var(--r-pill);
