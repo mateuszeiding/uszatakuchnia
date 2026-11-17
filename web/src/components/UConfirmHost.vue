@@ -16,6 +16,23 @@ import { pendingConfirm, settleConfirm } from '@/composables/useConfirm';
         >
             {{ pendingConfirm.body }}
         </p>
+        <ul
+            v-if="pendingConfirm.items?.length"
+            class="confirm__list"
+        >
+            <li
+                v-for="(it, i) in pendingConfirm.items"
+                :key="i"
+            >
+                {{ it }}
+            </li>
+        </ul>
+        <p
+            v-if="pendingConfirm.note"
+            class="confirm__note"
+        >
+            {{ pendingConfirm.note }}
+        </p>
         <template #footer>
             <button
                 type="button"
@@ -36,3 +53,18 @@ import { pendingConfirm, settleConfirm } from '@/composables/useConfirm';
         </template>
     </UModal>
 </template>
+
+<style scoped>
+.confirm__list {
+    margin: 12px 0 0;
+    padding-left: 18px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink);
+}
+.confirm__note {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--ink-muted);
+}
+</style>

@@ -44,6 +44,7 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		Preload("Ingredients.Ingredient.Allergens").
 		Preload("Ingredients.Ingredient.Type").
 		Preload("Ingredients.Unit").
+		Preload("Ingredients.LinkedRecipe.Photo").
 		Preload("Taxonomy.Value.Axis").
 		Find(&entity, id).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
@@ -61,6 +62,19 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	services.FillGramsPerUnit(dto.Ingredients, ix)
+
+	// Kto prowadzi do tego przepisu (modal usuwania): „Przepis · składnik”.
+	dto.LinkedFrom = []dtos.RecipeLinkSourceDto{}
+	if err := conn.Table("recipe_ingredients ri").
+		Select("r.id AS recipe_id, r.name AS recipe_name, i.name AS ingredient_name").
+		Joins("JOIN recipes r ON r.id = ri.recipe_id").
+		Joins("JOIN ingredients i ON i.id = ri.ingredient_id").
+		Where("ri.linked_recipe_id = ? AND ri.recipe_id <> ?", entity.ID, entity.ID).
+		Order("r.name, ri.sort_order").
+		Scan(&dto.LinkedFrom).Error; err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	resp.JSON(w, http.StatusOK, dto)
 }
@@ -84,7 +98,7 @@ func putDetailed(w http.ResponseWriter, r *http.Request) {
 		req.Status = entity.Status
 	}
 
-	fieldErrs, err := services.ValidateRecipe(conn, req)
+	fieldErrs, err := services.ValidateRecipe(conn, req, entity.ID)
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return

@@ -1,4 +1,5 @@
-import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
+import { API } from '@/data/api/API';
+import type { ILinkedRecipe, RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { RecipeStepDto } from '@/data/dtos/recipe/RecipeStepDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 import { scaleQuantity } from '@/shared/utils/quantity';
@@ -24,6 +25,33 @@ export function ingredientGroups(items: RecipeIngredientDto[]) {
     const sections = bySection(items);
     const single = sections.length === 1 ? sections[0]!.label : null;
     return { sections, grouped: sections.length > 1, single };
+}
+
+/** Link do przepisu widoczny na stronie publicznej — szkic się nie wyświetla. */
+export const publicLink = (ing: RecipeIngredientDto): ILinkedRecipe | null =>
+    ing.linkedRecipe?.status === 'published' ? ing.linkedRecipe : null;
+
+export interface IUsefulRecipe {
+    id: number;
+    title: string;
+    image: string | null;
+    /** Nazwy składników, które do niego prowadzą („do: bułka do hamburgera”). */
+    for: string[];
+}
+
+/** „Przydatne przepisy”: opublikowane linki ze składników, ten sam przepis z kilku wierszy → jedna karta. */
+export function usefulRecipes(items: RecipeIngredientDto[]): IUsefulRecipe[] {
+    const out: IUsefulRecipe[] = [];
+    for (const ing of items) {
+        const r = publicLink(ing);
+        if (!r) continue;
+        const name = ing.ingredientName.toLowerCase();
+        const seen = out.find((x) => x.id === r.id);
+        if (seen) {
+            if (!seen.for.includes(name)) seen.for.push(name);
+        } else out.push({ id: r.id, title: r.title, image: API.resolveUrl(r.image), for: [name] });
+    }
+    return out;
 }
 
 export function scaledAmount(ing: RecipeIngredientDto, units: IUnit[], ratio: number) {

@@ -1,13 +1,18 @@
 <script lang="ts" setup>
-import { blankIng, type IGroup, type IIngItem, uid } from '../recipeForm';
+import { nextTick, ref } from 'vue';
+
+import { blankIng, type IGroup, type IIngItem, type ILinkedRef, uid } from '../recipeForm';
 
 import GroupShell from './GroupShell.vue';
 import IngAutosuggest from './IngAutosuggest.vue';
+import RecipeLinkPicker from './RecipeLinkPicker.vue';
 
+import BookIcon from '@/components/BookIcon.vue';
 import UFieldError from '@/components/form/UFieldError.vue';
 import { confirmAction } from '@/composables/useConfirm';
 import { useListDnd } from '@/composables/useListDnd';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
+import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 import { parseQty, unitLabel } from '@/shared/utils/quantity';
 
@@ -17,6 +22,10 @@ const props = defineProps<{
     units: IUnit[];
     /** Błędy wierszy (id wiersza → komunikat); puste, dopóki nie próbowano zapisać. */
     rowErrors: Record<number, string>;
+    /** Przepisy do linkowania (wszystkie, także szkice). */
+    recipes: RecipeBaseDto[];
+    /** Edytowany przepis (null = nowy) — znika z listy wyboru. */
+    currentId: number | null;
 }>();
 const emit = defineEmits<{ 'add-new': [name: string, item: IIngItem] }>();
 
@@ -65,6 +74,28 @@ async function removeGroup(g: IGroup<IIngItem>) {
 function removeItem(g: IGroup<IIngItem>, it: IIngItem) {
     g.items.splice(g.items.indexOf(it), 1);
 }
+
+// ─── Link do przepisu ────────────────────────────────────────
+const picking = ref<number | null>(null);
+
+/** Po zamknięciu wyboru fokus wraca na „Przepis…” / „Zmień”. */
+async function focusLinkBtn(it: IIngItem) {
+    await nextTick();
+    document.getElementById(`lk-btn-${it.id}`)?.focus();
+}
+function closePicker(it: IIngItem) {
+    picking.value = null;
+    focusLinkBtn(it);
+}
+function setLink(it: IIngItem, r: ILinkedRef) {
+    it.linked = r;
+    closePicker(it);
+}
+function unlink(it: IIngItem) {
+    it.linked = null;
+    focusLinkBtn(it);
+}
+const togglePicker = (it: IIngItem) => (picking.value = picking.value === it.id ? null : it.id);
 </script>
 
 <template>
@@ -196,7 +227,75 @@ function removeItem(g: IGroup<IIngItem>, it: IIngItem) {
                         aria-label="Notatka do składnika"
                         placeholder="notatka, np. ~150 g"
                     />
+                    <button
+                        v-if="!it.linked"
+                        :id="`lk-btn-${it.id}`"
+                        type="button"
+                        class="ing-row__link-btn"
+                        :class="{ 'is-open': picking === it.id }"
+                        aria-haspopup="listbox"
+                        :aria-expanded="picking === it.id"
+                        @click="togglePicker(it)"
+                    >
+                        <BookIcon :size="13" />
+                        Przepis…
+                    </button>
                 </div>
+                <div
+                    v-if="it.linked"
+                    class="ing-row__linked"
+                >
+                    <span class="ing-row__linked-label">Prowadzi do:</span>
+                    <span class="ing-row__chip">
+                        <BookIcon :size="13" />
+                        <span class="ing-row__chip-title">{{ it.linked.title }}</span>
+                        <button
+                            type="button"
+                            class="ing-row__chip-x"
+                            :aria-label="`Usuń link do przepisu „${it.linked.title}”`"
+                            @click="unlink(it)"
+                        >
+                            <svg
+                                width="11"
+                                height="11"
+                                viewBox="0 0 11 11"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M2 2l7 7M9 2L2 9"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+                        </button>
+                    </span>
+                    <span
+                        v-if="it.linked.status === 'draft'"
+                        class="ing-row__draft"
+                    >
+                        szkic — link niewidoczny na stronie, dopóki go nie opublikujesz
+                    </span>
+                    <button
+                        :id="`lk-btn-${it.id}`"
+                        type="button"
+                        class="ing-row__change"
+                        aria-haspopup="listbox"
+                        :aria-expanded="picking === it.id"
+                        @click="togglePicker(it)"
+                    >
+                        Zmień
+                    </button>
+                </div>
+                <RecipeLinkPicker
+                    v-if="picking === it.id"
+                    :id="`lk-${it.id}`"
+                    :ingredient-name="it.name"
+                    :recipes="recipes"
+                    :current-id="currentId"
+                    @select="setLink(it, $event)"
+                    @close="closePicker(it)"
+                />
                 <div
                     v-if="rowErrors[it.id] || preview(it)"
                     class="ing-row__msg"
@@ -260,7 +359,7 @@ function removeItem(g: IGroup<IIngItem>, it: IIngItem) {
 }
 .ing-row__extra {
     display: grid;
-    grid-template-columns: 216px minmax(0, 1fr) 30px;
+    grid-template-columns: 216px minmax(0, 1fr) auto 30px;
     gap: 8px;
     align-items: center;
     padding-left: 28px;
@@ -283,6 +382,92 @@ function removeItem(g: IGroup<IIngItem>, it: IIngItem) {
 .ing-row__note {
     padding: 6px 10px;
     font-size: 13px;
+}
+.ing-row__link-btn {
+    grid-column: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: var(--r-md);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--ink-dim);
+    border: 1px solid var(--rule);
+    background: transparent;
+    cursor: pointer;
+}
+.ing-row__link-btn.is-open {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+/* trzecia linia: ustawiony link */
+.ing-row__linked {
+    padding-left: 28px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.ing-row__linked-label {
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+.ing-row__chip {
+    max-width: 420px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px 4px 10px;
+    border-radius: var(--r-pill);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+}
+.ing-row__chip svg {
+    flex-shrink: 0;
+}
+.ing-row__chip-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ing-row__chip-x {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: var(--r-pill);
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.ing-row__chip-x:hover {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.ing-row__draft {
+    padding: 2px 9px;
+    border-radius: var(--r-pill);
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--prep-soft);
+    color: var(--prep);
+}
+.ing-row__change {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 13px;
+    color: var(--ink-dim);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
 }
 .ing-row__msg {
     padding-left: 28px;

@@ -4,7 +4,7 @@ import { computed, onMounted, ref } from 'vue';
 
 import UIcon from '@/components/UIcon.vue';
 import USpinner from '@/components/USpinner.vue';
-import { confirmAction } from '@/composables/useConfirm';
+import { confirmRecipeDelete } from '@/composables/confirmRecipeDelete';
 import { showToast } from '@/composables/useToast';
 import { deleteRecipe, fetchRecipesWithClient, invalidateRecipes } from '@/data/api/recipe/fetch';
 import {
@@ -47,15 +47,7 @@ const filtered = computed(() => {
 });
 
 async function remove(r: RecipeBaseDto) {
-    const ok = await confirmAction({
-        title: `Usunąć „${r.name}”?`,
-        body:
-            r.status === 'published'
-                ? 'Przepis jest opublikowany i zniknie ze strony. Tej operacji nie da się cofnąć.'
-                : 'Tej operacji nie da się cofnąć.',
-        confirmLabel: 'Usuń przepis',
-        danger: true,
-    });
+    const ok = await confirmRecipeDelete(r);
     if (!ok) return;
     await deleteRecipe(r.id);
     recipes.value = recipes.value.filter((x) => x.id !== r.id);

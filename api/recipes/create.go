@@ -34,7 +34,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 	conn := db.DB()
 
-	fieldErrs, err := services.ValidateRecipe(conn, req)
+	fieldErrs, err := services.ValidateRecipe(conn, req, 0)
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return

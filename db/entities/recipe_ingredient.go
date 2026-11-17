@@ -16,6 +16,10 @@ type RecipeIngredient struct {
 	Note     *string `gorm:"type:varchar(255)"`
 	Optional bool    `gorm:"not null;default:false"`
 
+	// Link do przepisu na ten składnik (np. bułka → „Bułki do hamburgerów”). Usunięcie przepisu zeruje link.
+	LinkedRecipeID *uint   `gorm:"index:ix_recing_linked_recipe"`
+	LinkedRecipe   *Recipe `gorm:"foreignKey:LinkedRecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+
 	Recipe Recipe `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 

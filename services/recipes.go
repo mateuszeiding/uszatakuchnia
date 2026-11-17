@@ -13,7 +13,8 @@ import (
 
 // ValidateRecipe — szkic wymaga tylko nazwy i poprawnych danych; publikacja wymaga kompletu
 // (nazwa, min. 1 składnik, min. 1 krok, wymagane osie, trudność, porcje).
-func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest) ([]dtos.FieldError, error) {
+// selfID — id edytowanego przepisu (0 przy tworzeniu); składnik nie może linkować do własnego przepisu.
+func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]dtos.FieldError, error) {
 	errs := []dtos.FieldError{}
 	add := func(field, msg string) { errs = append(errs, dtos.FieldError{Field: field, Message: msg}) }
 
@@ -67,6 +68,35 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest) ([]dtos.FieldErro
 			} else if u.NoQty && ok && !q.Empty {
 				add(f+".quantity", fmt.Sprintf("Jednostka „%s” nie przyjmuje ilości", u.Name))
 			}
+		}
+	}
+
+	// Linki do przepisów: nie do siebie, tylko do istniejących.
+	linked := []uint{}
+	for _, it := range req.Ingredients {
+		if it.LinkedRecipeId != nil {
+			linked = append(linked, *it.LinkedRecipeId)
+		}
+	}
+	existing := map[uint]bool{}
+	if len(linked) > 0 {
+		var ids []uint
+		if err := tx.Model(&entities.Recipe{}).Where("id IN ?", uniqueUints(linked)).Pluck("id", &ids).Error; err != nil {
+			return nil, err
+		}
+		for _, id := range ids {
+			existing[id] = true
+		}
+	}
+	for i, it := range req.Ingredients {
+		if it.LinkedRecipeId == nil {
+			continue
+		}
+		f := fmt.Sprintf("ingredients[%d].linkedRecipeId", i)
+		if selfID != 0 && *it.LinkedRecipeId == selfID {
+			add(f, "Przepis nie może prowadzić do siebie")
+		} else if !existing[*it.LinkedRecipeId] {
+			add(f, "Nie ma takiego przepisu")
 		}
 	}
 
@@ -202,7 +232,7 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 		item := entities.RecipeIngredient{
 			RecipeID: recipeID, SortOrder: i + 1, Section: it.Section,
 			IngredientID: it.IngredientId, Quantity: qty, UnitID: it.UnitId, Note: it.Note,
-			Optional: it.Optional,
+			Optional: it.Optional, LinkedRecipeID: it.LinkedRecipeId,
 		}
 		if err := tx.Create(&item).Error; err != nil {
 			return err

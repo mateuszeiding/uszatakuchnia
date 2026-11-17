@@ -2,6 +2,7 @@
 // Szkic wymaga tylko nazwy; publikacja — kompletu (nazwa, składnik, krok, wymagane osie, trudność, porcje).
 
 import type { IUpsertRecipeRequest, RecipeDto, RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
+import type { ILinkedRecipe } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IDictionaries, IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 import { parseQty } from '@/shared/utils/quantity';
 import { defaultTimeUnit, fromMinutes, type TimeUnit, toMinutes } from '@/shared/utils/time';
@@ -20,7 +21,11 @@ export interface IIngItem {
     unitId: number | null;
     note: string;
     optional: boolean;
+    /** Link do przepisu na ten składnik; null = brak. */
+    linked: ILinkedRef | null;
 }
+
+export type ILinkedRef = Pick<ILinkedRecipe, 'id' | 'title' | 'status'>;
 
 export interface IStepItem {
     id: number;
@@ -60,6 +65,7 @@ export const blankIng = (): IIngItem => ({
     unitId: null,
     note: '',
     optional: false,
+    linked: null,
 });
 
 export const blankStep = (): IStepItem => ({ id: uid(), text: '', prep: false, prepLead: '' });
@@ -121,6 +127,13 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
             unitId: i.unitId,
             note: i.note ?? '',
             optional: i.optional,
+            linked: i.linkedRecipe
+                ? {
+                      id: i.linkedRecipe.id,
+                      title: i.linkedRecipe.title,
+                      status: i.linkedRecipe.status,
+                  }
+                : null,
         })
     );
     const stepGroups = groupBy(
@@ -184,6 +197,7 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
                     unitId: i.unitId,
                     note: orNull(i.note),
                     optional: i.optional,
+                    linkedRecipeId: i.linked?.id ?? null,
                 }))
         ),
     };

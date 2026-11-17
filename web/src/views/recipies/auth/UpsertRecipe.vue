@@ -25,6 +25,7 @@ import {
 import UFieldError from '@/components/form/UFieldError.vue';
 import IngredientModal from '@/components/IngredientModal.vue';
 import USpinner from '@/components/USpinner.vue';
+import { confirmRecipeDelete } from '@/composables/confirmRecipeDelete';
 import { confirmAction } from '@/composables/useConfirm';
 import { showToast } from '@/composables/useToast';
 import { fetchIngredientsWithClient, invalidateIngredients } from '@/data/api/ingredients/fetch';
@@ -37,7 +38,12 @@ import {
 } from '@/data/api/recipe/fetch';
 import { fetchDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
-import { type IFieldError, type RecipeStatus, STATUS_LABEL } from '@/data/dtos/recipe/RecipeDto';
+import {
+    type IFieldError,
+    type RecipeBaseDto,
+    type RecipeStatus,
+    STATUS_LABEL,
+} from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
 const props = defineProps<{ id?: string | number }>();
@@ -59,15 +65,22 @@ const showErrors = ref<'draft' | 'full' | null>(null);
 const serverError = ref('');
 const dicts = ref<IDictionaries>();
 const ingredients = ref<IngredientDto[]>([]);
+/** Wszystkie przepisy (także szkice) — do wyboru linku w składnikach. */
+const recipes = ref<RecipeBaseDto[]>([]);
 const addIng = ref<{ name: string; item: IIngItem } | null>(null);
 let leaving = false;
 
 const dirty = computed(() => JSON.stringify(form.value) !== saved.value);
 
 onMounted(async () => {
-    const [d, ings] = await Promise.all([fetchDictionaries(), fetchIngredientsWithClient(qc)]);
+    const [d, ings, list] = await Promise.all([
+        fetchDictionaries(),
+        fetchIngredientsWithClient(qc),
+        fetchRecipesWithClient(qc, 'list', true),
+    ]);
     dicts.value = d;
     ingredients.value = ings;
+    recipes.value = list;
     if (recipeId.value) {
         const r = await fetchRecipesWithClient(qc, recipeId.value);
         form.value = fromRecipe(r);
@@ -185,11 +198,10 @@ async function cancel() {
 
 async function removeRecipe() {
     if (!recipeId.value) return;
-    const ok = await confirmAction({
-        title: `Usunąć „${form.value.name || 'ten przepis'}”?`,
-        body: 'Przepis zniknie z listy i z panelu. Tej operacji nie da się cofnąć.',
-        confirmLabel: 'Usuń przepis',
-        danger: true,
+    const ok = await confirmRecipeDelete({
+        id: recipeId.value,
+        name: form.value.name,
+        status: status.value,
     });
     if (!ok) return;
     await deleteRecipe(recipeId.value);
@@ -371,6 +383,8 @@ const prepSummary = computed(() => {
                         :ingredients="ingredients"
                         :units="dicts?.units ?? []"
                         :row-errors="rowErrors"
+                        :recipes="recipes"
+                        :current-id="recipeId"
                         @add-new="(name, item) => (addIng = { name, item })"
                     />
                 </FormSection>

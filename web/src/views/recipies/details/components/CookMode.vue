@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-import { ingredientGroups, leadText, scaledAmount, servingsLabel } from '../recipeView';
+import { ingredientGroups, leadText, publicLink, scaledAmount, servingsLabel } from '../recipeView';
 
 import IngGroupHeader from './IngGroupHeader.vue';
 import IngRow from './IngRow.vue';
@@ -36,6 +36,7 @@ const step = computed(() => steps.value[i.value]!);
 const last = computed(() => i.value === steps.value.length - 1);
 const groups = computed(() => ingredientGroups(props.recipe.ingredients));
 const ratio = computed(() => (props.recipe.servings ? props.servings / props.recipe.servings : 1));
+const hasLinks = computed(() => props.recipe.ingredients.some((x) => publicLink(x)));
 
 function next() {
     emit('set-step', step.value.stepNo, true);
@@ -214,10 +215,17 @@ function amount(ing: RecipeDto['ingredients'][number]) {
                             :amount="amount(ing)"
                             :checked="checkedIng.includes(ing.sortOrder)"
                             roomy
+                            new-tab
                             @toggle="emit('toggle-ing', ing.sortOrder)"
                         />
                     </ul>
                 </div>
+                <p
+                    v-if="hasLinks"
+                    class="cook-ing__note"
+                >
+                    Linki do przepisów otwierają się w nowej karcie — gotowanie zostaje tutaj.
+                </p>
             </div>
         </UModal>
     </Teleport>
@@ -373,5 +381,11 @@ function amount(ing: RecipeDto['ingredients'][number]) {
     list-style: none;
     padding: 0;
     margin: 0;
+}
+.cook-ing__note {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink-muted);
 }
 </style>

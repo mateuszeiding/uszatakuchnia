@@ -3,6 +3,10 @@ import { shallowRef } from 'vue';
 export interface IConfirmOptions {
     title: string;
     body?: string;
+    /** Lista pod treścią (np. przepisy z linkami do usuwanego). */
+    items?: string[];
+    /** Dopisek na końcu, mniejszym tekstem („Tej operacji nie da się cofnąć.”). */
+    note?: string;
     confirmLabel?: string;
     danger?: boolean;
 }

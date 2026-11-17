@@ -24,6 +24,14 @@ type RecipeDto struct {
 	Photo       *RecipePhotoDto           `json:"photo,omitempty"`
 	Steps       []RecipeStepDto           `json:"steps"`
 	Ingredients []RecipeIngredientDto     `json:"ingredients"`
+	// Składniki innych przepisów, które prowadzą do tego (treść modalu usuwania).
+	LinkedFrom []RecipeLinkSourceDto `json:"linkedFrom"`
+}
+
+type RecipeLinkSourceDto struct {
+	RecipeID       uint   `json:"recipeId"`
+	RecipeName     string `json:"recipeName"`
+	IngredientName string `json:"ingredientName"`
 }
 
 type RecipeBaseDto struct {
@@ -77,6 +85,8 @@ type UpsertIngredientRequest struct {
 	UnitId       *uint   `json:"unitId"`
 	Note         *string `json:"note"`
 	Optional     bool    `json:"optional"`
+	// Link do przepisu na ten składnik; nil = brak.
+	LinkedRecipeId *uint `json:"linkedRecipeId"`
 }
 
 // FieldError — błąd walidacji przypięty do pola formularza (np. "ingredients[2].quantity").

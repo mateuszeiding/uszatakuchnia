@@ -22,7 +22,20 @@ func MapRecipeIngredientToDto(e entities.RecipeIngredient) dtos.RecipeIngredient
 		Optional:       e.Optional,
 		Allergens:      mapIngredientAllergenCodes(e.Ingredient.Allergens),
 		IngredientType: dtos.IngredientTypeRefDto{Code: e.Ingredient.Type.Code, Label: e.Ingredient.Type.Name},
+		LinkedRecipe:   mapLinkedRecipe(e.LinkedRecipe),
 	}
+}
+
+// mapLinkedRecipe wymaga preloadu Ingredients.LinkedRecipe.Photo.
+func mapLinkedRecipe(r *entities.Recipe) *dtos.LinkedRecipeDto {
+	if r == nil || r.ID == 0 {
+		return nil
+	}
+	var image *string
+	if r.Photo != nil && r.Photo.ImageURL != "" {
+		image = &r.Photo.ImageURL
+	}
+	return &dtos.LinkedRecipeDto{ID: r.ID, Title: r.Name, Status: r.Status, Image: image}
 }
 
 func MapRecipeIngredientArrayToDto(a []entities.RecipeIngredient) []dtos.RecipeIngredientDto {

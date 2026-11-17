@@ -1,3 +1,12 @@
+/** Przepis, do którego prowadzi składnik (np. bułka → „Bułki do hamburgerów”). */
+export interface ILinkedRecipe {
+    id: number;
+    title: string;
+    status: 'draft' | 'published';
+    /** Adres zdjęcia z API (przed resolveUrl); null = brak. */
+    image: string | null;
+}
+
 export class RecipeIngredientDto {
     sortOrder: number = 0;
     section: string | null = null;
@@ -18,6 +27,8 @@ export class RecipeIngredientDto {
     ingredientType: { code: string; label: string } = { code: 'OTHER', label: 'inne' };
     /** Ile gramów to 1 jednostka tej pozycji; null = nie da się przeliczyć. */
     gramsPerUnit: { min: number; max: number } | null = null;
+    /** Link do przepisu; szkic też przychodzi — strona publiczna go nie pokazuje (publicLink). */
+    linkedRecipe: ILinkedRecipe | null = null;
 
     constructor(obj: Partial<RecipeIngredientDto>) {
         Object.assign(this, obj);

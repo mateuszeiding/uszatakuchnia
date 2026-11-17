@@ -67,6 +67,8 @@ export class RecipeDto extends RecipeBaseDto {
 
     steps: RecipeStepDto[] = [];
     ingredients: RecipeIngredientDto[] = [];
+    /** Składniki innych przepisów, które prowadzą do tego (modal usuwania). */
+    linkedFrom: { recipeId: number; recipeName: string; ingredientName: string }[] = [];
 
     constructor(obj: Partial<RecipeDto> & { photo?: BackendRecipePhoto }) {
         super(obj);
@@ -75,6 +77,7 @@ export class RecipeDto extends RecipeBaseDto {
         this.allergens = obj.allergens ?? [];
         this.steps = (obj.steps ?? []).map((s) => new RecipeStepDto(s));
         this.ingredients = (obj.ingredients ?? []).map((i) => new RecipeIngredientDto(i));
+        this.linkedFrom = obj.linkedFrom ?? [];
     }
 }
 
@@ -105,6 +108,7 @@ export interface IUpsertRecipeRequest {
         unitId?: number | null;
         note?: string | null;
         optional: boolean;
+        linkedRecipeId?: number | null;
     }[];
 }
 

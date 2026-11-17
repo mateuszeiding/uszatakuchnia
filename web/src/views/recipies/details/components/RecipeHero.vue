@@ -3,6 +3,8 @@ import { computed } from 'vue';
 
 import { DIFFICULTY, leadText } from '../recipeView';
 
+import UsefulRecipes from './UsefulRecipes.vue';
+
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import { avg, fmt, nf } from '@/shared/utils/nutrition';
 import { formatTime } from '@/shared/utils/time';
@@ -171,6 +173,7 @@ function scrollToStep(no: number) {
                     {{ p.label }}
                 </li>
             </ul>
+            <UsefulRecipes :ingredients="recipe.ingredients" />
         </div>
     </div>
 </template>
