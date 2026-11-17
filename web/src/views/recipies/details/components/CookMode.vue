@@ -303,6 +303,7 @@ function amount(ing: RecipeDto['ingredients'][number]) {
 .cook__stage {
     flex: 1;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -373,6 +374,7 @@ function amount(ing: RecipeDto['ingredients'][number]) {
 .cook-ing {
     max-height: 60vh;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     display: flex;
     flex-direction: column;
     gap: 22px;

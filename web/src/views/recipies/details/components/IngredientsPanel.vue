@@ -267,6 +267,7 @@ onBeforeUnmount(() => ro?.disconnect());
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    scrollbar-gutter: stable;
     padding-right: 6px;
     display: flex;
     flex-direction: column;

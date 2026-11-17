@@ -159,6 +159,7 @@ onBeforeUnmount(() => {
 }
 .sheet__body {
     overflow-y: auto;
+    scrollbar-gutter: stable;
     padding: 18px 20px 4px;
 }
 .sheet__foot {

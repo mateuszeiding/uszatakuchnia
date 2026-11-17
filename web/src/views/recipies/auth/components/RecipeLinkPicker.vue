@@ -214,6 +214,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocDown));
     padding: 0;
     max-height: 220px;
     overflow: auto;
+    scrollbar-gutter: stable;
 }
 .lpick__opt {
     display: grid;
