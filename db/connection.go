@@ -62,19 +62,15 @@ func initDB() error {
 
 	inst = db
 
-	if err := Apply(context.Background(), inst, Options{
-		DevReset: false,
-		Migrate:  true,
-		AddSeed:  false,
-	}); err != nil {
-		return fmt.Errorf("apply: %w", err)
+	// Migracje tylko, gdy schemat w bazie jest starszy niż kod (odcisk w schema_state).
+	if err := ensureSchema(context.Background(), inst); err != nil {
+		return fmt.Errorf("schema: %w", err)
 	}
 
 	return nil
 }
 
 func Apply(ctx context.Context, db *gorm.DB, opt Options) error {
-	const lockKey int64 = 213742069
 
 	steps := []step{
 		{name: "dev reset", enabled: opt.DevReset, run: devReset},
@@ -83,12 +79,14 @@ func Apply(ctx context.Context, db *gorm.DB, opt Options) error {
 	}
 
 	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := lockTx(tx, lockKey); err != nil {
+		if err := lockTx(tx, migrateLockKey); err != nil {
 			return err
 		}
 		return runSteps(tx, steps)
 	})
 }
+
+const migrateLockKey int64 = 213742069
 
 func lockTx(tx *gorm.DB, key int64) error {
 	if err := tx.Exec(`SELECT pg_advisory_xact_lock(?)`, key).Error; err != nil {
