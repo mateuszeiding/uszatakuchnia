@@ -128,7 +128,9 @@ const emit = defineEmits<{ toggle: [] }>();
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    align-self: center;
+    /* przy pierwszej linii tekstu (nazwa 15 px × 1,4 = 21 px), nie na środku wiersza z notatką */
+    align-self: start;
+    margin-top: 2.5px;
 }
 .ing-item.is-done .ing-item__box {
     background: var(--accent);

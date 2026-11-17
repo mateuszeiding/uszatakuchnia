@@ -65,7 +65,9 @@ const forGroups = computed(() => forText(props.item));
     display: grid;
     grid-template-columns: 18px minmax(0, 1fr) auto;
     gap: 12px;
-    align-items: center;
+    /* pole i suma przy pierwszej linii nazwy (pod nią „do: …"); pojedyncza linia wyśrodkowana w min-height */
+    align-items: start;
+    align-content: center;
     min-height: 44px;
     padding: 8px 0;
     background: transparent;
@@ -83,6 +85,7 @@ const forGroups = computed(() => forText(props.item));
     align-items: center;
     justify-content: center;
     color: var(--on-accent);
+    margin-top: 2px;
 }
 .srow__box svg {
     width: 9px;
@@ -111,6 +114,7 @@ const forGroups = computed(() => forText(props.item));
     font-family: var(--font-mono);
     font-size: 14px;
     font-weight: 600;
+    line-height: 20px;
     text-align: right;
 }
 .is-done .srow__name,
@@ -130,6 +134,7 @@ const forGroups = computed(() => forText(props.item));
         width: 22px;
         height: 22px;
         border-radius: var(--r-md);
+        margin-top: 0.5px;
     }
     .srow__box svg {
         width: 12px;
@@ -141,6 +146,7 @@ const forGroups = computed(() => forText(props.item));
     .srow__sum {
         max-width: 150px;
         font-size: 15px;
+        line-height: 23px;
     }
 }
 
@@ -164,6 +170,7 @@ const forGroups = computed(() => forText(props.item));
         height: 11px;
         border: 1pt solid #000;
         border-radius: 2px;
+        margin-top: 0;
     }
     .srow__name {
         font-size: 12.5px;
