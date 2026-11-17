@@ -90,6 +90,7 @@ const emit = defineEmits<{ 'update:label': [v: string]; remove: [] }>();
     text-transform: uppercase;
     color: var(--ink);
     padding: 4px 0;
+    line-height: 17px; /* stała — wysokość nie zależy od tego, czy font już się wczytał */
 }
 .group-shell__label::placeholder {
     color: var(--ink-muted);

@@ -45,6 +45,7 @@ import {
     STATUS_LABEL,
 } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { LOADING_DICTIONARIES } from '@/data/dtos/taxonomy/loadingDictionaries';
 
 const props = defineProps<{ id?: string | number }>();
 const router = useRouter();
@@ -245,11 +246,13 @@ function onIngredientCreated(ing: IngredientDto) {
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────
+// W trakcie ładowania osie ze szkieletu (te same liczby wartości) — formularz ma docelowy układ.
+const axesView = computed(() => (dicts.value ?? LOADING_DICTIONARIES).axes);
 const classificationAxes = computed(() =>
-    (dicts.value?.axes ?? []).filter((a) => !SIDEBAR_AXES_LAST.includes(a.code))
+    axesView.value.filter((a) => !SIDEBAR_AXES_LAST.includes(a.code))
 );
-const dietAxis = computed(() => dicts.value?.axes.find((a) => a.code === 'diet'));
-const practicalAxis = computed(() => dicts.value?.axes.find((a) => a.code === 'practical'));
+const dietAxis = computed(() => axesView.value.find((a) => a.code === 'diet'));
+const practicalAxis = computed(() => axesView.value.find((a) => a.code === 'practical'));
 
 const axisModel = (code: string) => form.value.taxonomy[code] ?? [];
 function setAxis(code: string, ids: number[]) {
@@ -311,17 +314,22 @@ const prepSummary = computed(() => {
             </div>
         </header>
 
+        <!-- ładowanie: ten sam formularz nieaktywny (puste pola, szkielety chipów osi);
+             spinner nad formularzem, poza układem -->
         <div
-            v-if="loading"
-            class="upsert-loading"
-        >
-            <USpinner :size="22" />
-        </div>
-
-        <div
-            v-else
             class="upsert-body"
+            :class="{ 'is-loading': loading }"
+            :inert="loading"
+            :aria-busy="loading"
         >
+            <div
+                v-if="loading"
+                class="upsert-loading"
+                role="status"
+                aria-label="Wczytywanie przepisu"
+            >
+                <USpinner :size="22" />
+            </div>
             <div class="upsert-main">
                 <FormSection
                     n="01"
@@ -639,11 +647,24 @@ const prepSummary = computed(() => {
     background: var(--success);
 }
 .upsert-loading {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 120px;
+    z-index: 1;
     display: flex;
     justify-content: center;
-    padding: 80px 0;
+    pointer-events: none;
+}
+/* ładowanie: chipy osi bez etykiet (sam kształt) */
+.upsert-body.is-loading :deep(.chip) {
+    color: transparent;
+}
+.upsert-body.is-loading :deep(.chip__dot) {
+    visibility: hidden;
 }
 .upsert-body {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 360px;
     gap: 40px;
