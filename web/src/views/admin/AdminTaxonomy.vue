@@ -44,12 +44,34 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
 
 <template>
     <h1 class="admin-title">Klasyfikacja</h1>
-    <div
-        v-if="!dicts"
-        class="admin-loading"
-    >
-        <USpinner :size="22" />
-    </div>
+    <!-- ładowanie: zakładki, opis i tabela w tych samych miejscach (szkielety), spinner nad tabelą -->
+    <template v-if="!dicts">
+        <div
+            class="tabs tax-tabs"
+            aria-hidden="true"
+        >
+            <span
+                v-for="n in 6"
+                :key="n"
+                class="tab"
+                :class="{ 'is-active': n === 1 }"
+            >
+                <span class="sk tax-sk__label" />
+                <span class="count"><span class="tax-sk__count">00</span></span>
+            </span>
+        </div>
+        <p class="tax-desc">{{ DESCRIPTIONS.dish }}</p>
+        <div class="tax-wrap">
+            <div
+                class="tax-loading"
+                role="status"
+                aria-label="Wczytywanie klasyfikacji"
+            >
+                <USpinner :size="22" />
+            </div>
+            <ValuesTable :axis="null" />
+        </div>
+    </template>
     <template v-else>
         <div
             class="tabs tax-tabs"
@@ -96,10 +118,27 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
     letter-spacing: -0.8px;
     margin-bottom: 22px;
 }
-.admin-loading {
+.tax-wrap {
+    position: relative;
+}
+.tax-loading {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 56px;
+    z-index: 1;
     display: flex;
     justify-content: center;
-    padding: 60px 0;
+    pointer-events: none;
+}
+.tax-sk__label {
+    display: inline-block;
+    width: 64px;
+    height: 12px;
+    vertical-align: middle;
+}
+.tax-sk__count {
+    visibility: hidden;
 }
 .tax-tabs {
     overflow-x: auto;

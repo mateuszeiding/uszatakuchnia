@@ -14,7 +14,8 @@ import {
 import type { ITaxonomyAxis, ITaxonomyValue } from '@/data/dtos/taxonomy/DictionariesDto';
 
 // Wartości jednej osi: edycja w wierszu (nazwa, kolor), dodawanie, usuwanie z przeniesieniem.
-const props = defineProps<{ axis: ITaxonomyAxis }>();
+/** axis null = ładowanie: ta sama tabela z wierszami-szkieletami, wiersz dodawania nieaktywny. */
+const props = defineProps<{ axis: ITaxonomyAxis | null }>();
 const emit = defineEmits<{ changed: [] }>();
 
 const SWATCHES = [
@@ -75,7 +76,7 @@ async function saveEdit(v: ITaxonomyValue) {
 
 async function add() {
     const label = newLabel.value.trim();
-    if (!label || busy.value) return;
+    if (!label || busy.value || !props.axis) return;
     busy.value = true;
     const used = props.axis.values.map((v) => v.color);
     const color = props.axis.hasColor
@@ -132,7 +133,30 @@ async function doDelete(v: ITaxonomyValue, moveTo: number | null) {
                 <th class="col-actions"><span class="sr-only">Akcje</span></th>
             </tr>
         </thead>
-        <tbody>
+        <tbody
+            v-if="!axis"
+            aria-hidden="true"
+        >
+            <tr
+                v-for="n in 9"
+                :key="n"
+            >
+                <td>
+                    <span class="value">
+                        <span class="value__dot sk" />
+                        <span class="sk sk-cell" />
+                    </span>
+                </td>
+                <td class="num"><span class="sk sk-cell sk-cell--short" /></td>
+                <td>
+                    <div class="actions">
+                        <span class="tbl-btn sk-box"><span class="sk sk-fill" /></span>
+                        <span class="tbl-btn sk-box"><span class="sk sk-fill" /></span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+        <tbody v-else>
             <tr
                 v-for="v in axis.values"
                 :key="v.id"
@@ -230,12 +254,15 @@ async function doDelete(v: ITaxonomyValue, moveTo: number | null) {
             </tr>
         </tbody>
     </table>
-    <div class="add-row">
+    <div
+        class="add-row"
+        :inert="!axis"
+    >
         <input
             v-model="newLabel"
             class="input add-row__input"
-            :aria-label="`Nowa wartość: ${axis.label}`"
-            :placeholder="`Nowa wartość: ${axis.label.toLowerCase()}`"
+            :aria-label="`Nowa wartość: ${axis?.label ?? ''}`"
+            :placeholder="`Nowa wartość: ${axis?.label.toLowerCase() ?? ''}`"
             @keydown.enter="add"
         />
         <button
@@ -249,7 +276,7 @@ async function doDelete(v: ITaxonomyValue, moveTo: number | null) {
     </div>
 
     <DeleteValueModal
-        v-if="deleting"
+        v-if="deleting && axis"
         :label="deleting.label"
         :count="deleting.recipeCount ?? 0"
         :count-noun="recipesNoun(deleting.recipeCount ?? 0)"
@@ -303,6 +330,26 @@ tr.is-editing td {
 }
 .swatch.is-active {
     border-color: var(--ink);
+}
+/* szkielet wierszy */
+.sk-cell {
+    display: inline-block;
+    width: 120px;
+    height: 12px;
+    vertical-align: middle;
+}
+.sk-cell--short {
+    width: 14px;
+}
+.sk-box {
+    position: relative;
+    border-color: transparent;
+    background: transparent;
+}
+.sk-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
 }
 .add-row {
     display: flex;
