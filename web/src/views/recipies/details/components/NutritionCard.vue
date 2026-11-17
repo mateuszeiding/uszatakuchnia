@@ -279,12 +279,14 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
     border-color: color-mix(in srgb, var(--info) 40%, transparent);
     letter-spacing: 0;
 }
+/* telefon, nagłówek zwijany: tytuł + badge w pierwszej linii (tytuł się nie łamie),
+   „~290 kcal/porcja” i strzałka w drugiej */
 .nutri__toggle {
     width: 100%;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
     background: none;
     border: 0;
     padding: 0;
@@ -293,9 +295,13 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
     cursor: pointer;
     font: inherit;
 }
+.nutri__toggle .nutri__title {
+    white-space: nowrap;
+}
 .nutri__toggle-side {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
     color: var(--ink-muted);
 }
@@ -311,6 +317,7 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
 }
 .nutri__chev {
     flex-shrink: 0;
+    margin-left: auto;
     transition: transform 0.15s;
 }
 .nutri__chev.is-open {
