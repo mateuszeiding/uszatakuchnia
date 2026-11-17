@@ -92,109 +92,138 @@ async function remove(r: RecipeBaseDto) {
         </RouterLink>
     </div>
 
-    <div
-        v-if="loading"
-        class="admin-loading"
-    >
-        <USpinner :size="22" />
-    </div>
-    <table
-        v-else
-        class="data-table"
-    >
-        <thead>
-            <tr>
-                <th class="col-photo"><span class="sr-only">Zdjęcie</span></th>
-                <th>Tytuł</th>
-                <th>Typ dania</th>
-                <th>Status</th>
-                <th class="col-actions"><span class="sr-only">Akcje</span></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr
-                v-for="r in filtered"
-                :key="r.id"
+    <div class="tbl-wrap">
+        <div
+            v-if="loading"
+            class="tbl-loading"
+            role="status"
+            aria-label="Wczytywanie przepisów"
+        >
+            <USpinner :size="22" />
+        </div>
+        <table
+            class="data-table"
+            :aria-busy="loading"
+        >
+            <thead>
+                <tr>
+                    <th class="col-photo"><span class="sr-only">Zdjęcie</span></th>
+                    <th>Tytuł</th>
+                    <th>Typ dania</th>
+                    <th>Status</th>
+                    <th class="col-actions"><span class="sr-only">Akcje</span></th>
+                </tr>
+            </thead>
+            <tbody
+                v-if="loading"
+                aria-hidden="true"
             >
-                <td class="col-photo">
-                    <img
-                        v-if="r.photoUrl"
-                        :src="r.photoUrl"
-                        alt=""
-                        class="thumb"
-                    />
-                    <div
-                        v-else
-                        class="photo thumb"
-                    />
-                </td>
-                <td class="cell-title">
-                    <RouterLink :to="{ name: 'recipe-edit', params: { id: r.id } }">
-                        {{ r.name }}
-                    </RouterLink>
-                </td>
-                <td class="cell-dish">
-                    <span
-                        v-if="mainDish(r)"
-                        class="dish"
-                        :class="mainDish(r)?.color ? `cat-${mainDish(r)?.color}` : null"
-                    >
-                        <span
-                            class="dish__dot"
-                            aria-hidden="true"
-                        />
-                        {{ mainDish(r)?.label }}
-                    </span>
-                </td>
-                <td>
-                    <span
-                        class="status-tag"
-                        :class="`status-tag--${r.status}`"
-                    >
-                        {{ STATUS_LABEL[r.status] }}
-                    </span>
-                </td>
-                <td>
-                    <div class="actions">
-                        <RouterLink
-                            v-if="r.status === 'published'"
-                            :to="{ name: 'recipe-details', params: { id: r.id } }"
-                            class="tbl-btn"
-                            :aria-label="`Zobacz „${r.name}”`"
-                            title="Zobacz na stronie"
-                        >
-                            <UIcon name="eye" />
-                        </RouterLink>
-                        <RouterLink
-                            :to="{ name: 'recipe-edit', params: { id: r.id } }"
-                            class="tbl-btn"
-                            :aria-label="`Edytuj „${r.name}”`"
-                            title="Edytuj"
-                        >
-                            <UIcon name="edit" />
-                        </RouterLink>
-                        <button
-                            type="button"
-                            class="tbl-btn tbl-btn--danger"
-                            :aria-label="`Usuń „${r.name}”`"
-                            title="Usuń"
-                            @click="remove(r)"
-                        >
-                            <UIcon name="trash" />
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr v-if="!filtered.length">
-                <td
-                    colspan="5"
-                    class="empty-row"
+                <tr
+                    v-for="n in 8"
+                    :key="n"
                 >
-                    Brak przepisów
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                    <td class="col-photo"><div class="photo thumb sk" /></td>
+                    <td class="cell-title"><span class="sk sk-cell sk-cell--wide" /></td>
+                    <td class="cell-dish"><span class="sk sk-cell" /></td>
+                    <td>
+                        <span class="status-tag sk-box">
+                            <span class="sk sk-fill" />
+                            Szkic
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <span class="tbl-btn sk-box"><span class="sk sk-fill" /></span>
+                            <span class="tbl-btn sk-box"><span class="sk sk-fill" /></span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+            <tbody v-else>
+                <tr
+                    v-for="r in filtered"
+                    :key="r.id"
+                >
+                    <td class="col-photo">
+                        <img
+                            v-if="r.photoUrl"
+                            :src="r.photoUrl"
+                            alt=""
+                            class="thumb"
+                        />
+                        <div
+                            v-else
+                            class="photo thumb"
+                        />
+                    </td>
+                    <td class="cell-title">
+                        <RouterLink :to="{ name: 'recipe-edit', params: { id: r.id } }">
+                            {{ r.name }}
+                        </RouterLink>
+                    </td>
+                    <td class="cell-dish">
+                        <span
+                            v-if="mainDish(r)"
+                            class="dish"
+                            :class="mainDish(r)?.color ? `cat-${mainDish(r)?.color}` : null"
+                        >
+                            <span
+                                class="dish__dot"
+                                aria-hidden="true"
+                            />
+                            {{ mainDish(r)?.label }}
+                        </span>
+                    </td>
+                    <td>
+                        <span
+                            class="status-tag"
+                            :class="`status-tag--${r.status}`"
+                        >
+                            {{ STATUS_LABEL[r.status] }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <RouterLink
+                                v-if="r.status === 'published'"
+                                :to="{ name: 'recipe-details', params: { id: r.id } }"
+                                class="tbl-btn"
+                                :aria-label="`Zobacz „${r.name}”`"
+                                title="Zobacz na stronie"
+                            >
+                                <UIcon name="eye" />
+                            </RouterLink>
+                            <RouterLink
+                                :to="{ name: 'recipe-edit', params: { id: r.id } }"
+                                class="tbl-btn"
+                                :aria-label="`Edytuj „${r.name}”`"
+                                title="Edytuj"
+                            >
+                                <UIcon name="edit" />
+                            </RouterLink>
+                            <button
+                                type="button"
+                                class="tbl-btn tbl-btn--danger"
+                                :aria-label="`Usuń „${r.name}”`"
+                                title="Usuń"
+                                @click="remove(r)"
+                            >
+                                <UIcon name="trash" />
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr v-if="!filtered.length">
+                    <td
+                        colspan="5"
+                        class="empty-row"
+                    >
+                        Brak przepisów
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </template>
 
 <style scoped>
@@ -214,10 +243,41 @@ async function remove(r: RecipeBaseDto) {
     height: 40px;
     background: var(--bg-alt);
 }
-.admin-loading {
+/* ładowanie: tabela od razu, wiersze-szkielety na klasach prawdziwych komórek (ta sama wysokość),
+   spinner nad tabelą — poza układem */
+.tbl-wrap {
+    position: relative;
+}
+.tbl-loading {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 56px;
     display: flex;
     justify-content: center;
-    padding: 60px 0;
+    pointer-events: none;
+}
+.sk-cell {
+    display: inline-block;
+    width: 120px;
+    height: 12px;
+    vertical-align: middle;
+}
+.sk-cell--wide {
+    width: 220px;
+}
+.sk-cell--short {
+    width: 28px;
+}
+.sk-box {
+    position: relative;
+    border-color: transparent;
+    background: transparent;
+}
+.sk-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
 }
 .col-photo {
     width: 54px;

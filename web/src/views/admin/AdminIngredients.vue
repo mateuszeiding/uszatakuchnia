@@ -98,85 +98,109 @@ async function remove(ing: IngredientDto) {
         </RouterLink>
     </div>
 
-    <div
-        v-if="loading"
-        class="admin-loading"
-    >
-        <USpinner :size="22" />
-    </div>
-    <table
-        v-else
-        class="data-table"
-    >
-        <thead>
-            <tr>
-                <th>Nazwa</th>
-                <th>Typ</th>
-                <th>Alergeny</th>
-                <th class="num">Użycia</th>
-                <th class="col-actions"><span class="sr-only">Akcje</span></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr
-                v-for="ing in filtered"
-                :key="ing.id"
+    <div class="tbl-wrap">
+        <div
+            v-if="loading"
+            class="tbl-loading"
+            role="status"
+            aria-label="Wczytywanie składników"
+        >
+            <USpinner :size="22" />
+        </div>
+        <table
+            class="data-table"
+            :aria-busy="loading"
+        >
+            <thead>
+                <tr>
+                    <th>Nazwa</th>
+                    <th>Typ</th>
+                    <th>Alergeny</th>
+                    <th class="num">Użycia</th>
+                    <th class="col-actions"><span class="sr-only">Akcje</span></th>
+                </tr>
+            </thead>
+            <tbody
+                v-if="loading"
+                aria-hidden="true"
             >
-                <td class="cell-name">{{ ing.name }}</td>
-                <td class="cell-type">{{ ing.type?.name }}</td>
-                <td>
-                    <div
-                        v-if="ing.allergens.length"
-                        class="allergen-tags"
-                    >
-                        <span
-                            v-for="a in ing.allergens"
-                            :key="a"
-                            class="allergen-tag"
-                        >
-                            {{ allergenLabel[a] ?? a }}
-                        </span>
-                    </div>
-                    <span
-                        v-else
-                        class="muted"
-                    >
-                        —
-                    </span>
-                </td>
-                <td class="num">{{ ing.usedIn }}</td>
-                <td>
-                    <div class="actions">
-                        <RouterLink
-                            :to="`/admin/ingredients/${ing.id}`"
-                            class="tbl-btn"
-                            :aria-label="`Edytuj ${ing.name}`"
-                            title="Edytuj"
-                        >
-                            <UIcon name="edit" />
-                        </RouterLink>
-                        <button
-                            type="button"
-                            class="tbl-btn tbl-btn--danger"
-                            :aria-label="`Usuń ${ing.name}`"
-                            title="Usuń"
-                            @click="remove(ing)"
-                        >
-                            <UIcon name="trash" />
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr v-if="!filtered.length">
-                <td
-                    colspan="5"
-                    class="empty-row"
+                <tr
+                    v-for="n in 12"
+                    :key="n"
                 >
-                    Brak składników
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                    <td class="cell-name"><span class="sk sk-cell" /></td>
+                    <td class="cell-type"><span class="sk sk-cell" /></td>
+                    <td><span class="muted">—</span></td>
+                    <td class="num"><span class="sk sk-cell sk-cell--short" /></td>
+                    <td>
+                        <div class="actions">
+                            <span class="tbl-btn sk-box"><span class="sk sk-fill" /></span>
+                            <span class="tbl-btn sk-box"><span class="sk sk-fill" /></span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+            <tbody v-else>
+                <tr
+                    v-for="ing in filtered"
+                    :key="ing.id"
+                >
+                    <td class="cell-name">{{ ing.name }}</td>
+                    <td class="cell-type">{{ ing.type?.name }}</td>
+                    <td>
+                        <div
+                            v-if="ing.allergens.length"
+                            class="allergen-tags"
+                        >
+                            <span
+                                v-for="a in ing.allergens"
+                                :key="a"
+                                class="allergen-tag"
+                            >
+                                {{ allergenLabel[a] ?? a }}
+                            </span>
+                        </div>
+                        <span
+                            v-else
+                            class="muted"
+                        >
+                            —
+                        </span>
+                    </td>
+                    <td class="num">{{ ing.usedIn }}</td>
+                    <td>
+                        <div class="actions">
+                            <RouterLink
+                                :to="`/admin/ingredients/${ing.id}`"
+                                class="tbl-btn"
+                                :aria-label="`Edytuj ${ing.name}`"
+                                title="Edytuj"
+                            >
+                                <UIcon name="edit" />
+                            </RouterLink>
+                            <button
+                                type="button"
+                                class="tbl-btn tbl-btn--danger"
+                                :aria-label="`Usuń ${ing.name}`"
+                                title="Usuń"
+                                @click="remove(ing)"
+                            >
+                                <UIcon name="trash" />
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <tr v-if="!filtered.length">
+                    <td
+                        colspan="5"
+                        class="empty-row"
+                    >
+                        Brak składników
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <UModal
         v-if="blocked"
@@ -218,10 +242,41 @@ async function remove(ing: IngredientDto) {
     height: 40px;
     background: var(--bg-alt);
 }
-.admin-loading {
+/* ładowanie: tabela od razu, wiersze-szkielety na klasach prawdziwych komórek (ta sama wysokość),
+   spinner nad tabelą — poza układem */
+.tbl-wrap {
+    position: relative;
+}
+.tbl-loading {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 56px;
     display: flex;
     justify-content: center;
-    padding: 60px 0;
+    pointer-events: none;
+}
+.sk-cell {
+    display: inline-block;
+    width: 120px;
+    height: 12px;
+    vertical-align: middle;
+}
+.sk-cell--wide {
+    width: 220px;
+}
+.sk-cell--short {
+    width: 28px;
+}
+.sk-box {
+    position: relative;
+    border-color: transparent;
+    background: transparent;
+}
+.sk-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
 }
 .col-actions {
     width: 84px;
