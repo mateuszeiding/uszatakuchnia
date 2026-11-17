@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 import ShoppingHeader from './ShoppingHeader.vue';
 import ShoppingRow from './ShoppingRow.vue';
@@ -28,12 +28,6 @@ const changeServings = (n: number) => {
 };
 
 const { checked, toggle, clear } = useShoppingChecks(props.recipe.id);
-const open = ref<number[]>([]);
-const flip = (id: number) =>
-    (open.value = open.value.includes(id)
-        ? open.value.filter((x) => x !== id)
-        : [...open.value, id]);
-const doneOpen = ref(false);
 
 const ratio = computed(() =>
     props.recipe.servings ? progress.value.servings / props.recipe.servings : 1
@@ -43,11 +37,12 @@ const items = computed(() =>
 );
 const isOn = (it: IShopItem) => checked.value.includes(it.id);
 const done = computed(() => items.value.filter(isOn));
-const optTodo = computed(() => items.value.filter((x) => x.optional && !isOn(x)));
+const optional = computed(() => items.value.filter((x) => x.optional));
 
-/** Działy sklepu = typy składników w kolejności słownika; nieznane typy na końcu. */
+/** Działy sklepu = typy składników w kolejności słownika; nieznane typy na końcu.
+ *  Odhaczone zostają w swoim dziale (16.11) — wydruk je pomija. */
 const aisles = computed(() => {
-    const todo = items.value.filter((x) => !x.optional && !isOn(x));
+    const todo = items.value.filter((x) => !x.optional);
     const order = (props.dicts?.ingredientTypes ?? []).map((t) => t.code as string);
     for (const it of todo) if (!order.includes(it.type.code)) order.push(it.type.code);
     return order
@@ -82,7 +77,7 @@ const today = new Date().toLocaleDateString('pl-PL');
     <div class="shop">
         <p class="shop__hint">
             Odhacz to, co masz w domu albo już w koszyku. Ilości zsumowane ze wszystkich grup
-            przepisu; liczba przy pozycji — z ilu miejsc się składa.
+            przepisu.
         </p>
 
         <div class="shop__cols">
@@ -90,6 +85,7 @@ const today = new Date().toLocaleDateString('pl-PL');
                 v-for="a in aisles"
                 :key="a.code"
                 class="aisle"
+                :class="{ 'is-all-done': a.items.every(isOn) }"
                 :aria-label="a.label"
             >
                 <h2 class="aisle__title">{{ a.label }}</h2>
@@ -98,17 +94,16 @@ const today = new Date().toLocaleDateString('pl-PL');
                         v-for="it in a.items"
                         :key="it.id"
                         :item="it"
-                        :checked="false"
-                        :open="open.includes(it.id)"
+                        :checked="isOn(it)"
                         @toggle="toggle(it.id)"
-                        @flip="flip(it.id)"
                     />
                 </ul>
             </section>
 
             <section
-                v-if="optTodo.length"
+                v-if="optional.length"
                 class="aisle aisle--opt"
+                :class="{ 'is-all-done': optional.every(isOn) }"
                 aria-label="Opcjonalne"
             >
                 <h2 class="aisle__title">
@@ -117,64 +112,20 @@ const today = new Date().toLocaleDateString('pl-PL');
                 </h2>
                 <ul class="aisle__list">
                     <ShoppingRow
-                        v-for="it in optTodo"
+                        v-for="it in optional"
                         :key="it.id"
                         :item="it"
-                        :checked="false"
-                        :open="open.includes(it.id)"
+                        :checked="isOn(it)"
                         @toggle="toggle(it.id)"
-                        @flip="flip(it.id)"
                     />
                 </ul>
             </section>
         </div>
 
-        <section
+        <div
             v-if="done.length"
             class="done"
-            aria-label="Odhaczone"
         >
-            <h2 class="done__head">
-                <button
-                    type="button"
-                    class="done__toggle"
-                    :aria-expanded="doneOpen"
-                    aria-controls="shop-done"
-                    @click="doneOpen = !doneOpen"
-                >
-                    <span class="aisle__title aisle__title--plain">
-                        Odhaczone · {{ done.length }}
-                    </span>
-                    <svg
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        aria-hidden="true"
-                        :class="{ 'is-open': doneOpen }"
-                    >
-                        <path
-                            d="M2.5 4.5L6 8l3.5-3.5"
-                            stroke="currentColor"
-                            stroke-width="1.6"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
-                </button>
-            </h2>
-            <ul
-                v-show="doneOpen"
-                id="shop-done"
-                class="aisle__list"
-            >
-                <ShoppingRow
-                    v-for="it in done"
-                    :key="it.id"
-                    :item="it"
-                    checked
-                    :open="false"
-                    @toggle="toggle(it.id)"
-                />
-            </ul>
             <button
                 type="button"
                 class="done__clear"
@@ -182,7 +133,7 @@ const today = new Date().toLocaleDateString('pl-PL');
             >
                 Odznacz wszystko
             </button>
-        </section>
+        </div>
 
         <footer class="print-foot">
             <span>{{ skipped }}</span>
@@ -240,39 +191,10 @@ const today = new Date().toLocaleDateString('pl-PL');
     padding: 0;
     margin: 0;
 }
-.done__head {
-    font: inherit;
-}
-.done__toggle {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: none;
-    border: none;
-    border-bottom: 1px solid var(--rule);
-    padding: 0 0 6px;
-    color: var(--ink-muted);
-    cursor: pointer;
-}
-.aisle__title--plain {
-    padding: 0;
-    border: none;
-    color: var(--ink-muted);
-}
-.done__toggle svg {
-    width: 11px;
-    height: 11px;
-    transition: transform var(--dur);
-}
-.done__toggle svg.is-open {
-    transform: rotate(180deg);
-}
 .done__clear {
-    margin-top: 10px;
     background: none;
     border: none;
-    padding: 0;
+    padding: 6px 0;
     color: var(--ink-dim);
     font-size: 13px;
     text-decoration: underline;
@@ -315,6 +237,9 @@ const today = new Date().toLocaleDateString('pl-PL');
     .aisle {
         break-inside: avoid;
         margin-bottom: 16px;
+    }
+    .aisle.is-all-done {
+        display: none;
     }
     .aisle__title {
         padding-bottom: 2px;

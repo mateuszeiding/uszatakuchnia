@@ -3,13 +3,11 @@ import QtyText from '@/components/QtyText.vue';
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 
 // Wiersz składnika z odhaczaniem (panel przepisu i tryb gotowania).
-// Przekreślenie po odhaczeniu tylko na ilości i nazwie — notatka i „też: …” zostają czytelne.
+// Przekreślenie po odhaczeniu tylko na ilości i nazwie — notatka zostaje czytelna.
 defineProps<{
     ing: RecipeIngredientDto;
     amount: { qty: string; unit: string };
     checked: boolean;
-    /** Inne grupy z tym samym składnikiem („też: ciasto, kruszonka”). */
-    also: string[];
     /** Większe wiersze (tryb gotowania). */
     roomy?: boolean;
 }>();
@@ -64,12 +62,6 @@ const emit = defineEmits<{ toggle: [] }>();
                 >
                     (opcjonalnie)
                 </em>
-                <span
-                    v-if="also.length"
-                    class="ing-item__also"
-                >
-                    też: {{ also.join(', ') }}
-                </span>
             </span>
         </button>
     </li>
@@ -112,8 +104,7 @@ const emit = defineEmits<{ toggle: [] }>();
     font-size: 13px;
     font-weight: 600;
 }
-.ing-item__note,
-.ing-item__also {
+.ing-item__note {
     display: block;
     font-family: var(--font-sans);
     font-size: 12px;

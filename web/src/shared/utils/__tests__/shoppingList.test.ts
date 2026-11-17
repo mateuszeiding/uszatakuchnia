@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { breakdown, buildShopping, noConversionNote, optText, sumText } from '../shoppingList';
+import { buildShopping, forText, sumText } from '../shoppingList';
 
 import { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
@@ -51,30 +51,21 @@ describe('buildShopping / sumText', () => {
         expect(it.groups).toEqual(['Ciasto', 'Kruszonka']);
     });
 
-    it('różne jednostki z przelicznikiem → jednostka o największym udziale, z „~”', () => {
+    it('różne jednostki obok siebie, bez przeliczania — także z przelicznikiem (16.11)', () => {
         const it = item([
             line('Zaczyn', 1, 'mąka', '2', 'łyżka', { gramsPerUnit: { min: 8, max: 10 } }),
             line('Ciasto', 1, 'mąka', '500', 'g'),
             line('Kruszonka', 1, 'mąka', '50', 'g'),
         ]);
-        expect(sumText(it.sum)).toBe('~570 g');
-        expect(breakdown(it).map((r) => `${r.group} ${r.text}`)).toEqual([
-            'Zaczyn 2 łyżki ≈ 18 g',
-            'Ciasto 500 g',
-            'Kruszonka 50 g',
-        ]);
-        expect(noConversionNote(it)).toBeNull();
+        expect(sumText(it.sum)).toBe('550 g + 2 łyżki');
     });
 
-    it('bez przelicznika → „100 g + 1 łyżeczka” i zdanie dlaczego', () => {
+    it('bez przelicznika → „100 g + 1 łyżeczka”', () => {
         const it = item([
             line('Kruszonka', 13, 'cynamon', '100', 'g'),
             line('Ciasto', 13, 'cynamon', '1', 'łyżeczka'),
         ]);
         expect(sumText(it.sum)).toBe('100 g + 1 łyżeczka');
-        expect(noConversionNote(it)).toBe(
-            'Łyżeczek nie da się dodać do gramów — ten składnik nie ma przelicznika.'
-        );
     });
 
     it('sztuki zaokrąglane w górę', () => {
@@ -93,10 +84,10 @@ describe('buildShopping / sumText', () => {
         const it = item([line('Ciasto', 9, 'rodzynki', '50', 'g', { optional: true })]);
         expect(it.optional).toBe(true);
         expect(sumText(it.sum)).toBe('50 g');
-        expect(it.optSum).toBeNull();
+        expect(forText(it)).toBe('ciasto');
     });
 
-    it('wymagane + opcjonalne → suma wymaganych i dopisek', () => {
+    it('wymagane + opcjonalne → suma wymaganych, w „do:” grupa z dopiskiem', () => {
         const withQty = item([
             line('Ciasto', 4, 'masło', '80', 'g'),
             line('Kruszonka', 4, 'masło', '30', 'g'),
@@ -104,15 +95,14 @@ describe('buildShopping / sumText', () => {
         ]);
         expect(withQty.optional).toBe(false);
         expect(sumText(withQty.sum)).toBe('110 g');
-        expect(optText(withQty)).toBe('+ 20 g');
-        expect(breakdown(withQty)).toHaveLength(2); // opcjonalne nie w składowych
+        expect(forText(withQty)).toBe('ciasto, kruszonka · do podania (opcjonalnie)');
 
         const taste = item([
             line('Ciasto', 4, 'masło', '80', 'g'),
             line('Do podania', 4, 'masło', null, 'do smaku', { optional: true }),
         ]);
         expect(sumText(taste.sum)).toBe('80 g');
-        expect(optText(taste)).toBe('też do podania — do smaku');
+        expect(forText(taste)).toBe('ciasto · do podania (opcjonalnie)');
     });
 
     it('„do smaku” → tylko gdy nic innego', () => {
@@ -152,8 +142,32 @@ describe('buildShopping / sumText', () => {
     });
 });
 
-describe('przybliżenie na łyżki / szklanki', () => {
-    it('główna jednostka szklanka → ułamek, nie całość', () => {
+describe('forText — „do: …”', () => {
+    it('grupy bez ilości, małymi literami, bez powtórzeń', () => {
+        const it = item([
+            line('Zaczyn', 1, 'mąka', '2', 'łyżka'),
+            line('Ciasto', 1, 'mąka', '500', 'g'),
+            line('Kruszonka', 1, 'mąka', '50', 'g'),
+            line('Ciasto', 1, 'mąka', '20', 'g'),
+        ]);
+        expect(forText(it)).toBe('zaczyn, ciasto, kruszonka');
+    });
+
+    it('grupa wymagana i opcjonalna naraz → bez dopisku', () => {
+        const it = item([
+            line('Ciasto', 4, 'masło', '80', 'g'),
+            line('Ciasto', 4, 'masło', '20', 'g', { optional: true }),
+        ]);
+        expect(forText(it)).toBe('ciasto');
+    });
+
+    it('przepis bez grup → pusto', () => {
+        expect(forText(item([line(null, 7, 'sól', '1', 'łyżeczka')]))).toBe('');
+    });
+});
+
+describe('kolejność jednostek', () => {
+    it('najpierw jednostka o największym udziale w gramach, bez „~”', () => {
         const it = buildShopping(
             [
                 line('Zaczyn', 2, 'mleko', '100', 'ml', { gramsPerUnit: { min: 1, max: 1 } }),
@@ -164,6 +178,6 @@ describe('przybliżenie na łyżki / szklanki', () => {
             units,
             1
         )[0]!;
-        expect(sumText(it.sum)).toBe('~1¼ szklanki');
+        expect(sumText(it.sum)).toBe('¾ szklanki + 100 ml');
     });
 });

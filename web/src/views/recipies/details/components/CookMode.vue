@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-import { alsoIn, ingredientGroups, leadText, scaledAmount, servingsLabel } from '../recipeView';
+import { ingredientGroups, leadText, scaledAmount, servingsLabel } from '../recipeView';
 
 import IngGroupHeader from './IngGroupHeader.vue';
 import IngRow from './IngRow.vue';
@@ -213,7 +213,6 @@ function amount(ing: RecipeDto['ingredients'][number]) {
                             :ing="ing"
                             :amount="amount(ing)"
                             :checked="checkedIng.includes(ing.sortOrder)"
-                            :also="alsoIn(ing, recipe.ingredients)"
                             roomy
                             @toggle="emit('toggle-ing', ing.sortOrder)"
                         />

@@ -1,14 +1,14 @@
 // Lista zakupów: sumowanie składników przepisu.
-// Logika przeniesiona 1:1 z prototypu .design/sk-main.jsx (mergeParts, buildShopping, sumText, optText):
+// Logika przeniesiona 1:1 z prototypu .design/sk-main.jsx (mergeParts, buildShopping, sumText, forText):
 // 1) ten sam składnik (ingredientId) z różnych grup → jedna pozycja;
 // 2) ta sama jednostka → suma (min i max osobno);
-// 3) różne jednostki → przeliczenie przez gramy na jednostkę o największym udziale, jeśli oba mają przelicznik → „~”;
-// 4) bez przelicznika → zostaje jako „+ 1 łyżeczka”; „do smaku” → tylko gdy nic innego.
+// 3) różne jednostki → obok siebie: „550 g + 2 łyżki” (bez przeliczania, 16.11);
+// 4) „do smaku” → tylko gdy nic innego.
 // Formatowanie liczb wspólne ze stroną przepisu (quantity.ts: ułamki, tercje); w sklepie sztuki w górę.
 
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
-import { COUNT, fmtNum, parseQty, SPOON, unitLabel } from '@/shared/utils/quantity';
+import { COUNT, fmtNum, parseQty, unitLabel } from '@/shared/utils/quantity';
 
 export interface IRange {
     min: number;
@@ -33,9 +33,7 @@ export interface IBucket extends IRange {
     gpu: IRange | null;
 }
 
-export type ShopSum =
-    | { taste: true; rest: [] }
-    | { taste?: false; main: IBucket; approx: boolean; rest: IBucket[] };
+export type ShopSum = { taste: true; rest: [] } | { taste?: false; main: IBucket; rest: IBucket[] };
 
 export interface IShopItem {
     id: number;
@@ -43,9 +41,8 @@ export interface IShopItem {
     type: { code: string; label: string };
     /** Tylko opcjonalne wystąpienia → sekcja „Opcjonalne”. */
     optional: boolean;
+    /** Suma wymaganych wystąpień (dla pozycji tylko-opcjonalnych — opcjonalnych). */
     sum: ShopSum | null;
-    /** Opcjonalne wystąpienia składnika, który jest też wymagany („+ 20 g (opcjonalnie)”). */
-    optSum: ShopSum | null;
     parts: IShopPart[];
     groups: string[];
 }
@@ -107,26 +104,11 @@ export function mergeParts(parts: IShopPart[]): ShopSum | null {
     const buckets = Object.values(byU);
     if (!buckets.length) return tasteOnly.length ? { taste: true, rest: [] } : null;
 
+    // Kolejność: największy udział w gramach na początku („550 g + 2 łyżki”), bez przeliczania (16.11).
     const g = (b: IBucket) => (b.gpu ? (((b.min + b.max) / 2) * (b.gpu.min + b.gpu.max)) / 2 : -1);
     buckets.sort((a, b) => g(b) - g(a) || b.max - a.max);
-    const main: IBucket = { ...buckets[0]! };
-    let approx = false;
-    const rest: IBucket[] = [];
-    for (const b of buckets.slice(1)) {
-        if (b.gpu && main.gpu) {
-            main.min += (b.min * b.gpu.min) / main.gpu.max;
-            main.max += (b.max * b.gpu.max) / main.gpu.min;
-            approx = true;
-        } else rest.push(b);
-    }
-    // sumy przybliżone: ≥ 100 co 10. Odstępstwo od prototypu: łyżki / szklanki nie do całości
-    // (fmtNum zaokrągli do ćwiartek / tercji) — inaczej 1¼ szklanki wychodziło „~1 szklanka”.
-    if (approx && !isCount(main.unit)) {
-        const m = (main.min + main.max) / 2;
-        const r = SPOON.has(main.unit) ? m : m >= 100 ? Math.round(m / 10) * 10 : Math.round(m);
-        main.min = main.max = r;
-    }
-    return { main, approx, rest };
+    const [main, ...rest] = buckets;
+    return { main: main!, rest };
 }
 
 /** Składniki przepisu → pozycje listy zakupów (kolejność pierwszego wystąpienia). */
@@ -152,7 +134,6 @@ export function buildShopping(
             type: ing.ingredientType ?? { code: 'OTHER', label: 'inne' },
             optional: !req.length,
             sum: mergeParts(base),
-            optSum: req.length && opt.length ? mergeParts(opt) : null,
             parts,
             groups: [...new Set(parts.map((p) => p.group).filter((x): x is string => !!x))],
         });
@@ -163,63 +144,33 @@ export function buildShopping(
 export function sumText(s: ShopSum | null): string {
     if (!s) return '';
     if (s.taste) return 'do smaku';
-    const m = s.main;
-    let t = `${s.approx ? '~' : ''}${join(fmtQ(m, m.unit, true), uLabel(m, isCount(m.unit) ? Math.ceil(m.max - 0.001) : m.max))}`;
-    for (const r of s.rest)
-        t += ` + ${join(fmtQ(r, r.unit, true), uLabel(r, isCount(r.unit) ? Math.ceil(r.max - 0.001) : r.max))}`;
-    return t;
+    return [s.main, ...s.rest]
+        .map((b) =>
+            join(
+                fmtQ(b, b.unit, true),
+                uLabel(b, isCount(b.unit) ? Math.ceil(b.max - 0.001) : b.max)
+            )
+        )
+        .join(' + ');
 }
 
-/** Dopisek dla składnika wymaganego, który bywa też opcjonalny. */
-export function optText(it: IShopItem): string {
-    if (!it.optSum) return '';
-    if (it.optSum.taste) {
-        const groups = [
-            ...new Set(
-                it.parts.filter((p) => p.optional && p.group).map((p) => p.group!.toLowerCase())
-            ),
-        ];
-        return groups.length ? `też ${groups.join(', ')} — do smaku` : 'też do smaku';
-    }
-    return `+ ${sumText(it.optSum)}`;
-}
-
-/** Części, z których składa się suma (opcjonalne tylko dla pozycji tylko-opcjonalnych). */
-export const countedParts = (it: IShopItem) => it.parts.filter((p) => it.optional || !p.optional);
-
-export interface IBreakdownRow {
-    group: string;
-    text: string;
-    optional: boolean;
-    note: string | null;
-}
-
-/** Rozwinięcie pozycji: „grupa · ilość (≈ przeliczenie) · notatka”. */
-export function breakdown(it: IShopItem): IBreakdownRow[] {
-    const mu = it.sum && !it.sum.taste ? it.sum.main.unit : null;
-    return countedParts(it).map((p) => {
-        const t = noQty(p) || !p.qty ? 'do smaku' : join(fmtQ(p.qty, p.unit), uLabel(p, p.qty.max));
-        const conv =
-            p.gpu && mu && p.unit !== 'g' && p.qty && mu !== p.unit
-                ? ` ≈ ${Math.round((p.qty.min * p.gpu.min + p.qty.max * p.gpu.max) / 2)} ${mu === 'ml' ? 'ml' : 'g'}`
-                : '';
-        return { group: p.group ?? '—', text: t + conv, optional: p.optional, note: p.note };
-    });
-}
-
-// Dopełniacz l.mn. jednostki („łyżeczek”, „gramów”) do zdania o braku przelicznika.
-const GEN_PL: Record<string, string> = {
-    g: 'gramów',
-    kg: 'kilogramów',
-    ml: 'mililitrów',
-    l: 'litrów',
-};
-const genPl = (b: IBucket) => GEN_PL[b.unit] ?? b.unitDef?.forms?.[2] ?? b.unit;
-
-/** „Łyżeczek nie da się dodać do gramów — ten składnik nie ma przelicznika.”; null, gdy wszystko zsumowane. */
-export function noConversionNote(it: IShopItem): string | null {
-    const s = it.sum;
-    if (!s || s.taste || !s.rest.length) return null;
-    const what = s.rest.map(genPl).join(' ani ');
-    return `${what.charAt(0).toUpperCase()}${what.slice(1)} nie da się dodać do ${genPl(s.main)} — ten składnik nie ma przelicznika.`;
+/** „Do czego”: grupy przepisu, w których składnik występuje, bez ilości (16.11).
+ *  Grupy, w których jest tylko opcjonalnie → „(opcjonalnie)”; przepis bez grup → ''. */
+export function forText(it: IShopItem): string {
+    const groupsOf = (optional: boolean) => [
+        ...new Set(
+            it.parts
+                .filter((p) => p.optional === optional && p.group)
+                .map((p) => p.group!.toLowerCase())
+        ),
+    ];
+    const req = groupsOf(false);
+    const opt = groupsOf(true).filter((g) => !req.includes(g));
+    return [
+        req.join(', '),
+        opt.length && !it.optional ? `${opt.join(', ')} (opcjonalnie)` : '',
+        it.optional ? opt.join(', ') : '',
+    ]
+        .filter(Boolean)
+        .join(' · ');
 }

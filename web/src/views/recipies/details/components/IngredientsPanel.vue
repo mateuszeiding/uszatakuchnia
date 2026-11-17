@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-import { alsoIn, ingredientGroups, scaledAmount } from '../recipeView';
+import { ingredientGroups, scaledAmount } from '../recipeView';
 
 import IngGroupHeader from './IngGroupHeader.vue';
 import IngRow from './IngRow.vue';
@@ -148,7 +148,6 @@ onBeforeUnmount(() => ro?.disconnect());
                             :ing="ing"
                             :amount="amount(ing)"
                             :checked="checked.includes(ing.sortOrder)"
-                            :also="alsoIn(ing, recipe.ingredients)"
                             @toggle="emit('toggle', ing.sortOrder)"
                         />
                     </ul>
