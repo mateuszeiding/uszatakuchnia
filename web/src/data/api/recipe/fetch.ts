@@ -21,8 +21,6 @@ export function fetchRecipesWithClient<E extends keyof RequestMap>(
     >;
     return qc.fetchQuery({
         queryKey: [base, admin],
-        // Lista: 60 s świeża — powrót z przepisu bez ponownego pobierania (unieważnienie po zapisie / usunięciu).
-        staleTime: endpoint === 'list' ? LIST_STALE_MS : 0,
         // API zwraca zwykłe obiekty — budujemy klasy DTO (photoUrl, domyślne wartości).
         queryFn: async () => {
             if (endpoint === 'list') {
@@ -33,16 +31,6 @@ export function fetchRecipesWithClient<E extends keyof RequestMap>(
             return new RecipeDto(raw) as RequestMap[E];
         },
     });
-}
-
-const LIST_STALE_MS = 60_000;
-
-/** Lista z cache do pokazania od razu, bez szkieletów (odświeżenie w tle); undefined = brak danych
- *  albo cache unieważniony po zapisie / usunięciu — wtedy nie pokazujemy nieaktualnej listy. */
-export function cachedRecipeList(qc: QueryClient, admin = false) {
-    const key = ['recipes/list', admin];
-    if (qc.getQueryState(key)?.isInvalidated) return undefined;
-    return qc.getQueryData<RecipeBaseDto[]>(key);
 }
 
 // Use only from setup() context

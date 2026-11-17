@@ -20,8 +20,8 @@ import {
     toQuery,
 } from './listFilters';
 
-import { cachedRecipeList, fetchRecipesWithClient } from '@/data/api/recipe/fetch';
-import { cachedDictionaries, fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
+import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
+import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
 
@@ -30,27 +30,20 @@ const router = useRouter();
 const qc = useQueryClient();
 
 // Słowniki i przepisy ładowane niezależnie: filtry nie czekają na listę, siatka nie czeka na słowniki.
-// Dane z cache (powrót z przepisu) od razu — bez szkieletów; odświeżenie w tle.
-const cachedList = cachedRecipeList(qc);
-const cachedDicts = cachedDictionaries(qc);
-
-const recipes = ref<RecipeBaseDto[]>(cachedList ?? []);
-const loading = ref(!cachedList);
-const axes = ref<ITaxonomyAxis[]>(cachedDicts?.axes ?? []);
-const filtersReady = ref(!!cachedDicts);
-const filters = ref<IListFilters>(
-    cachedDicts ? readQuery(route.query, cachedDicts.axes) : emptyFilters()
-);
+// Do załadowania zawsze szkielety (także przy powrocie z przepisu).
+const recipes = ref<RecipeBaseDto[]>([]);
+const loading = ref(true);
+const axes = ref<ITaxonomyAxis[]>([]);
+const filtersReady = ref(false);
+const filters = ref<IListFilters>(emptyFilters());
 const shown = ref(PAGE_SIZE);
 const sheetOpen = ref(false);
 
 onMounted(() => {
     fetchDictionariesWithClient(qc).then((dicts) => {
         axes.value = dicts.axes;
-        if (!filtersReady.value) {
-            filters.value = readQuery(route.query, dicts.axes);
-            filtersReady.value = true;
-        }
+        filters.value = readQuery(route.query, dicts.axes);
+        filtersReady.value = true;
     });
     fetchRecipesWithClient(qc, 'list').then((list) => {
         recipes.value = list;

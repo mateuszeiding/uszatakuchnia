@@ -13,10 +13,6 @@ export const fetchDictionariesWithClient = (qc: QueryClient) =>
         staleTime: 5 * 60 * 1000,
     });
 
-/** Słowniki z cache; undefined = jeszcze nie pobrane. */
-export const cachedDictionaries = (qc: QueryClient) =>
-    qc.getQueryData<IDictionaries>(DICTIONARIES_KEY);
-
 // Use only from setup() context
 export const fetchDictionaries = () => fetchDictionariesWithClient(useQueryClient());
 
