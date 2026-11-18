@@ -1,5 +1,5 @@
 // Ilości składników: parser (liczby, ułamki, zakresy), odmiana jednostek, skalowanie porcji.
-// Logika przeniesiona z prototypu (design/UszataKuchnia/cr2-ui.jsx, rv2-data.jsx).
+// Logika przeniesiona z prototypu (Claude Design: cr2-ui.jsx, rv2-data.jsx).
 // Ten sam parser jest po stronie API: services/quantity.go.
 
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';

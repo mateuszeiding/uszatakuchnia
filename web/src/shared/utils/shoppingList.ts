@@ -1,5 +1,5 @@
 // Lista zakupów: sumowanie składników przepisu.
-// Logika przeniesiona 1:1 z prototypu .design/sk-main.jsx (mergeParts, buildShopping, sumText, forText):
+// Logika przeniesiona 1:1 z prototypu Claude Design sk-main.jsx (mergeParts, buildShopping, sumText, forText):
 // 1) ten sam składnik (ingredientId) z różnych grup → jedna pozycja;
 // 2) ta sama jednostka → suma (min i max osobno);
 // 3) różne jednostki → obok siebie: „550 g + 2 łyżki” (bez przeliczania, 16.11);

@@ -1,5 +1,5 @@
 // Makroskładniki: typy z API, zaokrąglenia i formatowanie zakresów („20 – 22 g (~21)”).
-// Logika przeniesiona z prototypu (.design/mk-main.jsx: rnd, fmt, fmtText). Wyliczenia są po stronie API (services/nutrition.go).
+// Logika przeniesiona z prototypu (Claude Design: mk-main.jsx — rnd, fmt, fmtText). Wyliczenia są po stronie API (services/nutrition.go).
 
 export type NutrientKey = 'kcal' | 'protein' | 'fat' | 'carbs' | 'fiber';
 

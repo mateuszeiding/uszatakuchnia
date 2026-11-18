@@ -35,11 +35,12 @@ Projekt używa Prettier przez `eslint-plugin-prettier`. Nie commituj kodu bez pr
 ### DS (Design System)
 - Tokeny: `web/src/scss/config/_tokens.scss`
 - Komponenty: `web/src/scss/config/_components.scss`
-- Designy źródłowe: `.design/` w roocie repo (handoff, decyzje, prototypy JSX). To jedyne źródło prawdy — `design/` i kopie w `~/.claude/...` są nieaktualne.
+- Designy źródłowe: projekt Claude Design — artefakt https://claude.ai/artifact/YEuK2L22otH24hdvcUC5GR (handoff, decyzje, prototypy JSX). To jedyne źródło prawdy; w repo nie trzymamy kopii (`.design/`, `design/` usunięte 18.11.2026), a eksporty w `~/.claude/...` są nieaktualne.
 
 ## Wdrażanie designu
 
-Design przygotowuje Claude Design w `.design/` (`Handoff - Claude Code.md`, `Decyzje i backlog.md`, prototypy `*.jsx`).
+Design przygotowuje Claude Design w artefakcie powyżej, pliki pod `project/`: `Handoff - Claude Code.md`, `Decyzje i backlog.md`, ekrany `*.html` → prototypy `*-main.jsx` (np. `Wskazowki.html` → `wk-main.jsx`).
+- Czytaj przez narzędzie Artifact: `action: "read"`, `paths: ["project/…"]` (lista plików: `action: "list"`, `scope: "files"`). Zawsze bieżąca wersja — nie pracuj na zapamiętanych kopiach. Tylko odczyt: nie publikuj do tego artefaktu i nie uruchamiaj `/design-sync`.
 - Każdy punkt **checklisty odbioru** z handoffu = zadanie w planie. Raport końcowy odhacza checklistę: zrobione / pominięte + powód. Niedokończonego zadania nie zostawiaj bez słowa.
 - Prototyp to referencja wyglądu i zachowania, nie kod do kopiowania — ale funkcje wskazane w handoffie jako „1:1” przenoś 1:1.
 - Jeśli design koliduje z istniejącym zachowaniem albo decyzją z `Decyzje i backlog.md` (np. przyklejony panel, kolejność sekcji) — nie rozwiązuj po cichu. Opisz kolizję i zapytaj.
