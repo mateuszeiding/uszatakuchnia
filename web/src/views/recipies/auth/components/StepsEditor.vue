@@ -1,18 +1,11 @@
 <script lang="ts" setup>
 import { nextTick } from 'vue';
 
-import {
-    blankStep,
-    type IGroup,
-    type IStepItem,
-    MAX_HINT_LEN,
-    PREP_LEADS,
-    uid,
-} from '../recipeForm';
+import { blankStep, type IGroup, type IStepItem, PREP_LEADS, uid } from '../recipeForm';
 
 import GroupShell from './GroupShell.vue';
+import StepHintsEditor from './StepHintsEditor.vue';
 
-import BulbIcon from '@/components/BulbIcon.vue';
 import { confirmAction } from '@/composables/useConfirm';
 import { useListDnd } from '@/composables/useListDnd';
 
@@ -128,43 +121,11 @@ async function removeGroup(g: IGroup<IStepItem>) {
                             stepNo(gi, ii) === 1 ? 'Rozgrzej piekarnik do 200°C…' : 'Następny krok…'
                         "
                     />
-                    <div
-                        v-for="(_, hi) in s.hints"
-                        :key="hi"
-                        class="hint-row"
-                    >
-                        <span class="hint-row__icon"><BulbIcon /></span>
-                        <input
-                            :id="`hint-${s.id}-${hi}`"
-                            v-model="s.hints[hi]"
-                            class="input hint-row__input"
-                            type="text"
-                            :maxlength="MAX_HINT_LEN"
-                            :aria-label="`Krok ${stepNo(gi, ii)}, wskazówka ${hi + 1}`"
-                            placeholder="np. Jeśli ciasto się klei, odstaw je na 10 minut"
-                        />
-                        <button
-                            type="button"
-                            class="row-icon-btn"
-                            :aria-label="`Usuń wskazówkę ${hi + 1} z kroku ${stepNo(gi, ii)}`"
-                            :title="`Usuń wskazówkę ${hi + 1}`"
-                            @click="s.hints.splice(hi, 1)"
-                        >
-                            <svg
-                                width="11"
-                                height="11"
-                                viewBox="0 0 11 11"
-                                aria-hidden="true"
-                            >
-                                <path
-                                    d="M2 2l7 7M9 2L2 9"
-                                    stroke="currentColor"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
-                        </button>
-                    </div>
+                    <StepHintsEditor
+                        v-model:hints="s.hints"
+                        :step-id="s.id"
+                        :step-no="stepNo(gi, ii)"
+                    />
                     <div class="step-row__prep">
                         <button
                             type="button"
@@ -311,19 +272,6 @@ async function removeGroup(g: IGroup<IStepItem>) {
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-}
-.hint-row {
-    display: grid;
-    grid-template-columns: 16px minmax(0, 1fr) 30px;
-    gap: 8px;
-    align-items: center;
-}
-.hint-row__icon {
-    display: inline-flex;
-    color: var(--accent);
-}
-.hint-row__input {
-    font-size: 13px;
 }
 .hint-add {
     margin-right: 8px;

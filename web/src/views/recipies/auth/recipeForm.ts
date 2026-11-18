@@ -226,8 +226,23 @@ export function moveTipToStep(f: IRecipeForm, stepId: number): void {
     const tip = f.tip.trim();
     const step = f.stepGroups.flatMap((g) => g.items).find((s) => s.id === stepId);
     if (!tip || !step) return;
-    step.hints.push(tip);
+    step.hints.push(...splitHint(tip));
     f.tip = '';
+}
+
+/** Dzieli tekst dłuższy niż MAX_HINT_LEN po zdaniach (. ! ? …) na kawałki ≤ MAX_HINT_LEN.
+ *  Zdanie dłuższe od limitu zostaje w całości — walidacja pokaże je przy kroku. */
+function splitHint(text: string): string[] {
+    const len = (s: string) => [...s].length;
+    if (len(text) <= MAX_HINT_LEN) return [text];
+    const sentences = text.match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g)?.map((s) => s.trim()) ?? [text];
+    const out: string[] = [];
+    for (const s of sentences.filter(Boolean)) {
+        const last = out[out.length - 1];
+        if (last && len(`${last} ${s}`) <= MAX_HINT_LEN) out[out.length - 1] = `${last} ${s}`;
+        else out.push(s);
+    }
+    return out;
 }
 
 export type FormErrors = Partial<
