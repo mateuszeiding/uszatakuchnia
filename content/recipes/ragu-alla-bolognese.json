@@ -1,0 +1,88 @@
+{
+  "name": "Ragù alla bolognese",
+  "servings": 6,
+  "timeMin": 180,
+  "timeMax": 300,
+  "difficulty": 1,
+  "status": "draft",
+  "newUnits": [{ "name": "łodyga", "forms": ["łodyga", "łodygi", "łodyg"] }],
+  "taxonomy": {
+    "dish": ["danie główne"],
+    "base": ["mięso"],
+    "cuisine": ["włoska"]
+  },
+  "ingredients": [
+    { "section": "Baza", "ingredient": "Oliwa z oliwek", "quantity": "2", "unit": "łyżka" },
+    { "section": "Baza", "ingredient": "Boczek", "quantity": "150", "unit": "g", "note": "wędzony" },
+    { "section": "Baza", "ingredient": "Cebula", "quantity": "1", "unit": "sztuka" },
+    { "section": "Baza", "ingredient": "Marchew", "quantity": "1", "unit": "sztuka" },
+    { "section": "Baza", "ingredient": "Seler naciowy", "quantity": "2", "unit": "łodyga" },
+    { "section": "Mięso", "ingredient": "Wołowina", "quantity": "450", "unit": "g", "note": "mielona" },
+    { "section": "Mięso", "ingredient": "Oliwa z oliwek", "quantity": "1", "unit": "łyżka" },
+    { "section": "Sos", "ingredient": "Czerwone wino wytrawne", "quantity": "100", "unit": "ml" },
+    { "section": "Sos", "ingredient": "Passata pomidorowa", "quantity": "500", "unit": "g" },
+    { "section": "Sos", "ingredient": "Woda", "note": "w razie potrzeby" },
+    { "section": "Sos", "ingredient": "Bazylia", "quantity": "1", "unit": "pęczek", "optional": true },
+    { "section": "Sos", "ingredient": "Mleko", "quantity": "200", "unit": "ml" },
+    { "section": "Sos", "ingredient": "Sól", "unit": "do smaku" },
+    { "section": "Do podania", "ingredient": "Parmezan", "unit": "do smaku" }
+  ],
+  "steps": [
+    {
+      "section": "Baza",
+      "text": "Rozgrzej oliwę w garnku na średnim ogniu. Dodaj pokrojony w kostkę boczek i smaż, często mieszając, aż wytopi się z niego tłuszcz, a boczek lekko się przypiecze.",
+      "hints": ["Najlepiej sprawdzi się garnek ok. 3–4 l."]
+    },
+    {
+      "section": "Baza",
+      "text": "Dodaj drobno pokrojoną cebulę, marchewkę i seler oraz szczyptę soli i dokładnie wymieszaj z boczkiem. Zmniejsz ogień i smaż 4–5 minut, aż warzywa zmiękną."
+    },
+    {
+      "section": "Mięso",
+      "text": "Na osobnej patelni rozgrzej oliwę i smaż wołowinę na średnio-dużym ogniu, rozbijając grudki, aż mięso się zrumieni.",
+      "hints": [
+        "Brązowe, przypieczone kawałki mięsa (reakcja Maillarda, zachodzi powyżej ok. 140°C) dają najwięcej smaku, dlatego warto mięso dobrze przysmażyć.",
+        "Nie wrzucaj za dużo mięsa naraz. Na przeładowanej patelni temperatura spada, sok z mięsa nie nadąża odparowywać i mięso się w nim dusi. Przy mniejszej patelni smaż w kilku turach.",
+        "Do rozdrabniania mięsa na patelni świetnie nadaje się tłuczek do ziemniaków."
+      ]
+    },
+    {
+      "section": "Mięso",
+      "text": "Przełóż obsmażone mięso do garnka z boczkiem i warzywami. Wymieszaj, rozbijając większe grudki."
+    },
+    {
+      "section": "Sos",
+      "text": "Wlej wino, zeskrob z dna to, co przywarło, i gotuj, aż wina ubędzie mniej więcej o dwie trzecie.",
+      "hints": [
+        "Zamiast wina może być wino bezalkoholowe, bulion albo nawet woda. Najważniejsze jest rozpuszczenie przypieczonych resztek z dna, bo w nich jest najwięcej smaku.",
+        "Na początku możesz wlać wino na patelnię po mięsie, zeskrobać przypieczone resztki i przelać wszystko do garnka."
+      ]
+    },
+    {
+      "section": "Sos",
+      "text": "Dodaj passatę i łodyżki bazylii. Do pustego słoika albo kartonu po passacie wlej trochę wody, wstrząśnij, żeby wypłukać resztki, i przelej do garnka. Wymieszaj.",
+      "hints": ["Łodyżki przez czas duszenia oddadzą sosowi aromat, a liście przydadzą się do podania."]
+    },
+    {
+      "section": "Sos",
+      "text": "Duś na małym ogniu co najmniej 2 godziny, mieszając co 15–20 minut. Sos ma tylko lekko mrugać. Jeśli zacznie za bardzo gęstnieć albo przywierać, dolej trochę wody.",
+      "hints": [
+        "Możesz dusić nawet do 4 godzin, smak będzie głębszy. Zaglądaj tylko częściej, czy nie trzeba dolać wody.",
+        "Przez długie duszenie kolagen z mięsa powoli zamienia się w żelatynę. Mięso robi się miękkie, a sos gęsty i lekko kleisty."
+      ]
+    },
+    {
+      "section": "Sos",
+      "text": "Wyjmij łodyżki bazylii. Zmniejsz ogień do minimum, wlej mleko i wymieszaj. Spróbuj i dopraw solą.",
+      "hints": [
+        "Po dodaniu mleka nie doprowadzaj sosu do wrzenia, bo mleko może się zważyć.",
+        "Sól dodajemy na końcu, żeby nie przesolić sosu. Boczek jest dość słony, a sos przez długie duszenie mocno się zredukuje."
+      ]
+    },
+    {
+      "section": "Podanie",
+      "text": "Wymieszaj ugotowany makaron z sosem na patelni, dolewając trochę wody z gotowania makaronu. Podawaj z bazylią i parmezanem.",
+      "hints": ["Do ciężkich, mięsnych sosów najlepiej nadają się makarony szerokie, jak tagliatelle czy pappardelle, albo grube, z rowkami lub dziurą w środku, jak rigatoni czy penne."]
+    }
+  ]
+}
