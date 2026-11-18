@@ -15,11 +15,12 @@ const hints = defineModel<string[]>('hints', { required: true });
         class="hint-row"
     >
         <span class="hint-row__icon"><BulbIcon /></span>
-        <input
+        <textarea
             :id="`hint-${stepId}-${hi}`"
             v-model="hints[hi]"
-            class="input hint-row__input"
-            type="text"
+            v-autosize
+            class="textarea hint-row__input"
+            rows="1"
             :maxlength="MAX_HINT_LEN"
             :aria-label="`Krok ${stepNo}, wskazówka ${hi + 1}`"
             placeholder="np. Jeśli ciasto się klei, odstaw je na 10 minut"
@@ -53,13 +54,21 @@ const hints = defineModel<string[]>('hints', { required: true });
     display: grid;
     grid-template-columns: 16px minmax(0, 1fr) 30px;
     gap: 8px;
-    align-items: center;
+    /* pole rośnie w dół — ikona i ✕ zostają przy pierwszej linii */
+    align-items: start;
 }
 .hint-row__icon {
     display: inline-flex;
+    margin-top: 12px;
     color: var(--accent);
 }
+.hint-row .row-icon-btn {
+    margin-top: 5px;
+}
+/* jedna linia jak .input (40 px), dalej rośnie z treścią */
 .hint-row__input {
+    min-height: 40px;
     font-size: 13px;
+    line-height: 18px;
 }
 </style>
