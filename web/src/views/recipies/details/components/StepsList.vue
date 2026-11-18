@@ -3,6 +3,9 @@ import { computed } from 'vue';
 
 import { bySection, leadText } from '../recipeView';
 
+import StepHints from './StepHints.vue';
+
+import BulbIcon from '@/components/BulbIcon.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 
 const props = defineProps<{
@@ -15,6 +18,7 @@ const emit = defineEmits<{ toggle: [stepNo: number]; cook: []; reset: [] }>();
 
 const sections = computed(() => bySection(props.recipe?.steps ?? []));
 const total = computed(() => props.recipe?.steps.length ?? 0);
+const oldTip = computed(() => props.recipe?.tip?.trim() ?? '');
 const doneCount = computed(
     () => (props.recipe?.steps ?? []).filter((s) => props.done.includes(s.stepNo)).length
 );
@@ -79,6 +83,23 @@ const doneCount = computed(
                 />
             </div>
         </div>
+
+        <aside
+            v-if="oldTip"
+            class="before"
+            aria-labelledby="h-before"
+        >
+            <h3
+                id="h-before"
+                class="steps__group"
+            >
+                Zanim zaczniesz
+            </h3>
+            <p class="before__row">
+                <span class="before__icon"><BulbIcon /></span>
+                <span class="before__text">{{ oldTip }}</span>
+            </p>
+        </aside>
 
         <div class="steps">
             <ol
@@ -151,19 +172,15 @@ const doneCount = computed(
                                 Przygotuj wcześniej{{ s.prepLead ? ` · ${leadText(s)}` : '' }}
                             </div>
                             <p class="step__text">{{ s.text }}</p>
+                            <StepHints
+                                :hints="s.hints"
+                                :done="done.includes(s.stepNo)"
+                            />
                         </div>
                     </li>
                 </ol>
             </div>
         </div>
-
-        <aside
-            v-if="recipe?.tip"
-            class="tip-box"
-        >
-            <div class="tip-box__head">Wskazówka</div>
-            <p class="tip-box__text">{{ recipe.tip }}</p>
-        </aside>
     </section>
 </template>
 
@@ -297,24 +314,28 @@ const doneCount = computed(
     color: var(--ink-muted);
     text-decoration: line-through;
 }
-.tip-box {
-    margin-top: 28px;
-    padding: 20px 22px;
-    background: var(--accent-soft);
+.before {
+    margin-bottom: 28px;
+    padding: 18px 20px;
+    background: var(--bg-alt);
+    border: 1px solid var(--rule);
     border-radius: var(--r-xl);
 }
-.tip-box__head {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--accent);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    font-weight: 600;
-    margin-bottom: 6px;
+.before__row {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
 }
-.tip-box__text {
-    font-size: 16px;
-    line-height: 1.6;
+.before__icon {
+    display: inline-flex;
+    padding-top: 3px;
+    color: var(--accent);
+}
+.before__text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-dim);
     text-wrap: pretty;
 }
 

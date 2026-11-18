@@ -6,8 +6,11 @@ export class RecipeStepDto {
     prep: boolean = false;
     /** Ile wcześniej, np. "12 h", "dzień wcześniej". */
     prepLead: string | null = null;
+    /** Wskazówki pod treścią kroku (0–n). */
+    hints: string[] = [];
 
     constructor(obj: Partial<RecipeStepDto>) {
         Object.assign(this, obj);
+        this.hints = obj.hints ?? [];
     }
 }

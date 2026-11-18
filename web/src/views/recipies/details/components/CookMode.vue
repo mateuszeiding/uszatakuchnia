@@ -5,6 +5,7 @@ import { ingredientGroups, leadText, publicLink, scaledAmount, servingsLabel } f
 
 import IngGroupHeader from './IngGroupHeader.vue';
 import IngRow from './IngRow.vue';
+import StepHints from './StepHints.vue';
 
 import UModal from '@/components/UModal.vue';
 import { useWakeLock } from '@/composables/useWakeLock';
@@ -162,6 +163,10 @@ function amount(ing: RecipeDto['ingredients'][number]) {
                         Przygotuj wcześniej{{ step.prepLead ? ` · ${leadText(step)}` : '' }}
                     </div>
                     <p class="cook__text">{{ step.text }}</p>
+                    <StepHints
+                        :hints="step.hints"
+                        size="lg"
+                    />
                 </div>
             </div>
             <div class="cook__nav">
