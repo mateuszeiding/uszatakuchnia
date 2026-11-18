@@ -10,6 +10,9 @@ import { defaultTimeUnit, fromMinutes, type TimeUnit, toMinutes } from '@/shared
 let seq = 0;
 export const uid = () => ++seq;
 
+/** Najdłuższa wskazówka kroku (jak w API). */
+export const MAX_HINT_LEN = 300;
+
 export const PREP_LEADS = ['30 min', '1 h', '2 h', '4 h', '12 h', 'dzień wcześniej'];
 
 export interface IIngItem {
@@ -32,6 +35,8 @@ export interface IStepItem {
     text: string;
     prep: boolean;
     prepLead: string;
+    /** Wskazówki pod treścią kroku; puste pomijane przy zapisie. */
+    hints: string[];
 }
 
 export interface IGroup<T> {
@@ -68,7 +73,13 @@ export const blankIng = (): IIngItem => ({
     linked: null,
 });
 
-export const blankStep = (): IStepItem => ({ id: uid(), text: '', prep: false, prepLead: '' });
+export const blankStep = (): IStepItem => ({
+    id: uid(),
+    text: '',
+    prep: false,
+    prepLead: '',
+    hints: [],
+});
 
 export const newForm = (): IRecipeForm => ({
     name: '',
@@ -139,7 +150,13 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
     const stepGroups = groupBy(
         r.steps,
         (s) => s.section,
-        (s): IStepItem => ({ id: uid(), text: s.text, prep: s.prep, prepLead: s.prepLead ?? '' })
+        (s): IStepItem => ({
+            id: uid(),
+            text: s.text,
+            prep: s.prep,
+            prepLead: s.prepLead ?? '',
+            hints: [...(s.hints ?? [])],
+        })
     );
     return {
         name: r.name,
@@ -184,6 +201,7 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
                     text: s.text.trim(),
                     prep: s.prep,
                     prepLead: s.prep ? orNull(s.prepLead) : null,
+                    hints: s.hints.map((h) => h.trim()).filter(Boolean),
                 }))
         ),
         ingredients: f.ingGroups.flatMap((g) =>
@@ -201,6 +219,15 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
                 }))
         ),
     };
+}
+
+/** Przenosi starą wskazówkę przepisu (tip) na koniec wskazówek kroku i czyści tip. Zapis do bazy dopiero przy „Zapisz”. */
+export function moveTipToStep(f: IRecipeForm, stepId: number): void {
+    const tip = f.tip.trim();
+    const step = f.stepGroups.flatMap((g) => g.items).find((s) => s.id === stepId);
+    if (!tip || !step) return;
+    step.hints.push(tip);
+    f.tip = '';
 }
 
 export type FormErrors = Partial<
@@ -257,8 +284,12 @@ export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IVal
         errors.ingredients = 'Dodaj co najmniej jeden składnik.';
     else if (rowErrCount) errors.ingredients = `Popraw składniki (${rowErrCount}).`;
 
-    if (!f.stepGroups.some((g) => g.items.some((s) => s.text.trim())))
-        errors.steps = 'Dodaj co najmniej jeden krok.';
+    const steps = f.stepGroups.flatMap((g) => g.items);
+    if (!steps.some((s) => s.text.trim())) errors.steps = 'Dodaj co najmniej jeden krok.';
+    // Numer jak w edytorze (ciągła numeracja wierszy).
+    const longAt = steps.findIndex((s) => s.hints.some((h) => [...h.trim()].length > MAX_HINT_LEN));
+    if (longAt >= 0)
+        errors.steps = `Krok ${longAt + 1}: wskazówka może mieć najwyżej ${MAX_HINT_LEN} znaków.`;
 
     return { errors, rows };
 }

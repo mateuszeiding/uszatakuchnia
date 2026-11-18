@@ -99,7 +99,7 @@ export interface IUpsertRecipeRequest {
         text: string;
         prep: boolean;
         prepLead?: string | null;
-        hints?: string[];
+        hints: string[];
     }[];
     ingredients: {
         sortOrder: number;

@@ -10,6 +10,7 @@ import PhotoField from './components/PhotoField.vue';
 import StepsEditor from './components/StepsEditor.vue';
 import TaxonomyField from './components/TaxonomyField.vue';
 import TimeField from './components/TimeField.vue';
+import TipMove from './components/TipMove.vue';
 import {
     ERROR_ORDER,
     type FormErrors,
@@ -404,21 +405,8 @@ const prepSummary = computed(() => {
                     hint="Jeśli krok trzeba zrobić dużo wcześniej (marynata, namaczanie, wyrastanie), zaznacz „Przygotuj wcześniej”. Przepis dostanie wtedy oznaczenie."
                     :error="errors.steps"
                 >
+                    <TipMove v-model:form="form" />
                     <StepsEditor v-model:groups="form.stepGroups" />
-                </FormSection>
-
-                <FormSection
-                    n="04"
-                    title="Wskazówka"
-                    optional
-                >
-                    <textarea
-                        v-model="form.tip"
-                        class="textarea"
-                        rows="3"
-                        aria-label="Wskazówka"
-                        placeholder="Jeśli filety są bardzo cienkie, skróć pieczenie do 10 minut…"
-                    />
                 </FormSection>
             </div>
 
