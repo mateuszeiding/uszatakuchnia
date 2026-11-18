@@ -45,6 +45,9 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		Preload("Ingredients.Ingredient.Type").
 		Preload("Ingredients.Unit").
 		Preload("Ingredients.LinkedRecipe.Photo").
+		Preload("Ingredients.Substitutes", func(tx *gorm.DB) *gorm.DB { return tx.Order("position") }).
+		Preload("Ingredients.Substitutes.Ingredient.Allergens").
+		Preload("Ingredients.Substitutes.Ingredient.Type").
 		Preload("Taxonomy.Value.Axis").
 		Preload("Equipment", func(tx *gorm.DB) *gorm.DB { return tx.Order("sort_order") }).
 		Preload("Equipment.Equipment").
@@ -64,6 +67,7 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	services.FillGramsPerUnit(dto.Ingredients, ix)
+	services.FillLineNutrition(dto.Ingredients, entity, ix)
 
 	// Kto prowadzi do tego przepisu (modal usuwania): „Przepis · składnik”.
 	dto.LinkedFrom = []dtos.RecipeLinkSourceDto{}

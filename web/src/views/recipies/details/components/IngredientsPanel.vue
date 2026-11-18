@@ -8,8 +8,11 @@ import IngRow from './IngRow.vue';
 import IngRowSkeleton from './IngRowSkeleton.vue';
 import ServingsStepper from './ServingsStepper.vue';
 
+import SwapIcon from '@/components/SwapIcon.vue';
+import type { ISubChoice } from '@/composables/useCookingProgress';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { activeSubs, chosenSub, effectiveLines, type SubsMap } from '@/shared/utils/substitutes';
 
 const props = defineProps<{
     /** null = ładowanie: nagłówek i licznik porcji w tym samym miejscu, szkielety wierszy. */
@@ -17,8 +20,19 @@ const props = defineProps<{
     dicts: IDictionaries | undefined;
     servings: number;
     checked: number[];
+    /** Wybrane zamienniki (uk:progress:<id>.subs). */
+    subs: SubsMap;
 }>();
-const emit = defineEmits<{ toggle: [sortOrder: number]; servings: [n: number] }>();
+const emit = defineEmits<{
+    toggle: [sortOrder: number];
+    servings: [n: number];
+    sub: [sortOrder: number, choice: ISubChoice | null];
+    'clear-subs': [];
+}>();
+
+const activeCount = computed(() => activeSubs(props.recipe?.ingredients ?? [], props.subs).size);
+const allergenLabel = (code: string) =>
+    props.dicts?.allergens.find((a) => a.code === code)?.label ?? code;
 
 const ratio = computed(() => (props.recipe?.servings ? props.servings / props.recipe.servings : 1));
 const groups = computed(() => ingredientGroups(props.recipe?.ingredients ?? []));
@@ -27,19 +41,19 @@ const shopLink = computed(() => ({
     query: { porcje: String(props.servings) },
 }));
 
-function amount(ing: RecipeDto['ingredients'][number]) {
-    return scaledAmount(ing, props.dicts?.units ?? [], ratio.value);
+function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
+    return scaledAmount(ing, props.dicts?.units ?? [], ratio.value * factor);
 }
 const doneIn = (items: RecipeDto['ingredients']) =>
     items.filter((i) => props.checked.includes(i.sortOrder)).length;
 
-/** Alergen → składniki, z których pochodzi (kolejność listy UE). Składnik z kilku grup — raz;
+/** Alergen → składniki, z których pochodzi (kolejność listy UE), wg wybranego wariantu. Składnik z kilku grup — raz;
  *  „(opcj.)” tylko, gdy jest opcjonalny we wszystkich wystąpieniach. */
 const allergens = computed(() =>
     (props.dicts?.allergens ?? [])
         .map((a) => {
             const by = new Map<number, { name: string; optional: boolean }>();
-            for (const i of props.recipe?.ingredients ?? []) {
+            for (const i of effectiveLines(props.recipe?.ingredients ?? [], props.subs)) {
                 if (!i.allergens.includes(a.code)) continue;
                 const seen = by.get(i.ingredientId);
                 if (seen) seen.optional &&= i.optional;
@@ -124,6 +138,22 @@ onBeforeUnmount(() => ro?.disconnect());
             :value="servings"
             @set="emit('servings', $event)"
         />
+        <div
+            v-if="activeCount"
+            class="ing-panel__variant"
+        >
+            <span class="ing-panel__variant-n">
+                <SwapIcon :size="13" />
+                Z zamiennikami: {{ activeCount }}
+            </span>
+            <button
+                type="button"
+                class="ing-panel__restore"
+                @click="emit('clear-subs')"
+            >
+                Przywróć przepis
+            </button>
+        </div>
 
         <div
             class="ing-panel__scroll"
@@ -161,8 +191,12 @@ onBeforeUnmount(() => ro?.disconnect());
                             :key="ing.sortOrder"
                             :ing="ing"
                             :amount="amount(ing)"
+                            :half="ing.substitutes.length ? amount(ing, 0.5) : undefined"
                             :checked="checked.includes(ing.sortOrder)"
+                            :sub="chosenSub(ing, subs)"
+                            :allergen-label="allergenLabel"
                             @toggle="emit('toggle', ing.sortOrder)"
+                            @sub="emit('sub', ing.sortOrder, $event)"
                         />
                     </ul>
                 </div>
@@ -249,6 +283,34 @@ onBeforeUnmount(() => ro?.disconnect());
     font-size: 15px;
     letter-spacing: 0;
     color: var(--ink-muted);
+}
+/* tylko gdy wybrano zamiennik: jedna linia pod licznikiem porcji + reset */
+.ing-panel__variant {
+    margin-top: -4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ink-dim);
+}
+.ing-panel__variant-n {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.ing-panel__variant-n svg {
+    color: var(--accent);
+}
+.ing-panel__restore {
+    padding: 6px 0;
+    border: none;
+    background: none;
+    color: var(--ink-dim);
+    font-size: 13px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
 }
 .ing-panel__shop {
     gap: 7px;

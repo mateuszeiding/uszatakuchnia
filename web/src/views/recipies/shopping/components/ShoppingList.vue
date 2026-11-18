@@ -10,6 +10,7 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import { pluralPL } from '@/shared/utils/quantity';
 import { buildShopping, type IShopItem } from '@/shared/utils/shoppingList';
+import { effectiveLines } from '@/shared/utils/substitutes';
 
 const props = defineProps<{
     recipe: RecipeDto;
@@ -32,8 +33,13 @@ const { checked, toggle, clear } = useShoppingChecks(props.recipe.id);
 const ratio = computed(() =>
     props.recipe.servings ? progress.value.servings / props.recipe.servings : 1
 );
+// Wybrany wariant przepisu (zamienniki z uk:progress:<id>.subs): zamiennik zamiast głównego, „pół na pół” = 2 pozycje.
 const items = computed(() =>
-    buildShopping(props.recipe.ingredients, props.dicts?.units ?? [], ratio.value)
+    buildShopping(
+        effectiveLines(props.recipe.ingredients, progress.value.subs),
+        props.dicts?.units ?? [],
+        ratio.value
+    )
 );
 const isOn = (it: IShopItem) => checked.value.includes(it.id);
 const done = computed(() => items.value.filter(isOn));

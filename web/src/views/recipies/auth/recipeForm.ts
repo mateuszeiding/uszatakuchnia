@@ -26,6 +26,14 @@ export interface IIngItem {
     optional: boolean;
     /** Link do przepisu na ten składnik; null = brak. */
     linked: ILinkedRef | null;
+    /** Zamienniki („zamiast” albo „pół na pół”) w kolejności dodania. */
+    substitutes: ISubItem[];
+}
+
+export interface ISubItem {
+    ingredientId: number;
+    name: string;
+    mix: boolean;
 }
 
 export type ILinkedRef = Pick<ILinkedRecipe, 'id' | 'title' | 'status'>;
@@ -82,6 +90,7 @@ export const blankIng = (): IIngItem => ({
     note: '',
     optional: false,
     linked: null,
+    substitutes: [],
 });
 
 export const blankEquip = (): IEquipItem => ({
@@ -165,6 +174,11 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
                       status: i.linkedRecipe.status,
                   }
                 : null,
+            substitutes: i.substitutes.map((s) => ({
+                ingredientId: s.ingredientId,
+                name: s.name,
+                mix: s.mix,
+            })),
         })
     );
     const stepGroups = groupBy(
@@ -243,6 +257,10 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
                     note: orNull(i.note),
                     optional: i.optional,
                     linkedRecipeId: i.linked?.id ?? null,
+                    // zamiennik równy składnikowi głównemu (zmieniono składnik w wierszu) — pomijany
+                    substitutes: i.substitutes
+                        .filter((s) => s.ingredientId !== i.ingredientId)
+                        .map((s) => ({ ingredientId: s.ingredientId, mix: s.mix })),
                 }))
         ),
         // pusty / niewybrany ze słownika wiersz pomijany

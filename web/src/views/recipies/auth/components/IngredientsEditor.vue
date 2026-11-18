@@ -1,14 +1,23 @@
 <script lang="ts" setup>
 import { nextTick, ref } from 'vue';
 
-import { blankIng, type IGroup, type IIngItem, type ILinkedRef, uid } from '../recipeForm';
+import {
+    blankIng,
+    type IGroup,
+    type IIngItem,
+    type ILinkedRef,
+    type ISubItem,
+    uid,
+} from '../recipeForm';
 
 import GroupShell from './GroupShell.vue';
 import IngAutosuggest from './IngAutosuggest.vue';
 import RecipeLinkPicker from './RecipeLinkPicker.vue';
+import SubstitutePicker from './SubstitutePicker.vue';
 
 import BookIcon from '@/components/BookIcon.vue';
 import UFieldError from '@/components/form/UFieldError.vue';
+import SwapIcon from '@/components/SwapIcon.vue';
 import { confirmAction } from '@/composables/useConfirm';
 import { useListDnd } from '@/composables/useListDnd';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
@@ -95,7 +104,35 @@ function unlink(it: IIngItem) {
     it.linked = null;
     focusLinkBtn(it);
 }
-const togglePicker = (it: IIngItem) => (picking.value = picking.value === it.id ? null : it.id);
+const togglePicker = (it: IIngItem) => {
+    subPicking.value = null;
+    picking.value = picking.value === it.id ? null : it.id;
+};
+
+// ─── Zamienniki ──────────────────────────────────────────────
+const subPicking = ref<number | null>(null);
+
+async function focusSubBtn(it: IIngItem) {
+    await nextTick();
+    document.getElementById(`sub-btn-${it.id}`)?.focus();
+}
+const toggleSubPicker = (it: IIngItem) => {
+    picking.value = null;
+    subPicking.value = subPicking.value === it.id ? null : it.id;
+};
+function closeSubPicker(it: IIngItem) {
+    subPicking.value = null;
+    focusSubBtn(it);
+}
+function addSub(it: IIngItem, s: ISubItem) {
+    it.substitutes.push(s);
+    closeSubPicker(it);
+}
+function removeSub(it: IIngItem, s: ISubItem) {
+    it.substitutes.splice(it.substitutes.indexOf(s), 1);
+    focusSubBtn(it);
+}
+const subLabel = (s: ISubItem) => (s.mix ? `pół na pół z: ${s.name}` : s.name);
 </script>
 
 <template>
@@ -228,6 +265,20 @@ const togglePicker = (it: IIngItem) => (picking.value = picking.value === it.id 
                         placeholder="notatka, np. ~150 g"
                     />
                     <button
+                        :id="`sub-btn-${it.id}`"
+                        type="button"
+                        class="ing-row__link-btn ing-row__sub-btn"
+                        :class="{ 'is-open': subPicking === it.id }"
+                        aria-haspopup="listbox"
+                        :aria-expanded="subPicking === it.id"
+                        :disabled="!it.ingredientId"
+                        :title="it.ingredientId ? undefined : 'Najpierw wybierz składnik'"
+                        @click="toggleSubPicker(it)"
+                    >
+                        <SwapIcon :size="13" />
+                        Zamiennik…
+                    </button>
+                    <button
                         v-if="!it.linked"
                         :id="`lk-btn-${it.id}`"
                         type="button"
@@ -242,51 +293,97 @@ const togglePicker = (it: IIngItem) => (picking.value = picking.value === it.id 
                     </button>
                 </div>
                 <div
-                    v-if="it.linked"
-                    class="ing-row__linked"
+                    v-if="it.substitutes.length || it.linked"
+                    class="ing-row__lines"
                 >
-                    <span class="ing-row__linked-label">Prowadzi do:</span>
-                    <span class="ing-row__chip">
-                        <BookIcon :size="13" />
-                        <span class="ing-row__chip-title">{{ it.linked.title }}</span>
-                        <button
-                            type="button"
-                            class="ing-row__chip-x"
-                            :aria-label="`Usuń link do przepisu „${it.linked.title}”`"
-                            @click="unlink(it)"
-                        >
-                            <svg
-                                width="11"
-                                height="11"
-                                viewBox="0 0 11 11"
-                                aria-hidden="true"
+                    <template v-if="it.substitutes.length">
+                        <span class="ing-row__line-label">Zamienniki:</span>
+                        <div class="ing-row__line ing-row__subs">
+                            <span
+                                v-for="s in it.substitutes"
+                                :key="`${s.ingredientId}-${s.mix}`"
+                                class="ing-row__chip"
                             >
-                                <path
-                                    d="M2 2l7 7M9 2L2 9"
-                                    stroke="currentColor"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
-                        </button>
-                    </span>
-                    <span
-                        v-if="it.linked.status === 'draft'"
-                        class="ing-row__draft"
-                    >
-                        szkic — link niewidoczny na stronie, dopóki go nie opublikujesz
-                    </span>
-                    <button
-                        :id="`lk-btn-${it.id}`"
-                        type="button"
-                        class="ing-row__change"
-                        aria-haspopup="listbox"
-                        :aria-expanded="picking === it.id"
-                        @click="togglePicker(it)"
-                    >
-                        Zmień
-                    </button>
+                                <span class="ing-row__chip-title">{{ subLabel(s) }}</span>
+                                <button
+                                    type="button"
+                                    class="ing-row__chip-x"
+                                    :aria-label="`Usuń zamiennik ${subLabel(s)}`"
+                                    @click="removeSub(it, s)"
+                                >
+                                    <svg
+                                        width="11"
+                                        height="11"
+                                        viewBox="0 0 11 11"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M2 2l7 7M9 2L2 9"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+                                </button>
+                            </span>
+                        </div>
+                    </template>
+                    <template v-if="it.linked">
+                        <span class="ing-row__line-label">Prowadzi do:</span>
+                        <div class="ing-row__line">
+                            <span class="ing-row__chip">
+                                <BookIcon :size="13" />
+                                <span class="ing-row__chip-title">{{ it.linked.title }}</span>
+                                <button
+                                    type="button"
+                                    class="ing-row__chip-x"
+                                    :aria-label="`Usuń link do przepisu „${it.linked.title}”`"
+                                    @click="unlink(it)"
+                                >
+                                    <svg
+                                        width="11"
+                                        height="11"
+                                        viewBox="0 0 11 11"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M2 2l7 7M9 2L2 9"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                        />
+                                    </svg>
+                                </button>
+                            </span>
+                            <span
+                                v-if="it.linked.status === 'draft'"
+                                class="ing-row__draft"
+                            >
+                                szkic — link niewidoczny na stronie, dopóki go nie opublikujesz
+                            </span>
+                            <button
+                                :id="`lk-btn-${it.id}`"
+                                type="button"
+                                class="ing-row__change"
+                                aria-haspopup="listbox"
+                                :aria-expanded="picking === it.id"
+                                @click="togglePicker(it)"
+                            >
+                                Zmień
+                            </button>
+                        </div>
+                    </template>
                 </div>
+                <SubstitutePicker
+                    v-if="subPicking === it.id"
+                    :id="`sp-${it.id}`"
+                    :ingredient-name="it.name"
+                    :main-id="it.ingredientId"
+                    :current="it.substitutes"
+                    :ingredients="ingredients"
+                    @add="addSub(it, $event)"
+                    @close="closeSubPicker(it)"
+                />
                 <RecipeLinkPicker
                     v-if="picking === it.id"
                     :id="`lk-${it.id}`"
@@ -359,7 +456,7 @@ const togglePicker = (it: IIngItem) => (picking.value = picking.value === it.id 
 }
 .ing-row__extra {
     display: grid;
-    grid-template-columns: 216px minmax(0, 1fr) auto 30px;
+    grid-template-columns: 216px minmax(0, 1fr) auto auto 30px;
     gap: 8px;
     align-items: center;
     padding-left: 28px;
@@ -383,8 +480,15 @@ const togglePicker = (it: IIngItem) => (picking.value = picking.value === it.id 
     padding: 6px 10px;
     font-size: 13px;
 }
-.ing-row__link-btn {
+.ing-row__link-btn.ing-row__sub-btn {
     grid-column: 3;
+}
+.ing-row__sub-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+.ing-row__link-btn {
+    grid-column: 4;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -402,17 +506,26 @@ const togglePicker = (it: IIngItem) => (picking.value = picking.value === it.id 
     color: var(--accent);
     border-color: var(--accent);
 }
-/* trzecia linia: ustawiony link */
-.ing-row__linked {
+/* linie pod wierszem: zamienniki i ustawiony link — etykieta w kolumnie 96 px */
+.ing-row__lines {
     padding-left: 28px;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+}
+.ing-row__line-label {
+    font-size: 12px;
+    color: var(--ink-muted);
+}
+.ing-row__line {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 6px 10px;
 }
-.ing-row__linked-label {
-    font-size: 12px;
-    color: var(--ink-muted);
+.ing-row__subs {
+    gap: 6px;
 }
 .ing-row__chip {
     max-width: 420px;

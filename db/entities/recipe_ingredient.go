@@ -20,6 +20,9 @@ type RecipeIngredient struct {
 	LinkedRecipeID *uint   `gorm:"index:ix_recing_linked_recipe"`
 	LinkedRecipe   *Recipe `gorm:"foreignKey:LinkedRecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 
+	// Zamienniki w kolejności position. Usunięcie wiersza (zapis formularza zastępuje wiersze) usuwa zamienniki.
+	Substitutes []RecipeIngredientSubstitute `gorm:"foreignKey:RecipeID,SortOrder;references:RecipeID,SortOrder;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+
 	Recipe Recipe `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 

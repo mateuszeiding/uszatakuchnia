@@ -40,6 +40,7 @@ var All = []Migration{
 	ingredientSkipShopping,
 	recipeStepHints,
 	equipment,
+	recipeIngredientSubstitutes,
 }
 
 // Run wykonuje migracje, których nie ma jeszcze w schema_migrations.

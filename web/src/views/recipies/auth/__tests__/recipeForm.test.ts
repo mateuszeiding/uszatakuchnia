@@ -94,3 +94,37 @@ describe('sprzęt w formularzu', () => {
         expect(v.errors.equipment).toBe('Popraw sprzęt (1).');
     });
 });
+
+describe('zamienniki w formularzu', () => {
+    it('fromRecipe → toRequest: zamiennik i pół na pół, bez zamiennika równego głównemu', () => {
+        const r = new RecipeDto({
+            name: 'x',
+            ingredients: [
+                {
+                    sortOrder: 1,
+                    section: null,
+                    ingredientId: 10,
+                    ingredientName: 'Wołowina',
+                    quantity: '500',
+                    unitId: 1,
+                    optional: false,
+                    substitutes: [
+                        { ingredientId: 11, name: 'Wieprzowina', mix: false },
+                        { ingredientId: 11, name: 'Wieprzowina', mix: true },
+                    ],
+                },
+            ],
+        } as unknown as Partial<RecipeDto>);
+        const f = fromRecipe(r);
+        const it = f.ingGroups[0]!.items[0]!;
+        expect(it.substitutes).toEqual([
+            { ingredientId: 11, name: 'Wieprzowina', mix: false },
+            { ingredientId: 11, name: 'Wieprzowina', mix: true },
+        ]);
+        it.substitutes.push({ ingredientId: 10, name: 'Wołowina', mix: false });
+        expect(toRequest(f, 'draft').ingredients[0]!.substitutes).toEqual([
+            { ingredientId: 11, mix: false },
+            { ingredientId: 11, mix: true },
+        ]);
+    });
+});

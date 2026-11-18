@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
 
 import MacroValue from '@/components/MacroValue.vue';
+import SwapIcon from '@/components/SwapIcon.vue';
 import {
     avg,
     energySplit,
@@ -12,8 +13,15 @@ import {
     scaleRange,
 } from '@/shared/utils/nutrition';
 
-// Makro na porcję (wyliczone w API). Licznik porcji zmienia tylko „Całe danie”.
-const props = defineProps<{ nutrition: IRecipeNutrition; servings: number }>();
+// Makro na porcję (wyliczone w API; przy wybranych zamiennikach — suma wkładów wariantu).
+// Licznik porcji zmienia tylko „Całe danie”.
+const props = defineProps<{
+    nutrition: IRecipeNutrition;
+    servings: number;
+    /** „wieprzowina mielona zamiast: wołowina” — gdy wybrano zamienniki; '' = przepis. */
+    swapNote?: string;
+}>();
+const emit = defineEmits<{ restore: [] }>();
 
 const pp = computed(() => props.nutrition.perPortion);
 const incomplete = computed(() => props.nutrition.incomplete ?? {});
@@ -225,6 +233,22 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
                 </div>
             </div>
 
+            <p
+                v-if="swapNote"
+                class="nutri__swap"
+            >
+                <SwapIcon :size="13" />
+                <span>
+                    Policzone z wybranymi zamiennikami: {{ swapNote }}.
+                    <button
+                        type="button"
+                        class="nutri__restore"
+                        @click="emit('restore')"
+                    >
+                        Przywróć przepis
+                    </button>
+                </span>
+            </p>
             <p
                 v-if="nutrition.missing.length || hasIncomplete"
                 class="nutri__missing"
@@ -499,6 +523,29 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
 .nutri__rows :deep(.macro-val),
 .nutri__dish-rows :deep(.macro-val) {
     white-space: normal;
+}
+.nutri__swap {
+    margin: 0;
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink-dim);
+}
+.nutri__swap svg {
+    flex-shrink: 0;
+    margin-top: 3px;
+    color: var(--accent);
+}
+.nutri__restore {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--ink-dim);
+    font-size: 13px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
 }
 .nutri__missing {
     margin: 0;

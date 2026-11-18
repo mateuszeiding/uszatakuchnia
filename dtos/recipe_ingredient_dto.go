@@ -1,5 +1,7 @@
 package dtos
 
+import "uszatakuchnia/db/entities"
+
 type RecipeIngredientDto struct {
 	SortOrder int     `json:"sortOrder"`
 	Section   *string `json:"section,omitempty"`
@@ -25,6 +27,28 @@ type RecipeIngredientDto struct {
 	// Przepis, do którego prowadzi składnik; nil = brak. Szkic też jest zwracany (ze statusem) —
 	// strona publiczna go nie pokazuje, formularz tak.
 	LinkedRecipe *LinkedRecipeDto `json:"linkedRecipe"`
+
+	// Wkład pozycji w makro na porcję (suma wkładów = RecipeDto.nutrition); nil = pozycja się nie liczy
+	// (opcjonalna, „do smaku”, bez ilości). Front liczy z wkładów makro wybranego wariantu.
+	Nutrition *entities.RecipeNutrition `json:"nutrition"`
+	// Zamienniki w kolejności; [] = brak.
+	Substitutes []RecipeSubstituteDto `json:"substitutes"`
+}
+
+// RecipeSubstituteDto — zamiennik pozycji z danymi do alergenów, listy zakupów i makro (bez kolejnego zapytania).
+type RecipeSubstituteDto struct {
+	IngredientID   uint                 `json:"ingredientId"`
+	Name           string               `json:"name"`
+	Mix            bool                 `json:"mix"` // „pół na pół” ze składnikiem głównym
+	Allergens      []string             `json:"allergens"`
+	IngredientType IngredientTypeRefDto `json:"ingredientType"`
+	SkipShopping   bool                 `json:"skipShopping"`
+	// Gramy na 1 jednostkę pozycji dla zamiennika; nil = nie da się przeliczyć.
+	GramsPerUnit *GramsRangeDto `json:"gramsPerUnit"`
+	// Składnik ma jakiekolwiek dane makro (inaczej „bez danych o wartościach odżywczych”).
+	HasNutrition bool `json:"hasNutrition"`
+	// Wkład wariantu w makro na porcję (mieszanka = połowa głównego + połowa zamiennika); nil = pozycja się nie liczy.
+	Nutrition *entities.RecipeNutrition `json:"nutrition"`
 }
 
 type LinkedRecipeDto struct {

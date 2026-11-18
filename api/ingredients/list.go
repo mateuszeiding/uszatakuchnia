@@ -27,20 +27,11 @@ func List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// W ilu przepisach jest składnik — panel blokuje usuwanie używanych.
-	var counts []struct {
-		IngredientID uint
-		N            int
-	}
-	if err := conn.Model(&entities.RecipeIngredient{}).
-		Select("ingredient_id, COUNT(DISTINCT recipe_id) AS n").
-		Group("ingredient_id").Scan(&counts).Error; err != nil {
+	// W ilu przepisach jest składnik (też jako zamiennik) — panel blokuje usuwanie używanych.
+	usedIn, err := services.IngredientUsage(conn)
+	if err != nil {
 		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
 		return
-	}
-	usedIn := map[uint]int{}
-	for _, c := range counts {
-		usedIn[c.IngredientID] = c.N
 	}
 
 	ix, err := services.LoadNutritionIndex(conn)

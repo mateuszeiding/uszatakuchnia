@@ -91,6 +91,13 @@ type UpsertIngredientRequest struct {
 	Optional     bool    `json:"optional"`
 	// Link do przepisu na ten składnik; nil = brak.
 	LinkedRecipeId *uint `json:"linkedRecipeId"`
+	// Zamienniki w kolejności; nil / [] = brak.
+	Substitutes []UpsertSubstituteRequest `json:"substitutes"`
+}
+
+type UpsertSubstituteRequest struct {
+	IngredientId uint `json:"ingredientId"`
+	Mix          bool `json:"mix"`
 }
 
 // FieldError — błąd walidacji przypięty do pola formularza (np. "ingredients[2].quantity").

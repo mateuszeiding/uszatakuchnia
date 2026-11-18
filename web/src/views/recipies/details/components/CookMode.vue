@@ -9,9 +9,11 @@ import IngRow from './IngRow.vue';
 import StepHints from './StepHints.vue';
 
 import UModal from '@/components/UModal.vue';
+import type { ISubChoice } from '@/composables/useCookingProgress';
 import { useWakeLock } from '@/composables/useWakeLock';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { chosenSub, type SubsMap } from '@/shared/utils/substitutes';
 
 // Tryb gotowania: jeden krok naraz, duże Wstecz / Dalej, ← → na klawiaturze, ekran nie gaśnie.
 const props = defineProps<{
@@ -20,12 +22,17 @@ const props = defineProps<{
     servings: number;
     done: number[];
     checkedIng: number[];
+    /** Wybrane zamienniki — wspólne ze stroną przepisu. */
+    subs: SubsMap;
 }>();
 const emit = defineEmits<{
     close: [];
     'set-step': [stepNo: number, done: boolean];
     'toggle-ing': [sortOrder: number];
+    sub: [sortOrder: number, choice: ISubChoice | null];
 }>();
+const allergenLabel = (code: string) =>
+    props.dicts?.allergens.find((a) => a.code === code)?.label ?? code;
 
 const steps = computed(() => props.recipe.steps);
 const firstOpen = steps.value.findIndex((s) => !props.done.includes(s.stepNo));
@@ -88,8 +95,8 @@ onBeforeUnmount(() => {
     prevFocus?.focus?.();
 });
 
-function amount(ing: RecipeDto['ingredients'][number]) {
-    return scaledAmount(ing, props.dicts?.units ?? [], ratio.value);
+function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
+    return scaledAmount(ing, props.dicts?.units ?? [], ratio.value * factor);
 }
 </script>
 
@@ -224,10 +231,14 @@ function amount(ing: RecipeDto['ingredients'][number]) {
                             :key="ing.sortOrder"
                             :ing="ing"
                             :amount="amount(ing)"
+                            :half="ing.substitutes.length ? amount(ing, 0.5) : undefined"
                             :checked="checkedIng.includes(ing.sortOrder)"
+                            :sub="chosenSub(ing, subs)"
+                            :allergen-label="allergenLabel"
                             roomy
                             new-tab
                             @toggle="emit('toggle-ing', ing.sortOrder)"
+                            @sub="emit('sub', ing.sortOrder, $event)"
                         />
                     </ul>
                 </div>

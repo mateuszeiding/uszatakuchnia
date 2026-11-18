@@ -1,3 +1,5 @@
+import type { IRecipeNutrition } from '@/shared/utils/nutrition';
+
 /** Przepis, do którego prowadzi składnik (np. bułka → „Bułki do hamburgerów”). */
 export interface ILinkedRecipe {
     id: number;
@@ -5,6 +7,22 @@ export interface ILinkedRecipe {
     status: 'draft' | 'published';
     /** Adres zdjęcia z API (przed resolveUrl); null = brak. */
     image: string | null;
+}
+
+/** Zamiennik pozycji (dane do alergenów, listy zakupów i makro bez kolejnego zapytania). */
+export interface IRecipeSubstitute {
+    ingredientId: number;
+    name: string;
+    /** „Pół na pół” ze składnikiem głównym (po połowie ilości). */
+    mix: boolean;
+    allergens: string[];
+    ingredientType: { code: string; label: string };
+    skipShopping: boolean;
+    gramsPerUnit: { min: number; max: number } | null;
+    /** Składnik ma dane makro (inaczej „bez danych o wartościach odżywczych”). */
+    hasNutrition: boolean;
+    /** Wkład wariantu w makro na porcję; null = pozycja się nie liczy. */
+    nutrition: IRecipeNutrition | null;
 }
 
 export class RecipeIngredientDto {
@@ -31,8 +49,12 @@ export class RecipeIngredientDto {
     gramsPerUnit: { min: number; max: number } | null = null;
     /** Link do przepisu; szkic też przychodzi — strona publiczna go nie pokazuje (publicLink). */
     linkedRecipe: ILinkedRecipe | null = null;
+    /** Wkład pozycji w makro na porcję (suma wkładów = nutrition przepisu); null = pozycja się nie liczy. */
+    nutrition: IRecipeNutrition | null = null;
+    substitutes: IRecipeSubstitute[] = [];
 
     constructor(obj: Partial<RecipeIngredientDto>) {
         Object.assign(this, obj);
+        this.substitutes = obj.substitutes ?? [];
     }
 }

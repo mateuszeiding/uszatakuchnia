@@ -102,6 +102,9 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 	}
 
 	validateSteps(req, add)
+	if err := validateSubstitutes(tx, req, add); err != nil {
+		return nil, err
+	}
 	if err := validateEquipment(tx, req, add); err != nil {
 		return nil, err
 	}
@@ -235,7 +238,10 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 			IngredientID: it.IngredientId, Quantity: qty, UnitID: it.UnitId, Note: it.Note,
 			Optional: it.Optional, LinkedRecipeID: it.LinkedRecipeId,
 		}
-		if err := tx.Create(&item).Error; err != nil {
+		if err := tx.Omit("Substitutes").Create(&item).Error; err != nil {
+			return err
+		}
+		if err := createSubstitutes(tx, recipeID, item.SortOrder, it.Substitutes); err != nil {
 			return err
 		}
 	}

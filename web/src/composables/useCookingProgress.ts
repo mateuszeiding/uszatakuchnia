@@ -1,24 +1,39 @@
 import { computed, ref, watch } from 'vue';
 
+/** Wybrany zamiennik wiersza: składnik + „pół na pół”. */
+export interface ISubChoice {
+    ingredientId: number;
+    mix: boolean;
+}
+
 export interface ICookingProgress {
     /** Odhaczone składniki (sortOrder). */
     ing: number[];
     /** Zrobione kroki (stepNo). */
     steps: number[];
     servings: number;
+    /** Wybrane zamienniki: sortOrder wiersza → zamiennik. Nieaktualne wpisy pomija substitutes.ts. */
+    subs: Record<number, ISubChoice>;
 }
 
 // Postęp gotowania zapamiętany lokalnie, osobno dla każdego przepisu (klucz uk:progress:<id>).
+// Strona przepisu, tryb gotowania i lista zakupów czytają ten sam stan (porcje, zamienniki).
 export function useCookingProgress(recipeId: number, defaultServings: number) {
     const key = `uk:progress:${recipeId}`;
-    const blank = (): ICookingProgress => ({ ing: [], steps: [], servings: defaultServings });
+    const blank = (): ICookingProgress => ({
+        ing: [],
+        steps: [],
+        servings: defaultServings,
+        subs: {},
+    });
 
     function load(): ICookingProgress {
         try {
             const raw = localStorage.getItem(key);
-            return raw
-                ? { ...blank(), ...(JSON.parse(raw) as Partial<ICookingProgress>) }
-                : blank();
+            if (!raw) return blank();
+            const p = { ...blank(), ...(JSON.parse(raw) as Partial<ICookingProgress>) };
+            if (!p.subs || typeof p.subs !== 'object') p.subs = {};
+            return p;
         } catch {
             return blank();
         }
@@ -52,6 +67,17 @@ export function useCookingProgress(recipeId: number, defaultServings: number) {
 
     const setServings = (n: number) => (progress.value.servings = Math.min(20, Math.max(1, n)));
 
+    /** null = składnik główny („w przepisie”). */
+    const setSub = (sortOrder: number, choice: ISubChoice | null) => {
+        const subs = { ...progress.value.subs };
+        if (choice) subs[sortOrder] = choice;
+        else delete subs[sortOrder];
+        progress.value.subs = subs;
+    };
+
+    /** „Przywróć przepis” — wszystkie wiersze wracają do składników głównych. */
+    const clearSubs = () => (progress.value.subs = {});
+
     const hasProgress = computed(
         () =>
             progress.value.ing.length > 0 ||
@@ -59,7 +85,9 @@ export function useCookingProgress(recipeId: number, defaultServings: number) {
             progress.value.servings !== defaultServings
     );
 
-    const reset = () => (progress.value = blank());
+    // „Zacznij od nowa” czyści gotowanie (odhaczenia, kroki, porcje); wybór zamienników zostaje —
+    // to wariant przepisu, nie postęp („Przywróć przepis” go czyści).
+    const reset = () => (progress.value = { ...blank(), subs: progress.value.subs });
 
-    return { progress, toggle, setStep, setServings, hasProgress, reset };
+    return { progress, toggle, setStep, setServings, setSub, clearSubs, hasProgress, reset };
 }

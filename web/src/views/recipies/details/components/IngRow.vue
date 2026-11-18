@@ -1,32 +1,69 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 
 import { publicLink } from '../recipeView';
 
+import SubstituteChooser from './SubstituteChooser.vue';
+
 import BookIcon from '@/components/BookIcon.vue';
 import QtyText from '@/components/QtyText.vue';
-import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
+import SwapIcon from '@/components/SwapIcon.vue';
+import type { ISubChoice } from '@/composables/useCookingProgress';
+import { useNarrow } from '@/composables/useNarrow';
+import type {
+    IRecipeSubstitute,
+    RecipeIngredientDto,
+} from '@/data/dtos/recipe/RecipeIngredientDto';
+import { optionName } from '@/shared/utils/substitutes';
 
 // Wiersz składnika z odhaczaniem (panel przepisu i tryb gotowania).
 // Przekreślenie po odhaczeniu tylko na ilości i nazwie — notatka zostaje czytelna.
-// Link do przepisu to RODZEŃSTWO przycisku (nie w nim): klik w link nie odhacza, Tab trafia osobno.
+// Ikony (⇄ zamienniki, książka — link do przepisu) to RODZEŃSTWO przycisku (nie w nim): klik w ikonę nie odhacza,
+// Tab trafia osobno. Wybrany zamiennik: nazwa wiersza = zamiennik, pod nią „zamiast: …” / „pół na pół”.
 const props = defineProps<{
     ing: RecipeIngredientDto;
     amount: { qty: string; unit: string };
+    /** Połowa ilości — opcja „pół na pół” w wyborze zamiennika. */
+    half?: { qty: string; unit: string };
     checked: boolean;
+    /** Wybrany zamiennik (null = składnik główny). */
+    sub?: IRecipeSubstitute | null;
+    allergenLabel?: (code: string) => string;
     /** Większe wiersze (tryb gotowania). */
     roomy?: boolean;
     /** Link otwiera nową kartę (tryb gotowania — gotowanie zostaje). */
     newTab?: boolean;
 }>();
+const emit = defineEmits<{ toggle: []; sub: [choice: ISubChoice | null] }>();
+
 const link = computed(() => publicLink(props.ing));
-const emit = defineEmits<{ toggle: [] }>();
+const hasSubs = computed(() => props.ing.substitutes.length > 0);
+const swapped = computed(() => props.sub ?? null);
+const name = computed(() => optionName(props.ing, swapped.value));
+
+const narrow = useNarrow();
+const open = ref(false);
+const li = ref<HTMLElement>();
+const swapBtn = ref<HTMLButtonElement>();
+
+const swapLabel = computed(
+    () =>
+        `${props.ing.ingredientName}: zamienniki (${props.ing.substitutes.length})` +
+        (swapped.value ? `, wybrany: ${name.value}` : '')
+);
+
+async function close() {
+    open.value = false;
+    await nextTick();
+    swapBtn.value?.focus();
+}
 </script>
 
 <template>
     <li
+        ref="li"
         class="ing-li"
-        :class="{ 'has-link': link }"
+        :class="{ 'has-icons': link || hasSubs }"
     >
         <button
             type="button"
@@ -67,30 +104,73 @@ const emit = defineEmits<{ toggle: [] }>();
                 </span>
             </span>
             <span class="ing-item__name">
-                <span class="ing-item__strike">{{ ing.ingredientName }}</span>
+                <span class="ing-item__strike">{{ name }}</span>
                 <em
                     v-if="ing.optional"
                     class="ing-item__opt"
                 >
                     (opcjonalnie)
                 </em>
+                <span
+                    v-if="swapped"
+                    class="ing-item__instead"
+                >
+                    {{
+                        swapped.mix ? 'pół na pół' : `zamiast: ${ing.ingredientName.toLowerCase()}`
+                    }}
+                </span>
             </span>
         </button>
-        <RouterLink
-            v-if="link"
-            :to="`/recipes/${link.id}`"
-            class="ing-link"
-            :class="{ 'ing-link--roomy': roomy }"
-            :title="`Przepis: ${link.title}`"
-            :aria-label="`Przepis: ${link.title}${newTab ? ' (otwiera się w nowej karcie)' : ''}`"
-            :target="newTab ? '_blank' : undefined"
-            :rel="newTab ? 'noopener' : undefined"
+        <span
+            v-if="link || hasSubs"
+            class="ing-icons"
         >
-            <BookIcon
-                :external="newTab"
-                :size="newTab ? 14 : 15"
-            />
-        </RouterLink>
+            <button
+                v-if="hasSubs"
+                ref="swapBtn"
+                type="button"
+                class="ing-icon ing-swap"
+                :class="{ 'ing-icon--roomy': roomy, 'is-active': swapped || open }"
+                aria-haspopup="dialog"
+                :aria-expanded="open"
+                :aria-label="swapLabel"
+                :title="`Zamienniki: ${ing.substitutes.length}`"
+                @click="open ? close() : (open = true)"
+            >
+                <span class="ing-icon__sq">
+                    <SwapIcon />
+                </span>
+            </button>
+            <RouterLink
+                v-if="link"
+                :to="`/recipes/${link.id}`"
+                class="ing-icon ing-link"
+                :class="{ 'ing-icon--roomy': roomy }"
+                :title="`Przepis: ${link.title}`"
+                :aria-label="`Przepis: ${link.title}${newTab ? ' (otwiera się w nowej karcie)' : ''}`"
+                :target="newTab ? '_blank' : undefined"
+                :rel="newTab ? 'noopener' : undefined"
+            >
+                <span class="ing-icon__sq">
+                    <BookIcon
+                        :external="newTab"
+                        :size="newTab ? 14 : 15"
+                    />
+                </span>
+            </RouterLink>
+        </span>
+        <SubstituteChooser
+            v-if="open"
+            :ing="ing"
+            :selected="swapped"
+            :amount="amount"
+            :half="half ?? amount"
+            :allergen-label="allergenLabel ?? ((c: string) => c)"
+            :anchor="li ?? null"
+            :sheet="narrow"
+            @select="emit('sub', $event)"
+            @close="close"
+        />
     </li>
 </template>
 
@@ -98,7 +178,7 @@ const emit = defineEmits<{ toggle: [] }>();
 .ing-li {
     border-bottom: 1px solid var(--rule);
 }
-.ing-li.has-link {
+.ing-li.has-icons {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     column-gap: 8px;
@@ -156,6 +236,11 @@ const emit = defineEmits<{ toggle: [] }>();
 .ing-item__opt {
     color: var(--ink-muted);
 }
+.ing-item__instead {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-muted);
+}
 .ing-item.is-done .ing-item__qty,
 .ing-item.is-done .ing-item__name {
     color: var(--ink-muted);
@@ -164,37 +249,66 @@ const emit = defineEmits<{ toggle: [] }>();
     text-decoration: line-through;
 }
 
-/* goła ikona: wyrównana do pierwszej linii nazwy, pole kliknięcia 28 px (telefon 44 px, bez wzrostu wiersza) */
-.ing-link {
+/* gołe ikony: wyrównane do pierwszej linii nazwy, pole kliknięcia 28 px (telefon 44 px, bez wzrostu wiersza);
+   tło tylko na wewnętrznym kwadracie 28 px */
+.ing-icons {
+    display: inline-flex;
+}
+.ing-icon {
     width: 28px;
     height: 28px;
     /* bez ujemnego marginesu z prawej: panel na desktopie przewija się w środku (poziomy pasek) */
     margin: 4px 0 0;
-    border-radius: var(--r-md);
+    padding: 0;
+    border: none;
+    background: transparent;
     color: var(--accent);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
 }
-.ing-link--roomy {
+.ing-icon--roomy {
     margin-top: 7px;
 }
-.ing-link:hover,
-.ing-link:focus-visible {
+.ing-icon__sq {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--r-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.ing-icon:hover .ing-icon__sq,
+.ing-icon.is-active .ing-icon__sq {
     background: var(--accent-soft);
+}
+.ing-icon:focus-visible {
+    outline: none;
+}
+.ing-icon:focus-visible .ing-icon__sq {
+    background: var(--accent-soft);
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
 }
 
 @media (max-width: 900px) {
     .ing-item {
         padding: 11px 0;
     }
-    .ing-link {
+    .ing-icon {
         width: 44px;
         height: 44px;
-        margin: 0 -12px -4px 0;
+        margin: 0 0 -4px;
+    }
+    .ing-icons {
+        margin-right: -12px;
     }
     /* tryb gotowania: lista w modalu się przewija — bez wystawania w prawo */
-    .ing-link--roomy {
+    .ing-icon--roomy {
+        margin-top: 0;
+    }
+    .ing-li:has(.ing-icon--roomy) .ing-icons {
         margin-right: 0;
     }
 }

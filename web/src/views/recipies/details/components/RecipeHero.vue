@@ -7,11 +7,16 @@ import UsefulRecipes from './UsefulRecipes.vue';
 
 import USpinner from '@/components/USpinner.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
-import { avg, fmt, nf } from '@/shared/utils/nutrition';
+import { avg, fmt, type IRecipeNutrition, nf } from '@/shared/utils/nutrition';
 import { formatTime } from '@/shared/utils/time';
 
 // recipe null = ładowanie: ten sam .hero (zdjęcie 1:1, metadane) ze szkieletami w miejscu treści.
-const props = defineProps<{ recipe: RecipeDto | null; servings: number }>();
+const props = defineProps<{
+    recipe: RecipeDto | null;
+    servings: number;
+    /** Makro wybranego wariantu (zamienniki); brak = makro przepisu. */
+    nutrition?: IRecipeNutrition | null;
+}>();
 
 const dish = computed(() => props.recipe?.taxonomy.dish ?? []);
 const cuisine = computed(() => props.recipe?.taxonomy.cuisine?.[0]?.label);
@@ -19,7 +24,8 @@ const diets = computed(() => props.recipe?.taxonomy.diet ?? []);
 const practical = computed(() => props.recipe?.taxonomy.practical ?? []);
 const prepSteps = computed(() => props.recipe?.steps.filter((s) => s.prep) ?? []);
 const kcal = computed(() => {
-    const f = fmt(props.recipe?.nutrition?.perPortion.kcal, 'kcal', 'recipe');
+    const n = props.nutrition !== undefined ? props.nutrition : props.recipe?.nutrition;
+    const f = fmt(n?.perPortion.kcal, 'kcal', 'recipe');
     return f ? nf(avg(f)) : null;
 });
 

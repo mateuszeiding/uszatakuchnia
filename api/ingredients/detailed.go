@@ -56,9 +56,12 @@ func deleteIngredient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var used int64
-	conn.Model(&entities.RecipeIngredient{}).Where("ingredient_id = ?", ing.ID).
-		Distinct("recipe_id").Count(&used)
+	usage, err := services.IngredientUsage(conn)
+	if err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	used := usage[ing.ID] // też jako zamiennik
 	if used > 0 {
 		resp.JSON(w, http.StatusConflict, map[string]any{
 			"error":  fmt.Sprintf("ingredient used in %d recipes", used),

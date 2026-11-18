@@ -121,6 +121,7 @@ export interface IUpsertRecipeRequest {
         note?: string | null;
         optional: boolean;
         linkedRecipeId?: number | null;
+        substitutes: { ingredientId: number; mix: boolean }[];
     }[];
     equipment: { equipmentId: number; spec: string | null; optional: boolean }[];
 }

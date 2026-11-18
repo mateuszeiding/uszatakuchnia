@@ -22,6 +22,7 @@ var models = []any{
 	&entities.Recipe{},
 	&entities.RecipeStep{},
 	&entities.RecipeIngredient{},
+	&entities.RecipeIngredientSubstitute{},
 	&entities.RecipePhoto{},
 	&entities.RecipeTaxonomy{},
 
@@ -56,6 +57,7 @@ var devResetTables = []string{
 	"recipe_taxonomy",
 	"recipe_tags", // wycofana: zastąpiona przez recipe_taxonomy
 	"recipe_steps",
+	"recipe_ingredient_substitutes",
 	"recipe_ingredients",
 	"recipe_photos",
 	"images",

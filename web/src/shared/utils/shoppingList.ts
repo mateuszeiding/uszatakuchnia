@@ -114,7 +114,7 @@ export function mergeParts(parts: IShopPart[]): ShopSum | null {
 
 /** Składniki przepisu → pozycje listy zakupów (kolejność pierwszego wystąpienia). */
 export function buildShopping(
-    lines: RecipeIngredientDto[],
+    lines: (RecipeIngredientDto & { factor?: number })[],
     units: IUnit[],
     ratio: number
 ): IShopItem[] {
@@ -123,7 +123,8 @@ export function buildShopping(
         if (x.skipShopping) continue; // np. woda — nie kupujemy
         const k = x.ingredientId;
         if (!by.has(k)) by.set(k, { ing: x, parts: [] });
-        by.get(k)!.parts.push(toPart(x, units, ratio));
+        // factor 0,5 = „pół na pół” z zamiennikiem (substitutes.effectiveLines)
+        by.get(k)!.parts.push(toPart(x, units, ratio * (x.factor ?? 1)));
     }
     const items: IShopItem[] = [];
     by.forEach(({ ing, parts }) => {

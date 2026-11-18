@@ -19,6 +19,7 @@ import StepsList from './StepsList.vue';
             :dicts="undefined"
             :servings="0"
             :checked="[]"
+            :subs="{}"
         />
         <StepsList
             class="recipe-grid__steps"

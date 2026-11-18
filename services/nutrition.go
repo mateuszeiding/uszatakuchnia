@@ -170,17 +170,39 @@ type NutritionLine struct {
 // pozycje bez makro lub bez przelicznika trafiają do Missing, a wliczone bez części wartości — do Incomplete.
 // Nil, gdy nic nie dało się policzyć.
 func (ix *NutritionIndex) Compute(lines []NutritionLine, servings int) *entities.RecipeNutrition {
+	n, _, contributed := ix.accumulate(lines, servings)
+	if !contributed {
+		return nil
+	}
+	return n
+}
+
+// LineNutrition — wkład pozycji (albo pary pozycji „pół na pół”) w makro na porcję, w tym samym formacie co Compute.
+// Suma wkładów wszystkich pozycji = Compute (front liczy z nich makro wybranego wariantu).
+// Pozycja bez makro / przelicznika: pusty PerPortion i nazwa w Missing. Nil, gdy pozycja się nie liczy
+// (opcjonalna, „do smaku”, bez ilości).
+func (ix *NutritionIndex) LineNutrition(lines []NutritionLine, servings int) *entities.RecipeNutrition {
+	n, counted, _ := ix.accumulate(lines, servings)
+	if !counted {
+		return nil
+	}
+	return n
+}
+
+// accumulate — wspólne sumowanie dla Compute i LineNutrition. counted: któraś pozycja się liczy (wliczona albo
+// pominięta z braku danych); contributed: któraś pozycja coś dodała.
+func (ix *NutritionIndex) accumulate(lines []NutritionLine, servings int) (n *entities.RecipeNutrition, counted, contributed bool) {
 	sum := map[string]*entities.SumRange{}
 	missing := []string{}
 	seenMissing := map[string]bool{}
 	incomplete := map[string][]string{}
 	seenIncomplete := map[[2]string]bool{} // [wartość, nazwa]
-	contributed := false
 
 	for _, l := range lines {
 		if l.Optional || l.NoQty || l.Qty.Empty {
 			continue
 		}
+		counted = true
 		grams, okGrams := ix.GramsPerUnit(l.IngredientID, l.UnitID, l.UnitName)
 		macros := ix.ResolveMacros(l.IngredientID)
 		name := ix.Names[l.IngredientID]
@@ -210,9 +232,6 @@ func (ix *NutritionIndex) Compute(lines []NutritionLine, servings int) *entities
 			s.Max += gMax * v.Upper() / 100
 		}
 	}
-	if !contributed {
-		return nil
-	}
 
 	if servings < 1 {
 		servings = 1
@@ -221,5 +240,13 @@ func (ix *NutritionIndex) Compute(lines []NutritionLine, servings int) *entities
 	for k, s := range sum {
 		per[k] = entities.SumRange{Min: s.Min / float64(servings), Max: s.Max / float64(servings)}
 	}
-	return &entities.RecipeNutrition{PerPortion: per, Missing: missing, Incomplete: incomplete}
+	return &entities.RecipeNutrition{PerPortion: per, Missing: missing, Incomplete: incomplete}, counted, contributed
+}
+
+// Half — ta sama pozycja z połową ilości („pół na pół”).
+func (l NutritionLine) Half() NutritionLine {
+	h := l
+	h.Qty.Min /= 2
+	h.Qty.Max /= 2
+	return h
 }
