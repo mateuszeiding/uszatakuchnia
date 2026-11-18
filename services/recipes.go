@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"uszatakuchnia/db/entities"
 	"uszatakuchnia/dtos"
@@ -100,11 +101,7 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 		}
 	}
 
-	for i, s := range req.Steps {
-		if s.PrepLead != nil && !s.Prep {
-			add(fmt.Sprintf("steps[%d].prepLead", i), "„Ile wcześniej” dotyczy tylko kroku przygotowania")
-		}
-	}
+	validateSteps(req, add)
 
 	// Klasyfikacja: wartości istnieją, osie pojedyncze mają max 1 wartość.
 	perAxis := map[uint]int{}
@@ -214,6 +211,7 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 		}
 		step := entities.RecipeStep{
 			RecipeID: recipeID, StepNo: i + 1, Section: s.Section, Text: s.Text, Prep: s.Prep, PrepLead: lead,
+			Hints: CleanHints(s.Hints),
 		}
 		if err := tx.Create(&step).Error; err != nil {
 			return err
@@ -248,4 +246,32 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 		}
 	}
 	return nil
+}
+
+// MaxHintLen — najdłuższa wskazówka kroku (znaki, nie bajty).
+const MaxHintLen = 300
+
+func validateSteps(req dtos.UpsertRecipeRequest, add func(field, msg string)) {
+	for i, s := range req.Steps {
+		if s.PrepLead != nil && !s.Prep {
+			add(fmt.Sprintf("steps[%d].prepLead", i), "„Ile wcześniej” dotyczy tylko kroku przygotowania")
+		}
+		for _, h := range CleanHints(s.Hints) {
+			if utf8.RuneCountInString(h) > MaxHintLen {
+				add("steps", fmt.Sprintf("Krok %d: wskazówka może mieć najwyżej %d znaków", i+1, MaxHintLen))
+				break
+			}
+		}
+	}
+}
+
+// CleanHints przycina wskazówki i pomija puste. Zawsze zwraca niepustą referencję (zapis jako []).
+func CleanHints(in []string) []string {
+	out := make([]string, 0, len(in))
+	for _, h := range in {
+		if h = strings.TrimSpace(h); h != "" {
+			out = append(out, h)
+		}
+	}
+	return out
 }

@@ -12,6 +12,7 @@ func MapRecipeStepToDto(e entities.RecipeStep) dtos.RecipeStepDto {
 		Text:     e.Text,
 		Prep:     e.Prep,
 		PrepLead: e.PrepLead,
+		Hints:    append([]string{}, e.Hints...),
 	}
 }
 

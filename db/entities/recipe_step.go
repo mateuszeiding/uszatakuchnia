@@ -10,6 +10,9 @@ type RecipeStep struct {
 	Prep     bool    `gorm:"not null;default:false"`
 	PrepLead *string `gorm:"type:varchar(32)"` // np. "12 h", "dzień wcześniej"
 
+	// Wskazówki pod treścią kroku („jeśli…”, „możesz też…”), 0–n.
+	Hints StringList `gorm:"type:jsonb;not null;default:'[]'"`
+
 	Recipe Recipe `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 

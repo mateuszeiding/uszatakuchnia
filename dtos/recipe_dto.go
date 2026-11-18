@@ -70,11 +70,12 @@ type UpsertRecipeRequest struct {
 }
 
 type UpsertStepRequest struct {
-	StepNo   int     `json:"stepNo"`
-	Section  *string `json:"section"`
-	Text     string  `json:"text"`
-	Prep     bool    `json:"prep"`
-	PrepLead *string `json:"prepLead"`
+	StepNo   int      `json:"stepNo"`
+	Section  *string  `json:"section"`
+	Text     string   `json:"text"`
+	Prep     bool     `json:"prep"`
+	PrepLead *string  `json:"prepLead"`
+	Hints    []string `json:"hints"`
 }
 
 type UpsertIngredientRequest struct {
