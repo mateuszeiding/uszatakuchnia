@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Wieprzowina",
+    "typeCode": "MEAT",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 220, "max": 263 },
+      "protein": { "min": 16, "max": 18 },
+      "fat": { "min": 17, "max": 21 },
+      "carbs": { "min": 0, "max": null },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": []
+  },
+  {
+    "name": "Pancetta",
+    "typeCode": "MEAT",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 380, "max": 460 },
+      "protein": { "min": 13, "max": 16 },
+      "fat": { "min": 35, "max": 45 },
+      "carbs": { "min": 0, "max": 1 },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [{ "unit": "plaster", "gramsMin": 10, "gramsMax": 15 }]
+  },
+  {
+    "name": "Wino bezalkoholowe",
+    "typeCode": "OTHER",
+    "allergens": ["sulphites"],
+    "nutrition": {
+      "kcal": { "min": 15, "max": 30 },
+      "protein": { "min": 0, "max": 0.2 },
+      "fat": { "min": 0, "max": null },
+      "carbs": { "min": 3.5, "max": 7 },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "ml", "gramsMin": 1, "gramsMax": null },
+      { "unit": "szklanka", "gramsMin": 250, "gramsMax": null }
+    ]
+  },
+  {
+    "name": "Pomidory krojone (z puszki)",
+    "typeCode": "VEGETABLE",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 20, "max": 25 },
+      "protein": { "min": 1, "max": 1.2 },
+      "fat": { "min": 0.1, "max": 0.3 },
+      "carbs": { "min": 3.5, "max": 4.5 },
+      "fiber": { "min": 1, "max": 1.2 }
+    },
+    "conversions": [
+      { "unit": "ml", "gramsMin": 1.03, "gramsMax": null },
+      { "unit": "szklanka", "gramsMin": 250, "gramsMax": 260 }
+    ]
+  },
+  {
+    "name": "Grana Padano",
+    "typeCode": "DAIRY",
+    "allergens": ["milk", "eggs"],
+    "nutrition": {
+      "kcal": { "min": 384, "max": 398 },
+      "protein": { "min": 32, "max": 33 },
+      "fat": { "min": 28, "max": 29 },
+      "carbs": { "min": 0, "max": null },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [{ "unit": "łyżka", "gramsMin": 5, "gramsMax": 7 }]
+  },
+  {
+    "name": "Pecorino Romano",
+    "typeCode": "DAIRY",
+    "allergens": ["milk"],
+    "nutrition": {
+      "kcal": { "min": 387, "max": 392 },
+      "protein": { "min": 26, "max": 32 },
+      "fat": { "min": 27, "max": 32 },
+      "carbs": { "min": 0, "max": 1 },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [{ "unit": "łyżka", "gramsMin": 5, "gramsMax": 7 }]
+  }
+]

@@ -1,47 +1,214 @@
 {
-  "name": "Domowe bułki do hamburgerów",
+  "name": "Bułki do burgerów",
   "servings": 8,
-  "tagline": "Miękkie bułki do burgerów. Roboty niewiele, głównie czekasz, aż urosną.",
-  "description": "Drożdżowe bułki z sezamem. Ciasto wyrabiasz w robocie albo ręcznie.",
-  "tip": "Ciasto ma być lepkie. Nie dosypuj mąki na zapas, bo bułki wyjdą ciężkie i zbite.",
   "timeMin": 180,
   "timeMax": 240,
   "difficulty": 2,
-  "status": "draft",
+  "status": "published",
   "taxonomy": {
-    "dish": ["pieczywo i wypieki"],
-    "cuisine": ["amerykańska"],
-    "diet": ["wegetariańskie"]
+    "cuisine": [
+      "amerykańska"
+    ],
+    "diet": [
+      "wegetariańskie"
+    ],
+    "dish": [
+      "pieczywo i wypieki"
+    ]
   },
   "ingredients": [
-    { "section": "Zaczyn", "ingredient": "Drożdże suche", "quantity": "7", "unit": "g" },
-    { "section": "Zaczyn", "ingredient": "Mąka pszenna typ 550", "quantity": "60", "unit": "g" },
-    { "section": "Zaczyn", "ingredient": "Woda", "quantity": "240", "unit": "ml", "note": "ciepła, ok. 40°C" },
-    { "section": "Ciasto", "ingredient": "Mąka pszenna typ 550", "quantity": "375", "unit": "g" },
-    { "section": "Ciasto", "ingredient": "Jajka", "quantity": "1", "unit": "sztuka", "note": "duże" },
-    { "section": "Ciasto", "ingredient": "Masło", "quantity": "42", "unit": "g", "note": "roztopione" },
-    { "section": "Ciasto", "ingredient": "Cukier biały", "quantity": "37", "unit": "g" },
-    { "section": "Ciasto", "ingredient": "Sól", "quantity": "7", "unit": "g" },
-    { "section": "Ciasto", "ingredient": "Oliwa z oliwek", "quantity": "1", "unit": "łyżeczka", "note": "do natłuszczenia miski" },
-    { "section": "Dodatkowo", "ingredient": "Jajka", "quantity": "1", "unit": "sztuka", "note": "duże, do smarowania" },
-    { "section": "Dodatkowo", "ingredient": "Mleko", "quantity": "1", "unit": "łyżka" },
-    { "section": "Dodatkowo", "ingredient": "Sezam", "unit": "do smaku", "note": "do posypania", "optional": true },
-    { "section": "Dodatkowo", "ingredient": "Masło", "quantity": "15", "unit": "g", "note": "do posmarowania po upieczeniu" }
+    {
+      "section": "Zaczyn",
+      "ingredient": "Drożdże suche",
+      "quantity": "7",
+      "unit": "g"
+    },
+    {
+      "section": "Zaczyn",
+      "ingredient": "Mąka pszenna typ 550",
+      "quantity": "60",
+      "unit": "g"
+    },
+    {
+      "section": "Zaczyn",
+      "ingredient": "Woda",
+      "quantity": "240",
+      "unit": "ml",
+      "note": "ciepła, ok. 40°C"
+    },
+    {
+      "section": "Ciasto",
+      "ingredient": "Mąka pszenna typ 550",
+      "quantity": "375",
+      "unit": "g"
+    },
+    {
+      "section": "Ciasto",
+      "ingredient": "Jajka",
+      "quantity": "1",
+      "unit": "sztuka",
+      "note": "duże"
+    },
+    {
+      "section": "Ciasto",
+      "ingredient": "Masło",
+      "quantity": "42",
+      "unit": "g",
+      "note": "roztopione"
+    },
+    {
+      "section": "Ciasto",
+      "ingredient": "Cukier biały",
+      "quantity": "37",
+      "unit": "g"
+    },
+    {
+      "section": "Ciasto",
+      "ingredient": "Sól",
+      "quantity": "7",
+      "unit": "g"
+    },
+    {
+      "section": "Ciasto",
+      "ingredient": "Oliwa z oliwek",
+      "quantity": "1",
+      "unit": "łyżeczka",
+      "note": "do natłuszczenia miski"
+    },
+    {
+      "section": "Dodatkowo",
+      "ingredient": "Jajka",
+      "quantity": "1",
+      "unit": "sztuka",
+      "note": "duże, do smarowania"
+    },
+    {
+      "section": "Dodatkowo",
+      "ingredient": "Mleko",
+      "quantity": "1",
+      "unit": "łyżka"
+    },
+    {
+      "section": "Dodatkowo",
+      "ingredient": "Sezam",
+      "unit": "do smaku",
+      "note": "do posypania",
+      "optional": true
+    },
+    {
+      "section": "Dodatkowo",
+      "ingredient": "Masło",
+      "quantity": "15",
+      "unit": "g",
+      "note": "do posmarowania po upieczeniu"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Waga kuchenna",
+      "optional": true
+    },
+    {
+      "name": "Robot planetarny",
+      "spec": "z hakiem",
+      "optional": true
+    },
+    {
+      "name": "Skrobak do ciasta",
+      "optional": true
+    },
+    {
+      "name": "Blacha do pieczenia",
+      "spec": "z matą silikonową albo papierem"
+    },
+    {
+      "name": "Pędzel kuchenny"
+    },
+    {
+      "name": "Kratka do studzenia",
+      "optional": true
+    },
+    {
+      "name": "Termometr kuchenny",
+      "spec": "do wody",
+      "optional": true
+    }
   ],
   "steps": [
-    { "section": "Zaczyn", "text": "W misce, w której będziesz wyrabiać ciasto, wymieszaj drożdże, mąkę i ciepłą wodę. Odstaw na ok. 15 minut, aż na wierzchu pojawi się gęsta piana. To znak, że drożdże zaczęły pracować. W tym czasie roztop masło i odstaw je, żeby trochę przestygło." },
-    { "section": "Ciasto", "text": "Do zaczynu dodaj cukier, sól, resztę mąki, jajko i roztopione masło. Masło może być jeszcze ciepłe, ale nie wlewaj gorącego prosto na jajko, bo się zetnie." },
-    { "section": "Ciasto", "text": "Wyrabiaj ciasto hakiem na niskich obrotach przez 5–8 minut. Możesz też ręcznie, tylko może to zająć więcej czasu. Dobrze wyrobione ciasto jest miękkie i lepkie: przykleja się do palców i szpatułki, ale odchodzi od nich w całości, bez zostawiania kawałków. Jeśli po wyrabianiu nadal mocno się klei, zostaw je w misce na ok. 10 minut, w tym czasie zrobi się bardziej sprężyste. Nie przejmuj się, jeśli dalej będzie trochę lepkie, przy formowaniu kuli przestanie się kleić." },
-    { "section": "Ciasto", "text": "Przełóż ciasto na lekko oprószony mąką blat i uformuj gładką kulę. Najłatwiej zrobić to skrobakiem do ciasta: wsuń go pod ciasto z drugiej strony i przyciągnij je kawałek do siebie. Powtarzaj to, obracając ciasto po trochu, aż cała kula będzie gładka i napięta. Ciasto powinno lekko trzymać się blatu, bo wtedy wierzch ładnie się naciąga. Jeśli zamiast tego ślizga się po mące, przesuń je tam, gdzie mąki jest mniej." },
-    { "section": "Ciasto", "text": "Wysmaruj oliwą miskę na tyle dużą, żeby zmieściło się w niej 2–3 razy więcej ciasta. Włóż ciasto i obróć je kilka razy, żeby całe pokryło się cienką warstwą oliwy. Dzięki temu nie przeschnie i nie przyklei się do miski. Przykryj folią albo ściereczką i odstaw w ciepłe miejsce na 1–2 godziny, aż ciasto podwoi objętość." },
-    { "section": "Formowanie", "text": "Wyłóż blachę matą silikonową lub papierem do pieczenia. Uderz wyrośnięte ciasto pięścią, żeby pozbyć się dużych pęcherzy powietrza, i przełóż je na blat oprószony mąką. Złóż ciasto na pół tak, żeby wilgotna strona, która była w misce, znalazła się w środku. Dużo łatwiej będzie się z nim pracowało." },
-    { "section": "Formowanie", "text": "Podziel ciasto na kawałki po ok. 95 g, z każdego wyjdzie jedna bułka. Jeśli wolisz większe bułki, kawałki mogą mieć nawet ok. 130 g. Waga bardzo się tu przydaje: bułki wyjdą równe i upieką się w tym samym czasie." },
-    { "section": "Formowanie", "text": "Każdy kawałek lekko ugnieć, żeby się połączył, a potem zawijaj brzegi pod spód, aż wierzch będzie gładki. Połóż kulkę na blacie złączeniem do dołu. Ułóż dłoń jak szpon, z lekko zgiętymi palcami, nakryj nią kulkę i ruchem okrężnym przetaczaj ją po blacie, delikatnie przy tym ciągnąc. Łatwiejszym sposobem na początek jest złączenie małych palców obu dłoni: podsuń je pod kulkę od drugiej strony i przyciągaj ją po blacie do siebie, za każdym razem trochę ją obracając. Dobrze uformowana bułka jest gładka, napięta i trochę gumowata w dotyku. Możesz to sprawdzić, naciskając ją lekko palcem: ciasto powinno być sprężyste, a wgniecenie po chwili prawie niewidoczne. Gotowe bułki odkładaj na blachę, zostawiając między nimi kilka centymetrów odstępu." },
-    { "section": "Formowanie", "text": "Lekko oprósz bułki mąką i spłaszcz każdą dłonią. Przykryj je i zostaw na ok. godzinę do wyrośnięcia. Nie przejmuj się, że wyglądają jak grube placki, bo urosną jeszcze podczas wyrastania i pieczenia." },
-    { "section": "Pieczenie", "text": "Rozgrzej piekarnik do 190°C, grzanie góra–dół, bez termoobiegu." },
-    { "section": "Pieczenie", "text": "Roztrzep drugie jajko z mlekiem i delikatnie posmaruj nim bułki, tak żeby ich nie przyklepać. Jeśli chcesz, posyp je sezamem." },
-    { "section": "Pieczenie", "text": "Piecz 10–15 minut, aż wierzch będzie złoty lub jasnobrązowy. Dokładny czas zależy od piekarnika, w małym elektrycznym bułki bywają gotowe już po 9–10 minutach. Nie ma dużej różnicy, czy wyjmiesz je złote, czy trochę ciemniejsze. Pilnuj tylko, żeby nie zrobiły się ciemnobrązowe." },
-    { "section": "Pieczenie", "text": "Zaraz po wyjęciu z piekarnika posmaruj bułki masłem. Może być roztopione albo prosto z lodówki, bo ciepłe bułki i tak je roztopią. Dzięki temu wierzch będzie miękki i błyszczący." },
-    { "section": "Pieczenie", "text": "Zdejmij bułki z blachy i zostaw do wystygnięcia, najlepiej na kratce." }
+    {
+      "section": "Zaczyn",
+      "text": "W misce, w której będziesz wyrabiać ciasto, wymieszaj drożdże, mąkę i ciepłą wodę (~ 35-40°C. Nie przekraczaj 50°C, taka temperatura zabije drożdże). Odstaw na ok. 15 minut, aż na wierzchu pojawi się gęsta piana. To znak, że drożdże zaczęły pracować. W tym czasie roztop masło i odstaw je, żeby trochę przestygło.",
+      "hints": [
+        "Jeśli twoje drożdże są bliskie terminu przydatności moga być osłabione. W takim wypadku możesz dodać jedną łyżeczkę cukru teraz żeby je dokarmić. Cukier dodany do zaczynu odejmij od reszty cukru w przepisie."
+      ]
+    },
+    {
+      "section": "Ciasto",
+      "text": "Do zaczynu dodaj cukier, sól, resztę mąki, jajko i roztopione masło.",
+      "hints": [
+        "Jeśli masło jest gorące, nie wlewaj go bezpośrednio na jajko bo się zetnie."
+      ]
+    },
+    {
+      "section": "Ciasto",
+      "text": "Wyrabiaj ciasto hakiem na niskich obrotach przez 5–8 minut. Dobrze wyrobione ciasto jest miękkie i lepkie: przykleja się do palców i szpatułki, ale odchodzi od nich w całości, bez zostawiania kawałków. Nie przejmuj się, jeśli dalej będzie trochę lepkie, przy formowaniu kuli przestanie się kleić.",
+      "hints": [
+        "Jeśli po wyrabianiu ciasto nadal mocno się klei, zostaw je w misce na ok. 10 minut. Mąka wchłonie więcej wody i wytworzy dodatkowy gluten dzięki czemu ciasto zrobi się bardziej sprężyste.",
+        "Ciasto można wyrobić też ręcznie jednak może to zająć więcej czasu."
+      ]
+    },
+    {
+      "section": "Ciasto",
+      "text": "Przełóż ciasto na lekko oprószony mąką blat i uformuj gładką kulę. Najłatwiej zrobić to skrobakiem do ciasta: wsuń go pod ciasto z drugiej strony i przyciągnij je kawałek do siebie. Powtarzaj to, obracając ciasto po trochu, aż cała kula będzie gładka i napięta. Ciasto powinno lekko trzymać się blatu, bo wtedy wierzch ładnie się naciąga. Jeśli zamiast tego ślizga się po mące, przesuń je tam, gdzie mąki jest mniej."
+    },
+    {
+      "section": "Ciasto",
+      "text": "Wysmaruj oliwą miskę na tyle dużą, żeby zmieściło się w niej 2–3 razy więcej ciasta. Włóż ciasto i obróć je kilka razy, żeby całe pokryło się cienką warstwą oliwy. Dzięki temu nie przeschnie i nie przyklei się do miski. Przykryj i odstaw w ciepłe miejsce na 1–2 godziny, aż ciasto podwoi objętość.",
+      "hints": [
+        "Miske z ciastem można owinąć folią ale w zupełności wystarczy ścierka czy też inne naczynie do przykrycia."
+      ]
+    },
+    {
+      "section": "Formowanie",
+      "text": "Wyłóż blachę matą silikonową lub papierem do pieczenia. Uderz wyrośnięte ciasto pięścią, żeby pozbyć się dużych pęcherzy powietrza, i przełóż je na blat oprószony mąką. Złóż ciasto na pół tak, żeby wilgotna strona, która była w misce, znalazła się w środku. Dużo łatwiej będzie się z nim pracowało."
+    },
+    {
+      "section": "Formowanie",
+      "text": "Podziel ciasto na kawałki po ok. 95 g, z każdego wyjdzie jedna bułka. Jeśli wolisz większe bułki, kawałki mogą mieć nawet ok. 130 g. Waga bardzo się tu przydaje: bułki wyjdą równe i upieką się w tym samym czasie."
+    },
+    {
+      "section": "Formowanie",
+      "text": "Kawałek ciasta lekko ugnieć, żeby się połączył, a potem zawijaj brzegi pod spód, aż wierzch będzie gładki. Połóż kulkę na blacie złączeniem do dołu. Ułóż dłoń jak szpon, z lekko zgiętymi palcami, nakryj nią kulkę i ruchem okrężnym przetaczaj ją po blacie, delikatnie przy tym ciągnąc. Łatwiejszym sposobem na początek jest złączenie małych palców obu dłoni: podsuń je pod kulkę od drugiej strony i przyciągaj ją po blacie do siebie, za każdym razem trochę ją obracając. Dobrze uformowana bułka jest gładka, napięta i trochę gumowata w dotyku. Możesz to sprawdzić, naciskając ją lekko palcem: ciasto powinno być sprężyste, a wgniecenie po chwili prawie niewidoczne. Gotowe bułki odkładaj na blachę, zostawiając między nimi kilka centymetrów odstępu.",
+      "hints": [
+        "Przy formowaniu ważne jest aby dół bułki był dobrze sklejony. Jeśli ciasto nie skeiło się dobrze podczas ugniatania lub wstępnego formowania zaklej spód palcami. Podczas przeciągania bułki po blacie dół się wyrówna."
+      ]
+    },
+    {
+      "section": "Formowanie",
+      "text": "Lekko oprósz bułki mąką i spłaszcz dłonią. Przykryj je i zostaw na ok. godzinę do wyrośnięcia. Nie przejmuj się, że wyglądają jak grube placki, bo urosną jeszcze podczas wyrastania i pieczenia."
+    },
+    {
+      "section": "Pieczenie",
+      "text": "Rozgrzej piekarnik do 190°C, grzanie góra–dół, bez termoobiegu."
+    },
+    {
+      "section": "Pieczenie",
+      "text": "Roztrzep drugie jajko z mlekiem i delikatnie posmaruj nim bułki, tak żeby ich nie przyklepać. Jeśli chcesz, posyp je sezamem."
+    },
+    {
+      "section": "Pieczenie",
+      "text": "Piecz 10–15 minut, aż wierzch będzie złoty lub jasnobrązowy. Nie ma dużej różnicy, czy wyjmiesz je złote, czy trochę ciemniejsze. Jeśli przypieką się za bardzo dalej będą dobre jednak góra bułki może być twarda.",
+      "hints": [
+        "Dokładny czas pieczenia zależy od piekarnika, w małym elektrycznym bułki bywają gotowe już po 9–10 minutach."
+      ]
+    },
+    {
+      "section": "Pieczenie",
+      "text": "Zaraz po wyjęciu z piekarnika posmaruj bułki masłem. Może być roztopione albo prosto z lodówki, ciepło bułki i tak je roztopi. Dzięki temu wierzch będzie miękki i błyszczący."
+    },
+    {
+      "section": "Pieczenie",
+      "text": "Zdejmij bułki z blachy i zostaw do wystygnięcia, najlepiej na kratce."
+    }
   ]
 }

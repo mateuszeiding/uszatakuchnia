@@ -4,34 +4,160 @@
   "timeMin": 180,
   "timeMax": 300,
   "difficulty": 1,
-  "status": "draft",
-  "newUnits": [{ "name": "łodyga", "forms": ["łodyga", "łodygi", "łodyg"] }],
+  "status": "published",
   "taxonomy": {
-    "dish": ["danie główne"],
-    "base": ["mięso"],
-    "cuisine": ["włoska"]
+    "base": [
+      "mięso"
+    ],
+    "cuisine": [
+      "włoska"
+    ],
+    "dish": [
+      "danie główne"
+    ]
   },
   "ingredients": [
-    { "section": "Baza", "ingredient": "Oliwa z oliwek", "quantity": "2", "unit": "łyżka" },
-    { "section": "Baza", "ingredient": "Boczek", "quantity": "150", "unit": "g", "note": "wędzony" },
-    { "section": "Baza", "ingredient": "Cebula", "quantity": "1", "unit": "sztuka" },
-    { "section": "Baza", "ingredient": "Marchew", "quantity": "1", "unit": "sztuka" },
-    { "section": "Baza", "ingredient": "Seler naciowy", "quantity": "2", "unit": "łodyga" },
-    { "section": "Mięso", "ingredient": "Wołowina", "quantity": "450", "unit": "g", "note": "mielona" },
-    { "section": "Mięso", "ingredient": "Oliwa z oliwek", "quantity": "1", "unit": "łyżka" },
-    { "section": "Sos", "ingredient": "Czerwone wino wytrawne", "quantity": "100", "unit": "ml" },
-    { "section": "Sos", "ingredient": "Passata pomidorowa", "quantity": "500", "unit": "g" },
-    { "section": "Sos", "ingredient": "Woda", "note": "w razie potrzeby" },
-    { "section": "Sos", "ingredient": "Bazylia", "quantity": "1", "unit": "pęczek", "optional": true },
-    { "section": "Sos", "ingredient": "Mleko", "quantity": "200", "unit": "ml" },
-    { "section": "Sos", "ingredient": "Sól", "unit": "do smaku" },
-    { "section": "Do podania", "ingredient": "Parmezan", "unit": "do smaku" }
+    {
+      "section": "Baza",
+      "ingredient": "Oliwa z oliwek",
+      "quantity": "2",
+      "unit": "łyżka"
+    },
+    {
+      "section": "Baza",
+      "ingredient": "Boczek",
+      "quantity": "150",
+      "unit": "g",
+      "note": "wędzony",
+      "substitutes": [
+        {
+          "ingredient": "Pancetta"
+        }
+      ]
+    },
+    {
+      "section": "Baza",
+      "ingredient": "Cebula",
+      "quantity": "1",
+      "unit": "sztuka"
+    },
+    {
+      "section": "Baza",
+      "ingredient": "Marchew",
+      "quantity": "1",
+      "unit": "sztuka"
+    },
+    {
+      "section": "Baza",
+      "ingredient": "Seler naciowy",
+      "quantity": "2",
+      "unit": "łodyga"
+    },
+    {
+      "section": "Mięso",
+      "ingredient": "Wołowina",
+      "quantity": "450",
+      "unit": "g",
+      "note": "mielona",
+      "substitutes": [
+        {
+          "ingredient": "Wieprzowina"
+        },
+        {
+          "ingredient": "Wieprzowina",
+          "mix": true
+        }
+      ]
+    },
+    {
+      "section": "Mięso",
+      "ingredient": "Oliwa z oliwek",
+      "quantity": "1",
+      "unit": "łyżka"
+    },
+    {
+      "section": "Sos",
+      "ingredient": "Czerwone wino wytrawne",
+      "quantity": "100",
+      "unit": "ml",
+      "substitutes": [
+        {
+          "ingredient": "Bulion warzywny"
+        },
+        {
+          "ingredient": "Woda"
+        },
+        {
+          "ingredient": "Wino bezalkoholowe"
+        }
+      ]
+    },
+    {
+      "section": "Sos",
+      "ingredient": "Passata pomidorowa",
+      "quantity": "500",
+      "unit": "g",
+      "substitutes": [
+        {
+          "ingredient": "Pomidory krojone (z puszki)"
+        }
+      ]
+    },
+    {
+      "section": "Sos",
+      "ingredient": "Woda",
+      "note": "w razie potrzeby"
+    },
+    {
+      "section": "Sos",
+      "ingredient": "Bazylia",
+      "quantity": "1",
+      "unit": "pęczek",
+      "optional": true
+    },
+    {
+      "section": "Sos",
+      "ingredient": "Mleko",
+      "quantity": "200",
+      "unit": "ml"
+    },
+    {
+      "section": "Sos",
+      "ingredient": "Sól",
+      "unit": "do smaku"
+    },
+    {
+      "section": "Do podania",
+      "ingredient": "Parmezan",
+      "unit": "do smaku",
+      "substitutes": [
+        {
+          "ingredient": "Grana Padano"
+        },
+        {
+          "ingredient": "Pecorino Romano"
+        }
+      ]
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Garnek",
+      "spec": "3–4 l"
+    },
+    {
+      "name": "Patelnia"
+    },
+    {
+      "name": "Tłuczek do ziemniaków",
+      "spec": "do rozbijania mięsa",
+      "optional": true
+    }
   ],
   "steps": [
     {
       "section": "Baza",
-      "text": "Rozgrzej oliwę w garnku na średnim ogniu. Dodaj pokrojony w kostkę boczek i smaż, często mieszając, aż wytopi się z niego tłuszcz, a boczek lekko się przypiecze.",
-      "hints": ["Najlepiej sprawdzi się garnek ok. 3–4 l."]
+      "text": "Rozgrzej oliwę w garnku na średnim ogniu. Dodaj pokrojony w kostkę boczek i smaż, często mieszając, aż wytopi się z niego tłuszcz, a boczek lekko się przypiecze."
     },
     {
       "section": "Baza",
@@ -54,14 +180,16 @@
       "section": "Sos",
       "text": "Wlej wino, zeskrob z dna to, co przywarło, i gotuj, aż wina ubędzie mniej więcej o dwie trzecie.",
       "hints": [
-        "Zamiast wina może być wino bezalkoholowe, bulion albo nawet woda. Najważniejsze jest rozpuszczenie przypieczonych resztek z dna, bo w nich jest najwięcej smaku.",
+        "Najważniejsze jest oderwanie przypieczonych resztek od dna. To w nich jest najwięcej smaku.",
         "Na początku możesz wlać wino na patelnię po mięsie, zeskrobać przypieczone resztki i przelać wszystko do garnka."
       ]
     },
     {
       "section": "Sos",
       "text": "Dodaj passatę i łodyżki bazylii. Do pustego słoika albo kartonu po passacie wlej trochę wody, wstrząśnij, żeby wypłukać resztki, i przelej do garnka. Wymieszaj.",
-      "hints": ["Łodyżki przez czas duszenia oddadzą sosowi aromat, a liście przydadzą się do podania."]
+      "hints": [
+        "Łodyżki przez czas duszenia oddadzą sosowi aromat, a liście przydadzą się do podania."
+      ]
     },
     {
       "section": "Sos",
@@ -82,7 +210,9 @@
     {
       "section": "Podanie",
       "text": "Wymieszaj ugotowany makaron z sosem na patelni, dolewając trochę wody z gotowania makaronu. Podawaj z bazylią i parmezanem.",
-      "hints": ["Do ciężkich, mięsnych sosów najlepiej nadają się makarony szerokie, jak tagliatelle czy pappardelle, albo grube, z rowkami lub dziurą w środku, jak rigatoni czy penne."]
+      "hints": [
+        "Do ciężkich, mięsnych sosów najlepiej nadają się makarony szerokie, jak tagliatelle czy pappardelle, albo grube, z rowkami lub dziurą w środku, jak rigatoni czy penne."
+      ]
     }
   ]
 }
