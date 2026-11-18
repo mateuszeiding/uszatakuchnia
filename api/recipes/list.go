@@ -10,13 +10,17 @@ import (
 )
 
 func List(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 	conn := db.DB()
 
-	// admin=true query param means show all; otherwise only published
+	// admin=true — także szkice, tylko dla właściciela; reszta widzi opublikowane
 	isAdmin := r.URL.Query().Get("admin") == "true"
+	if isAdmin && !resp.IsOwner(r) {
+		resp.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 
 	query := conn.Model(&entities.Recipe{}).
 		Select(`id, name, tagline, time_min, time_max, difficulty, status, nutrition,

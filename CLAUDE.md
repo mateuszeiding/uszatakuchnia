@@ -88,7 +88,46 @@ Oba skrypty wymagają `DB_DATABASE_URL` z `.env.local`.
 - Po zmianie wersji głównej Postgresa na Neonie podbij `PG_MAJOR` w workflow.
 - `content/` to nie backup — przepisy w stanie z dnia dodania.
 
+## Autoryzacja API
+
+Odczyt opublikowanych treści (lista, przepis, lista zakupów, zdjęcia, słowniki) jest publiczny. **Każdy zapis** (POST / PUT / PATCH / DELETE) i podgląd szkiców (`GET /api/recipes/list?admin=true`, `GET` szczegółów szkicu) wymaga uprawnień właściciela w nagłówku `Authorization: Bearer …`:
+- **przeglądarka** — token dostępu Auth0 (JWT, audience `VITE_AUTH0_AUDIENCE`); backend sprawdza podpis (JWKS z Auth0), wystawcę, audience i `sub` = `VITE_AUTH0_OWNER_SUB`. Inne zalogowane konto dostaje 403 i nie widzi UI admina,
+- **sesje Claude Code** — klucz `API_ADMIN_KEY` (min. 32 znaki) z `.env.local`; ten sam klucz jest w zmiennych Vercela.
+
+Odpowiedzi: 401 bez tokenu / ze złym kluczem / z wygasłym tokenem, 403 z tokenem cudzego konta, 404 dla szkicu bez uprawnień.
+
+Kod:
+- `auth/` — sprawdzenie klucza i JWT (cache kluczy JWKS w pamięci funkcji),
+- `http/begin.go` — `resp.Begin(w, r)`: CORS + preflight + bramka zapisu. **Każdy handler w `api/` zaczyna się od `if resp.Begin(w, r) { return }`** — pilnuje tego test `go test ./http`. Nowy endpoint zapisujący jest wtedy chroniony bez dodatkowego kodu. Odczyt, który ma pokazać więcej właścicielowi, sprawdza `resp.IsOwner(r)`,
+- `web/src/data/api/API.ts` — dokleja token do żądań; przy 401 pyta o ponowne logowanie w okienku (`web/src/auth/reauthenticate.ts`) i powtarza żądanie, więc formularz nie traci treści.
+
+CORS: produkcja i podglądy Vercela są z tej samej domeny co API, więc CORS wpuszcza tylko lokalny dev (`localhost:5173`, `:4173`). Dodatkowe domeny: `CORS_ORIGINS="https://a,https://b"`. curl i skrypty CORS nie dotyczy.
+
+Zmienne (Vercel: Production + Preview + Development; lokalnie `.env.local`, frontend dodatkowo `web/.env`):
+- `API_ADMIN_KEY` — sekret, tylko Vercel i `.env.local`, **nigdy repo ani frontend**,
+- `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_AUDIENCE`, `VITE_AUTH0_OWNER_SUB` — czyta je frontend (build) i backend (runtime). Backend przyjmuje też `AUTH0_DOMAIN` / `AUTH0_AUDIENCE` / `AUTH0_OWNER_SUB`, jeśli są ustawione,
+- `CORS_ORIGINS` — opcjonalnie.
+
+Brak konfiguracji = zamknięte: bez `API_ADMIN_KEY` klucz nie działa, bez `VITE_AUTH0_OWNER_SUB` żadne konto nie jest właścicielem.
+
+### Zapis przez API z sesji Claude Code
+
+Klucz czytaj z `.env.local` do zmiennej i nie wypisuj go (repo jest publiczne, logi też bywają):
+```bash
+KEY=$(sed -n 's/^API_ADMIN_KEY="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' .env.local | tr -d '\r')
+curl -s -X POST https://<domena>/api/ingredients \
+  -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' -d @body.json
+```
+Ten sam nagłówek przy `POST` / `PUT /api/recipes`, `GET /api/recipes/<id>` szkicu przed edycją i `GET /api/recipes/list?admin=true`.
+
+- **401** — w `.env.local` nie ma `API_ADMIN_KEY` albo różni się od klucza w Vercelu. Nie obchodź tego (np. zapisem prosto do bazy) — powiedz właścicielowi; po jego zgodzie `vercel env pull .env.local` ściąga aktualne zmienne (nadpisuje plik).
+- Klucz nie wygasa sam. **Rotacja** (np. po wycieku): właściciel generuje nowy (`[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))` w PowerShellu), podmienia `API_ADMIN_KEY` w Vercelu (wszystkie środowiska), robi redeploy i podmienia wartość w `.env.local`. Stary klucz przestaje działać po redeployu.
+
+Lokalnie: `go run ./cmd/...` łączy się z bazą bezpośrednio — autoryzacja API go nie dotyczy. `vercel dev` czyta `.env.local`, więc zapis z lokalnego frontendu wymaga tam `VITE_AUTH0_*` i `VITE_AUTH0_OWNER_SUB`, a curl — `API_ADMIN_KEY`.
+
 ## Przepisy dodawane przez Claude (backup)
+
+Przepisy wprowadza się przez API produkcyjne z kluczem `API_ADMIN_KEY` — jak w „Zapis przez API z sesji Claude Code” wyżej.
 
 Przepisy wprowadzane przez API (nie przez formularz) mają kopię w `content/`:
 - `content/recipes/<slug>.json` — przepis z nazwami składników, jednostek i wartości taksonomii (nie ID), więc da się go odtworzyć na każdej bazie,
@@ -103,4 +142,4 @@ cd web && pnpm dev          # frontend
 vercel dev                  # backend (Vercel CLI)
 ```
 
-Zmienne środowiskowe: `.env.local` w rocie projektu (`DB_DATABASE_URL`, `AUTH0_*`, itd.). Uwaga: baza z `.env.local` to produkcja.
+Zmienne środowiskowe: `.env.local` w rocie projektu (`DB_DATABASE_URL`, `API_ADMIN_KEY`, `VITE_AUTH0_*`, itd. — patrz „Autoryzacja API”). Uwaga: baza z `.env.local` to produkcja.

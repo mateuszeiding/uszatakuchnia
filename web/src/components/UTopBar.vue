@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import { useAuth0 } from '@auth0/auth0-vue';
 import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
 import AuthButton from './auth/AuthButton.vue';
 
-const { isAuthenticated } = useAuth0();
+import { isOwner } from '@/auth/createAuth';
 
 const dark = ref(localStorage.getItem('theme') === 'dark');
 
@@ -64,7 +63,7 @@ if (dark.value) {
                     </span>
                 </button>
 
-                <template v-if="isAuthenticated">
+                <template v-if="isOwner">
                     <RouterLink
                         to="/admin"
                         class="topbar__admin-badge"

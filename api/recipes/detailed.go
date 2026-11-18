@@ -16,7 +16,7 @@ import (
 )
 
 func Detailed(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 
@@ -55,12 +55,22 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if entity.ID == 0 {
+	// Szkic widzi tylko właściciel; reszta dostaje 404, jakby przepisu nie było.
+	owner := resp.IsOwner(r)
+	if entity.ID == 0 || (!owner && entity.Status != entities.StatusPublished) {
 		resp.Error(w, http.StatusNotFound, "recipe not found")
 		return
 	}
 
 	dto := mappers.MapRecipeToDto(entity)
+	if !owner {
+		// link do przepisu-składnika, który jest szkicem, zdradzałby szkic
+		for i := range dto.Ingredients {
+			if l := dto.Ingredients[i].LinkedRecipe; l != nil && l.Status != entities.StatusPublished {
+				dto.Ingredients[i].LinkedRecipe = nil
+			}
+		}
+	}
 	ix, err := services.LoadNutritionIndex(conn)
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
@@ -76,6 +86,7 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		Joins("JOIN recipes r ON r.id = ri.recipe_id").
 		Joins("JOIN ingredients i ON i.id = ri.ingredient_id").
 		Where("ri.linked_recipe_id = ? AND ri.recipe_id <> ?", entity.ID, entity.ID).
+		Where("? OR r.status = ?", owner, entities.StatusPublished).
 		Order("r.name, ri.sort_order").
 		Scan(&dto.LinkedFrom).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())

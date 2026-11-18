@@ -10,7 +10,7 @@ import (
 )
 
 func Ingredient(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 	conn := db.DB()

@@ -13,7 +13,7 @@ import (
 
 // List — wszystkie słowniki: osie klasyfikacji z wartościami, jednostki, alergeny, typy składników, sprzęt.
 func List(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 	conn := db.DB()

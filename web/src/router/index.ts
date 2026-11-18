@@ -2,6 +2,7 @@ import { authGuard } from '@auth0/auth0-vue';
 import RecipesView from '@view/recipies/list/RecipesView.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
+import { isOwner } from '@/auth/createAuth';
 import AdminIngredientEdit from '@/views/admin/AdminIngredientEdit.vue';
 import AdminIngredients from '@/views/admin/AdminIngredients.vue';
 import AdminLayout from '@/views/admin/AdminLayout.vue';
@@ -10,6 +11,10 @@ import AdminTaxonomy from '@/views/admin/AdminTaxonomy.vue';
 import UpsertRecipe from '@/views/recipies/auth/UpsertRecipe.vue';
 import RecipeDetails from '@/views/recipies/details/RecipeDetails.vue';
 import ShoppingListView from '@/views/recipies/shopping/ShoppingListView.vue';
+
+// Po zalogowaniu (authGuard) wpuszcza tylko konto właściciela; inne wracają na listę.
+const ownerGuard = () => (isOwner.value ? true : '/recipes');
+const adminGuards = [authGuard, ownerGuard];
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,7 +27,7 @@ const router = createRouter({
     routes: [
         { path: '/', redirect: '/recipes' },
         { path: '/recipes', component: RecipesView },
-        { path: '/recipes/new', component: UpsertRecipe, beforeEnter: authGuard },
+        { path: '/recipes/new', component: UpsertRecipe, beforeEnter: adminGuards },
         { path: '/recipes/:id', name: 'recipe-details', component: RecipeDetails, props: true },
         {
             path: '/recipes/:id/zakupy',
@@ -35,12 +40,12 @@ const router = createRouter({
             name: 'recipe-edit',
             component: UpsertRecipe,
             props: true,
-            beforeEnter: authGuard,
+            beforeEnter: adminGuards,
         },
         {
             path: '/admin',
             component: AdminLayout,
-            beforeEnter: authGuard,
+            beforeEnter: adminGuards,
             children: [
                 { path: '', redirect: '/admin/recipes' },
                 { path: 'recipes', component: AdminRecipes },

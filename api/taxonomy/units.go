@@ -30,7 +30,7 @@ type unitRequest struct {
 //
 // Słownik sprzętu obsługuje ta sama funkcja (limit funkcji Vercela): /api/taxonomy/equipment[/:id] → ?kind=equipment.
 func Units(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 	if r.URL.Query().Get("kind") == "equipment" {

@@ -11,7 +11,7 @@ import (
 
 // Get — GET /api/photos/:id. Zdjęcia są niezmienne (nowe zdjęcie = nowe id), więc cache na rok.
 func Get(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 	id, err := strconv.ParseUint(r.URL.Query().Get("id"), 10, 64)

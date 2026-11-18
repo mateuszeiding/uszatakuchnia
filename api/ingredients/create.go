@@ -11,7 +11,7 @@ import (
 )
 
 func Create(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 	if r.Method != http.MethodPost {

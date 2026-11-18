@@ -17,7 +17,7 @@ var allowedPhotoTypes = map[string]bool{"image/jpeg": true, "image/png": true, "
 
 // Upload — POST /api/photos, body = surowe bajty obrazu, Content-Type = typ obrazu.
 func Upload(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 	if r.Method != http.MethodPost {

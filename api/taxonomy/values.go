@@ -27,7 +27,7 @@ type valueRequest struct {
 //	PUT    /api/taxonomy/values/:id              {label, color?}
 //	DELETE /api/taxonomy/values/:id?moveTo=<id>  przepisy z tą wartością dostają moveTo
 func Values(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 	switch r.Method {

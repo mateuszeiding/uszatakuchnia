@@ -17,7 +17,7 @@ import (
 
 // Detailed — PUT/DELETE /api/ingredients/:id
 func Detailed(w http.ResponseWriter, r *http.Request) {
-	if resp.HandleCORS(w, r) {
+	if resp.Begin(w, r) {
 		return
 	}
 	switch r.Method {
