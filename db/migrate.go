@@ -25,6 +25,9 @@ var models = []any{
 	&entities.RecipePhoto{},
 	&entities.RecipeTaxonomy{},
 
+	&entities.Equipment{},
+	&entities.RecipeEquipment{},
+
 	&entities.Image{},
 	&entities.Photo{},
 }
@@ -48,6 +51,8 @@ var migrateLock sync.Mutex
 
 // devResetTables — wszystkie tabele aplikacji, łącznie z wycofanymi (żeby reset nie zostawiał śmieci).
 var devResetTables = []string{
+	"recipe_equipment",
+	"equipment",
 	"recipe_taxonomy",
 	"recipe_tags", // wycofana: zastąpiona przez recipe_taxonomy
 	"recipe_steps",

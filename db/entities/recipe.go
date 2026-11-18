@@ -26,6 +26,7 @@ type Recipe struct {
 	Steps       []RecipeStep       `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Ingredients []RecipeIngredient `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Taxonomy    []RecipeTaxonomy   `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Equipment   []RecipeEquipment  `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 // RecipeBase — lekki widok przepisu dla listy. NeedsPrep wyliczane w zapytaniu (EXISTS na krokach prep).

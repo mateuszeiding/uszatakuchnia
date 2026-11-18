@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { blankStep, fromRecipe, moveTipToStep, newForm, toRequest, validate } from '../recipeForm';
+import {
+    blankEquip,
+    blankStep,
+    fromRecipe,
+    moveTipToStep,
+    newForm,
+    toRequest,
+    validate,
+} from '../recipeForm';
 
 import { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 
@@ -54,5 +62,35 @@ describe('wskazówki w formularzu', () => {
         );
         f.stepGroups[0]!.items[1]!.hints = ['ż'.repeat(300)];
         expect(validate(f, undefined).errors.steps).toBeUndefined();
+    });
+});
+
+describe('sprzęt w formularzu', () => {
+    it('fromRecipe → toRequest zachowuje kolejność, doprecyzowanie i opcjonalny', () => {
+        const r = new RecipeDto({
+            name: 'x',
+            equipment: [
+                { equipmentId: 3, name: 'garnek', spec: '3–4 l', optional: false },
+                { equipmentId: 1, name: 'robot', spec: null, optional: true },
+            ],
+        } as unknown as Partial<RecipeDto>);
+        const f = fromRecipe(r);
+        expect(f.equipment.map((e) => e.name)).toEqual(['garnek', 'robot']);
+        expect(toRequest(f, 'draft').equipment).toEqual([
+            { equipmentId: 3, spec: '3–4 l', optional: false },
+            { equipmentId: 1, spec: null, optional: true },
+        ]);
+    });
+
+    it('pusty wiersz pomijany, wpisany bez wyboru = błąd wiersza', () => {
+        const f = newForm();
+        const empty = blankEquip();
+        const typed = { ...blankEquip(), name: 'termometr' };
+        f.equipment = [empty, typed];
+        expect(toRequest(f, 'draft').equipment).toEqual([]);
+        const v = validate(f, undefined);
+        expect(v.rows[typed.id]).toBeTruthy();
+        expect(v.rows[empty.id]).toBeUndefined();
+        expect(v.errors.equipment).toBe('Popraw sprzęt (1).');
     });
 });

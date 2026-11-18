@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"uszatakuchnia/db/entities"
 	"uszatakuchnia/db/mappers"
 	resp "uszatakuchnia/http"
+	"uszatakuchnia/services"
 
 	"gorm.io/gorm"
 )
@@ -25,8 +27,14 @@ type unitRequest struct {
 //	POST   /api/taxonomy/units
 //	PUT    /api/taxonomy/units/:id
 //	DELETE /api/taxonomy/units/:id?moveTo=<id>  składniki w przepisach dostają moveTo (bez = bez jednostki)
+//
+// Słownik sprzętu obsługuje ta sama funkcja (limit funkcji Vercela): /api/taxonomy/equipment[/:id] → ?kind=equipment.
 func Units(w http.ResponseWriter, r *http.Request) {
 	if resp.HandleCORS(w, r) {
+		return
+	}
+	if r.URL.Query().Get("kind") == "equipment" {
+		equipmentHandler(w, r)
 		return
 	}
 	switch r.Method {
@@ -133,4 +141,66 @@ func deleteUnit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp.JSON(w, http.StatusOK, map[string]any{"deleted": unit.ID, "moved": used})
+}
+
+// ─── Sprzęt (Panel → Klasyfikacja → Sprzęt) ─────────────────
+//
+//	POST   /api/taxonomy/equipment                      {name}
+//	PUT    /api/taxonomy/equipment/:id                  {name}
+//	DELETE /api/taxonomy/equipment/:id?replaceWith=<id>  przepisy dostają inny sprzęt (doprecyzowania zostają)
+//	DELETE /api/taxonomy/equipment/:id?removeFromRecipes=true
+func equipmentHandler(w http.ResponseWriter, r *http.Request) {
+	conn := db.DB()
+	q := r.URL.Query()
+	id, _ := strconv.ParseUint(q.Get("id"), 10, 64)
+
+	switch r.Method {
+	case http.MethodPost, http.MethodPut:
+		if r.Method == http.MethodPut && id == 0 {
+			resp.Error(w, http.StatusBadRequest, "id is required")
+			return
+		}
+		if r.Method == http.MethodPost {
+			id = 0
+		}
+		var req struct {
+			Name string `json:"name"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			resp.Error(w, http.StatusBadRequest, "invalid body")
+			return
+		}
+		e, err := services.SaveEquipment(conn, uint(id), req.Name)
+		switch {
+		case errors.Is(err, services.ErrEquipmentNotFound):
+			resp.Error(w, http.StatusNotFound, err.Error())
+		case errors.Is(err, services.ErrEquipmentTaken):
+			resp.Error(w, http.StatusConflict, err.Error())
+		case err != nil:
+			resp.Error(w, http.StatusBadRequest, err.Error())
+		default:
+			status := http.StatusOK
+			if r.Method == http.MethodPost {
+				status = http.StatusCreated
+			}
+			resp.JSON(w, status, mappers.MapEquipmentToDto(e))
+		}
+	case http.MethodDelete:
+		replaceWith, _ := strconv.ParseUint(q.Get("replaceWith"), 10, 64)
+		used, err := services.DeleteEquipment(conn, uint(id), uint(replaceWith), q.Get("removeFromRecipes") == "true")
+		switch {
+		case errors.Is(err, services.ErrEquipmentNotFound):
+			resp.Error(w, http.StatusNotFound, err.Error())
+		case errors.Is(err, services.ErrEquipmentInUse):
+			resp.JSON(w, http.StatusConflict, map[string]any{"error": err.Error(), "usedIn": used})
+		case errors.Is(err, services.ErrEquipmentReplace):
+			resp.Error(w, http.StatusBadRequest, err.Error())
+		case err != nil:
+			resp.Error(w, http.StatusInternalServerError, err.Error())
+		default:
+			resp.JSON(w, http.StatusOK, map[string]any{"deleted": id, "recipes": used})
+		}
+	default:
+		resp.Error(w, http.StatusMethodNotAllowed, "method not allowed")
+	}
 }

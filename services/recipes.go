@@ -102,6 +102,9 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 	}
 
 	validateSteps(req, add)
+	if err := validateEquipment(tx, req, add); err != nil {
+		return nil, err
+	}
 
 	// Klasyfikacja: wartości istnieją, osie pojedyncze mają max 1 wartość.
 	perAxis := map[uint]int{}
@@ -245,7 +248,7 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 			return err
 		}
 	}
-	return nil
+	return replaceRecipeEquipment(tx, recipeID, req)
 }
 
 // MaxHintLen — najdłuższa wskazówka kroku (znaki, nie bajty).

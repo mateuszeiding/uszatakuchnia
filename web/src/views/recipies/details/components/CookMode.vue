@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { ingredientGroups, leadText, publicLink, scaledAmount, servingsLabel } from '../recipeView';
 
+import EquipmentCard from './EquipmentCard.vue';
 import IngGroupHeader from './IngGroupHeader.vue';
 import IngRow from './IngRow.vue';
 import StepHints from './StepHints.vue';
@@ -197,11 +198,16 @@ function amount(ing: RecipeDto['ingredients'][number]) {
 
         <UModal
             v-if="showIng"
-            :title="`Składniki · ${servings} ${servingsLabel(servings)}`"
+            :title="`${recipe.equipment.length ? 'Sprzęt i składniki' : 'Składniki'} · ${servings} ${servingsLabel(servings)}`"
             :width="480"
             @close="showIng = false"
         >
             <div class="cook-ing">
+                <EquipmentCard
+                    v-if="recipe.equipment.length"
+                    :items="recipe.equipment"
+                    compact
+                />
                 <div
                     v-for="(sec, si) in groups.sections"
                     :key="si"

@@ -24,6 +24,7 @@ type RecipeDto struct {
 	Photo       *RecipePhotoDto           `json:"photo,omitempty"`
 	Steps       []RecipeStepDto           `json:"steps"`
 	Ingredients []RecipeIngredientDto     `json:"ingredients"`
+	Equipment   []RecipeEquipmentDto      `json:"equipment"`
 	// Składniki innych przepisów, które prowadzą do tego (treść modalu usuwania).
 	LinkedFrom []RecipeLinkSourceDto `json:"linkedFrom"`
 }
@@ -67,6 +68,8 @@ type UpsertRecipeRequest struct {
 
 	Steps       []UpsertStepRequest       `json:"steps"`
 	Ingredients []UpsertIngredientRequest `json:"ingredients"`
+	// nil = bez zmian (starszy klient); [] = przepis bez sprzętu.
+	Equipment *[]UpsertEquipmentRequest `json:"equipment"`
 }
 
 type UpsertStepRequest struct {

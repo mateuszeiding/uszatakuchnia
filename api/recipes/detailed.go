@@ -46,6 +46,8 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 		Preload("Ingredients.Unit").
 		Preload("Ingredients.LinkedRecipe.Photo").
 		Preload("Taxonomy.Value.Axis").
+		Preload("Equipment", func(tx *gorm.DB) *gorm.DB { return tx.Order("sort_order") }).
+		Preload("Equipment.Equipment").
 		Find(&entity, id).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return

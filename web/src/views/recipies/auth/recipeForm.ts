@@ -39,6 +39,16 @@ export interface IStepItem {
     hints: string[];
 }
 
+export interface IEquipItem {
+    id: number;
+    /** 0 = jeszcze nie wybrano ze słownika (wiersz pomijany przy zapisie). */
+    equipmentId: number;
+    /** Tekst w polu podpowiadania. */
+    name: string;
+    spec: string;
+    optional: boolean;
+}
+
 export interface IGroup<T> {
     id: number;
     label: string;
@@ -60,6 +70,7 @@ export interface IRecipeForm {
     servings: string;
     ingGroups: IGroup<IIngItem>[];
     stepGroups: IGroup<IStepItem>[];
+    equipment: IEquipItem[];
 }
 
 export const blankIng = (): IIngItem => ({
@@ -71,6 +82,14 @@ export const blankIng = (): IIngItem => ({
     note: '',
     optional: false,
     linked: null,
+});
+
+export const blankEquip = (): IEquipItem => ({
+    id: uid(),
+    equipmentId: 0,
+    name: '',
+    spec: '',
+    optional: false,
 });
 
 export const blankStep = (): IStepItem => ({
@@ -94,6 +113,7 @@ export const newForm = (): IRecipeForm => ({
     servings: '4',
     ingGroups: [{ id: uid(), label: '', items: [blankIng()] }],
     stepGroups: [{ id: uid(), label: '', items: [blankStep()] }],
+    equipment: [],
 });
 
 /** Grupuje kolejne elementy o tej samej sekcji (kolejność z API zachowana). */
@@ -169,6 +189,13 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
         servings: r.servings ? String(r.servings) : '',
         ingGroups: ingGroups.length ? ingGroups : newForm().ingGroups,
         stepGroups: stepGroups.length ? stepGroups : newForm().stepGroups,
+        equipment: r.equipment.map((e) => ({
+            id: uid(),
+            equipmentId: e.equipmentId,
+            name: e.name,
+            spec: e.spec ?? '',
+            optional: e.optional,
+        })),
     };
 }
 
@@ -218,6 +245,14 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
                     linkedRecipeId: i.linked?.id ?? null,
                 }))
         ),
+        // pusty / niewybrany ze słownika wiersz pomijany
+        equipment: f.equipment
+            .filter((e) => e.equipmentId > 0)
+            .map((e) => ({
+                equipmentId: e.equipmentId,
+                spec: orNull(e.spec),
+                optional: e.optional,
+            })),
     };
 }
 
@@ -253,6 +288,7 @@ export type FormErrors = Partial<
         | 'difficulty'
         | 'time'
         | 'servings'
+        | 'equipment'
         | `taxonomy.${string}`,
         string
     >
@@ -261,7 +297,7 @@ export type FormErrors = Partial<
 export interface IValidation {
     /** Błędy wymagane do publikacji. */
     errors: FormErrors;
-    /** Wiersze składników z błędem (id wiersza → komunikat). */
+    /** Wiersze składników i sprzętu z błędem (id wiersza → komunikat). */
     rows: Record<number, string>;
 }
 
@@ -299,6 +335,15 @@ export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IVal
         errors.ingredients = 'Dodaj co najmniej jeden składnik.';
     else if (rowErrCount) errors.ingredients = `Popraw składniki (${rowErrCount}).`;
 
+    let equipErr = 0;
+    for (const e of f.equipment) {
+        if (e.name.trim() && !e.equipmentId) {
+            rows[e.id] = 'Wybierz sprzęt z listy albo dodaj go do słownika.';
+            equipErr++;
+        }
+    }
+    if (equipErr) errors.equipment = `Popraw sprzęt (${equipErr}).`;
+
     const steps = f.stepGroups.flatMap((g) => g.items);
     if (!steps.some((s) => s.text.trim())) errors.steps = 'Dodaj co najmniej jeden krok.';
     // Numer jak w edytorze (ciągła numeracja wierszy).
@@ -313,6 +358,7 @@ export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IVal
 export const ERROR_ORDER: [keyof FormErrors | string, string][] = [
     ['name', 'f-name'],
     ['ingredients', 'f-ingredients'],
+    ['equipment', 'f-equipment'],
     ['steps', 'f-steps'],
     ['taxonomy.dish', 'f-taxonomy-dish'],
     ['difficulty', 'f-difficulty'],

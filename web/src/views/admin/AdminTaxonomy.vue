@@ -2,6 +2,7 @@
 import { useQueryClient } from '@tanstack/vue-query';
 import { computed, onMounted, ref } from 'vue';
 
+import EquipmentTable from './components/EquipmentTable.vue';
 import UnitsTable from './components/UnitsTable.vue';
 import ValuesTable from './components/ValuesTable.vue';
 
@@ -10,7 +11,7 @@ import { invalidateRecipes } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient, invalidateDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Klasyfikacja: osie (Typ dania, Baza, Kuchnia, Diety, Praktyczne, …) + Jednostki.
+// Klasyfikacja: osie (Typ dania, Baza, Kuchnia, Diety, Praktyczne, …) + Jednostki + Sprzęt.
 const qc = useQueryClient();
 const dicts = ref<IDictionaries>();
 const tab = ref<string>('dish');
@@ -38,6 +39,7 @@ onMounted(load);
 const tabs = computed(() => [
     ...(dicts.value?.axes ?? []).map((a) => ({ id: a.code, label: a.label, n: a.values.length })),
     { id: 'units', label: 'Jednostki', n: dicts.value?.units.length ?? 0 },
+    { id: 'equipment', label: 'Sprzęt', n: dicts.value?.equipment.length ?? 0 },
 ]);
 const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value));
 </script>
@@ -51,7 +53,7 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
             aria-hidden="true"
         >
             <span
-                v-for="n in 6"
+                v-for="n in 7"
                 :key="n"
                 class="tab"
                 :class="{ 'is-active': n === 1 }"
@@ -100,6 +102,11 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
         <UnitsTable
             v-if="tab === 'units'"
             :units="dicts.units"
+            @changed="reload"
+        />
+        <EquipmentTable
+            v-else-if="tab === 'equipment'"
+            :items="dicts.equipment"
             @changed="reload"
         />
         <ValuesTable

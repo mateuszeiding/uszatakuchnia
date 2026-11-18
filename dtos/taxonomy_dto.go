@@ -39,4 +39,5 @@ type DictionariesDto struct {
 	Units           []UnitDto         `json:"units"`
 	Allergens       []AllergenDto     `json:"allergens"`
 	IngredientTypes []TypeDto         `json:"ingredientTypes"`
+	Equipment       []EquipmentDto    `json:"equipment"`
 }

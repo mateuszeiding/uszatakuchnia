@@ -52,6 +52,7 @@ func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 		Photo:       MapRecipePhotoToDto(e.Photo),
 		Steps:       MapRecipeStepArrayToDto(e.Steps),
 		Ingredients: MapRecipeIngredientArrayToDto(e.Ingredients),
+		Equipment:   MapRecipeEquipmentToDto(e.Equipment),
 	}
 }
 

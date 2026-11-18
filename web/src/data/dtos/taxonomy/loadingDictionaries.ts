@@ -111,6 +111,7 @@ export const LOADING_DICTIONARIES: IDictionaries = {
     axes: loadingAxes,
     units: [],
     ingredientTypes: [],
+    equipment: [],
     allergens: [
         'gluten',
         'mleko',

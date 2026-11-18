@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 
 import CookMode from './CookMode.vue';
+import EquipmentCard from './EquipmentCard.vue';
 import IngredientsPanel from './IngredientsPanel.vue';
 import NutritionCard from './NutritionCard.vue';
 import RecipeHero from './RecipeHero.vue';
@@ -25,8 +26,8 @@ const cooking = ref(false);
         :recipe="recipe"
         :servings="progress.servings"
     />
-    <!-- Desktop: panel składników (przyklejony) po lewej przez oba wiersze, po prawej kroki, pod nimi makro.
-         Mobile: składniki → makro → kroki. -->
+    <!-- Desktop: panel składników (przyklejony) po lewej, po prawej Sprzęt → Kroki → Wartości odżywcze.
+         Mobile: składniki → makro → sprzęt → kroki. -->
     <div class="recipe-grid">
         <IngredientsPanel
             class="recipe-grid__ing"
@@ -37,21 +38,28 @@ const cooking = ref(false);
             @toggle="toggle('ing', $event)"
             @servings="setServings"
         />
-        <StepsList
-            class="recipe-grid__steps"
-            :recipe="recipe"
-            :done="progress.steps"
-            :can-reset="hasProgress"
-            @toggle="toggle('steps', $event)"
-            @cook="cooking = true"
-            @reset="reset"
-        />
-        <NutritionCard
-            v-if="recipe.nutrition"
-            class="recipe-grid__nutri"
-            :nutrition="recipe.nutrition"
-            :servings="progress.servings"
-        />
+        <div class="recipe-grid__main">
+            <EquipmentCard
+                v-if="recipe.equipment.length"
+                class="recipe-grid__equip"
+                :items="recipe.equipment"
+            />
+            <StepsList
+                class="recipe-grid__steps"
+                :recipe="recipe"
+                :done="progress.steps"
+                :can-reset="hasProgress"
+                @toggle="toggle('steps', $event)"
+                @cook="cooking = true"
+                @reset="reset"
+            />
+            <NutritionCard
+                v-if="recipe.nutrition"
+                class="recipe-grid__nutri"
+                :nutrition="recipe.nutrition"
+                :servings="progress.servings"
+            />
+        </div>
     </div>
     <CookMode
         v-if="cooking && recipe.steps.length"
@@ -70,44 +78,37 @@ const cooking = ref(false);
 .recipe-grid {
     display: grid;
     grid-template-columns: 340px minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-    gap: 28px 56px;
+    gap: 56px;
     margin-top: 56px;
     align-items: start;
 }
-.recipe-grid__ing {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-}
-.recipe-grid__steps {
-    grid-column: 2;
-    grid-row: 1;
+.recipe-grid__main {
     min-width: 0;
-}
-.recipe-grid__nutri {
-    grid-column: 2;
-    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
 }
 
 @media (max-width: 900px) {
     .recipe-grid {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: none;
         gap: 40px;
         margin-top: 32px;
     }
-    .recipe-grid__ing,
-    .recipe-grid__steps,
-    .recipe-grid__nutri {
-        grid-column: auto;
-        grid-row: auto;
+    /* składniki → makro → sprzęt → kroki */
+    .recipe-grid__main {
+        display: contents;
     }
     .recipe-grid__nutri {
         order: 1;
         margin-top: -16px; /* karta zaraz po składnikach (jak w v1: odstęp 24px) */
     }
-    .recipe-grid__steps {
+    .recipe-grid__equip {
         order: 2;
+        margin-bottom: -16px; /* sprzęt czyta się razem z krokami */
+    }
+    .recipe-grid__steps {
+        order: 3;
     }
 }
 </style>

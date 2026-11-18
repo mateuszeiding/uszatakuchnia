@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/vue-query';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 
+import EquipmentEditor from './components/EquipmentEditor.vue';
 import FormActionBar, { type BusyAction } from './components/FormActionBar.vue';
 import FormSection from './components/FormSection.vue';
 import IngredientsEditor from './components/IngredientsEditor.vue';
@@ -45,7 +46,7 @@ import {
     type RecipeStatus,
     STATUS_LABEL,
 } from '@/data/dtos/recipe/RecipeDto';
-import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import type { IDictionaries, IEquipment } from '@/data/dtos/taxonomy/DictionariesDto';
 import { LOADING_DICTIONARIES } from '@/data/dtos/taxonomy/loadingDictionaries';
 
 const props = defineProps<{ id?: string | number }>();
@@ -246,6 +247,11 @@ function onIngredientCreated(ing: IngredientDto) {
     addIng.value = null;
 }
 
+// ─── Sprzęt dodany do słownika z formularza ──────────────────
+function onEquipmentCreated(e: IEquipment) {
+    if (dicts.value) dicts.value = { ...dicts.value, equipment: [...dicts.value.equipment, e] };
+}
+
 // ─── Sidebar ──────────────────────────────────────────────────
 // W trakcie ładowania osie ze szkieletu (te same liczby wartości) — formularz ma docelowy układ.
 const axesView = computed(() => (dicts.value ?? LOADING_DICTIONARIES).axes);
@@ -400,8 +406,24 @@ const prepSummary = computed(() => {
                 </FormSection>
 
                 <FormSection
-                    id="f-steps"
+                    id="f-equipment"
                     n="03"
+                    title="Sprzęt"
+                    optional
+                    hint="To, czego może zabraknąć: robot, forma, termometr, garnek o konkretnej pojemności. Bez oczywistości — nóż, deska, łyżka."
+                    :error="errors.equipment"
+                >
+                    <EquipmentEditor
+                        v-model="form.equipment"
+                        :equipment="dicts?.equipment ?? []"
+                        :row-errors="rowErrors"
+                        @created="onEquipmentCreated"
+                    />
+                </FormSection>
+
+                <FormSection
+                    id="f-steps"
+                    n="04"
                     title="Kroki"
                     hint="Jeśli krok trzeba zrobić dużo wcześniej (marynata, namaczanie, wyrastanie), zaznacz „Przygotuj wcześniej”. Przepis dostanie wtedy oznaczenie."
                     :error="errors.steps"

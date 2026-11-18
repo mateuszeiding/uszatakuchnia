@@ -8,9 +8,10 @@ import (
 	"uszatakuchnia/db/mappers"
 	"uszatakuchnia/dtos"
 	resp "uszatakuchnia/http"
+	"uszatakuchnia/services"
 )
 
-// List — wszystkie słowniki: osie klasyfikacji z wartościami, jednostki, alergeny, typy składników.
+// List — wszystkie słowniki: osie klasyfikacji z wartościami, jednostki, alergeny, typy składników, sprzęt.
 func List(w http.ResponseWriter, r *http.Request) {
 	if resp.HandleCORS(w, r) {
 		return
@@ -21,6 +22,7 @@ func List(w http.ResponseWriter, r *http.Request) {
 	var values []entities.TaxonomyValue
 	var units []entities.Unit
 	var types []entities.IngredientType
+	var equipment []entities.Equipment
 
 	if err := conn.Order("sort_order, id").Find(&axes).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
@@ -37,6 +39,21 @@ func List(w http.ResponseWriter, r *http.Request) {
 	if err := conn.Order("id").Find(&types).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+	if err := conn.Order("lower(name), id").Find(&equipment).Error; err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	eqUsage, err := services.EquipmentUsage(conn)
+	if err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	equipmentDto := make([]dtos.EquipmentDto, 0, len(equipment))
+	for _, e := range equipment {
+		d := mappers.MapEquipmentToDto(e)
+		d.UsedIn = eqUsage[e.ID]
+		equipmentDto = append(equipmentDto, d)
 	}
 
 	// Liczby użyć (panel: usuwanie używanej wartości = przeniesienie przepisów).
@@ -81,5 +98,6 @@ func List(w http.ResponseWriter, r *http.Request) {
 		Units:           unitsDto,
 		Allergens:       mappers.MapAllergensToDto(),
 		IngredientTypes: mappers.MapIngredientTypeArrayToDto(types),
+		Equipment:       equipmentDto,
 	})
 }

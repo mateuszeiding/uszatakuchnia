@@ -2,7 +2,12 @@ import { type QueryClient, useQueryClient } from '@tanstack/vue-query';
 
 import { API } from '../API';
 
-import type { IDictionaries, ITaxonomyValue, IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
+import type {
+    IDictionaries,
+    IEquipment,
+    ITaxonomyValue,
+    IUnit,
+} from '@/data/dtos/taxonomy/DictionariesDto';
 
 export const DICTIONARIES_KEY = ['taxonomy/list'];
 
@@ -52,4 +57,25 @@ export const updateUnit = (id: number, payload: IUnitPayload) =>
 export const deleteUnit = (id: number, moveTo?: number) =>
     API.Client.delete<{ deleted: number; moved: number }>(
         `taxonomy/units/${id}${moveTo ? `?moveTo=${moveTo}` : ''}`
+    );
+
+export const createEquipment = (name: string) =>
+    API.Client.post<IEquipment>('taxonomy/equipment', { name });
+
+export const updateEquipment = (id: number, name: string) =>
+    API.Client.put<IEquipment>(`taxonomy/equipment/${id}`, { name });
+
+/** Używany sprzęt: replaceWith (inny sprzęt, doprecyzowania zostają) albo removeFromRecipes. */
+export const deleteEquipment = (
+    id: number,
+    opt: { replaceWith?: number; removeFromRecipes?: boolean } = {}
+) =>
+    API.Client.delete<{ deleted: number; recipes: number }>(
+        `taxonomy/equipment/${id}${
+            opt.replaceWith
+                ? `?replaceWith=${opt.replaceWith}`
+                : opt.removeFromRecipes
+                  ? '?removeFromRecipes=true'
+                  : ''
+        }`
     );

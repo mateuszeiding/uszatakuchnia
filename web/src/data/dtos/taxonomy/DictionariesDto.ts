@@ -40,11 +40,20 @@ export interface IAllergen {
     label: string;
 }
 
+/** Pozycja słownika sprzętu. */
+export interface IEquipment {
+    id: number;
+    name: string;
+    /** W ilu przepisach użyty. */
+    usedIn: number;
+}
+
 export interface IDictionaries {
     axes: ITaxonomyAxis[];
     units: IUnit[];
     allergens: IAllergen[];
     ingredientTypes: IType<IngredientType>[];
+    equipment: IEquipment[];
 }
 
 /** Wartości klasyfikacji przepisu pogrupowane po kodzie osi. */

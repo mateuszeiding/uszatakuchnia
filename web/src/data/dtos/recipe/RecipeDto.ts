@@ -56,6 +56,15 @@ export const cuisineOf = (r: Pick<RecipeBaseDto, 'taxonomy'>): ITaxonomyValue | 
 export const taxonomyLabels = (r: Pick<RecipeBaseDto, 'taxonomy'>, axis: string): string[] =>
     (r.taxonomy[axis] ?? []).map((v) => v.label);
 
+/** Pozycja sprzętu w przepisie (kolejność z API). */
+export interface IRecipeEquipment {
+    equipmentId: number;
+    name: string;
+    /** Doprecyzowanie: „3–4 l, grube dno”; null = brak. */
+    spec: string | null;
+    optional: boolean;
+}
+
 export class RecipeDto extends RecipeBaseDto {
     servings: number = 1;
     description: string | null = null;
@@ -67,6 +76,7 @@ export class RecipeDto extends RecipeBaseDto {
 
     steps: RecipeStepDto[] = [];
     ingredients: RecipeIngredientDto[] = [];
+    equipment: IRecipeEquipment[] = [];
     /** Składniki innych przepisów, które prowadzą do tego (modal usuwania). */
     linkedFrom: { recipeId: number; recipeName: string; ingredientName: string }[] = [];
 
@@ -78,6 +88,7 @@ export class RecipeDto extends RecipeBaseDto {
         this.steps = (obj.steps ?? []).map((s) => new RecipeStepDto(s));
         this.ingredients = (obj.ingredients ?? []).map((i) => new RecipeIngredientDto(i));
         this.linkedFrom = obj.linkedFrom ?? [];
+        this.equipment = obj.equipment ?? [];
     }
 }
 
@@ -111,6 +122,7 @@ export interface IUpsertRecipeRequest {
         optional: boolean;
         linkedRecipeId?: number | null;
     }[];
+    equipment: { equipmentId: number; spec: string | null; optional: boolean }[];
 }
 
 /** Błąd walidacji z API (422). */
