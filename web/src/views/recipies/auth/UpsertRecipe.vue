@@ -371,6 +371,7 @@ const prepSummary = computed(() => {
                                     id="in-tagline"
                                     v-model="form.tagline"
                                     class="textarea"
+                                    v-autosize
                                     rows="3"
                                     placeholder="Maślany, lekko kwaśny, gotowy w 30 minut."
                                 />

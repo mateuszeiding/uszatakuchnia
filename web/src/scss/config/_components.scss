@@ -129,6 +129,8 @@
 .input, .select { line-height: 18px; }
 .input--mono { font-family: var(--font-mono); }
 .textarea { line-height: 1.55; resize: vertical; min-height: 72px; }
+/* v-autosize: wysokość idzie za treścią, ręczne ciągnięcie zbędne */
+.textarea--auto { resize: none; overflow-y: hidden; }
 .input:focus, .textarea:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .input::placeholder, .textarea::placeholder { color: var(--ink-faint); }
 .input:disabled, .textarea:disabled, .select:disabled { opacity: .5; cursor: not-allowed; }

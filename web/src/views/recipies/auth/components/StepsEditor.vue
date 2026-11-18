@@ -115,6 +115,7 @@ async function removeGroup(g: IGroup<IStepItem>) {
                     <textarea
                         v-model="s.text"
                         class="textarea step-row__text"
+                        v-autosize
                         rows="2"
                         :aria-label="`Krok ${stepNo(gi, ii)}`"
                         :placeholder="

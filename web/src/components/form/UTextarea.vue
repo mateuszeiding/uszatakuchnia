@@ -37,6 +37,7 @@ function onInput(e: Event) {
         </label>
         <textarea
             class="textarea"
+            v-autosize
             :class="{ 'is-invalid': errorMessage }"
             :id="uid"
             :name="name"
