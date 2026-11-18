@@ -1,0 +1,80 @@
+# Codzienna kopia bazy produkcyjnej (Neon) jako zaszyfrowany artefakt, 90 dni.
+# Instrukcja odtwarzania i lista sekretów: docs/backup-bazy.md
+name: Kopia bazy
+
+on:
+  schedule:
+    - cron: "17 2 * * *" # 02:17 UTC = 03:17 / 04:17 w Polsce; nie o pełnej godzinie (kolejki GitHuba)
+  workflow_dispatch:
+    inputs:
+      test_failure:
+        description: "Przerwij celowo — test, czy mail o nieudanym backupie dochodzi"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: write # tylko dla kroku keepalive (ponowne włączenie crona)
+    env:
+      PG_MAJOR: "17" # = główna wersja Postgresa na Neonie; pg_dump starszy od serwera odmówi pracy
+    steps:
+      - name: Celowy błąd (test powiadomienia)
+        if: ${{ inputs.test_failure }}
+        run: |
+          echo "::error::Przebieg przerwany celowo (test_failure). Jeśli przyszedł mail — powiadomienia działają."
+          exit 1
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts
+
+      - name: Klient PostgreSQL ${{ env.PG_MAJOR }}
+        run: |
+          if [ ! -x /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-common >/dev/null
+          fi
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y >/dev/null
+          sudo apt-get install -y -qq "postgresql-client-$PG_MAJOR" >/dev/null
+          echo "/usr/lib/postgresql/$PG_MAJOR/bin" >>"$GITHUB_PATH"
+
+      - name: Zrzut, szyfrowanie, kontrola
+        id: dump
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          OUT_DIR: ${{ runner.temp }}/backup
+        run: bash scripts/db-backup.sh
+
+      - name: Zapis artefaktu (90 dni)
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.dump.outputs.name }}
+          path: ${{ steps.dump.outputs.file }}
+          retention-days: 90
+          compression-level: 0 # plik jest zaszyfrowany, nie da się go skompresować
+          if-no-files-found: error
+
+      # GitHub wyłącza cron w publicznym repo po 60 dniach bez aktywności.
+      # Ponowne włączenie przez API przy każdym przebiegu z crona przesuwa ten termin (bez pustych commitów).
+      - name: Keepalive crona (nie dotyczy kopii)
+        if: ${{ github.event_name == 'schedule' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method PUT "repos/$GITHUB_REPOSITORY/actions/workflows/db-backup.yml/enable"

@@ -81,6 +81,13 @@ Drop → migrate → seed. `.env.local` wskazuje na **produkcyjną** bazę Neon,
 
 Oba skrypty wymagają `DB_DATABASE_URL` z `.env.local`.
 
+### Kopia zapasowa bazy
+- Codziennie (cron ok. 02:17 UTC) workflow `.github/workflows/db-backup.yml` robi `pg_dump` całej bazy, szyfruje gpg (hasło w sekrecie `BACKUP_PASSPHRASE`) i zapisuje jako artefakt na 90 dni: GitHub → Actions → **Kopia bazy** → przebieg → Artifacts.
+- **Przed ryzykowną migracją albo operacją na danych produkcji** uruchom kopię ręcznie (Actions → Kopia bazy → Run workflow) albo zrób snapshot / gałąź w Neon Console — i powiedz o tym właścicielowi, zanim ruszysz dane.
+- Odtwarzanie (cała baza, jeden przepis przez `go run ./cmd/restore-recipe`, gdzie jest hasło): `docs/backup-bazy.md`. Testuj na lokalnej bazie, nigdy na produkcji.
+- Po zmianie wersji głównej Postgresa na Neonie podbij `PG_MAJOR` w workflow.
+- `content/` to nie backup — przepisy w stanie z dnia dodania.
+
 ## Przepisy dodawane przez Claude (backup)
 
 Przepisy wprowadzane przez API (nie przez formularz) mają kopię w `content/`:
