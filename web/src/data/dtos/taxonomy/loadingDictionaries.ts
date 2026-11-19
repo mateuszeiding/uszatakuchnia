@@ -112,6 +112,7 @@ export const LOADING_DICTIONARIES: IDictionaries = {
     units: [],
     ingredientTypes: [],
     equipment: [],
+    challengeFormats: [],
     allergens: [
         'gluten',
         'mleko',

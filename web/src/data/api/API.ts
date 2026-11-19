@@ -99,4 +99,8 @@ export type EndpointsConfig = {
     taxonomy: {
         list: string;
     };
+    challenges: {
+        list: string;
+        [key: number]: string;
+    };
 };

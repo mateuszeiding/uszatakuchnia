@@ -1,3 +1,4 @@
+import type { IChallengeFormat } from '../challenge/ChallengeDto';
 import type { IType } from '../ingredients/IType';
 
 import type { IngredientType } from '@/shared/enums/IngredientType';
@@ -54,6 +55,7 @@ export interface IDictionaries {
     allergens: IAllergen[];
     ingredientTypes: IType<IngredientType>[];
     equipment: IEquipment[];
+    challengeFormats: IChallengeFormat[];
 }
 
 /** Wartości klasyfikacji przepisu pogrupowane po kodzie osi. */
