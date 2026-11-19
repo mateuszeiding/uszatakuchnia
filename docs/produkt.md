@@ -8,9 +8,11 @@ Aktualizacja: 18.11.2026 · prowadzi: analityk (sesja Claude Code od featurów)
 
 Aplikacja z przepisami właściciela, publiczna do czytania, bez kont użytkowników. Jeden autor tworzy całą treść.
 
+Odbiorcy (18.11.2026): właściciel i kilku znajomych. Później może szersze grono. Główny cel: zbieranie przepisów.
+
 Trzy filary:
 1. **Przepisy** — wpisywane ręcznie, z naciskiem na gotowanie przy kuchence: skalowanie porcji, postęp, tryb gotowania, lista zakupów.
-2. **Wyzwania** — lista zadań kulinarnych w duchu MasterChefa. Jeszcze niezaczęte.
+2. **Wyzwania** — lista zadań kulinarnych w duchu kulinarnych programów konkursowych. Wdrożone lokalnie 19.11 (patrz „W toku”).
 3. **Wiki** — baza wiedzy o składnikach i technikach. Jeszcze niezaczęte.
 
 Zasady:
@@ -30,12 +32,14 @@ Przepisy wpisuje Claude przez API, jako szkic. Właściciel je poprawia i publik
 
 | Feature | Etap | Gdzie |
 |---|---|---|
-| Autoryzacja zapisów w API | brief dla inżyniera | `docs/prompt-claude-code-autoryzacja.md` |
+| **Zdjęcia przepisów — ODŁOŻONE (18.11)** | wracamy przy decyzji o przenosinach infrastruktury. Niedokończony kod sesji inżyniera w `git stash` („zdjęcia przepisów — niedokończone (odłożone 18.11)”; zawiera też niechciany import z linku). Porównanie magazynów (18.11): rekomendacja Cloudflare R2 (S3, 10 GB za darmo, transfer bez opłat, przenośne); Vercel Blob prostszy, ale związany z Vercelem (1 GB); bytea odpada (limit Neona). Stan obecny: jedyne obsługiwane źródło obrazów to **Unsplash** — obraz po id zdjęcia z Unsplash, pobierany przez ich API (`db/helpers/unsplash_image.go`, `services/image_provider.go`, encja `images`, wymaga `UNSPLASH_ACCESS_KEY`), używany w seedzie. Ich utrata nic nie szkodzi (właściciel, 18.11) — kandydat do usunięcia. Właściciel nie może dodać własnego zdjęcia. Aplikacja trzyma zdjęcie jako adres lub id z obcej strony, a własnego pliku nie ma gdzie zapisać. Cel: upload własnych zdjęć z pliku | `docs/prompt-claude-code-zdjecia.md` |
+| Autoryzacja zapisów w API | na produkcji (c65e2cb, bf16955): zapis bez klucza → 401, klucz z `.env.local` działa. Czeka na sprawdzenie przez właściciela w przeglądarce (logowanie, panel, zapis) | `CLAUDE.md` |
+| Codzienna kopia zapasowa bazy | wypchnięte (29649b2), odtworzenie sprawdzone lokalnie; czeka na 2 sekrety w GitHubie | `docs/backup-bazy.md` |
+| Poprawki z przeglądu 18.11 | do rozdzielenia: inżynier / designer / treść | `docs/przeglad-uzycia-2026-11-18.md` |
+| Wyzwania | design zaakceptowany (artefakt: Handoff → „Wyzwania”, prototyp `Wyzwania.html`); **na produkcji 19.11** (push po kopii bazy z 18:18 UTC; migracja 0009 przeszła, 3 formaty startowe są). Lista wyzwań pusta — do wpisania. Zakładki Klasyfikacji: przewijanie (decyzja 19.11). Do potwierdzenia: 7 decyzji inżyniera | `docs/prompt-claude-design-wyzwania.md` |
+| Jedno wejście do API (router) | **na produkcji 19.11** (290b90c), sprawdzone curlem: odczyty 200, zapis bez klucza 401, nieznany adres 404. Zmiana celowa: nieznany `/api/…` → 404 JSON zamiast index.html. Znosi limit 12 funkcji Vercela (ryzyko 8), adresy API bez zmian. Bez migracji | `docs/prompt-claude-code-router-api.md` |
 
-Wdrożone, jeszcze niesprawdzone na żywej stronie:
-- linki do przepisów i blok „Przydatne przepisy” (17.11 — żaden opublikowany przepis nie miał jeszcze linku),
-- tryb gotowania,
-- wskazówki przy krokach, sprzęt, zamienniki (18.11).
+Przegląd żywej strony 18.11: wskazówki, sprzęt i zamienniki działają zgodnie z projektem. Tryb gotowania ucina długie kroki na telefonie (błąd). Nadal niesprawdzone: linki do przepisów i „Przydatne przepisy” (żaden opublikowany przepis nie ma linku), Wake Lock, wydruk listy zakupów.
 
 ## Co działa
 
@@ -62,7 +66,8 @@ Wdrożone, jeszcze niesprawdzone na żywej stronie:
 - Składnik może być pominięty na liście (np. woda) · 17.11
 
 ### Formularz przepisu `/recipes/new`, `/recipes/:id/edit` (admin)
-- Bez autozapisu: `Zapisz szkic` / `Opublikuj`. Walidacja przed publikacją, ostrzeżenie przy wyjściu, przeciąganie wierszy, kadrowanie zdjęcia do 1:1 · 14.10
+- Bez autozapisu: `Zapisz szkic` / `Opublikuj`. Walidacja przed publikacją, ostrzeżenie przy wyjściu, przeciąganie wierszy · 14.10
+- Zdjęcie: **nie działa dla właściciela** — patrz „W toku”, zdjęcia przepisów.
 - Ustawianie linków do przepisów, wskazówek, sprzętu i zamienników · 17–18.11
 
 ### Panel `/admin` (admin)
@@ -74,6 +79,12 @@ Wdrożone, jeszcze niesprawdzone na żywej stronie:
 
 Kolejność ustalamy w rozmowie. Tu jest pula.
 
+**Pomysły właściciela (18.11, w analizie):**
+- Składniki w treści kroku, z ilością skalowaną razem z porcjami. Dziś w krokach nie piszemy ilości, bo skaler ich nie zmienia.
+- Słowniczek: dymki przy pojęciach w krokach („reakcja Maillarda”, „deglasowanie”). Zaczątek Wiki. Ten sam mechanizm „odwołania w treści kroku” co ilości wyżej.
+- Kroki opcjonalne. Dziś opcjonalny może być składnik, a krok nie. Krok opcjonalny nie musi mieć składnika opcjonalnego: może dotyczyć samego przepisu (np. technika, dłuższe odstawienie).
+- Nadkategoria jako składnik przepisu („ser twardy” zamiast wymieniania Grana Padano, pecorino…). Drzewo składników już jest (`ParentID`, makro dziedziczone z podskładników) i formularz pozwala wybrać rodzica. Brakuje tego, co widzi czytelnik.
+
 **Mniejsze, odłożone w backlogu jako „później”:**
 - Strona 404, przepis bez zdjęcia, strona logowania.
 - Czytelne adresy (slugi) i meta OG, czyli podgląd linku po wysłaniu przepisu albo listy zakupów. Rośnie w znaczeniu, kiedy aplikacja ma iść do ludzi.
@@ -84,20 +95,27 @@ Kolejność ustalamy w rozmowie. Tu jest pula.
 - Zamiennik z inną ilością (drożdże świeże 25 g ↔ suche 7 g).
 - Lista zakupów z kilku przepisów naraz.
 
+**Z pierwotnej wizji (czerwiec 2026), nierozpisane:**
+- Przepisy wielopoziomowe: kroki w wersji podstawowej / średniej / mistrzowskiej, z coraz większą liczbą szczegółów.
+- Kalkulator jednostek imperialnych jako osobna strona, bez zmian w bazie.
+
 **Duże obszary:**
-- **Wyzwania.** Zarys z planu z czerwca: lista do przeglądania (bez logowania, bez punktów), trudność 1–3, typ wyzwania (konkretne danie, z podanych składników, kuchnia, technika), opcjonalny link do przepisu, „ukończone” zapamiętane na urządzeniu. Brak konceptu, designu i decyzji.
+- **Wyzwania** → w toku (brief dla designera, 18.11). Ustalenia z właścicielem: trening i zabawa, zadania w stylu kulinarnych programów konkursowych, ale ogólne (nic pod konkretny program); bez linku do przepisu; trudność 1–5 w atrakcyjnej formie; limit czasu tylko jako informacja, bez zegara; lista + „Losuj”; „zrobione” na urządzeniu; filtry później; bez zadań zespołowych.
 - **Wiki.** Składniki (opis, przechowywanie, odmiany, zamienniki, przepisy z tym składnikiem), techniki, style gotowania; słowa kluczowe w krokach z dymkiem i linkiem. Publiczna karta składnika z makro jest zaprojektowana (`Makro.html`) i odłożona do Wiki.
 
 ## Ryzyka i dług
 
-1. **Zapisy w API bez autoryzacji (wysokie).** Handlery Go nie sprawdzają tokenu: każdy może tworzyć, zmieniać i usuwać przepisy, składniki, zdjęcia i słowniki na produkcji. Szkice też da się odczytać (`?admin=true` na liście, szczegóły przepisu bez sprawdzania statusu). → W toku.
+1. ~~Zapisy w API bez autoryzacji~~ — zamknięte 18.11 (c65e2cb): zapis tylko z tokenem właściciela albo kluczem `API_ADMIN_KEY`, szkice niewidoczne publicznie. Rotacja klucza: `CLAUDE.md`.
 2. **`.env.local` wskazuje na produkcję.** Każda lokalna sesja pracuje na prawdziwych danych. `resetdb` jest zakazany.
-3. **Zdjęcia w bazie** (tabela `photos`, bytea) zamiast Vercel Blob — rozwiązanie tymczasowe od 10.2026. Baza rośnie razem ze zdjęciami.
-4. **Kopia przepisów w `content/` to stan z dnia dodania**, a nie backup bazy. Poprawki zrobione w aplikacji do niej nie wracają.
+3. **Zdjęcia w bazie** (tabela `photos`, bytea) — rozwiązanie tymczasowe od 10.2026. Wgrywanie własnych zdjęć odłożone 18.11 do przenosin infrastruktury (kod w git stash). Codzienny backup obejmuje tylko bazę.
+4. **Infrastruktura do przemyślenia.** Baza (darmowy Neon, 0,5 GB), a może i API (limity Vercel serverless) pewnie kiedyś się przeniosą. Nie wiadomo jeszcze kiedy ani dokąd. Do tego czasu nowe rzeczy nie powinny się mocno wiązać z Vercelem.
+5. **Brak kopii zapasowej bazy (wysokie).** Neon na darmowym planie przywraca tylko do 6 godzin wstecz i daje 1 ręczny snapshot. Kopia przepisów w `content/` to stan z dnia dodania, a nie backup: poprawki zrobione w aplikacji do niej nie wracają. → W toku.
+7. **Test `web` `recipeForm.test.ts` pada od c65e2cb** (autoryzacja): `createAuth.ts` czyta `location` przy imporcie. Nienaprawione.
+6. **Repo jest publiczne.** Wszystko, co trafia do repo, logów i artefaktów GitHub Actions, jest widoczne dla świata.
+8. ~~Limit 12 funkcji na Vercelu~~ — zamknięte 19.11 (290b90c): całe API to jedna funkcja z routerem, nowy endpoint = linijka w `router/routes.go`. Historia: Każdy plik w `api/` to osobna funkcja. Od Wyzwań (19.11) nowe endpointy doklejamy do istniejących plików (wyzwania siedzą w `api/taxonomy/units.go`). Wyjścia: jeden plik-router na całe API (znosi limit na stałe), plan Pro, albo przenosiny API (pkt 4). Decyzja 19.11: router (prompt `docs/prompt-claude-code-router-api.md`).
 
 ## Otwarte pytania
 
-- Czy baza ma kopię zapasową poza `content/`? Neon przywraca do punktu w czasie tylko w ramach okna historii, które zależy od planu.
 - Kiedy aplikacja ma wyjść do ludzi? Od tego zależy, kiedy robimy slugi, meta OG, 404 i przepis bez zdjęcia.
 - `ml = 1 g`, `l = 1000 g` bez przelicznika — rekomendacja z makro: zostawić. Do potwierdzenia.
 - Wyzwania: czy wracamy do tego filaru, a jeśli tak, od jakiego typu wyzwania zaczynamy?
