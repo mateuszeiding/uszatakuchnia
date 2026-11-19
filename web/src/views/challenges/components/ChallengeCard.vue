@@ -61,9 +61,10 @@ const lead = computed(() => paragraphs(props.challenge.description)[0] ?? '');
                     <span class="sr-only">Limit czasu:</span>
                     {{ timeLimitText(challenge.timeLimitMin) }}
                 </span>
+                <!-- miejsce zarezerwowane zawsze: przełączenie nie zmienia wysokości karty -->
                 <span
-                    v-if="done"
                     class="ch-card__done"
+                    :class="{ 'is-hidden': !done }"
                 >
                     ✓ zrobione
                 </span>
@@ -163,6 +164,9 @@ const lead = computed(() => paragraphs(props.challenge.description)[0] ?? '');
     font-size: 12px;
     font-weight: 600;
     color: var(--success);
+}
+.ch-card__done.is-hidden {
+    visibility: hidden;
 }
 .ch-card__toggle {
     position: absolute;
