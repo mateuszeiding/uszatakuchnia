@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
 	"encoding/json"
@@ -15,26 +15,108 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func Detailed(w http.ResponseWriter, r *http.Request) {
-	if resp.Begin(w, r) {
+// RecipeList — GET /api/recipes/list[?admin=true]. admin=true — także szkice, tylko dla właściciela.
+func RecipeList(w http.ResponseWriter, r *http.Request) {
+	conn := db.DB()
+
+	// admin=true — także szkice, tylko dla właściciela; reszta widzi opublikowane
+	isAdmin := r.URL.Query().Get("admin") == "true"
+	if isAdmin && !resp.IsOwner(r) {
+		resp.Error(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	switch r.Method {
-	case http.MethodGet:
-		getDetailed(w, r)
-	case http.MethodPut:
-		putDetailed(w, r)
-	case http.MethodDelete:
-		deleteDetailed(w, r)
-	default:
-		resp.Error(w, http.StatusMethodNotAllowed, "method not allowed")
+	query := conn.Model(&entities.Recipe{}).
+		Select(`id, name, tagline, time_min, time_max, difficulty, status, nutrition,
+			EXISTS (SELECT 1 FROM recipe_steps s WHERE s.recipe_id = recipes.id AND s.prep) AS needs_prep`).
+		Preload("Photo").
+		Preload("Taxonomy.Value.Axis").
+		Order("id DESC")
+
+	if !isAdmin {
+		query = query.Where("status = ?", entities.StatusPublished)
 	}
+
+	var list []entities.RecipeBase
+	if err := query.Find(&list).Error; err != nil {
+		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+
+	// Nazwy składników per przepis (do wyszukiwania po składnikach).
+	var rows []struct {
+		RecipeID uint
+		Name     string
+	}
+	if err := conn.Table("recipe_ingredients ri").
+		Select("ri.recipe_id, i.name").
+		Joins("JOIN ingredients i ON i.id = ri.ingredient_id").
+		Order("ri.recipe_id, ri.sort_order").
+		Scan(&rows).Error; err != nil {
+		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	names := map[uint][]string{}
+	for _, r := range rows {
+		names[r.RecipeID] = append(names[r.RecipeID], r.Name)
+	}
+
+	dtos := mappers.MapRecipeBaseArrayToDto(list)
+	for i := range dtos {
+		dtos[i].IngredientNames = names[dtos[i].ID]
+		if dtos[i].IngredientNames == nil {
+			dtos[i].IngredientNames = []string{}
+		}
+	}
+	resp.JSON(w, http.StatusOK, dtos)
 }
 
-func getDetailed(w http.ResponseWriter, r *http.Request) {
+// RecipeCreate — POST /api/recipes. Bez statusu = szkic.
+func RecipeCreate(w http.ResponseWriter, r *http.Request) {
+	var req dtos.UpsertRecipeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Error(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if req.Status == "" {
+		req.Status = entities.StatusDraft
+	}
+
 	conn := db.DB()
-	id := r.URL.Query().Get("id")
+
+	fieldErrs, err := services.ValidateRecipe(conn, req, 0)
+	if err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if len(fieldErrs) > 0 {
+		resp.JSON(w, http.StatusUnprocessableEntity, map[string]any{"error": "validation failed", "fields": fieldErrs})
+		return
+	}
+
+	var recipe entities.Recipe
+	services.ApplyRecipeRequest(&recipe, req)
+
+	if err := conn.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&recipe).Error; err != nil {
+			return err
+		}
+		if err := services.ReplaceRecipeChildren(tx, recipe.ID, req); err != nil {
+			return err
+		}
+		return services.RecomputeRecipes(tx, recipe.ID)
+	}); err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp.JSON(w, http.StatusCreated, map[string]any{"id": recipe.ID})
+}
+
+// RecipeGet — GET /api/recipes/{id}. Szkic widzi tylko właściciel; reszta dostaje 404.
+func RecipeGet(w http.ResponseWriter, r *http.Request) {
+	conn := db.DB()
+	id := pathID(r)
 
 	var entity entities.Recipe
 	if err := conn.
@@ -96,9 +178,10 @@ func getDetailed(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, dto)
 }
 
-func putDetailed(w http.ResponseWriter, r *http.Request) {
+// RecipeUpdate — PUT /api/recipes/{id}. Bez statusu = status bez zmian.
+func RecipeUpdate(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
-	id := r.URL.Query().Get("id")
+	id := pathID(r)
 
 	var req dtos.UpsertRecipeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -143,9 +226,10 @@ func putDetailed(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, map[string]any{"id": entity.ID})
 }
 
-func deleteDetailed(w http.ResponseWriter, r *http.Request) {
+// RecipeDelete — DELETE /api/recipes/{id}.
+func RecipeDelete(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
-	id := r.URL.Query().Get("id")
+	id := pathID(r)
 
 	var entity entities.Recipe
 	if err := conn.Find(&entity, id).Error; err != nil || entity.ID == 0 {

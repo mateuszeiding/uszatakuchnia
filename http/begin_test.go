@@ -12,8 +12,9 @@ import (
 	"testing"
 )
 
-// Każda funkcja Vercela w api/ musi zacząć od `if resp.Begin(w, r) { return }` —
-// inaczej endpoint zapisujący byłby otwarty dla każdego.
+// W api/ jest dokładnie jedna funkcja Vercela (całe API idzie przez router) i zaczyna od
+// `if resp.Begin(w, r) { return }` — inaczej endpoint zapisujący byłby otwarty dla każdego.
+// Trasy po kolei sprawdza router/router_test.go.
 func TestEveryHandlerStartsWithBegin(t *testing.T) {
 	var files []string
 	err := filepath.WalkDir("../api", func(p string, d os.DirEntry, err error) error {
@@ -49,8 +50,61 @@ func TestEveryHandlerStartsWithBegin(t *testing.T) {
 			}
 		}
 	}
-	if handlers < len(files) {
-		t.Errorf("found %d handlers in %d files — each api file should export a handler", handlers, len(files))
+	if len(files) != 1 || handlers != 1 {
+		t.Errorf("found %d handlers in %d files in api/ — want exactly one function (the router entry); "+
+			"new endpoints go to router/routes.go", handlers, len(files))
+	}
+}
+
+// Begin woła tylko funkcja w api/. Drugie wywołanie w handlerze albo routerze dublowałoby nagłówki
+// CORS (Vary), a handler, który „sam się chroni”, sugerowałby, że inne trasy tego nie robią.
+func TestBeginCalledOnlyInAPI(t *testing.T) {
+	err := filepath.WalkDir("..", func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			switch d.Name() {
+			case "api", "http", "web", "node_modules", ".git", "content", "docs", "dist":
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(p, ".go") || strings.HasSuffix(p, "_test.go") {
+			return nil
+		}
+		f, err := parser.ParseFile(token.NewFileSet(), p, nil, 0)
+		if err != nil {
+			return err
+		}
+		alias := ""
+		for _, imp := range f.Imports {
+			if imp.Path.Value == `"uszatakuchnia/http"` {
+				alias = "http"
+				if imp.Name != nil {
+					alias = imp.Name.Name
+				}
+			}
+		}
+		if alias == "" {
+			return nil
+		}
+		ast.Inspect(f, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+			if sel, ok := call.Fun.(*ast.SelectorExpr); ok && sel.Sel.Name == "Begin" {
+				if id, ok := sel.X.(*ast.Ident); ok && id.Name == alias {
+					t.Errorf("%s calls %s.Begin — only api/index.go may (once, before the router)", p, alias)
+				}
+			}
+			return true
+		})
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 

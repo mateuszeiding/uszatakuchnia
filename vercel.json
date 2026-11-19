@@ -2,43 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["lhr1"],
   "rewrites": [
-    { "source": "/api", "destination": "/api" },
-    { "source": "/api/recipes/list", "destination": "/api/recipes/list" },
-    { "source": "/api/recipes", "destination": "/api/recipes/create" },
-    { "source": "/api/ingredients", "destination": "/api/ingredients/create" },
-    { "source": "/api/ingredients/list", "destination": "/api/ingredients/list" },
-    { "source": "/api/ingredients/:id(\\d+)", "destination": "/api/ingredients/detailed" },
-    { "source": "/api/enums/ingredient", "destination": "/api/enums/ingredient" },
-    { "source": "/api/taxonomy/list", "destination": "/api/taxonomy/list" },
-    { "source": "/api/taxonomy/values", "destination": "/api/taxonomy/values" },
-    { "source": "/api/taxonomy/values/:id(\\d+)", "destination": "/api/taxonomy/values" },
-    { "source": "/api/taxonomy/units", "destination": "/api/taxonomy/units" },
-    { "source": "/api/taxonomy/units/:id(\\d+)", "destination": "/api/taxonomy/units" },
-    { "source": "/api/taxonomy/equipment", "destination": "/api/taxonomy/units?kind=equipment" },
-    {
-      "source": "/api/taxonomy/equipment/:id(\\d+)",
-      "destination": "/api/taxonomy/units?kind=equipment&id=:id"
-    },
-    {
-      "source": "/api/taxonomy/challenge-formats",
-      "destination": "/api/taxonomy/units?kind=challenge-formats"
-    },
-    {
-      "source": "/api/taxonomy/challenge-formats/:id(\\d+)",
-      "destination": "/api/taxonomy/units?kind=challenge-formats&id=:id"
-    },
-    { "source": "/api/challenges/list", "destination": "/api/taxonomy/units?kind=challenges" },
-    { "source": "/api/challenges", "destination": "/api/taxonomy/units?kind=challenges" },
-    {
-      "source": "/api/challenges/:id(\\d+)",
-      "destination": "/api/taxonomy/units?kind=challenges&id=:id"
-    },
-    { "source": "/api/photos", "destination": "/api/photos/upload" },
-    { "source": "/api/photos/:id(\\d+)", "destination": "/api/photos/get" },
-    {
-      "source": "/api/recipes/:id(\\d+)",
-      "destination": "/api/recipes/detailed"
-    },
+    { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "installCommand": "pnpm -C web install",

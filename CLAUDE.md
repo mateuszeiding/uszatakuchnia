@@ -2,7 +2,7 @@
 
 ## Stack
 
-- **Backend:** Go, GORM, Vercel Serverless Functions (`api/**/*.go`)
+- **Backend:** Go, GORM, Vercel Serverless — jedna funkcja (`api/index.go`) z routerem na `http.ServeMux`
 - **Frontend:** Vue 3 + TypeScript, SCSS (DS v2), Vite, Auth0
 - **DB:** PostgreSQL (Neon), connection string w `DB_DATABASE_URL`
 
@@ -50,7 +50,12 @@ Design przygotowuje Claude Design w artefakcie powyżej, pliki pod `project/`: `
 
 ## Zasady kodu — Backend (Go)
 
-- Każda funkcja API to oddzielny handler w `api/**/*.go`.
+- Całe API to **jedna funkcja Vercela**: `api/index.go` (`resp.Begin`, potem router). `vercel.json` kieruje do niej całe `/api/*` jednym rewrite'em. Limitu 12 funkcji na wdrożenie już nie dotykamy.
+- **Nowy endpoint:** handler (jedna metoda jednej trasy) w `handlers/` + jedna linijka w tabeli `router/routes.go`, np. `{http.MethodPut, "/api/foo/{id}", h.FooUpdate}`. Nie dodawaj plików do `api/` (każdy plik tam to osobna funkcja; test tego pilnuje), nie ruszaj `vercel.json`, nie używaj `?kind=`.
+  - `{id}` w ścieżce przepuszcza tylko liczbę ≥ 1 (inaczej 404); handler czyta go przez `pathID(r)` (`r.PathValue("id")`). Parametry typu `?moveTo=` zostają w query.
+  - Router sam odpowiada 404 (nieznana ścieżka) i 405 (zła metoda, z `Allow`) w JSON — handler nie sprawdza metody.
+  - Handler **nie woła** `resp.Begin` (robi to raz `api/index.go`).
+- Router to zwykły `http.Handler` — poza Vercelem wystarczy `http.ListenAndServe(addr, http.HandlerFunc(api.Handler))`.
 - Encje DB: `db/entities/`, mappery: `db/mappers/`, DTOs: `dtos/`.
 - GORM AutoMigrate — nie piszesz ręcznych migracji SQL.
 
@@ -98,7 +103,9 @@ Odpowiedzi: 401 bez tokenu / ze złym kluczem / z wygasłym tokenem, 403 z token
 
 Kod:
 - `auth/` — sprawdzenie klucza i JWT (cache kluczy JWKS w pamięci funkcji),
-- `http/begin.go` — `resp.Begin(w, r)`: CORS + preflight + bramka zapisu. **Każdy handler w `api/` zaczyna się od `if resp.Begin(w, r) { return }`** — pilnuje tego test `go test ./http`. Nowy endpoint zapisujący jest wtedy chroniony bez dodatkowego kodu. Odczyt, który ma pokazać więcej właścicielowi, sprawdza `resp.IsOwner(r)`,
+- `http/begin.go` — `resp.Begin(w, r)`: CORS + preflight + bramka zapisu. Woła go **raz jedyna funkcja `api/index.go`, przed routerem** — więc przed każdą trasą, także przed 404 i 405. Nowy endpoint w `router/routes.go` jest chroniony bez dodatkowego kodu. Odczyt, który ma pokazać więcej właścicielowi, sprawdza `resp.IsOwner(r)`. Testy (`go test ./http ./router`):
+  - `http/begin_test.go` — w `api/` jest dokładnie jedna funkcja i zaczyna od `if resp.Begin(w, r) { return }`; nikt poza nią nie woła `Begin` (podwójne nagłówki CORS),
+  - `router/router_test.go` — po **wszystkich** trasach z tabeli: zapis bez tokenu i ze złym kluczem → 401, preflight → 204 z CORS; Begin przed 404/405; każda trasa trafia do swojego handlera; `vercel.json` ma jeden rewrite API,
 - `web/src/data/api/API.ts` — dokleja token do żądań; przy 401 pyta o ponowne logowanie w okienku (`web/src/auth/reauthenticate.ts`) i powtarza żądanie, więc formularz nie traci treści.
 
 CORS: produkcja i podglądy Vercela są z tej samej domeny co API, więc CORS wpuszcza tylko lokalny dev (`localhost:5173`, `:4173`). Dodatkowe domeny: `CORS_ORIGINS="https://a,https://b"`. curl i skrypty CORS nie dotyczy.
@@ -142,5 +149,7 @@ Poprawki zrobione potem w aplikacji nie wracają do tych plików — to backup s
 cd web && pnpm dev          # frontend
 vercel dev                  # backend (Vercel CLI)
 ```
+
+`vercel dev` podnosi API (jedną funkcję z routerem), ale czyta `.env.local` = produkcja — do testów zapisu go nie używaj.
 
 Zmienne środowiskowe: `.env.local` w rocie projektu (`DB_DATABASE_URL`, `API_ADMIN_KEY`, `VITE_AUTH0_*`, itd. — patrz „Autoryzacja API”). Uwaga: baza z `.env.local` to produkcja.
