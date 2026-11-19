@@ -118,20 +118,21 @@ KEY=$(sed -n 's/^API_ADMIN_KEY="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' .env.local | tr 
 curl -s -X POST https://<domena>/api/ingredients \
   -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' -d @body.json
 ```
-Ten sam nagłówek przy `POST` / `PUT /api/recipes`, `GET /api/recipes/<id>` szkicu przed edycją i `GET /api/recipes/list?admin=true`.
+Ten sam nagłówek przy `POST` / `PUT /api/recipes` i `/api/challenges`, `GET /api/recipes/<id>` szkicu przed edycją i `GET /api/recipes/list?admin=true`.
 
 - **401** — w `.env.local` nie ma `API_ADMIN_KEY` albo różni się od klucza w Vercelu. Nie obchodź tego (np. zapisem prosto do bazy) — powiedz właścicielowi; po jego zgodzie `vercel env pull .env.local` ściąga aktualne zmienne (nadpisuje plik).
 - Klucz nie wygasa sam. **Rotacja** (np. po wycieku): właściciel generuje nowy (`[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))` w PowerShellu), podmienia `API_ADMIN_KEY` w Vercelu (wszystkie środowiska), robi redeploy i podmienia wartość w `.env.local`. Stary klucz przestaje działać po redeployu.
 
 Lokalnie: `go run ./cmd/...` łączy się z bazą bezpośrednio — autoryzacja API go nie dotyczy. `vercel dev` czyta `.env.local`, więc zapis z lokalnego frontendu wymaga tam `VITE_AUTH0_*` i `VITE_AUTH0_OWNER_SUB`, a curl — `API_ADMIN_KEY`.
 
-## Przepisy dodawane przez Claude (backup)
+## Przepisy i wyzwania dodawane przez Claude (backup)
 
-Przepisy wprowadza się przez API produkcyjne z kluczem `API_ADMIN_KEY` — jak w „Zapis przez API z sesji Claude Code” wyżej.
+Przepisy i wyzwania wprowadza się przez API produkcyjne z kluczem `API_ADMIN_KEY` — jak w „Zapis przez API z sesji Claude Code” wyżej.
 
-Przepisy wprowadzane przez API (nie przez formularz) mają kopię w `content/`:
+Przepisy i wyzwania wprowadzane przez API (nie przez formularz) mają kopię w `content/`:
 - `content/recipes/<slug>.json` — przepis z nazwami składników, jednostek i wartości taksonomii (nie ID), więc da się go odtworzyć na każdej bazie,
-- `content/ingredients/<data>-<temat>.json` — składniki założone przy okazji (makro na 100 g, przeliczniki).
+- `content/ingredients/<data>-<temat>.json` — składniki założone przy okazji (makro na 100 g, przeliczniki),
+- `content/challenges/<slug>.json` — wyzwanie: dokładnie body dla `POST /api/challenges`, z formatem jako nazwą (`"format": "na temat"` zamiast `formatId`) — API przyjmuje oba. Pola: `title`, `format`, `description` (akapity oddzielone `\n\n`), `difficulty` 1–5, `timeLimitMin` (null = bez limitu), `source` (null = nie pokazujemy), `ingredients` (`[{ "name", "required" }]`, tekst bez powiązania z bazą składników). Wyzwanie z API jest od razu publiczne (bez szkicu).
 
 Poprawki zrobione potem w aplikacji nie wracają do tych plików — to backup stanu z dnia dodania.
 

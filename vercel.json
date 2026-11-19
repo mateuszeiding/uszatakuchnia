@@ -19,6 +19,20 @@
       "source": "/api/taxonomy/equipment/:id(\\d+)",
       "destination": "/api/taxonomy/units?kind=equipment&id=:id"
     },
+    {
+      "source": "/api/taxonomy/challenge-formats",
+      "destination": "/api/taxonomy/units?kind=challenge-formats"
+    },
+    {
+      "source": "/api/taxonomy/challenge-formats/:id(\\d+)",
+      "destination": "/api/taxonomy/units?kind=challenge-formats&id=:id"
+    },
+    { "source": "/api/challenges/list", "destination": "/api/taxonomy/units?kind=challenges" },
+    { "source": "/api/challenges", "destination": "/api/taxonomy/units?kind=challenges" },
+    {
+      "source": "/api/challenges/:id(\\d+)",
+      "destination": "/api/taxonomy/units?kind=challenges&id=:id"
+    },
     { "source": "/api/photos", "destination": "/api/photos/upload" },
     { "source": "/api/photos/:id(\\d+)", "destination": "/api/photos/get" },
     {

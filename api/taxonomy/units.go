@@ -10,6 +10,7 @@ import (
 	"uszatakuchnia/db"
 	"uszatakuchnia/db/entities"
 	"uszatakuchnia/db/mappers"
+	"uszatakuchnia/handlers"
 	resp "uszatakuchnia/http"
 	"uszatakuchnia/services"
 
@@ -28,13 +29,23 @@ type unitRequest struct {
 //	PUT    /api/taxonomy/units/:id
 //	DELETE /api/taxonomy/units/:id?moveTo=<id>  składniki w przepisach dostają moveTo (bez = bez jednostki)
 //
-// Słownik sprzętu obsługuje ta sama funkcja (limit funkcji Vercela): /api/taxonomy/equipment[/:id] → ?kind=equipment.
+// Ta sama funkcja obsługuje (limit 12 funkcji Vercela, vercel.json → ?kind=…):
+//   - słownik sprzętu: /api/taxonomy/equipment[/:id] → ?kind=equipment,
+//   - wyzwania: /api/challenges[/list|/:id] → ?kind=challenges (handlers.Challenges),
+//   - formaty wyzwań: /api/taxonomy/challenge-formats[/:id] → ?kind=challenge-formats.
 func Units(w http.ResponseWriter, r *http.Request) {
 	if resp.Begin(w, r) {
 		return
 	}
-	if r.URL.Query().Get("kind") == "equipment" {
+	switch r.URL.Query().Get("kind") {
+	case "equipment":
 		equipmentHandler(w, r)
+		return
+	case "challenges":
+		handlers.Challenges(w, r)
+		return
+	case "challenge-formats":
+		handlers.ChallengeFormats(w, r)
 		return
 	}
 	switch r.Method {

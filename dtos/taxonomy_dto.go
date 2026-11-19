@@ -35,9 +35,10 @@ type AllergenDto struct {
 
 // DictionariesDto — wszystkie słowniki w jednym zapytaniu (GET /api/taxonomy).
 type DictionariesDto struct {
-	Axes            []TaxonomyAxisDto `json:"axes"`
-	Units           []UnitDto         `json:"units"`
-	Allergens       []AllergenDto     `json:"allergens"`
-	IngredientTypes []TypeDto         `json:"ingredientTypes"`
-	Equipment       []EquipmentDto    `json:"equipment"`
+	Axes             []TaxonomyAxisDto    `json:"axes"`
+	Units            []UnitDto            `json:"units"`
+	Allergens        []AllergenDto        `json:"allergens"`
+	IngredientTypes  []TypeDto            `json:"ingredientTypes"`
+	Equipment        []EquipmentDto       `json:"equipment"`
+	ChallengeFormats []ChallengeFormatDto `json:"challengeFormats"`
 }

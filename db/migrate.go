@@ -29,6 +29,10 @@ var models = []any{
 	&entities.Equipment{},
 	&entities.RecipeEquipment{},
 
+	&entities.ChallengeFormat{},
+	&entities.Challenge{},
+	&entities.ChallengeIngredient{},
+
 	&entities.Image{},
 	&entities.Photo{},
 }
@@ -52,6 +56,9 @@ var migrateLock sync.Mutex
 
 // devResetTables — wszystkie tabele aplikacji, łącznie z wycofanymi (żeby reset nie zostawiał śmieci).
 var devResetTables = []string{
+	"challenge_ingredients",
+	"challenges",
+	"challenge_formats",
 	"recipe_equipment",
 	"equipment",
 	"recipe_taxonomy",

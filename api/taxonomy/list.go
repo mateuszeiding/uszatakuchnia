@@ -11,7 +11,8 @@ import (
 	"uszatakuchnia/services"
 )
 
-// List — wszystkie słowniki: osie klasyfikacji z wartościami, jednostki, alergeny, typy składników, sprzęt.
+// List — wszystkie słowniki: osie klasyfikacji z wartościami, jednostki, alergeny, typy składników, sprzęt,
+// formaty wyzwań.
 func List(w http.ResponseWriter, r *http.Request) {
 	if resp.Begin(w, r) {
 		return
@@ -23,6 +24,7 @@ func List(w http.ResponseWriter, r *http.Request) {
 	var units []entities.Unit
 	var types []entities.IngredientType
 	var equipment []entities.Equipment
+	var formats []entities.ChallengeFormat
 
 	if err := conn.Order("sort_order, id").Find(&axes).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
@@ -48,6 +50,21 @@ func List(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+	if err := conn.Order("sort_order, id").Find(&formats).Error; err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	formatUsage, err := services.ChallengeFormatUsage(conn)
+	if err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	formatsDto := make([]dtos.ChallengeFormatDto, 0, len(formats))
+	for _, f := range formats {
+		d := mappers.MapChallengeFormatToDto(f)
+		d.UsedIn = formatUsage[f.ID]
+		formatsDto = append(formatsDto, d)
 	}
 	equipmentDto := make([]dtos.EquipmentDto, 0, len(equipment))
 	for _, e := range equipment {
@@ -94,10 +111,11 @@ func List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp.JSON(w, http.StatusOK, dtos.DictionariesDto{
-		Axes:            axesDto,
-		Units:           unitsDto,
-		Allergens:       mappers.MapAllergensToDto(),
-		IngredientTypes: mappers.MapIngredientTypeArrayToDto(types),
-		Equipment:       equipmentDto,
+		Axes:             axesDto,
+		Units:            unitsDto,
+		Allergens:        mappers.MapAllergensToDto(),
+		IngredientTypes:  mappers.MapIngredientTypeArrayToDto(types),
+		Equipment:        equipmentDto,
+		ChallengeFormats: formatsDto,
 	})
 }
