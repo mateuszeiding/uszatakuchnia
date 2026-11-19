@@ -1,10 +1,20 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { computed, ref } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
 
 import AuthButton from './auth/AuthButton.vue';
 
 import { isOwner } from '@/auth/createAuth';
+
+const route = useRoute();
+// Link aktywny dla całej sekcji: /challenges i /challenges/:id (RouterLink zaznacza tylko trasy zagnieżdżone).
+const LINKS = [
+    { to: '/recipes', label: 'Przepisy' },
+    { to: '/challenges', label: 'Wyzwania' },
+];
+const section = computed(
+    () => LINKS.find((l) => route.path === l.to || route.path.startsWith(`${l.to}/`))?.to
+);
 
 const dark = ref(localStorage.getItem('theme') === 'dark');
 
@@ -31,12 +41,19 @@ if (dark.value) {
                     uszatakuchnia
                     <span class="topbar__logo-dot">.</span>
                 </RouterLink>
-                <nav class="topbar__nav">
+                <nav
+                    class="topbar__nav"
+                    aria-label="Główna"
+                >
                     <RouterLink
-                        to="/recipes"
+                        v-for="l in LINKS"
+                        :key="l.to"
+                        :to="l.to"
                         class="topbar__link"
+                        :class="{ 'is-active': section === l.to }"
+                        :aria-current="section === l.to ? 'page' : undefined"
                     >
-                        Przepisy
+                        {{ l.label }}
                     </RouterLink>
                 </nav>
             </div>
@@ -63,16 +80,19 @@ if (dark.value) {
                     </span>
                 </button>
 
+                <!-- admin pracuje na desktopie: na telefonie bez „Panel” i „Zaloguj” -->
                 <template v-if="isOwner">
                     <RouterLink
                         to="/admin"
-                        class="topbar__admin-badge"
+                        class="topbar__admin-badge topbar__desktop"
                     >
                         Panel
                     </RouterLink>
                 </template>
 
-                <AuthButton />
+                <div class="topbar__desktop">
+                    <AuthButton />
+                </div>
             </div>
         </div>
     </header>
@@ -129,7 +149,7 @@ if (dark.value) {
 }
 
 .topbar__link:hover,
-.topbar__link.router-link-active {
+.topbar__link.is-active {
     color: var(--ink);
 }
 
@@ -176,19 +196,41 @@ if (dark.value) {
     letter-spacing: 0.3px;
 }
 
+/* Telefon: logo, „Przepisy”, „Wyzwania”, motyw (sama ikona). Cele 44 px; wysokość paska jak dotąd
+   (57 px z linią) — przyklejone elementy strony przepisu i listy zakupów liczą od niej. */
 @media (max-width: 900px) {
     .topbar__inner {
-        padding: 12px 20px;
+        padding: 6px 16px;
+        gap: 12px;
     }
-    .topbar__nav,
-    .topbar__theme-label {
+    .topbar__left {
+        gap: 16px;
+        min-width: 0;
+    }
+    .topbar__logo {
+        font-size: 16px;
+        white-space: nowrap;
+    }
+    .topbar__nav {
+        gap: 16px;
+    }
+    .topbar__link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        white-space: nowrap;
+    }
+    .topbar__theme-label,
+    .topbar__desktop {
         display: none;
     }
     .topbar__theme {
-        padding: 4px;
-    }
-    .topbar__right {
-        gap: 8px;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        justify-content: center;
+        background: transparent;
+        border: none;
     }
 }
 </style>
