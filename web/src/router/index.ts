@@ -9,6 +9,7 @@ import AdminLayout from '@/views/admin/AdminLayout.vue';
 import AdminRecipes from '@/views/admin/AdminRecipes.vue';
 import AdminTaxonomy from '@/views/admin/AdminTaxonomy.vue';
 import ChallengesView from '@/views/challenges/ChallengesView.vue';
+import ChallengeView from '@/views/challenges/ChallengeView.vue';
 import UpsertRecipe from '@/views/recipies/auth/UpsertRecipe.vue';
 import RecipeDetails from '@/views/recipies/details/RecipeDetails.vue';
 import ShoppingListView from '@/views/recipies/shopping/ShoppingListView.vue';
@@ -44,6 +45,7 @@ const router = createRouter({
             beforeEnter: adminGuards,
         },
         { path: '/challenges', component: ChallengesView },
+        { path: '/challenges/:id', component: ChallengeView, props: true },
         {
             path: '/admin',
             component: AdminLayout,
