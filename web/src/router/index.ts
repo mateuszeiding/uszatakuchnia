@@ -3,6 +3,8 @@ import RecipesView from '@view/recipies/list/RecipesView.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
 import { isOwner } from '@/auth/createAuth';
+import AdminChallengeEdit from '@/views/admin/AdminChallengeEdit.vue';
+import AdminChallenges from '@/views/admin/AdminChallenges.vue';
 import AdminIngredientEdit from '@/views/admin/AdminIngredientEdit.vue';
 import AdminIngredients from '@/views/admin/AdminIngredients.vue';
 import AdminLayout from '@/views/admin/AdminLayout.vue';
@@ -56,6 +58,9 @@ const router = createRouter({
                 { path: 'ingredients', component: AdminIngredients },
                 { path: 'ingredients/new', component: AdminIngredientEdit },
                 { path: 'ingredients/:id(\\d+)', component: AdminIngredientEdit, props: true },
+                { path: 'challenges', component: AdminChallenges },
+                { path: 'challenges/new', component: AdminChallengeEdit },
+                { path: 'challenges/:id(\\d+)', component: AdminChallengeEdit, props: true },
                 { path: 'taxonomy', component: AdminTaxonomy },
                 // stare adresy
                 { path: 'settings', redirect: '/admin/taxonomy' },

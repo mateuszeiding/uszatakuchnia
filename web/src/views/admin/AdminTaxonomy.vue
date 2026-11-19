@@ -2,16 +2,18 @@
 import { useQueryClient } from '@tanstack/vue-query';
 import { computed, onMounted, ref } from 'vue';
 
+import ChallengeFormatsTable from './components/ChallengeFormatsTable.vue';
 import EquipmentTable from './components/EquipmentTable.vue';
 import UnitsTable from './components/UnitsTable.vue';
 import ValuesTable from './components/ValuesTable.vue';
 
 import USpinner from '@/components/USpinner.vue';
+import { invalidateChallenges } from '@/data/api/challenges/fetch';
 import { invalidateRecipes } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient, invalidateDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Klasyfikacja: osie (Typ dania, Baza, Kuchnia, Diety, Praktyczne, …) + Jednostki + Sprzęt.
+// Klasyfikacja: osie (Typ dania, Baza, Kuchnia, Diety, Praktyczne, …) + Jednostki + Sprzęt + Formaty wyzwań.
 const qc = useQueryClient();
 const dicts = ref<IDictionaries>();
 const tab = ref<string>('dish');
@@ -31,6 +33,8 @@ async function load() {
 async function reload() {
     // etykiety / kolory / przeniesione wartości są też na kartach listy przepisów (cache 60 s)
     invalidateRecipes(qc);
+    // nazwy formatów są też na kartach wyzwań
+    invalidateChallenges(qc);
     await invalidateDictionaries(qc);
     await load();
 }
@@ -40,6 +44,7 @@ const tabs = computed(() => [
     ...(dicts.value?.axes ?? []).map((a) => ({ id: a.code, label: a.label, n: a.values.length })),
     { id: 'units', label: 'Jednostki', n: dicts.value?.units.length ?? 0 },
     { id: 'equipment', label: 'Sprzęt', n: dicts.value?.equipment.length ?? 0 },
+    { id: 'formats', label: 'Formaty wyzwań', n: dicts.value?.challengeFormats.length ?? 0 },
 ]);
 const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value));
 </script>
@@ -53,7 +58,7 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
             aria-hidden="true"
         >
             <span
-                v-for="n in 7"
+                v-for="n in 8"
                 :key="n"
                 class="tab"
                 :class="{ 'is-active': n === 1 }"
@@ -109,6 +114,11 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
             :items="dicts.equipment"
             @changed="reload"
         />
+        <ChallengeFormatsTable
+            v-else-if="tab === 'formats'"
+            :items="dicts.challengeFormats"
+            @changed="reload"
+        />
         <ValuesTable
             v-else-if="axis"
             :key="axis.id"
@@ -149,6 +159,10 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
 }
 .tax-tabs {
     overflow-x: auto;
+}
+/* 8 zakładek (z „Formaty wyzwań”) nie mieści się przy ~1120 px: etykiety w jednej linii, pasek się przewija */
+.tax-tabs .tab {
+    white-space: nowrap;
 }
 .tax-desc {
     margin: 16px 0;

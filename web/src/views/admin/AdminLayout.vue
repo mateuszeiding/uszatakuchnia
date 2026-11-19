@@ -3,6 +3,7 @@
 const MODULES = [
     { to: '/admin/recipes', label: 'Przepisy' },
     { to: '/admin/ingredients', label: 'Składniki' },
+    { to: '/admin/challenges', label: 'Wyzwania' },
     { to: '/admin/taxonomy', label: 'Klasyfikacja' },
 ];
 </script>
