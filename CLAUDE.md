@@ -55,6 +55,7 @@ Design przygotowuje Claude Design w artefakcie powyżej, pliki pod `project/`: `
   - `{id}` w ścieżce przepuszcza tylko liczbę ≥ 1 (inaczej 404); handler czyta go przez `pathID(r)` (`r.PathValue("id")`). Parametry typu `?moveTo=` zostają w query.
   - Router sam odpowiada 404 (nieznana ścieżka) i 405 (zła metoda, z `Allow`) w JSON — handler nie sprawdza metody.
   - Handler **nie woła** `resp.Begin` (robi to raz `api/index.go`).
+- Wyjątek: `GET /recipes/{id}` i `/recipes/{id}/zakupy` (`handlers/share.go`) to strony dla botów podglądu linków (meta OG). `vercel.json` ma dla nich dwa rewrite'y z `has: user-agent`, a `router_test` pilnuje, żeby poza `/api/` były tylko takie trasy.
 - Router to zwykły `http.Handler` — poza Vercelem wystarczy `http.ListenAndServe(addr, http.HandlerFunc(api.Handler))`.
 - Encje DB: `db/entities/`, mappery: `db/mappers/`, DTOs: `dtos/`.
 - GORM AutoMigrate — nie piszesz ręcznych migracji SQL.
