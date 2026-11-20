@@ -1,8 +1,8 @@
 import { computed, ref } from 'vue';
 
-// „Zrobione” wyzwania na tym urządzeniu: localStorage `uk:challenges:done` = lista id.
-// Jeden stan na aplikację (lista, strona wyzwania i losowanie widzą to samo), zmiany z innej karty
-// przeglądarki też. Wpisy wyzwań, których już nie ma, są ignorowane w licznikach (filtruje wywołujący).
+// Challenges marked "done" on this device: localStorage `uk:challenges:done` = list of ids.
+// One state per app (the list, the challenge page and the random pick see the same), changes from another
+// browser tab too. Entries of challenges that no longer exist are ignored in counters (the caller filters).
 const KEY = 'uk:challenges:done';
 
 function load(): number[] {
@@ -20,7 +20,7 @@ function save() {
     try {
         localStorage.setItem(KEY, JSON.stringify(ids.value));
     } catch {
-        /* tryb prywatny / brak miejsca — działa do końca sesji */
+        /* private mode / no storage: works until the session ends */
     }
 }
 

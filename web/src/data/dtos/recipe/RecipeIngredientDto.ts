@@ -1,27 +1,27 @@
 import type { IRecipeNutrition } from '@/shared/utils/nutrition';
 
-/** Przepis, do którego prowadzi składnik (np. bułka → „Bułki do hamburgerów”). */
+/** Recipe this ingredient links to (e.g. bun → "Bułki do hamburgerów"). */
 export interface ILinkedRecipe {
     id: number;
     title: string;
     status: 'draft' | 'published';
-    /** Adres zdjęcia z API (przed resolveUrl); null = brak. */
+    /** Photo URL from the API (before resolveUrl); null = none. */
     image: string | null;
 }
 
-/** Zamiennik pozycji (dane do alergenów, listy zakupów i makro bez kolejnego zapytania). */
+/** Row substitute (data for allergens, the shopping list and macros without another request). */
 export interface IRecipeSubstitute {
     ingredientId: number;
     name: string;
-    /** „Pół na pół” ze składnikiem głównym (po połowie ilości). */
+    /** "Half and half" with the main ingredient (half the quantity each). */
     mix: boolean;
     allergens: string[];
     ingredientType: { code: string; label: string };
     skipShopping: boolean;
     gramsPerUnit: { min: number; max: number } | null;
-    /** Składnik ma dane makro (inaczej „bez danych o wartościach odżywczych”). */
+    /** The ingredient has macro data (otherwise "no nutrition data"). */
     hasNutrition: boolean;
-    /** Wkład wariantu w makro na porcję; null = pozycja się nie liczy. */
+    /** The variant's share of the per-serving macros; null = the row doesn't count. */
     nutrition: IRecipeNutrition | null;
 }
 
@@ -32,24 +32,24 @@ export class RecipeIngredientDto {
     ingredientId: number = 0;
     ingredientName: string = '';
 
-    /** Ilość jako tekst: "2", "½", "1,5", "2–3". */
+    /** Quantity as text: "2", "½", "1,5", "2–3". */
     quantity: string | null = null;
     unitId: number | null = null;
-    /** Nazwa jednostki (forma słownikowa); odmianę robi unitLabel(). */
+    /** Unit name (dictionary form); unitLabel() inflects it. */
     unit: string | null = null;
     note: string | null = null;
     optional: boolean = false;
-    /** Kody alergenów składnika. */
+    /** The ingredient's allergen codes. */
     allergens: string[] = [];
-    /** Dział w sklepie (typ składnika) — lista zakupów. */
+    /** Store aisle (ingredient type), for the shopping list. */
     ingredientType: { code: string; label: string } = { code: 'OTHER', label: 'inne' };
-    /** Składnik pomijany na liście zakupów (np. woda). */
+    /** Skipped on the shopping list (e.g. water). */
     skipShopping: boolean = false;
-    /** Ile gramów to 1 jednostka tej pozycji; null = nie da się przeliczyć. */
+    /** Grams per 1 unit of this row; null = can't convert. */
     gramsPerUnit: { min: number; max: number } | null = null;
-    /** Link do przepisu; szkic też przychodzi — strona publiczna go nie pokazuje (publicLink). */
+    /** Recipe link; drafts come too, and the public page hides them (publicLink). */
     linkedRecipe: ILinkedRecipe | null = null;
-    /** Wkład pozycji w makro na porcję (suma wkładów = nutrition przepisu); null = pozycja się nie liczy. */
+    /** This row's share of the per-serving macros (shares add up to the recipe's nutrition); null = the row doesn't count. */
     nutrition: IRecipeNutrition | null = null;
     substitutes: IRecipeSubstitute[] = [];
 

@@ -1,11 +1,11 @@
 /* ============================================================
    Uszatka CSS — TOKENS
-   Warstwa 1: prymitywy (niezależne od motywu)
-   Warstwa 2: kolory motywu — light :root / dark [data-theme]
+   Layer 1: primitives (theme-independent)
+   Layer 2: theme colors: light :root / dark [data-theme]
    ============================================================ */
 
 :root {
-  /* ── TYPOGRAFIA ── */
+  /* ── TYPOGRAPHY ── */
   --font-sans: "Geist", "Inter Tight", "Inter", -apple-system, system-ui, sans-serif;
   --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
@@ -21,7 +21,7 @@
   --text-h4:  18px;
   --text-body: 16px;
   --text-small: 13px;
-  --text-meta:  12px; /* minimum czytelności */
+  --text-meta:  12px; /* minimum for legibility */
 
   --lh-display: 0.92;
   --lh-tight:   0.95;
@@ -36,12 +36,12 @@
   --ls-tight: -0.4px;
   --ls-mono:   0.5px;
 
-  /* ── ODSTĘPY (skala 4px) ── */
+  /* ── SPACING (4px scale) ── */
   --s-0:  0;
   --s-1:  4px;  --s-2:  8px;  --s-3:  12px; --s-4:  16px; --s-5:  20px;
   --s-6:  24px; --s-7:  32px; --s-8:  40px; --s-9:  56px; --s-10: 80px;
 
-  /* ── PROMIENIE ── */
+  /* ── RADII ── */
   --r-sm:   4px;
   --r-md:   6px;
   --r-lg:   8px;
@@ -49,23 +49,23 @@
   --r-2xl:  12px;
   --r-pill: 999px;
 
-  /* ── OBRAMOWANIA ── */
+  /* ── BORDERS ── */
   --bw-1: 1px;
   --bw-2: 1.5px;
 
-  /* ── CIENIE ── */
+  /* ── SHADOWS ── */
   --shadow-card:   0 8px 24px rgba(10, 10, 15, 0.08);
   --shadow-menu:   0 12px 32px rgba(10, 10, 15, 0.10);
   --shadow-accent: 0 4px 14px rgba(107, 78, 230, 0.32);
 
-  /* ── RUCH ── */
+  /* ── MOTION ── */
   --dur-fast: 120ms;
   --dur:      150ms;
   --dur-slow: 180ms;
   --ease:     cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
-  /* ── WARSTWY ── */
+  /* ── LAYERS ── */
   --z-base:     1;
   --z-sticky:   40;
   --z-dropdown: 50;
@@ -73,29 +73,29 @@
   --z-modal:    100;
   --z-toast:    200;
 
-  /* ── STANY ── */
+  /* ── STATES ── */
   --opacity-disabled: 0.45;
   --opacity-muted:    0.6;
   --focus-ring: 0 0 0 3px var(--accent-soft);
   --cat-tint:   0.16;
 
-  /* ── KOLOR — light ── */
+  /* ── COLOR: light ── */
   --bg:         #F8F8FF;
   --bg-alt:     #FFFFFF;
   --bg-elev:    #FFFFFF;
   --ink:        #0A0A0F;
   --ink-dim:    #3A3A45;
   --ink-muted:  #62626E;
-  --ink-faint:  #75757F; /* ≥ 4,5:1 na --bg */
+  --ink-faint:  #75757F; /* ≥ 4.5:1 on --bg */
   --rule:        rgba(10, 10, 15, 0.12);
   --rule-strong: rgba(10, 10, 15, 0.22);
 
   --accent:      #6B4EE6;
   --accent-soft: #EDE8FB;
-  /* tło przycisków z białym tekstem — w obu motywach to samo (biały 5,4:1); --accent zostaje dla linków, ikon, obramowań */
+  /* background of buttons with white text: the same in both themes (white 5.4:1); --accent stays for links, icons, borders */
   --accent-fill: #6B4EE6;
-  --accent-fill-hover: #5A3FD0; /* hover przycisku akcentowego — biały 6,6:1 */
-  --toast-action: #B9AEF2; /* „Cofnij” na ciemnym toaście (tło --ink) — poprawki 20.11 */
+  --accent-fill-hover: #5A3FD0; /* accent button hover: white 6.6:1 */
+  --toast-action: #B9AEF2; /* "Cofnij" on the dark toast (--ink background) */
   --on-accent:   #FFFFFF;
 
   --success:      #2F6B3F; --success-soft: rgba(47, 107, 63, 0.12);
@@ -103,32 +103,32 @@
   --danger:       #C53728; --danger-soft:  rgba(197, 55, 40, 0.12);
   --info:         #3F70A8; --info-soft:    rgba(63, 112, 168, 0.12);
 
-  /* krok „przygotuj wcześniej” */
+  /* "prep ahead" step */
   --prep:      #8A6410;
   --prep-soft: rgba(217, 164, 65, 0.14);
   --prep-line: rgba(217, 164, 65, 0.55);
-  /* pasek „Szkic” nad nawigacją (podgląd szkicu) */
+  /* "Szkic" bar above the nav (draft preview) */
   --bar-bg:    #FBF3E2;
 
-  --c-blue:       #3F70A8;  /* ryby */
-  --c-terracotta: #B85A2E;  /* mięso */
-  --c-sage:       #7A9050;  /* wege */
-  --c-forest:     #2F6B3F;  /* wegan */
-  --c-mustard:    #D9A441;  /* makarony */
-  --c-wheat:      #B8946A;  /* ryż / kasze */
-  --c-tomato:     #C53728;  /* zupy */
-  --c-lime:       #A8B83D;  /* sałatki */
-  --c-brown:      #7A4A2E;  /* pieczywo */
-  --c-pink:       #D27393;  /* desery */
-  --c-coral:      #E89556;  /* śniadania */
-  --c-plum:       #8A4A6D;  /* przekąski */
-  --c-teal:       #2F8A8A;  /* napoje */
-  --c-olive:      #5C6E33;  /* regiony / wolne */
+  --c-blue:       #3F70A8;  /* fish */
+  --c-terracotta: #B85A2E;  /* meat */
+  --c-sage:       #7A9050;  /* vegetarian */
+  --c-forest:     #2F6B3F;  /* vegan */
+  --c-mustard:    #D9A441;  /* pasta */
+  --c-wheat:      #B8946A;  /* rice / grains */
+  --c-tomato:     #C53728;  /* soups */
+  --c-lime:       #A8B83D;  /* salads */
+  --c-brown:      #7A4A2E;  /* bread */
+  --c-pink:       #D27393;  /* desserts */
+  --c-coral:      #E89556;  /* breakfasts */
+  --c-plum:       #8A4A6D;  /* snacks */
+  --c-teal:       #2F8A8A;  /* drinks */
+  --c-olive:      #5C6E33;  /* regions / free */
 
   color-scheme: light;
 }
 
-/* ── KOLOR — dark (jawny atrybut) ── */
+/* ── COLOR: dark (explicit attribute) ── */
 [data-theme="dark"] {
   --bg:         #0A0A0F;
   --bg-alt:     #13131C;
@@ -142,9 +142,9 @@
 
   --accent:      #9D8FE8;
   --accent-soft: rgba(157, 143, 232, 0.16);
-  --accent-fill: #6B4EE6; /* biały na #9D8FE8 = 2,8:1 — za mało dla tekstu */
+  --accent-fill: #6B4EE6; /* white on #9D8FE8 = 2.8:1, too low for text */
   --accent-fill-hover: #5A3FD0;
-  --toast-action: #5A3FD0; /* „Cofnij” na jasnym toaście (tło --ink) */
+  --toast-action: #5A3FD0; /* "Cofnij" on the light toast (--ink background) */
   --on-accent:   #FFFFFF;
 
   --success: #5E9A6A; --success-soft: rgba(94, 154, 106, 0.18);

@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { computed, useId } from 'vue';
 
-// Blok „Uwagi” — czego nie zawalić w całym przepisie / wyzwaniu (zakupy, bezpieczeństwo, czas).
-// Rodzina --prep (jak dawny baner „Wymaga przygotowania”). Kroki „przygotuj wcześniej” są pierwszymi
-// pozycjami (zegar zamiast punktora, „krok N” emituje `step`). Brak uwag i przygotowania → nic.
-// Warianty: default (strona), compact (lista zakupów), large (tryb gotowania), print (wydruk listy zakupów).
+// The "Uwagi" block: what not to mess up across the whole recipe / challenge (shopping, safety, timing).
+// Uses the --prep color family. "Prepare ahead" steps are the first items
+// (a clock instead of a bullet; "krok N" emits `step`). No notes and no prep → renders nothing.
+// Variants: default (page), compact (shopping list), large (cooking mode), print (shopping list printout).
 export interface ICautionPrep {
-    /** „dzień wcześniej”, „12 h wcześniej”; null = bez podanego czasu. */
+    /** e.g. "dzień wcześniej", "12 h wcześniej"; null = no time given. */
     lead: string | null;
     step: number;
 }
@@ -23,7 +23,7 @@ const emit = defineEmits<{ step: [no: number] }>();
 
 const headingId = useId();
 const isPrint = computed(() => props.variant === 'print');
-// wydruk (lista zakupów) pokazuje tylko uwagi
+// the printout (shopping list) shows only the notes
 const prepRows = computed(() => (isPrint.value ? [] : props.prep));
 const visible = computed(() => props.items.length > 0 || prepRows.value.length > 0);
 </script>
@@ -90,7 +90,7 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
                         />
                     </svg>
                 </span>
-                <!-- kropka po linku z CSS (::after) — bez spacji przed nią -->
+                <!-- the period after the link comes from CSS (::after), so no space before it -->
                 <span class="cautions__text cautions__text--prep">
                     Przygotuj {{ p.lead ?? 'wcześniej' }}:
                     <button
@@ -188,7 +188,7 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     cursor: pointer;
 }
 
-/* lista zakupów */
+/* shopping list */
 .cautions--compact {
     padding: 12px 14px;
 }
@@ -199,7 +199,7 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     font-size: 14px;
 }
 
-/* tryb gotowania */
+/* cooking mode */
 .cautions--large {
     padding: 16px 18px;
 }
@@ -223,7 +223,7 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     padding-top: 5px;
 }
 
-/* wydruk listy zakupów: czarno-biała ramka, zwykła lista */
+/* shopping list printout */
 .cautions--print {
     padding: 8px 12px;
     background: none;

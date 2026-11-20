@@ -36,7 +36,7 @@ export const createTaxonomyValue = (payload: ITaxonomyValuePayload) =>
 export const updateTaxonomyValue = (id: number, payload: ITaxonomyValuePayload) =>
     API.Client.put<ITaxonomyValue>(`taxonomy/values/${id}`, payload);
 
-/** moveTo: przepisy z usuwaną wartością dostają tę (wymagane dla osi obowiązkowej, gdy wartość używana). */
+/** moveTo: recipes with the deleted value get this one (required for a mandatory axis when the value is in use). */
 export const deleteTaxonomyValue = (id: number, moveTo?: number) =>
     API.Client.delete<{ deleted: number; moved: number }>(
         `taxonomy/values/${id}${moveTo ? `?moveTo=${moveTo}` : ''}`
@@ -65,7 +65,7 @@ export const createEquipment = (name: string) =>
 export const updateEquipment = (id: number, name: string) =>
     API.Client.put<IEquipment>(`taxonomy/equipment/${id}`, { name });
 
-/** Używany sprzęt: replaceWith (inny sprzęt, doprecyzowania zostają) albo removeFromRecipes. */
+/** Equipment in use: replaceWith (other equipment, details stay) or removeFromRecipes. */
 export const deleteEquipment = (
     id: number,
     opt: { replaceWith?: number; removeFromRecipes?: boolean } = {}

@@ -24,7 +24,7 @@ describe('matches (przegląd 18.11, #8)', () => {
     });
     it('bez głupich trafień', () => {
         expect(m('cukier', 'Cukinia')).toBe(false);
-        expect(m('naci', 'Seler naciowy')).toBe(true); // zawiera się — jak dotąd
+        expect(m('naci', 'Seler naciowy')).toBe(true); // substring match
         expect(m('bul', 'Bułka')).toBe(true);
         expect(m('bulx', 'Bułka')).toBe(false);
         expect(m('kurczak', 'Ragù alla bolognese')).toBe(false);

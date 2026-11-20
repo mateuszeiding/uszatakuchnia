@@ -5,7 +5,7 @@ import { RouterLink, useRoute } from 'vue-router';
 import { isOwner } from '@/auth/createAuth';
 
 const route = useRoute();
-// Link aktywny dla całej sekcji: /challenges i /challenges/:id (RouterLink zaznacza tylko trasy zagnieżdżone).
+// Link active for the whole section: /challenges and /challenges/:id (RouterLink marks only nested routes).
 const LINKS = [
     { to: '/recipes', label: 'Przepisy' },
     { to: '/challenges', label: 'Wyzwania' },
@@ -14,8 +14,8 @@ const section = computed(
     () => LINKS.find((l) => route.path === l.to || route.path.startsWith(`${l.to}/`))?.to
 );
 
-// Motyw: zapisany wybór, a bez niego systemowy (prefers-color-scheme). Stan przycisku = widoczny motyw,
-// więc pierwsze dotknięcie zawsze przełącza na przeciwny. Dopóki nie ma wyboru, przycisk idzie za systemem.
+// Theme: the saved choice, otherwise the system one (prefers-color-scheme). Button state = the visible theme,
+// so the first tap always switches to the opposite. Until there's a choice, the button follows the system.
 const readSaved = () => {
     try {
         const t = localStorage.getItem('theme');
@@ -41,7 +41,7 @@ function toggleTheme() {
     try {
         localStorage.setItem('theme', theme);
     } catch {
-        /* prywatne okno — motyw działa do końca wizyty */
+        /* private window: the theme works until the end of the visit */
     }
     document.documentElement.setAttribute('data-theme', theme);
 }
@@ -91,7 +91,7 @@ function toggleTheme() {
                     </span>
                 </button>
 
-                <!-- admin pracuje na desktopie: „Panel” tylko na desktopie; „Zaloguj” jest w stopce (20.11) -->
+                <!-- the admin works on desktop: "Panel" on desktop only; "Zaloguj" is in the footer -->
                 <template v-if="isOwner">
                     <RouterLink
                         to="/admin"
@@ -118,7 +118,7 @@ function toggleTheme() {
 .topbar__inner {
     max-width: 1280px;
     margin: 0 auto;
-    /* 9 + 44 (motyw) + 9 — pasek tej samej wysokości co z dawną pigułką motywu i „Zaloguj” */
+    /* 9 + 44 (theme button) + 9: keeps the bar height unchanged */
     padding: 9px 56px;
     display: flex;
     align-items: center;
@@ -167,7 +167,7 @@ function toggleTheme() {
     gap: 12px;
 }
 
-/* motyw: sama ikona, cel 44 px na każdej szerokości (20.11) */
+/* theme: icon only, a 44 px touch target at every width */
 .topbar__theme {
     width: 44px;
     height: 44px;
@@ -205,8 +205,8 @@ function toggleTheme() {
     letter-spacing: 0.3px;
 }
 
-/* Telefon: logo, „Przepisy”, „Wyzwania”, motyw (sama ikona). Cele 44 px; wysokość paska jak dotąd
-   (57 px z linią) — przyklejone elementy strony przepisu i listy zakupów liczą od niej. */
+/* Phone: logo, "Przepisy", "Wyzwania", theme (icon only). 44 px targets; the bar keeps its height
+   (57 px with the border): sticky elements of the recipe page and the shopping list are offset from it. */
 @media (max-width: 900px) {
     .topbar__inner {
         padding: 6px 16px;

@@ -1,6 +1,6 @@
 import { pluralPL } from '@/shared/utils/quantity';
 
-/** Toast po „Odznacz wszystko”: „Odznaczono 3 kroki i 5 składników.”; gdy jedna liczba to 0 — tylko druga. */
+/** Toast after "Odznacz wszystko": "Odznaczono 3 kroki i 5 składników."; when one count is 0, only the other. */
 export function uncheckedText(steps: number, ings: number): string {
     const parts = [
         steps ? `${steps} ${pluralPL(steps, 'krok', 'kroki', 'kroków')}` : '',

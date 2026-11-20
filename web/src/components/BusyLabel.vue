@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import USpinner from './USpinner.vue';
 
-// Etykieta przycisku z trybem zajętości: oba warianty („Zapisz zmiany” / spinner + „Zapisywanie…”)
-// leżą w tej samej komórce siatki, niewidoczny trzyma miejsce — przycisk ma zawsze tę samą szerokość
-// i nic obok się nie przesuwa.
+// Button label with a busy state: both variants ("Zapisz zmiany" / spinner + "Zapisywanie…")
+// share one grid cell and the hidden one holds the space, so the button keeps its width
+// and nothing next to it shifts.
 withDefaults(
     defineProps<{
         busy: boolean;
         label: string;
-        /** Tekst w trakcie; domyślnie ten sam co label (sam spinner dochodzi). */
+        /** Text while busy; defaults to label (only the spinner is added). */
         busyLabel?: string;
         spinnerColor?: string;
     }>(),

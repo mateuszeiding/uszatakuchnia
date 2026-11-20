@@ -3,9 +3,9 @@ import { shallowRef } from 'vue';
 export interface IConfirmOptions {
     title: string;
     body?: string;
-    /** Lista pod treścią (np. przepisy z linkami do usuwanego). */
+    /** List below the text (e.g. recipes linking to the one being deleted). */
     items?: string[];
-    /** Dopisek na końcu, mniejszym tekstem („Tej operacji nie da się cofnąć.”). */
+    /** Footnote in smaller text ("Tej operacji nie da się cofnąć."). */
     note?: string;
     confirmLabel?: string;
     danger?: boolean;
@@ -15,10 +15,10 @@ interface IPendingConfirm extends IConfirmOptions {
     resolve: (ok: boolean) => void;
 }
 
-// Jeden modal potwierdzenia na aplikację (UConfirmHost w App.vue).
+// One confirmation modal per app (UConfirmHost in App.vue).
 export const pendingConfirm = shallowRef<IPendingConfirm | null>(null);
 
-/** Pokazuje modal potwierdzenia; zwraca true, jeśli użytkownik potwierdził. */
+/** Shows the confirmation modal; resolves true if the user confirmed. */
 export function confirmAction(options: IConfirmOptions): Promise<boolean> {
     pendingConfirm.value?.resolve(false);
     return new Promise((resolve) => {

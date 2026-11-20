@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Ikona wskazówki: żarówka (dekoracyjna — tekst wskazówki stoi obok).
+// Hint icon: a light bulb (decorative: the hint text sits next to it).
 withDefaults(defineProps<{ size?: number }>(), { size: 15 });
 </script>
 

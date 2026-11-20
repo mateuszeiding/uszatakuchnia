@@ -10,14 +10,14 @@ const http = axios.create({
     baseURL: `${import.meta.env.DEV ? 'http://localhost:3000' : ''}/api`,
 });
 
-// Każde żądanie zalogowanego idzie z tokenem Auth0 (zapis i szkice wymagają właściciela).
+// Every request from a logged-in user carries the Auth0 token (writes and drafts require the owner).
 http.interceptors.request.use(async (config) => {
     const token = await accessToken();
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
 });
 
-// 401 = sesja wygasła: zaloguj w okienku i powtórz żądanie (formularz zostaje na stronie).
+// 401 = session expired: log in via a popup and retry the request (the form stays on the page).
 http.interceptors.response.use(undefined, async (error: AxiosError) => {
     const config = error.config as RetriableConfig | undefined;
     const status = error.response?.status;
@@ -56,7 +56,7 @@ export class API {
         return response.data;
     }
 
-    /** Wysyła surowe bajty (np. obraz) z raportowaniem postępu 0–100. */
+    /** Sends raw bytes (e.g. an image) with 0–100 progress reporting. */
     public async upload<T>(endpoint: string, file: Blob, onProgress?: (pct: number) => void) {
         const response = await http.post<T>(endpoint, file, {
             headers: { 'Content-Type': file.type },
@@ -66,7 +66,7 @@ export class API {
         return response.data;
     }
 
-    /** Adres zasobu z API (np. zdjęcia /api/photos/1) — lokalnie API działa na innym porcie. */
+    /** API resource URL (e.g. photos at /api/photos/1); locally the API runs on another port. */
     public static resolveUrl(url: string | null | undefined): string | null {
         if (!url) return null;
         return import.meta.env.DEV && url.startsWith('/api/') ? `http://localhost:3000${url}` : url;

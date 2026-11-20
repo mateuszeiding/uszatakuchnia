@@ -37,7 +37,7 @@ function relFromCwd(abs) {
     return abs.startsWith(prefix) ? abs.slice(prefix.length) : abs;
 }
 
-// ---------- generatory ----------
+// ---------- generators ----------
 function toScss(palette) {
     const groups = Object.keys(palette);
     const out = [];
@@ -132,7 +132,7 @@ function toMarkdown(palette) {
         const keys = sortKeys(Object.keys(palette[g]));
         for (const k of keys) {
             const hex = normHex(palette[g][k]).toUpperCase();
-            const displayName = unslug(k); // zamiast gray-outer-space → outer space
+            const displayName = unslug(k); // "outer space" instead of "gray-outer-space"
             const label = encodeURIComponent(displayName);
             const hexEsc = hex.replace('#', '%23');
             out.push(

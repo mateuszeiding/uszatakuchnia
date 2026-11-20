@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { onBeforeUnmount, onMounted, ref, useId } from 'vue';
 
-// Modal: role="dialog", pułapka fokusu, Esc zamyka, fokus wraca na element, który go otworzył.
-// Element z atrybutem autofocus dostaje fokus na starcie (inaczej pierwsza kontrolka).
+// Modal: role="dialog", focus trap, Esc closes, focus returns to the element that opened it.
+// An element with the autofocus attribute gets focus first (otherwise the first control).
 const props = withDefaults(
     defineProps<{
         title: string;

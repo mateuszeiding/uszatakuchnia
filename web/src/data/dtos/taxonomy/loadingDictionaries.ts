@@ -1,7 +1,7 @@
 import type { AxisCode, IDictionaries, ITaxonomyAxis } from './DictionariesDto';
 
-// Osie na czas ładowania formularza przepisu: liczba i długości wartości jak w słownikach (17.11),
-// żeby chipy zawijały się w tyle samo rzędów. Etykiety chipów są w szkielecie niewidoczne.
+// Axes shown while the recipe form loads: value counts and lengths match the real dictionaries,
+// so the chips wrap into the same number of rows. Chip labels are invisible in the skeleton.
 const AXES: [AxisCode, string, boolean, string[]][] = [
     [
         'dish',
@@ -94,7 +94,7 @@ const loadingAxes: ITaxonomyAxis[] = AXES.map(([code, label, required, values], 
     required,
     hasColor: code === 'dish',
     filterMode: code === 'diet' ? 'and' : 'or',
-    // typ dania ma kolor (kropka w chipie zmienia jego szerokość) — kropka w szkielecie niewidoczna
+    // the dish type has a color (the dot changes the chip's width); the dot is invisible in the skeleton
     values: values.map((v, i) => ({
         id: -100 * (ai + 1) - i,
         label: v,
@@ -103,9 +103,9 @@ const loadingAxes: ITaxonomyAxis[] = AXES.map(([code, label, required, values], 
 }));
 
 /**
- * Słowniki na czas ładowania formularzy (szkielet w docelowym układzie): 14 alergenów UE jest stałych
- * (rozporządzenie 1169/2011), więc chipy alergenów mają od razu docelową liczbę i szerokości.
- * Reszta pusta — pola wyboru mają tę samą wysokość bez opcji.
+ * Dictionaries while the forms load (skeleton in the final layout): the 14 EU allergens are fixed
+ * (Regulation 1169/2011), so the allergen chips get their final count and widths right away.
+ * The rest is empty: select fields have the same height without options.
  */
 export const LOADING_DICTIONARIES: IDictionaries = {
     axes: loadingAxes,

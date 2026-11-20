@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-// Kość do gry — losowanie wyzwania.
 withDefaults(defineProps<{ size?: number }>(), { size: 16 });
 </script>
 

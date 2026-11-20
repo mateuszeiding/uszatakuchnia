@@ -1,7 +1,7 @@
 import { ref, watch } from 'vue';
 
-// Odhaczenia na liście zakupów („mam w domu / w koszyku”) — osobno od postępu gotowania.
-// localStorage `uk:shopping:<recipeId>` = tablica ingredientId; zmiana porcji ich nie czyści.
+// Shopping list checks ("mam w domu / w koszyku"), separate from cooking progress.
+// localStorage `uk:shopping:<recipeId>` = array of ingredientId; changing servings doesn't clear them.
 export function useShoppingChecks(recipeId: number) {
     const key = `uk:shopping:${recipeId}`;
 
@@ -21,7 +21,7 @@ export function useShoppingChecks(recipeId: number) {
             try {
                 localStorage.setItem(key, JSON.stringify(c));
             } catch {
-                /* tryb prywatny / brak miejsca — odhaczenia działają tylko w tej sesji */
+                /* private mode / no storage: checks last only for this session */
             }
         },
         { deep: true }

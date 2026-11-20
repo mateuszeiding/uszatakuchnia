@@ -1,13 +1,13 @@
 import { createAuth0 } from '@auth0/auth0-vue';
 import { computed, watch } from 'vue';
 
-// Jedna instancja Auth0 na aplikację — używa jej też klient API (poza setup()).
+// One Auth0 instance per app; the API client uses it too (outside setup()).
 export const auth0 = createAuth0({
     domain: import.meta.env.VITE_AUTH0_DOMAIN,
     clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
     authorizationParams: {
         redirect_uri: globalThis.location.origin,
-        // token dostępu jako JWT dla naszego API (backend sprawdza podpis, audience i `sub`)
+        // access token as a JWT for our API (the backend checks signature, audience and `sub`)
         audience: import.meta.env.VITE_AUTH0_AUDIENCE,
     },
 });
@@ -15,8 +15,8 @@ export const auth0 = createAuth0({
 export const createAuth = () => auth0;
 
 /**
- * Zalogowane konto właściciela. Tylko ono widzi UI admina; backend sprawdza to samo
- * (`sub` z tokenu = AUTH0_OWNER_SUB / VITE_AUTH0_OWNER_SUB).
+ * The owner's logged-in account. Only it sees the admin UI; the backend checks the same
+ * (`sub` from the token = AUTH0_OWNER_SUB / VITE_AUTH0_OWNER_SUB).
  */
 export const isOwner = computed(
     () =>
@@ -25,7 +25,7 @@ export const isOwner = computed(
         auth0.user.value?.sub === import.meta.env.VITE_AUTH0_OWNER_SUB
 );
 
-/** Czeka, aż Auth0 sprawdzi sesję po załadowaniu strony. */
+/** Waits until Auth0 has checked the session after page load. */
 export function authReady(): Promise<void> {
     if (!auth0.isLoading.value) return Promise.resolve();
     return new Promise((resolve) => {
@@ -37,7 +37,7 @@ export function authReady(): Promise<void> {
     });
 }
 
-/** Token dla API albo null (niezalogowany / sesja Auth0 wygasła). */
+/** Token for the API, or null (logged out / Auth0 session expired). */
 export async function accessToken(): Promise<string | null> {
     await authReady();
     if (!auth0.isAuthenticated.value) return null;

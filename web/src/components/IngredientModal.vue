@@ -8,12 +8,12 @@ import { createIngredient } from '@/data/api/ingredients/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Szybkie dodanie składnika z formularza przepisu: nazwa, typ, alergeny UE.
-// Edycja (z makro i przelicznikami) jest w panelu — AdminIngredientEdit.
+// Quick ingredient add from the recipe form: name, type, EU allergens.
+// Full editing (with macros and conversions) is in the admin panel: AdminIngredientEdit.
 const props = defineProps<{
     dicts: IDictionaries;
     initialName?: string;
-    /** Tekst przycisku dla nowego składnika (z formularza: „Dodaj i wstaw”). */
+    /** Button text for a new ingredient (from the form: "Dodaj i wstaw"). */
     createLabel?: string;
 }>();
 const emit = defineEmits<{ saved: [ing: IngredientDto]; close: [] }>();

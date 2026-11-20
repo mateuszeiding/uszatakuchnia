@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Płomień (trudność wyzwania): wypełniony — kolor z `color` i jaśniejszy rdzeń; pusty — sam obrys.
+// Flame for challenge difficulty: filled uses `color` with a lighter core, empty is just the outline.
 withDefaults(defineProps<{ size?: number; filled?: boolean }>(), { size: 16, filled: false });
 </script>
 

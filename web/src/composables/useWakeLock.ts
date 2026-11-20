@@ -1,7 +1,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
-// Blokada wygaszania ekranu (Wake Lock API) na czas życia komponentu.
-// Przeglądarka zwalnia blokadę po schowaniu karty — odnawiamy ją po powrocie.
+// Keeps the screen awake (Wake Lock API) for the component's lifetime.
+// The browser releases the lock when the tab is hidden, so we renew it on return.
 export function useWakeLock() {
     const active = ref(false);
     let lock: WakeLockSentinel | null = null;

@@ -4,7 +4,7 @@ import type { IType } from './IType';
 import { IngredientType } from '@/shared/enums/IngredientType';
 import type { Macros } from '@/shared/utils/nutrition';
 
-/** Przelicznik jednostki na gramy; inherited = od składnika nadrzędnego. */
+/** Unit-to-grams conversion; inherited = from the parent ingredient. */
 export interface IConversion {
     unitId: number;
     unitName: string;
@@ -23,20 +23,20 @@ export class IngredientDto {
         code: IngredientType.OTHER,
     };
 
-    /** Nie dodawaj do listy zakupów (np. woda). */
+    /** Never added to the shopping list (e.g. water). */
     skipShopping: boolean = false;
-    /** Kody alergenów UE (patrz IDictionaries.allergens). */
+    /** EU allergen codes (see IDictionaries.allergens). */
     allergens: string[] = [];
-    /** W ilu przepisach użyty (tylko z listy). */
+    /** Number of recipes using it (list only). */
     usedIn: number = 0;
 
     image: ImageDto = new ImageDto({});
 
-    /** Własne makro na 100 g (brak klucza = dziedziczy z podskładników). */
+    /** Own macros per 100 g (missing key = inherited from sub-ingredients). */
     nutrition: Macros = {};
-    /** Makro na 100 g do wyświetlenia: własne albo odziedziczone. */
+    /** Macros per 100 g for display: own or inherited. */
     resolvedNutrition: Macros = {};
-    /** Przeliczniki: własne + odziedziczone. */
+    /** Conversions: own + inherited. */
     conversions: IConversion[] = [];
 
     constructor(obj: Partial<IngredientDto>) {

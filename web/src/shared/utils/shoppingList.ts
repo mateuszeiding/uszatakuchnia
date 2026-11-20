@@ -1,11 +1,10 @@
-// Lista zakupów: sumowanie składników przepisu.
-// Logika przeniesiona 1:1 z prototypu Claude Design sk-main.jsx (mergeParts, buildShopping, sumText, forText):
-// 1) ten sam składnik (ingredientId) z różnych grup → jedna pozycja;
-// 2) ta sama jednostka → suma (min i max osobno);
-// 3) różne jednostki → obok siebie: „550 g + 2 łyżki” (bez przeliczania, 16.11);
-// 4) „do smaku” → tylko gdy nic innego;
-// 5) składniki z skipShopping (np. woda) pomijane.
-// Formatowanie liczb wspólne ze stroną przepisu (quantity.ts: ułamki, tercje); w sklepie sztuki w górę.
+// Shopping list: adding up a recipe's ingredients.
+// 1) the same ingredient (ingredientId) from different groups → one item;
+// 2) the same unit → a sum (min and max separately);
+// 3) different units → side by side: "550 g + 2 łyżki" (no conversion);
+// 4) "do smaku" → only when there's nothing else;
+// 5) ingredients with skipShopping (e.g. water) are skipped.
+// Number formatting is shared with the recipe page (quantity.ts: fractions, thirds); in the store, pieces round up.
 
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
@@ -16,13 +15,13 @@ export interface IRange {
     max: number;
 }
 
-/** Jedno wystąpienie składnika w przepisie (przeskalowane do wybranej liczby porcji). */
+/** One occurrence of an ingredient in the recipe (scaled to the chosen servings). */
 export interface IShopPart {
     group: string | null;
     unit: string;
     unitDef: IUnit | undefined;
     qty: IRange | null;
-    /** Gramy na 1 jednostkę; null = nie da się przeliczyć. */
+    /** Grams per 1 unit; null = can't convert. */
     gpu: IRange | null;
     optional: boolean;
     note: string | null;
@@ -40,13 +39,13 @@ export interface IShopItem {
     id: number;
     name: string;
     type: { code: string; label: string };
-    /** Tylko opcjonalne wystąpienia → sekcja „Opcjonalne”. */
+    /** Only optional occurrences → the "Opcjonalne" section. */
     optional: boolean;
-    /** Suma wymaganych wystąpień (dla pozycji tylko-opcjonalnych — opcjonalnych). */
+    /** Sum of the required occurrences (for optional-only items: of the optional ones). */
     sum: ShopSum | null;
     parts: IShopPart[];
     groups: string[];
-    /** Doprecyzowania („mielona”, „wędzony”) ze wszystkich wystąpień, bez powtórzeń, w kolejności przepisu. */
+    /** Details ("mielona", "wędzony") from all occurrences, deduplicated, in recipe order. */
     notes: string[];
 }
 
@@ -55,7 +54,7 @@ const GPU: Record<string, number> = { g: 1, kg: 1000 };
 const isCount = (unit: string, def?: IUnit) => isCountUnit(unit, def);
 const noQty = (p: { unitDef: IUnit | undefined }) => !!p.unitDef?.noQty;
 
-/** Liczba do listy: w sklepie sztuki zaokrąglone w górę (nie kupisz 2½ jajka). */
+/** Number for the list: pieces are rounded up in the store (you can't buy 2½ eggs). */
 function fmtN(v: number, unit: string, shop: boolean, def?: IUnit): string {
     const count = isCount(unit, def);
     if (shop && count) return String(Math.ceil(v - 0.001));
@@ -71,7 +70,7 @@ const uLabel = (b: { unit: string; unitDef: IUnit | undefined }, n: number) =>
     unitLabel(b.unitDef, b.unit || null, n);
 const join = (qty: string, unit: string) => [qty, unit].filter(Boolean).join(' ');
 
-/** Pozycja przepisu → część listy zakupów (ilość × ratio). */
+/** Recipe row → part of a shopping list item (quantity × ratio). */
 export function toPart(ing: RecipeIngredientDto, units: IUnit[], ratio: number): IShopPart {
     const unitDef = units.find((u) => u.id === ing.unitId);
     const q = parseQty(ing.quantity);
@@ -108,14 +107,14 @@ export function mergeParts(parts: IShopPart[]): ShopSum | null {
     const buckets = Object.values(byU);
     if (!buckets.length) return tasteOnly.length ? { taste: true, rest: [] } : null;
 
-    // Kolejność: największy udział w gramach na początku („550 g + 2 łyżki”), bez przeliczania (16.11).
+    // Order: biggest share in grams first ("550 g + 2 łyżki"), no conversion.
     const g = (b: IBucket) => (b.gpu ? (((b.min + b.max) / 2) * (b.gpu.min + b.gpu.max)) / 2 : -1);
     buckets.sort((a, b) => g(b) - g(a) || b.max - a.max);
     const [main, ...rest] = buckets;
     return { main: main!, rest };
 }
 
-/** Składniki przepisu → pozycje listy zakupów (kolejność pierwszego wystąpienia). */
+/** Recipe ingredients → shopping list items (in order of first occurrence). */
 export function buildShopping(
     lines: (RecipeIngredientDto & { factor?: number })[],
     units: IUnit[],
@@ -123,10 +122,10 @@ export function buildShopping(
 ): IShopItem[] {
     const by = new Map<number, { ing: RecipeIngredientDto; parts: IShopPart[] }>();
     for (const x of lines) {
-        if (x.skipShopping) continue; // np. woda — nie kupujemy
+        if (x.skipShopping) continue; // e.g. water: not bought
         const k = x.ingredientId;
         if (!by.has(k)) by.set(k, { ing: x, parts: [] });
-        // factor 0,5 = „pół na pół” z zamiennikiem (substitutes.effectiveLines)
+        // factor 0.5 = "half and half" with a substitute (substitutes.effectiveLines)
         by.get(k)!.parts.push(toPart(x, units, ratio * (x.factor ?? 1)));
     }
     const items: IShopItem[] = [];
@@ -166,8 +165,8 @@ export function sumText(s: ShopSum | null): string {
         .join(' + ');
 }
 
-/** „Do czego”: grupy przepisu, w których składnik występuje, bez ilości (16.11).
- *  Grupy, w których jest tylko opcjonalnie → „(opcjonalnie)”; przepis bez grup → ''. */
+/** "What for": the recipe groups the ingredient appears in, without quantities.
+ *  Groups where it's only optional → "(opcjonalnie)"; a recipe without groups → ''. */
 export function forText(it: IShopItem): string {
     const groupsOf = (optional: boolean) => [
         ...new Set(
