@@ -35,7 +35,6 @@ export interface IUsefulRecipe {
     id: number;
     title: string;
     image: string | null;
-    /** Names of the ingredients that link to it ("do: bułka do hamburgera"). */
     for: string[];
 }
 

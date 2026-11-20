@@ -3,7 +3,6 @@ import { computed } from 'vue';
 
 import type { IRecipeEquipment } from '@/data/dtos/recipe/RecipeDto';
 
-// Equipment needed for the recipe: a list to look over before cooking (no checking off).
 // Desktop, from 4 items: two columns (row-wise grid). Lines only BETWEEN items:
 // the last item in each column has no line (index + columns >= item count).
 // compact = a section of the "Sprzęt i składniki" sheet in cooking mode: header like an ingredient group, one column.
@@ -68,7 +67,6 @@ const headingId = computed(() => (props.compact ? 'h-equip-cook' : 'h-equip'));
     letter-spacing: -0.6px;
     margin-bottom: 8px;
 }
-/* cooking mode: header like an ingredient group header */
 .equip--compact .equip__title {
     font-family: var(--font-mono);
     font-size: 12px;

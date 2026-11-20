@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 
 import UModal from '@/components/UModal.vue';
 
-// Square crop: drag / arrow keys, zoom slider. Output: a 1200×1200 JPEG.
+// Output: a 1200×1200 JPEG.
 const props = defineProps<{ src: string }>();
 const emit = defineEmits<{ cancel: []; done: [blob: Blob] }>();
 

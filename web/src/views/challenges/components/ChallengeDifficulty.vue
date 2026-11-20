@@ -2,7 +2,6 @@
 import FlameIcon from '@/components/FlameIcon.vue';
 import { DIFFICULTIES, levelName } from '@/shared/utils/challenges';
 
-// Challenge difficulty 1–5: flames + a word label.
 // Icons are aria-hidden; screen readers get "trudność 3 z 5". Without the label (admin table): screen reader text only.
 withDefaults(defineProps<{ level: number; size?: number; label?: boolean; compact?: boolean }>(), {
     size: 16,

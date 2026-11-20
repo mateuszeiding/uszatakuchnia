@@ -3,8 +3,6 @@ import { computed } from 'vue';
 
 import { pluralPL } from '@/shared/utils/quantity';
 
-// Ingredient group header with a counter on the right ("8", after checking off "2/8").
-// The whole group checked → "✓" in the accent color and a dimmed header.
 const props = defineProps<{ label: string; count: number; done: number }>();
 
 const all = computed(() => props.count > 0 && props.done === props.count);

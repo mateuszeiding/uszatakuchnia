@@ -3,8 +3,6 @@ import { computed, useId } from 'vue';
 
 import type { IChallengeIngredient } from '@/data/dtos/challenge/ChallengeDto';
 
-// The challenge "Składniki" card: "Musisz użyć" and "Do dyspozycji" / "Możesz też użyć".
-// Headers like a recipe ingredient group header. From 8 items (desktop), 2 columns; lines only between items.
 const props = defineProps<{ ingredients: IChallengeIngredient[]; narrow: boolean }>();
 
 const id = useId();

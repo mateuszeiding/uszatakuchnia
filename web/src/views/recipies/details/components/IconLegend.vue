@@ -4,10 +4,9 @@ import { ref } from 'vue';
 import BookIcon from '@/components/BookIcon.vue';
 import SwapIcon from '@/components/SwapIcon.vue';
 
-// Ingredient icon legend, a separate card above the ingredients card. Only icons present in the recipe
-// (the parent doesn't render the card when there are none). Collapsible: the header is
-// a "Zwiń / Pokaż" button; collapsed, it shows the title and small icons. State on the device: uk:legend:collapsed
-// (expanded by default); the old uk:legend:hidden ("Ukryj") = collapsed, and that key is removed.
+// Only icons present in the recipe (the parent doesn't render the card when there are none).
+// Collapsed state on the device: uk:legend:collapsed (expanded by default);
+// the old uk:legend:hidden ("Ukryj") = collapsed, and that key is removed.
 defineProps<{ swap: boolean; link: boolean }>();
 
 const KEY = 'uk:legend:collapsed';

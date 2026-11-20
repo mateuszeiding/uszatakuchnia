@@ -5,15 +5,12 @@ import { useRouter } from 'vue-router';
 import ServingsStepper from '@/views/recipies/details/components/ServingsStepper.vue';
 import { servingsLabel } from '@/views/recipies/details/recipeView';
 
-// Shopping list header: back, Drukuj (desktop), title, servings counter, progress "n z m".
-// Sticky below the nav bar on a phone.
 const props = defineProps<{
     recipeId: number;
     recipeName: string;
     servings: number;
     done: number;
     total: number;
-    /** Loading: the same header, skeletons in place of the recipe name, servings and counter. */
     loading?: boolean;
 }>();
 const emit = defineEmits<{ servings: [n: number] }>();
@@ -140,7 +137,6 @@ function back(e: MouseEvent) {
 <style lang="scss" scoped>
 @use '@/scss/mixins/media' as m;
 
-/* recipe name and counter skeleton (loading) */
 .head__sk-name {
     display: inline-block;
     width: 180px;

@@ -47,7 +47,6 @@ const portionsLabel = computed(() => {
     return d >= 2 && d <= 4 && (t < 10 || t >= 20) ? 'porcje' : 'porcji';
 });
 
-// Mobile: a collapsible section, collapsed by default.
 const mq = window.matchMedia('(max-width: 900px)');
 const mobile = ref(mq.matches);
 const open = ref(!mq.matches);
@@ -303,8 +302,6 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
     border-color: color-mix(in srgb, var(--info) 40%, transparent);
     letter-spacing: 0;
 }
-/* phone, collapsible header: title + badge on the first line (the title doesn't wrap),
-   "~290 kcal/porcja" and the arrow on the second */
 .nutri__toggle {
     width: 100%;
     display: flex;

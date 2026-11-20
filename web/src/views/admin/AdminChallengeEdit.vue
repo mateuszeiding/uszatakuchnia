@@ -30,7 +30,6 @@ import {
 import { fetchDictionariesWithClient, invalidateDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IChallenge, IChallengeFormat } from '@/data/dtos/challenge/ChallengeDto';
 
-// Challenge edit page. Warns on leaving with unsaved changes (Anuluj, navigation, closing the tab).
 const props = defineProps<{ id?: string }>();
 const LIST = '/admin/challenges';
 
@@ -136,7 +135,6 @@ async function remove() {
     }
 }
 
-// ─── Leave warning ────────────────────────────────────────────
 const onBeforeUnload = (e: BeforeUnloadEvent) => {
     if (!dirty.value) return;
     e.preventDefault();
@@ -182,7 +180,6 @@ onBeforeRouteUpdate(guard);
         Nie ma takiego wyzwania.
         <RouterLink :to="LIST">Wróć do listy</RouterLink>
     </p>
-    <!-- loading: the same form, disabled, with empty fields; the spinner sits above it, outside the layout -->
     <form
         v-else
         class="edit"

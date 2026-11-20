@@ -2,7 +2,6 @@
 import UFieldError from '@/components/form/UFieldError.vue';
 import { fromMinutes, type TimeUnit, toMinutes } from '@/shared/utils/time';
 
-// Recipe time: "od" (required), "do" (optional, range) + min/h unit.
 // Switching the unit converts the entered values; toRequest() stores minutes.
 const time = defineModel<string>('time', { required: true });
 const timeMax = defineModel<string>('timeMax', { required: true });

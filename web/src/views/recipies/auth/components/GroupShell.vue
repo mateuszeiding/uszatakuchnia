@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-// Wrapper of an ingredient group / step stage: group name, list, drop slot at the end.
 defineProps<{
     label: string;
     index: number;

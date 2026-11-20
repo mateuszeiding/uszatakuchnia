@@ -4,8 +4,7 @@ import ShoppingRowSkeleton from './ShoppingRowSkeleton.vue';
 
 import USpinner from '@/components/USpinner.vue';
 
-// Shopping list loading: the real header (skeletons for name, servings, counter) and aisles with rows
-// of ShoppingRow height. The .shop container as in ShoppingList.vue. The spinner sits on the list, outside the layout.
+// Rows of ShoppingRow height; the .shop container as in ShoppingList.vue.
 defineProps<{ recipeId: number }>();
 const AISLES = [3, 2, 2];
 </script>

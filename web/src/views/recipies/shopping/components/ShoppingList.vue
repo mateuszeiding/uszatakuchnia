@@ -76,7 +76,6 @@ const aisles = computed(() => {
         .filter((a) => a.items.length);
 });
 
-// Print footer
 const skipped = computed(() => {
     const n = done.value.length;
     if (!n) return '';

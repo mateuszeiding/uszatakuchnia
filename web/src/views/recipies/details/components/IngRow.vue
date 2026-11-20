@@ -16,23 +16,19 @@ import type {
 } from '@/data/dtos/recipe/RecipeIngredientDto';
 import { optionName } from '@/shared/utils/substitutes';
 
-// Ingredient row with checking off (recipe panel and cooking mode).
 // After checking, only the quantity and name are struck through, so the note stays readable.
 // Icons (⇄ substitutes, book = recipe link) are SIBLINGS of the button (not inside it): clicking an icon doesn't check the row,
 // and Tab reaches them separately. The recipe link always opens a new tab, so the current recipe stays.
-// Chosen substitute: the row name = the substitute, with "zamiast: …" / "pół na pół" below.
 const props = defineProps<{
     ing: RecipeIngredientDto;
     amount: { qty: string; unit: string };
     /** Half the quantity: the "pół na pół" option in the substitute chooser. */
     half?: { qty: string; unit: string };
     checked: boolean;
-    /** Chosen substitute (null = main ingredient). */
     sub?: IRecipeSubstitute | null;
     allergenLabel?: (code: string) => string;
     /** Recipe allergens (for "zawiera: …" in the substitute chooser). */
     recipeAllergens?: string[];
-    /** Bigger rows (cooking mode). */
     roomy?: boolean;
 }>();
 const emit = defineEmits<{ toggle: []; sub: [choice: ISubChoice | null] }>();

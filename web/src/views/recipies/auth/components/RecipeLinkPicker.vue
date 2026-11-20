@@ -5,8 +5,7 @@ import type { ILinkedRef } from '../recipeForm';
 
 import { mainDish, type RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 
-// Recipe picker for an ingredient: combobox with title search (also without Polish characters),
-// excluding the current recipe, drafts last with a label. ↑ ↓ to pick, Enter confirms, Esc closes.
+// Search by title (also without Polish characters), excluding the current recipe; drafts last with a label.
 const props = defineProps<{
     id: string;
     ingredientName: string;

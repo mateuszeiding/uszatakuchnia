@@ -4,8 +4,6 @@ import { computed } from 'vue';
 import QtyText from '@/components/QtyText.vue';
 import { forText, type IShopItem, sumText } from '@/shared/utils/shoppingList';
 
-// Shopping list item: check, name, details ("mielona") + "do: …" (recipe groups), sum.
-// A checked item stays in place, struck through and dimmed.
 const props = defineProps<{ item: IShopItem; checked: boolean }>();
 const emit = defineEmits<{ toggle: [] }>();
 
@@ -137,7 +135,6 @@ const forGroups = computed(() => forText(props.item));
     text-decoration: line-through;
 }
 
-/* phone in the store: bigger rows and checkbox */
 @media (max-width: 900px) {
     .srow__check {
         grid-template-columns: 24px minmax(0, 1fr) auto;

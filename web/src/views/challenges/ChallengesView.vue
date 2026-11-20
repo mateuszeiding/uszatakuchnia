@@ -13,8 +13,6 @@ import { fetchChallengesWithClient } from '@/data/api/challenges/fetch';
 import type { IChallenge } from '@/data/dtos/challenge/ChallengeDto';
 import { losParam, parseLos, plural } from '@/shared/utils/challenges';
 
-// Challenge list: desktop, a column with "Losuj" (sticky) + a 2-column grid;
-// phone, "Losuj" above the list, 1 column. Newest first. While loading, the same layout with skeletons.
 const route = useRoute();
 const router = useRouter();
 const qc = useQueryClient();
@@ -93,7 +91,6 @@ watch(loading, (l) => {
                 class="ch-aside"
                 :inert="loading"
             >
-                <!-- the card is in place while loading, just disabled -->
                 <ChallengeRandomizer
                     v-model="sel"
                     :items="items"

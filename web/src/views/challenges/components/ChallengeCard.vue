@@ -8,7 +8,7 @@ import type { IChallenge } from '@/data/dtos/challenge/ChallengeDto';
 import { paragraphs, timeLimitText } from '@/shared/utils/challenges';
 
 // Challenge card: <li> = a link (the whole card) + a sibling "done" button in the top right corner
-// (a separate target for the mouse and Tab). A done card stays in place, marked "✓ zrobione".
+// (a separate target for the mouse and Tab).
 // Title and description reserve 2 lines each, so all cards have the same height (the skeleton has the same layout).
 const props = defineProps<{ challenge: IChallenge; done: boolean }>();
 defineEmits<{ toggle: [] }>();

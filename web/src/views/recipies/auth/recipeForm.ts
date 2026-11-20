@@ -24,7 +24,6 @@ export interface IIngItem {
     unitId: number | null;
     note: string;
     optional: boolean;
-    /** Link to the recipe for this ingredient; null = none. */
     linked: ILinkedRef | null;
     /** Substitutes ("zamiast" or "pół na pół") in the order added. */
     substitutes: ISubItem[];
@@ -51,7 +50,6 @@ export interface IEquipItem {
     id: number;
     /** 0 = not picked from the dictionary yet (row skipped on save). */
     equipmentId: number;
-    /** Text in the autosuggest field. */
     name: string;
     spec: string;
     optional: boolean;
@@ -68,7 +66,6 @@ export interface IRecipeForm {
     tagline: string;
     tip: string;
     photoUrl: string | null;
-    /** Selected values per axis code (dish, base, cuisine, diet, practical, …). */
     taxonomy: Record<string, number[]>;
     difficulty: number | null;
     /** "od" / "do" time as text in the timeUnit unit (e.g. "2,5" h). */

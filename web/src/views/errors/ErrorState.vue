@@ -4,12 +4,10 @@ import { nextTick, onMounted, ref } from 'vue';
 import { useNoindex } from '@/composables/useNoindex';
 import { setTitle } from '@/shared/utils/title';
 
-// Error page: eyebrow, h1, description, buttons, an optional section below.
 // Tab title = the heading, noindex, focus on h1 after load.
 const props = defineProps<{
     kicker: string;
     title: string;
-    /** Eyebrow in --prep (connection error), otherwise --ink-muted. */
     warn?: boolean;
 }>();
 

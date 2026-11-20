@@ -9,19 +9,15 @@ import type {
 } from '@/data/dtos/recipe/RecipeIngredientDto';
 import { optionAllergens, optionName } from '@/shared/utils/substitutes';
 
-// Substitute chooser: on desktop a popover by the row (extends over the steps column); ≤ 900 px a bottom sheet.
-// Radio: the main ingredient ("w przepisie") + substitutes; the choice applies immediately. Esc / click outside closes,
-// focus returns to the icon. Teleport: the ingredient list scrolls inside the panel (it must not clip the popover).
+// Teleported: the ingredient list scrolls inside the panel and must not clip the popover.
 const props = defineProps<{
     ing: RecipeIngredientDto;
     selected: IRecipeSubstitute | null;
     amount: { qty: string; unit: string };
-    /** Half the quantity ("pół na pół" mix). */
     half: { qty: string; unit: string };
     allergenLabel: (code: string) => string;
     /** Whole-recipe allergens: "zawiera: X" only when the option adds an allergen the recipe doesn't have. */
     recipeAllergens?: string[];
-    /** The row the popover is attached to. */
     anchor: HTMLElement | null;
     sheet: boolean;
 }>();

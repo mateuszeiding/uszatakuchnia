@@ -81,7 +81,6 @@ const sub = (r: RecipeBaseDto) =>
 </template>
 
 <style scoped>
-/* the whole row is a link; hover like the cards: border + title in the accent color, no movement */
 .latest {
     margin-top: 56px;
 }

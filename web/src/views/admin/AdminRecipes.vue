@@ -14,7 +14,6 @@ import {
     STATUS_LABEL,
 } from '@/data/dtos/recipe/RecipeDto';
 
-// The admin's only recipe list: status tabs, preview / edit / delete.
 const qc = useQueryClient();
 const recipes = ref<RecipeBaseDto[]>([]);
 const loading = ref(true);
@@ -253,8 +252,6 @@ async function remove(r: RecipeBaseDto) {
     height: 40px;
     background: var(--bg-alt);
 }
-/* loading: the table right away, skeleton rows on the real cell classes (same height),
-   spinner above the table, outside the layout */
 .tbl-wrap {
     position: relative;
 }

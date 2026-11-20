@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-// Admin panel (desktop): module nav on the left, the module in <RouterView>.
 const MODULES = [
     { to: '/admin/recipes', label: 'Przepisy' },
     { to: '/admin/ingredients', label: 'Składniki' },

@@ -9,7 +9,7 @@ import type { IConversion } from '@/data/dtos/ingredients/IngredientDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 import { fmtGrams } from '@/shared/utils/nutrition';
 
-// How many grams 1 unit of the ingredient weighs. g / kg are computed automatically, "do smaku" has no conversion.
+// g / kg are computed automatically; "do smaku" has no conversion.
 const props = defineProps<{
     units: IUnit[];
     /** Conversions inherited from the parent ingredient (read-only). */

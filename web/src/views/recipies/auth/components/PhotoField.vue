@@ -7,7 +7,7 @@ import UFieldError from '@/components/form/UFieldError.vue';
 import { API } from '@/data/api/API';
 import { uploadPhoto } from '@/data/api/photos/fetch';
 
-// 1:1 photo: file validation → crop → upload with a progress bar. v-model = the API URL.
+// v-model = the photo's API URL.
 const photo = defineModel<string | null>({ required: true });
 
 const MAX_MB = 10;

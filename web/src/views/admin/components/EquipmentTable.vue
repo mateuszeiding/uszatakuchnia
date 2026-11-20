@@ -9,7 +9,6 @@ import { showToast } from '@/composables/useToast';
 import { createEquipment, deleteEquipment, updateEquipment } from '@/data/api/taxonomy/fetch';
 import type { IEquipment } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Equipment dictionary: add, rename inline, delete (in use → replace or remove from recipes).
 const props = defineProps<{ items: IEquipment[] }>();
 const emit = defineEmits<{ changed: [] }>();
 

@@ -84,7 +84,6 @@ function removeItem(g: IGroup<IIngItem>, it: IIngItem) {
     g.items.splice(g.items.indexOf(it), 1);
 }
 
-// ─── Recipe link ─────────────────────────────────────────────
 const picking = ref<number | null>(null);
 
 /** After the picker closes, focus returns to "Przepis…" / "Zmień". */
@@ -109,7 +108,6 @@ const togglePicker = (it: IIngItem) => {
     picking.value = picking.value === it.id ? null : it.id;
 };
 
-// ─── Substitutes ─────────────────────────────────────────────
 const subPicking = ref<number | null>(null);
 
 async function focusSubBtn(it: IIngItem) {
@@ -506,7 +504,6 @@ const subLabel = (s: ISubItem) => (s.mix ? `pół na pół z: ${s.name}` : s.nam
     color: var(--accent);
     border-color: var(--accent);
 }
-/* lines below the row: substitutes and the set link, label in a 96 px column */
 .ing-row__lines {
     padding-left: 28px;
     display: grid;

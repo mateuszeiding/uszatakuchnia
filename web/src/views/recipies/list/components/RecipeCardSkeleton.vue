@@ -1,6 +1,5 @@
 <template>
-    <!-- The same layout as RecipeCard without a photo (recipes have no photos, so no frame), body 16 px / gap 10 px,
-         dish type badge (the real .badge class, same height), a 2-line title, a metadata line. -->
+    <!-- The same layout as RecipeCard (the real .badge class keeps the badge height). -->
     <div
         class="skc"
         aria-hidden="true"

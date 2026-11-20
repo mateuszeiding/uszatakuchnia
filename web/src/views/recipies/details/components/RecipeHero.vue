@@ -11,9 +11,9 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import { avg, fmt, type IRecipeNutrition, nf } from '@/shared/utils/nutrition';
 import { formatTime } from '@/shared/utils/time';
 
-// recipe null = loading: the same .hero (no photo, recipes don't have photos) with skeletons in place of the content.
-// A recipe without a photo: no placeholder frame, the hero is a single column,
-// and on a phone a 38 px title, so the ingredients start on the first screen.
+// recipe null = loading: skeletons in place of the content.
+// Without a photo the hero is one column; on a phone the title is 38 px,
+// so the ingredients start on the first screen.
 const props = defineProps<{
     recipe: RecipeDto | null;
     servings: number;
@@ -335,7 +335,6 @@ function scrollToStep(no: number) {
     border: 1.5px solid var(--rule-strong);
 }
 
-/* no photo: one column */
 .hero--text {
     display: block;
     max-width: 760px;
@@ -355,7 +354,6 @@ function scrollToStep(no: number) {
     margin-top: 28px;
 }
 
-/* skeleton: the same classes as the content, .sk fills in place of text */
 .hero__loading {
     display: flex;
     align-items: center;

@@ -14,7 +14,6 @@ import {
 import type { IChallengeFormat } from '@/data/dtos/challenge/ChallengeDto';
 import { plural } from '@/shared/utils/challenges';
 
-// Classification → Challenge formats: add, rename inline, delete (in use → move).
 const props = defineProps<{ items: IChallengeFormat[] }>();
 const emit = defineEmits<{ changed: [] }>();
 

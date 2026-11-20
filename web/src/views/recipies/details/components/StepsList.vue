@@ -9,7 +9,7 @@ import BulbIcon from '@/components/BulbIcon.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 
 const props = defineProps<{
-    /** null = loading: the same header and step cards with text skeletons. */
+    /** null = loading. */
     recipe: RecipeDto | null;
     done: number[];
     canReset: boolean;

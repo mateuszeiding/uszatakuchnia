@@ -158,7 +158,6 @@ const kcal = computed(() => {
     height: 100%;
     object-fit: cover;
 }
-/* "wymaga przygotowania" in the card body */
 .r-card__prep {
     display: inline-flex;
     align-items: center;

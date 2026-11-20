@@ -11,8 +11,7 @@ import { showToast } from '@/composables/useToast';
 import { createEquipment } from '@/data/api/taxonomy/fetch';
 import type { IEquipment } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// The "Sprzęt" section: handle (drag + ↑ ↓), equipment with dictionary suggestions, details,
-// "Opcjonalny" (aria-pressed), ✕ without confirmation (nothing is saved until "Zapisz"). An empty row is skipped.
+// ✕ deletes without confirmation (nothing is saved until "Zapisz"); an empty row is skipped.
 const items = defineModel<IEquipItem[]>({ required: true });
 const props = defineProps<{
     equipment: IEquipment[];

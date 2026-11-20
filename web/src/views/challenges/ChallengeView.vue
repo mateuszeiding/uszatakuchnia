@@ -23,9 +23,6 @@ import {
 import { setTitle } from '@/shared/utils/title';
 
 // Challenge page. Coming from a random pick (?los=), the "Wylosowane" bar replaces "← Wszystkie wyzwania".
-// Desktop: content + the sticky "Składniki" card on the right; without ingredients, a single column.
-// The "Uwagi" block sits below the metadata (before "Oznacz jako zrobione" and the description).
-// Phone: format, title, metadata, notes, description, ingredients, full-width "Oznacz jako zrobione", source.
 const props = defineProps<{ id: string }>();
 
 const route = useRoute();
@@ -51,7 +48,6 @@ async function load(id: number) {
         challenge.value = await fetchChallengeWithClient(qc, id);
         setTitle(challenge.value.title);
     } catch (e) {
-        // unknown challenge → list
         if ((e as { response?: { status?: number } }).response?.status === 404) {
             router.replace('/challenges');
             return;

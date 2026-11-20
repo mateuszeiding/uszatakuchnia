@@ -13,7 +13,6 @@ import { invalidateRecipes } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient, invalidateDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Classification: axes (dish type, base, cuisine, diets, practical, …) + units + equipment + challenge formats.
 const qc = useQueryClient();
 const dicts = ref<IDictionaries>();
 const tab = ref<string>('dish');
@@ -51,7 +50,6 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
 
 <template>
     <h1 class="admin-title">Klasyfikacja</h1>
-    <!-- loading: tabs, description and table in the same places (skeletons), spinner above the table -->
     <template v-if="!dicts">
         <div
             class="tabs tax-tabs"

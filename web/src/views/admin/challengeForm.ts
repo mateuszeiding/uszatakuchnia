@@ -53,7 +53,6 @@ export function toPayload(f: IChallengeForm): IUpsertChallengeRequest {
         difficulty: f.difficulty ?? 0,
         source: f.source.trim() || null,
         cautions: cautionTexts(f.cautions),
-        // empty rows skipped
         ingredients: filledRows(f).map((r) => ({ name: r.name.trim(), required: r.required })),
     };
 }

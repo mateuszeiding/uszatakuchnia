@@ -41,11 +41,9 @@ function onUncheckAll() {
 }
 const cooking = ref(false);
 
-// Icons present in the recipe → the "Ikony przy składnikach" card.
 const hasSwap = computed(() => props.recipe.ingredients.some((i) => i.substitutes.length));
 const hasLink = computed(() => props.recipe.ingredients.some((i) => publicLink(i)));
 
-// Chosen variant (substitutes): macros and the sentence in the card.
 const subsActive = computed(
     () => activeSubs(props.recipe.ingredients, progress.value.subs).size > 0
 );
@@ -63,8 +61,6 @@ const swapNote = computed(() =>
         :nutrition="nutrition"
         :servings="progress.servings"
     />
-    <!-- Desktop: on the left the icons card (scrolls away) and the ingredients panel (sticky); on the right Sprzęt → Kroki → Wartości odżywcze.
-         Mobile: icons → ingredients → macros → equipment → steps. -->
     <div class="recipe-grid">
         <div class="recipe-grid__side">
             <IconLegend

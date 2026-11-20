@@ -185,7 +185,6 @@ async function remove(c: IChallenge) {
     height: 40px;
     background: var(--bg-alt);
 }
-/* loading: the table right away, skeleton rows in the same cells, spinner above the table */
 .tbl-wrap {
     position: relative;
 }

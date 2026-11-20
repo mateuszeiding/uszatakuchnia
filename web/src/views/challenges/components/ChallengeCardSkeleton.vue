@@ -1,6 +1,5 @@
 <template>
-    <!-- The same layout as ChallengeCard: badge (the real .badge-attr class, same height),
-         title and description 2 lines each, footer with a border; the "done" circle in the corner. -->
+    <!-- The same layout as ChallengeCard (the real .badge-attr class keeps the badge height). -->
     <div
         class="skc"
         aria-hidden="true"

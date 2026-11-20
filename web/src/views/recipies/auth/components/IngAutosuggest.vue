@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 
-// Ingredient combobox: ↑ ↓ to pick, Enter confirms, Esc closes. The last option is "Dodaj do bazy".
 const props = defineProps<{
     id: string;
     name: string;

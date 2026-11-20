@@ -6,7 +6,6 @@ import { blankIngredient, type IChallengeIngRow } from '../challengeForm';
 import UFieldError from '@/components/form/UFieldError.vue';
 import { useListDnd } from '@/composables/useListDnd';
 
-// Challenge ingredients: row = handle (drag, ↑ ↓), text, "Obowiązkowy" (aria-pressed), ✕.
 // Plain text, not linked to the ingredient database; empty rows are skipped on save, deleting a row doesn't ask.
 defineProps<{ errors: Record<string, string> }>();
 const rows = defineModel<IChallengeIngRow[]>({ required: true });

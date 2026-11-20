@@ -36,7 +36,6 @@ import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import { LOADING_DICTIONARIES } from '@/data/dtos/taxonomy/loadingDictionaries';
 import { NUTRIENTS } from '@/shared/utils/nutrition';
 
-// Ingredient edit as a separate page: basics, macros per 100 g (with inheritance), unit conversions.
 const props = defineProps<{ id?: string }>();
 const LIST = '/admin/ingredients';
 
@@ -145,7 +144,6 @@ function cancel() {
     router.push(LIST);
 }
 
-// ─── Leave warning ────────────────────────────────────────────
 const onBeforeUnload = (e: BeforeUnloadEvent) => {
     if (!dirty.value) return;
     e.preventDefault();
@@ -195,8 +193,6 @@ onBeforeRouteUpdate(guard);
         Nie ma takiego składnika.
         <RouterLink :to="LIST">Wróć do listy</RouterLink>
     </p>
-    <!-- loading: the same form (sections, fields, macro table, 14 allergens), disabled,
-         with empty fields and the loaded layout; the spinner sits above the form, outside the layout -->
     <form
         v-else-if="dicts || loading"
         class="edit"
@@ -347,7 +343,6 @@ onBeforeRouteUpdate(guard);
     justify-content: center;
     pointer-events: none;
 }
-/* loading: allergen chips without labels (shape only) */
 .edit.is-loading :deep(.chip) {
     color: transparent;
 }

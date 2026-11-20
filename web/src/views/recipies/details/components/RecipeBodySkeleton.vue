@@ -3,8 +3,7 @@ import IngredientsPanel from './IngredientsPanel.vue';
 import RecipeHero from './RecipeHero.vue';
 import StepsList from './StepsList.vue';
 
-// Recipe page loading: the same components and grid as RecipeBody, in skeleton mode
-// (recipe = null). The spinner with "ładowanie przepisu…" sits on the photo skeleton and takes no space.
+// The same components and grid as RecipeBody, in skeleton mode (recipe = null).
 </script>
 
 <template>

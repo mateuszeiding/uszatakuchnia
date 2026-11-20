@@ -24,7 +24,6 @@ function togglePrep(s: IStepItem) {
     if (!s.prep) s.prepLead = '';
 }
 
-/** A new empty hint row, focused. */
 async function addHint(s: IStepItem) {
     s.hints.push('');
     await nextTick();

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Step hint rows in the form: icon, field, ✕ (no confirmation: nothing is saved until "Zapisz").
+// ✕ deletes without confirmation: nothing is saved until "Zapisz".
 import { MAX_HINT_LEN } from '../recipeForm';
 
 import BulbIcon from '@/components/BulbIcon.vue';
@@ -65,7 +65,6 @@ const hints = defineModel<string[]>('hints', { required: true });
 .hint-row .row-icon-btn {
     margin-top: 5px;
 }
-/* one line like .input (40 px), then grows with the content */
 .hint-row__input {
     min-height: 40px;
     font-size: 13px;

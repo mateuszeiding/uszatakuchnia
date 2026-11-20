@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-// Challenge page loading: the same layout as ChallengeView (format chip, title, metadata, button,
-// paragraphs; the "Składniki" card on the right). On a phone the card goes below the description, the button full width.
+// The same layout as ChallengeView.
 defineProps<{ narrow: boolean }>();
 </script>
 

@@ -9,7 +9,7 @@ import { showToast } from '@/composables/useToast';
 import { createUnit, deleteUnit, updateUnit } from '@/data/api/taxonomy/fetch';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Units: name + inflected forms "1, 2–4, 5+" (empty for abbreviations like g, ml).
+// Inflected forms "1, 2–4, 5+" stay empty for abbreviations like g, ml.
 const props = defineProps<{ units: IUnit[] }>();
 const emit = defineEmits<{ changed: [] }>();
 

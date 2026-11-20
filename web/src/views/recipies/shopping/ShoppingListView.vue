@@ -13,7 +13,6 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import { setTitle } from '@/shared/utils/title';
 
-// /recipes/:id/zakupy: the recipe's shopping list (phone in the store, desktop, print).
 const props = defineProps<{ id: string | number }>();
 
 const recipe = ref<RecipeDto>();
@@ -111,7 +110,6 @@ const onSync = (q: Record<string, string>) => router.replace({ query: { ...route
     font-size: 14px;
 }
 
-/* print: no nav bar, black and white regardless of the theme */
 @include m.print {
     :global(.topbar) {
         display: none;

@@ -94,7 +94,6 @@ onMounted(async () => {
     loading.value = false;
 });
 
-// ─── Validation ──────────────────────────────────────────────
 const validation = computed(() => validate(form.value, dicts.value));
 const errors = computed<FormErrors>(() => {
     if (showErrors.value === 'full') return validation.value.errors;
@@ -125,8 +124,6 @@ async function scrollToFirstError() {
     );
 }
 
-// ─── Save ────────────────────────────────────────────────────
-/** Resolves true when saved. */
 async function submit(
     kind: Exclude<BusyAction, null>,
     nextStatus: RecipeStatus,
@@ -248,7 +245,6 @@ async function removeRecipe() {
     router.push(PANEL);
 }
 
-// ─── Leave warning ────────────────────────────────────────────
 const onBeforeUnload = (e: BeforeUnloadEvent) => {
     if (!dirty.value) return;
     e.preventDefault();
@@ -269,7 +265,6 @@ onBeforeRouteLeave((to) => {
     });
 });
 
-// ─── Ingredient not in the database ──────────────────────────
 function onIngredientCreated(ing: IngredientDto) {
     ingredients.value = [...ingredients.value, ing];
     if (addIng.value) {
@@ -281,12 +276,10 @@ function onIngredientCreated(ing: IngredientDto) {
     addIng.value = null;
 }
 
-// ─── Equipment added to the dictionary from the form ─────────
 function onEquipmentCreated(e: IEquipment) {
     if (dicts.value) dicts.value = { ...dicts.value, equipment: [...dicts.value.equipment, e] };
 }
 
-// ─── Sidebar ──────────────────────────────────────────────────
 // While loading, the axes come from the skeleton (same value counts), so the form has its final layout.
 const axesView = computed(() => (dicts.value ?? LOADING_DICTIONARIES).axes);
 const classificationAxes = computed(() =>
@@ -355,8 +348,6 @@ const prepSummary = computed(() => {
             </div>
         </header>
 
-        <!-- loading: the same form, disabled (empty fields, axis chip skeletons);
-             the spinner sits above the form, outside the layout -->
         <div
             class="upsert-body"
             :class="{ 'is-loading': loading }"
@@ -715,7 +706,6 @@ const prepSummary = computed(() => {
     justify-content: center;
     pointer-events: none;
 }
-/* loading: axis chips without labels (shape only) */
 .upsert-body.is-loading :deep(.chip) {
     color: transparent;
 }

@@ -7,10 +7,8 @@ import { type NutrientKey, NUTRIENTS } from '@/shared/utils/nutrition';
 // Note above the macro table; depends on the state: sub-ingredients × number of own values.
 const props = defineProps<{
     children: IngredientDto[];
-    /** Values with own data (a filled row). */
     own: NutrientKey[];
     name: string;
-    /** Base for links to sub-ingredients, e.g. /admin/ingredients. */
     linkBase: string;
 }>();
 

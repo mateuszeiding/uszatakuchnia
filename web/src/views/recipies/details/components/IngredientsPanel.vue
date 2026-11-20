@@ -21,7 +21,7 @@ import {
 } from '@/shared/utils/substitutes';
 
 const props = defineProps<{
-    /** null = loading: header and servings counter in the same place, skeleton rows. */
+    /** null = loading. */
     recipe: RecipeDto | null;
     dicts: IDictionaries | undefined;
     servings: number;
@@ -296,7 +296,6 @@ onBeforeUnmount(() => ro?.disconnect());
     letter-spacing: 0;
     color: var(--ink-muted);
 }
-/* only when a substitute is chosen: one line below the servings counter + reset */
 .ing-panel__variant {
     margin-top: -4px;
     display: flex;
@@ -357,7 +356,6 @@ onBeforeUnmount(() => ro?.disconnect());
     background: linear-gradient(to bottom, transparent, var(--bg-alt));
     pointer-events: none;
 }
-/* the group header sticks to the top of the scrolling list */
 .ing-panel__ghead {
     position: sticky;
     top: 0;

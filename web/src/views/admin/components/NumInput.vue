@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-// Number field for admin tables: unit inside the field, an inherited value shown as a ghost.
 defineProps<{
     id: string;
     /** Screen reader label (e.g. "Białko, min"); visually it's the row and column headers. */
@@ -7,7 +6,6 @@ defineProps<{
     unit: string;
     invalid?: boolean;
     describedby?: string;
-    /** Hint shown when the field is empty (the inherited value). */
     ghost?: string | null;
 }>();
 const model = defineModel<string>({ required: true });

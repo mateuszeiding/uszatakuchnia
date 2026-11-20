@@ -15,17 +15,12 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import { activeSubs, chosenSub, type SubsMap } from '@/shared/utils/substitutes';
 
-// Cooking mode → "Sprzęt i składniki".
-// ≤ 900 px: a bottom sheet (handle, header + ✕); desktop: a panel on the right.
-// Content: servings counter (shared with the page), "Z zamiennikami: n · Przywróć przepis" only with a choice, equipment,
-// ingredient groups. "Wróć do kroku N" sticks to the bottom. Closed by: ✕, "Wróć…", the backdrop, Esc, dragging the handle down (> 80 px).
 const props = defineProps<{
     recipe: RecipeDto;
     dicts: IDictionaries | undefined;
     servings: number;
     checkedIng: number[];
     subs: SubsMap;
-    /** Step number the bottom button returns to. */
     stepNo: number;
 }>();
 const emit = defineEmits<{
@@ -50,7 +45,6 @@ const narrow = useNarrow();
 const root = ref<HTMLElement>();
 const heading = ref<HTMLElement>();
 
-// ─── dragging the handle down (phone) ───
 const drag = ref(0);
 let startY: number | null = null;
 function onDragStart(e: PointerEvent) {
@@ -73,7 +67,6 @@ function onDragEnd() {
     drag.value = 0;
 }
 
-// ─── keyboard: Esc closes, Tab stays in the sheet ───
 function trap(e: KeyboardEvent) {
     const list = [
         ...(root.value?.querySelectorAll<HTMLElement>(
@@ -251,7 +244,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
     z-index: calc(var(--z-modal) - 1);
     background: rgba(10, 10, 15, 0.5);
 }
-/* desktop: a panel on the right */
 .cis {
     position: fixed;
     top: 0;

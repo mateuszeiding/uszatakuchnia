@@ -7,7 +7,6 @@ import UModal from '@/components/UModal.vue';
 // For a required axis (dish type) moving is mandatory.
 const props = defineProps<{
     label: string;
-    /** How many recipes / ingredients use the value. */
     count: number;
     countNoun: string;
     others: { id: number; label: string }[];

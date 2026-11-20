@@ -1,4 +1,3 @@
-// Recipe list filters: state ↔ URL query (for sharing by link), recipe matching.
 // Classification axes are filtered generically: param = axis code, values = comma-separated ids.
 // Axis mode from the database (filterMode): 'and' = the recipe has all of them (diets), 'or' = any of them.
 
@@ -156,7 +155,6 @@ function passes(r: RecipeBaseDto, f: IListFilters, axes: ITaxonomyAxis[]): boole
     return true;
 }
 
-// ─── Facets ──────────────────────────────────────────────────
 // The panel shows only values that at least one published recipe has (on the whole list, so nothing jumps),
 // with a counter: how many recipes there would be after adding the value to the current choice (with the search).
 // A selected value: how many of the current results have it. 0 and not selected → dimmed, disabled, in its place.
@@ -182,7 +180,6 @@ function withValue(f: IListFilters, dim: FacetDim, v: number): IListFilters {
     return { ...f, difficulty: v };
 }
 
-/** Whether the value has at least one recipe in the list (regardless of the choice). */
 export const facetPresent = (list: RecipeBaseDto[], dim: FacetDim, v: number) =>
     list.some((r) => hasValue(r, dim, v));
 

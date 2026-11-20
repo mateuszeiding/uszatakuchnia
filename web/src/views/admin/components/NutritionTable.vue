@@ -6,7 +6,7 @@ import NumInput from './NumInput.vue';
 import MacroValue from '@/components/MacroValue.vue';
 import { type Macros, nf, type NutrientKey, NUTRIENTS, rnd } from '@/shared/utils/nutrition';
 
-// Macros per 100 g: 5 rows × min / max. An empty row shows the inherited values.
+// An empty row shows the inherited values.
 const props = defineProps<{
     /** Values from sub-ingredients when the ingredient has children; null = no inheritance. */
     inherited: Macros | null;

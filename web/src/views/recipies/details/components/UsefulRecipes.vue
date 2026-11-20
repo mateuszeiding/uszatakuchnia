@@ -5,10 +5,7 @@ import { usefulRecipes } from '../recipeView';
 
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 
-// "Przydatne przepisy": published recipes that the ingredients link to.
-// Card = one link: 1:1 thumbnail, title (max 2 lines), arrow. No "do: …" (it repeated the title;
-// the row icon tells which ingredient).
-// Desktop: a 3-column grid; ≤ 900 px: a list separated by lines. No links → no block.
+// No "do: …" on the card: it repeated the title, and the row icon tells which ingredient.
 // A card opens a new tab.
 const props = defineProps<{ ingredients: RecipeIngredientDto[] }>();
 const items = computed(() => usefulRecipes(props.ingredients));

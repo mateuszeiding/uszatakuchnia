@@ -13,11 +13,9 @@ import {
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Filters panel (sidebar on desktop, bottom sheet content on mobile).
 // Facets: only values that at least one published recipe has; a group without values
 // disappears; each value has a counter of how many recipes there would be after adding it. 0 and not selected → disabled,
 // dimmed, in its place. "Bez przygotowania wcześniej" only when some recipe requires prep.
-// loading: the dictionaries or the list are still loading; section skeletons use the same classes.
 const props = defineProps<{
     axes: ITaxonomyAxis[];
     /** Published recipes (the whole list, unfiltered): the source of facets and counters. */
@@ -290,7 +288,6 @@ input:focus-visible + .filters__track {
     flex-wrap: wrap;
     gap: 6px;
 }
-/* counter next to a value; accent color when selected */
 .filters__count {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -300,7 +297,6 @@ input:focus-visible + .filters__track {
 .chip.is-active .filters__count {
     color: inherit;
 }
-/* 0 and not selected: dimmed, disabled, in its place */
 .chip:disabled {
     opacity: 0.55;
     color: var(--ink-faint);

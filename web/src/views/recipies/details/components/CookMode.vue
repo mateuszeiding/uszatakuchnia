@@ -13,7 +13,6 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import type { SubsMap } from '@/shared/utils/substitutes';
 
-// Cooking mode: one step at a time, big Wstecz / Dalej, ← → on the keyboard, the screen stays on.
 const props = defineProps<{
     recipe: RecipeDto;
     dicts: IDictionaries | undefined;
@@ -165,7 +164,6 @@ onBeforeUnmount(() => {
                     class="cook__content"
                     aria-live="polite"
                 >
-                    <!-- notes only on the step 1 screen, above the step text -->
                     <CautionsBlock
                         v-if="i === 0"
                         class="cook__cautions"
