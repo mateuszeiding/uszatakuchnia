@@ -4,6 +4,8 @@ import { ref, watch } from 'vue';
 
 import RecipeBody from './components/RecipeBody.vue';
 import RecipeBodySkeleton from './components/RecipeBodySkeleton.vue';
+import RecipeLoadError from './components/RecipeLoadError.vue';
+import RecipeMissing from './components/RecipeMissing.vue';
 
 import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
@@ -16,24 +18,41 @@ const props = defineProps<{ id: string | number }>();
 const recipe = ref<RecipeDto>();
 const dicts = ref<IDictionaries>();
 const loading = ref(true);
-const failed = ref(false);
+/** missing = API 404 (nie ma, usunięty, szkic dla nie-właściciela); error = sieć / 5xx / timeout. */
+const failed = ref<'missing' | 'error' | null>(null);
+const retrying = ref(false);
 
 const qc = useQueryClient();
 
-async function load(id: number) {
-    loading.value = true;
-    failed.value = false;
+const isNotFound = (e: unknown) =>
+    (e as { response?: { status?: number } } | null)?.response?.status === 404;
+
+async function fetchAll(id: number) {
     try {
         [recipe.value, dicts.value] = await Promise.all([
             fetchRecipesWithClient(qc, id),
             fetchDictionariesWithClient(qc),
         ]);
+        failed.value = null;
         setTitle(recipe.value.name);
-    } catch {
-        failed.value = true;
-    } finally {
-        loading.value = false;
+    } catch (e) {
+        recipe.value = undefined;
+        failed.value = isNotFound(e) ? 'missing' : 'error';
     }
+}
+
+async function load(id: number) {
+    loading.value = true;
+    failed.value = null;
+    await fetchAll(id);
+    loading.value = false;
+}
+
+/** „Spróbuj ponownie” — w miejscu, strona błędu zostaje do odpowiedzi („Wczytuję…”). */
+async function retry() {
+    retrying.value = true;
+    await fetchAll(Number(props.id));
+    retrying.value = false;
 }
 
 watch(
@@ -44,7 +63,16 @@ watch(
 </script>
 
 <template>
-    <div class="container recipe-page">
+    <RecipeMissing v-if="failed === 'missing'" />
+    <RecipeLoadError
+        v-else-if="failed === 'error'"
+        :retrying="retrying"
+        @retry="retry"
+    />
+    <div
+        v-else
+        class="container recipe-page"
+    >
         <RouterLink
             to="/recipes"
             class="recipe-page__back"
@@ -52,13 +80,7 @@ watch(
             ← Wszystkie przepisy
         </RouterLink>
 
-        <RecipeBodySkeleton v-if="loading" />
-        <div
-            v-else-if="failed || !recipe"
-            class="recipe-page__state"
-        >
-            Nie udało się wczytać przepisu.
-        </div>
+        <RecipeBodySkeleton v-if="loading || !recipe" />
         <RecipeBody
             v-else
             :key="recipe.id"
@@ -78,15 +100,6 @@ watch(
     padding-top: 28px;
     font-size: 13px;
     color: var(--ink-muted);
-}
-.recipe-page__state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 80px 0;
-    color: var(--ink-muted);
-    font-size: 14px;
 }
 /* link pod przepisem; linia i „Zaloguj” są w stopce strony (UFooter) */
 .recipe-page__footer {
