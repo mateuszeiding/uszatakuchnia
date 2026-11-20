@@ -6,7 +6,7 @@ import (
 	h "uszatakuchnia/handlers"
 )
 
-// Routes — całe API. Nowy endpoint = nowa linijka tutaj (vercel.json kieruje całe /api/* do
+// Routes — całe API (+ strony dla botów podglądu na końcu). Nowy endpoint = nowa linijka tutaj (vercel.json kieruje całe /api/* do
 // jednej funkcji, więc nic więcej nie trzeba). Zapis (wszystko poza GET) wymaga właściciela —
 // pilnuje tego resp.Begin w api/index.go, a test w router_test.go sprawdza każdą trasę z tej tabeli.
 var Routes = []Route{
@@ -50,4 +50,9 @@ var Routes = []Route{
 	// Zdjęcia
 	{http.MethodPost, "/api/photos", h.PhotoUpload},
 	{http.MethodGet, "/api/photos/{id}", h.PhotoGet},
+
+	// Strony dla botów podglądu linków (Messenger, WhatsApp…): index.html z meta przepisu.
+	// Jedyne trasy poza /api/ — vercel.json kieruje tu tylko ich user-agenty (test w router_test.go).
+	{http.MethodGet, "/recipes/{id}", h.RecipeSharePage},
+	{http.MethodGet, "/recipes/{id}/zakupy", h.ShoppingSharePage},
 }

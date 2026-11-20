@@ -3,6 +3,28 @@
   "regions": ["lhr1"],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
+    {
+      "source": "/recipes/:id(\\d+)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Twitterbot|Slackbot|TelegramBot|Discordbot|LinkedInBot|SkypeUriPreview|Viber|redditbot|Pinterest|Iframely|Embedly|vkShare|Google-PageRenderer).*"
+        }
+      ],
+      "destination": "/api/index"
+    },
+    {
+      "source": "/recipes/:id(\\d+)/zakupy",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Twitterbot|Slackbot|TelegramBot|Discordbot|LinkedInBot|SkypeUriPreview|Viber|redditbot|Pinterest|Iframely|Embedly|vkShare|Google-PageRenderer).*"
+        }
+      ],
+      "destination": "/api/index"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "installCommand": "pnpm -C web install",

@@ -14,6 +14,11 @@ import (
 
 const testKey = "0123456789abcdef0123456789abcdef-router"
 
+// isBotPage — strona dla botów podglądu linków: jedyne trasy poza /api/, tylko GET pod /recipes/.
+func isBotPage(rt router.Route) bool {
+	return rt.Method == http.MethodGet && strings.HasPrefix(rt.Path, "/recipes/")
+}
+
 // samplePath — adres trasy z {id} podmienionym na liczbę.
 func samplePath(rt router.Route) string { return strings.ReplaceAll(rt.Path, "{id}", "7") }
 
@@ -52,8 +57,8 @@ func TestEveryRouteIsGuardedByBegin(t *testing.T) {
 	for _, rt := range router.Routes {
 		path := samplePath(rt)
 		name := rt.Method + " " + path
-		if !strings.HasPrefix(rt.Path, "/api/") {
-			t.Errorf("%s: route outside /api/", name)
+		if !strings.HasPrefix(rt.Path, "/api/") && !isBotPage(rt) {
+			t.Errorf("%s: route outside /api/ (only GET /recipes/… pages for link-preview bots)", name)
 		}
 
 		if rt.Method != http.MethodGet {
@@ -172,31 +177,95 @@ func TestEveryRouteReachesItsHandler(t *testing.T) {
 	}
 }
 
-// vercel.json: całe API jednym rewrite'em do jedynej funkcji, bez dawnych ?kind=.
-func TestVercelJSONHasSingleAPIRewrite(t *testing.T) {
+type vercelRewrite struct {
+	Source, Destination string
+	Has                 []struct{ Type, Key, Value string }
+}
+
+func readVercelRewrites(t *testing.T) ([]vercelRewrite, string) {
+	t.Helper()
 	raw, err := os.ReadFile("../vercel.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	var cfg struct {
-		Rewrites []struct{ Source, Destination string }
-	}
+	var cfg struct{ Rewrites []vercelRewrite }
 	if err := json.Unmarshal(raw, &cfg); err != nil {
 		t.Fatal(err)
 	}
+	return cfg.Rewrites, string(raw)
+}
+
+// vercel.json: całe API jednym rewrite'em (bez warunków) do jedynej funkcji, bez dawnych ?kind=.
+// Pozostałe rewrite'y do funkcji to strony dla botów podglądu — każdy z warunkiem na user-agent.
+func TestVercelJSONHasSingleAPIRewrite(t *testing.T) {
+	rewrites, raw := readVercelRewrites(t)
 	api := 0
-	for _, rw := range cfg.Rewrites {
+	for _, rw := range rewrites {
 		if strings.HasPrefix(rw.Destination, "/api") {
-			api++
 			if rw.Destination != "/api/index" {
 				t.Errorf("rewrite %s → %s: API must go to /api/index", rw.Source, rw.Destination)
+			}
+			if len(rw.Has) == 0 {
+				api++
 			}
 		}
 	}
 	if api != 1 {
-		t.Errorf("%d API rewrites in vercel.json, want 1", api)
+		t.Errorf("%d unconditional API rewrites in vercel.json, want 1", api)
 	}
 	if strings.Contains(string(raw), "kind=") {
 		t.Error("vercel.json still has ?kind=")
+	}
+}
+
+// Strony dla botów podglądu: każda trasa poza /api/ ma w vercel.json rewrite do /api/index
+// z warunkiem na user-agent (ludzie dostają statyczny index.html), i to przed rewrite'em SPA.
+func TestBotPagesRewrittenOnlyForBots(t *testing.T) {
+	rewrites, _ := readVercelRewrites(t)
+	spa := -1
+	for i, rw := range rewrites {
+		if rw.Source == "/(.*)" {
+			spa = i
+		}
+	}
+	if spa < 0 {
+		t.Fatal("no SPA rewrite /(.*)")
+	}
+	pages := 0
+	for _, rt := range router.Routes {
+		if !isBotPage(rt) {
+			continue
+		}
+		pages++
+		want := strings.ReplaceAll(rt.Path, "{id}", `:id(\d+)`)
+		found := false
+		for i, rw := range rewrites {
+			if rw.Source != want {
+				continue
+			}
+			found = true
+			if rw.Destination != "/api/index" {
+				t.Errorf("%s → %s, want /api/index", rw.Source, rw.Destination)
+			}
+			if i > spa {
+				t.Errorf("%s: bot rewrite after the SPA rewrite never matches", rw.Source)
+			}
+			ua := false
+			for _, h := range rw.Has {
+				if h.Type == "header" && strings.EqualFold(h.Key, "user-agent") &&
+					strings.Contains(h.Value, "facebookexternalhit") && strings.Contains(h.Value, "WhatsApp") {
+					ua = true
+				}
+			}
+			if !ua {
+				t.Errorf("%s: rewrite without user-agent condition — humans would hit the function", rw.Source)
+			}
+		}
+		if !found {
+			t.Errorf("GET %s: no bot rewrite %q in vercel.json", rt.Path, want)
+		}
+	}
+	if pages == 0 {
+		t.Error("no bot page routes")
 	}
 }
