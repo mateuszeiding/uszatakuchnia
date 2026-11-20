@@ -30,6 +30,8 @@ const props = defineProps<{
     /** Wybrany zamiennik (null = składnik główny). */
     sub?: IRecipeSubstitute | null;
     allergenLabel?: (code: string) => string;
+    /** Alergeny przepisu (do „zawiera: …” w wyborze zamiennika). */
+    recipeAllergens?: string[];
     /** Większe wiersze (tryb gotowania). */
     roomy?: boolean;
 }>();
@@ -165,6 +167,7 @@ async function close() {
             :amount="amount"
             :half="half ?? amount"
             :allergen-label="allergenLabel ?? ((c: string) => c)"
+            :recipe-allergens="recipeAllergens"
             :anchor="li ?? null"
             :sheet="narrow"
             @select="emit('sub', $event)"

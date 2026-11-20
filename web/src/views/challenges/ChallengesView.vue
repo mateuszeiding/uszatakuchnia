@@ -27,7 +27,6 @@ const failed = ref(false);
 const sel = ref<number[]>(parseLos(route.query.los) ?? []);
 
 onMounted(async () => {
-    document.title = 'Wyzwania · uszatakuchnia';
     try {
         items.value = await fetchChallengesWithClient(qc);
     } catch {

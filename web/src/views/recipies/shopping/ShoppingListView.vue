@@ -10,6 +10,7 @@ import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { setTitle } from '@/shared/utils/title';
 
 // /recipes/:id/zakupy — lista zakupów przepisu (telefon w sklepie, desktop, wydruk).
 const props = defineProps<{ id: string | number }>();
@@ -37,7 +38,7 @@ async function load(id: number) {
             fetchRecipesWithClient(qc, id),
             fetchDictionariesWithClient(qc),
         ]);
-        document.title = `Lista zakupów · ${recipe.value.name} · uszatakuchnia`;
+        setTitle(`Lista zakupów: ${recipe.value.name}`);
     } catch {
         failed.value = true;
     } finally {

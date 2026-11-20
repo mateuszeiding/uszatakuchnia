@@ -195,6 +195,7 @@ onBeforeUnmount(() => ro?.disconnect());
                             :checked="checked.includes(ing.sortOrder)"
                             :sub="chosenSub(ing, subs)"
                             :allergen-label="allergenLabel"
+                            :recipe-allergens="recipe?.allergens"
                             @toggle="emit('toggle', ing.sortOrder)"
                             @sub="emit('sub', ing.sortOrder, $event)"
                         />

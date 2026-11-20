@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import { ingredientGroups, leadText, publicLink, scaledAmount, servingsLabel } from '../recipeView';
 
@@ -41,6 +41,9 @@ const i = ref(firstOpen === -1 ? 0 : firstOpen);
 const showIng = ref(false);
 const wake = useWakeLock();
 const root = ref<HTMLElement>();
+const stage = ref<HTMLElement>();
+// nowy krok zawsze od góry (inaczej po przewinięciu długiego kroku następny zaczyna się w połowie)
+watch(i, () => stage.value?.scrollTo({ top: 0 }));
 
 const step = computed(() => steps.value[i.value]!);
 const last = computed(() => i.value === steps.value.length - 1);
@@ -154,7 +157,10 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
                     :style="{ width: `${((i + 1) / steps.length) * 100}%` }"
                 />
             </div>
-            <div class="cook__stage">
+            <div
+                ref="stage"
+                class="cook__stage"
+            >
                 <div
                     class="cook__content"
                     aria-live="polite"
@@ -202,12 +208,17 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
                     {{ last ? 'Gotowe' : 'Dalej →' }}
                 </button>
             </div>
-            <div class="cook__hint">
-                {{
-                    wake
-                        ? 'Ekran nie zgaśnie, dopóki tryb jest otwarty'
-                        : 'Strzałki ← → zmieniają krok'
-                }}
+            <div
+                v-if="wake"
+                class="cook__hint"
+            >
+                Ekran nie zgaśnie, dopóki tryb jest otwarty
+            </div>
+            <div
+                v-else
+                class="cook__hint cook__hint--keys"
+            >
+                Strzałki ← → zmieniają krok
             </div>
         </div>
 
@@ -243,6 +254,7 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
                             :checked="checkedIng.includes(ing.sortOrder)"
                             :sub="chosenSub(ing, subs)"
                             :allergen-label="allergenLabel"
+                            :recipe-allergens="recipe.allergens"
                             roomy
                             @toggle="emit('toggle-ing', ing.sortOrder)"
                             @sub="emit('sub', ing.sortOrder, $event)"
@@ -404,6 +416,15 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
     font-size: 12px;
     color: var(--ink-muted);
     padding-bottom: 10px;
+}
+/* podpowiedź o strzałkach tylko tam, gdzie jest klawiatura i kursor (na telefonie to szum) */
+.cook__hint--keys {
+    display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+    .cook__hint--keys {
+        display: block;
+    }
 }
 .cook-ing {
     max-height: 60vh;

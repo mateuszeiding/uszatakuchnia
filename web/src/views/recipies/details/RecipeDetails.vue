@@ -9,6 +9,7 @@ import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { setTitle } from '@/shared/utils/title';
 
 const props = defineProps<{ id: string | number }>();
 
@@ -27,7 +28,7 @@ async function load(id: number) {
             fetchRecipesWithClient(qc, id),
             fetchDictionariesWithClient(qc),
         ]);
-        document.title = `${recipe.value.name} · uszatakuchnia`;
+        setTitle(recipe.value.name);
     } catch {
         failed.value = true;
     } finally {

@@ -19,6 +19,8 @@ const props = defineProps<{
     /** Połowa ilości (mieszanka „pół na pół”). */
     half: { qty: string; unit: string };
     allergenLabel: (code: string) => string;
+    /** Alergeny całego przepisu — „zawiera: X” tylko, gdy opcja dodaje alergen, którego przepis nie ma. */
+    recipeAllergens?: string[];
     /** Wiersz, przy którym stoi popover. */
     anchor: HTMLElement | null;
     sheet: boolean;
@@ -37,10 +39,10 @@ const isOn = (o: IRecipeSubstitute | null) =>
           props.selected.ingredientId === o.ingredientId &&
           props.selected.mix === o.mix;
 
-/** Alergeny, które opcja dodaje względem składnika głównego. */
+/** Alergeny, które opcja dodaje do przepisu (nie ma ich ani składnik główny, ani reszta przepisu). */
 const added = (o: IRecipeSubstitute | null) =>
     optionAllergens(props.ing, o)
-        .filter((a) => !props.ing.allergens.includes(a))
+        .filter((a) => !props.ing.allergens.includes(a) && !props.recipeAllergens?.includes(a))
         .map(props.allergenLabel);
 
 const note = (o: IRecipeSubstitute | null) =>

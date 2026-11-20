@@ -20,6 +20,7 @@ import {
     rollChallenge,
     timeLimitText,
 } from '@/shared/utils/challenges';
+import { setTitle } from '@/shared/utils/title';
 
 // Strona wyzwania. Z losowania (?los=) zamiast „← Wszystkie wyzwania” pasek „Wylosowane”.
 // Desktop: treść + karta „Składniki” po prawej (przyklejona); bez składników — jedna kolumna 760 px.
@@ -48,7 +49,7 @@ async function load(id: number) {
     loading.value = !qc.getQueryData(['challenges/', id]);
     try {
         challenge.value = await fetchChallengeWithClient(qc, id);
-        document.title = `${challenge.value.title} · uszatakuchnia`;
+        setTitle(challenge.value.title);
     } catch (e) {
         // nieistniejące wyzwanie → lista
         if ((e as { response?: { status?: number } }).response?.status === 404) {

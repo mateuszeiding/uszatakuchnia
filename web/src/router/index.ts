@@ -3,6 +3,7 @@ import RecipesView from '@view/recipies/list/RecipesView.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
 import { isOwner } from '@/auth/createAuth';
+import { setTitle } from '@/shared/utils/title';
 import AdminChallengeEdit from '@/views/admin/AdminChallengeEdit.vue';
 import AdminChallenges from '@/views/admin/AdminChallenges.vue';
 import AdminIngredientEdit from '@/views/admin/AdminIngredientEdit.vue';
@@ -30,7 +31,7 @@ const router = createRouter({
     },
     routes: [
         { path: '/', redirect: '/recipes' },
-        { path: '/recipes', component: RecipesView },
+        { path: '/recipes', component: RecipesView, meta: { title: 'Przepisy' } },
         { path: '/recipes/new', component: UpsertRecipe, beforeEnter: adminGuards },
         { path: '/recipes/:id', name: 'recipe-details', component: RecipeDetails, props: true },
         {
@@ -38,6 +39,7 @@ const router = createRouter({
             name: 'recipe-shopping',
             component: ShoppingListView,
             props: true,
+            meta: { title: 'Lista zakupów' },
         },
         {
             path: '/recipes/:id/edit',
@@ -46,11 +48,17 @@ const router = createRouter({
             props: true,
             beforeEnter: adminGuards,
         },
-        { path: '/challenges', component: ChallengesView },
-        { path: '/challenges/:id', component: ChallengeView, props: true },
+        { path: '/challenges', component: ChallengesView, meta: { title: 'Wyzwania' } },
+        {
+            path: '/challenges/:id',
+            component: ChallengeView,
+            props: true,
+            meta: { title: 'Wyzwania' },
+        },
         {
             path: '/admin',
             component: AdminLayout,
+            meta: { title: 'Panel' },
             beforeEnter: adminGuards,
             children: [
                 { path: '', redirect: '/admin/recipes' },
@@ -68,6 +76,13 @@ const router = createRouter({
         },
         { path: '/:pathMatch(.*)*', redirect: '/recipes' },
     ],
+});
+
+// Tytuł karty: z meta trasy (meta dzieci nadpisuje rodzica), widoki z danymi ustawiają go po wczytaniu.
+// Zmiana samego query (filtry listy, porcje na liście zakupów) nie rusza tytułu.
+router.afterEach((to, from) => {
+    if (to.path === from.path && from.matched.length) return;
+    setTitle(to.meta.title as string | undefined);
 });
 
 export default router;
