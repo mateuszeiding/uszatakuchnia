@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Bułka do burgerów",
+    "typeCode": "GRAIN",
+    "allergens": ["gluten", "milk", "eggs", "sesame"],
+    "nutrition": {
+      "kcal": { "min": 260, "max": 300 },
+      "protein": { "min": 8, "max": 10 },
+      "fat": { "min": 3.5, "max": 7 },
+      "carbs": { "min": 45, "max": 52 },
+      "fiber": { "min": 2, "max": 3 }
+    },
+    "conversions": [{ "unit": "sztuka", "gramsMin": 70, "gramsMax": 90 }]
+  }
+]

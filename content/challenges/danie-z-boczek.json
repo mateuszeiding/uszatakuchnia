@@ -1,0 +1,15 @@
+{
+  "title": "Danie z boczkiem",
+  "format": "z podanych składników",
+  "description": "Przygotuj dowolne danie, w którym użyjesz boczku.",
+  "difficulty": 2,
+  "timeLimitMin": 45,
+  "source": "MasterChef Polska Sezon 10 Odcinek 2",
+  "ingredients": [
+    {
+      "name": "Boczek",
+      "required": true
+    }
+  ],
+  "cautions": []
+}

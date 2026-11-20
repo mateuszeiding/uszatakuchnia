@@ -1,0 +1,15 @@
+{
+  "title": "Danie z makaronem spaghetti",
+  "format": "z podanych składników",
+  "description": "Przygotuj dowolne danie, w którym użyjesz makaronu spaghetti.",
+  "difficulty": 2,
+  "timeLimitMin": 45,
+  "source": "MasterChef Polska Sezon 10 Odcinek 2",
+  "ingredients": [
+    {
+      "name": "Makaron spaghetti",
+      "required": true
+    }
+  ],
+  "cautions": []
+}

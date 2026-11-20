@@ -1,0 +1,15 @@
+{
+  "title": "Filetowanie i danie z sandacza",
+  "format": "z podanych składników",
+  "description": "Przygotuj dowolne danie z sandacza. Rybę kupujesz w całości i sam ją filetujesz.",
+  "difficulty": 3,
+  "timeLimitMin": 60,
+  "source": "MasterChef Polska Sezon 10 Odcinek 2",
+  "ingredients": [
+    {
+      "name": "Sandacz (cały)",
+      "required": true
+    }
+  ],
+  "cautions": []
+}
