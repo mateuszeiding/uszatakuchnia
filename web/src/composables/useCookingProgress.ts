@@ -16,6 +16,12 @@ export interface ICookingProgress {
     subs: Record<number, ISubChoice>;
 }
 
+/** Odhaczenia sprzed „Odznacz wszystko” — do „Cofnij”. */
+export interface ICheckSnapshot {
+    ing: number[];
+    steps: number[];
+}
+
 // Postęp gotowania zapamiętany lokalnie, osobno dla każdego przepisu (klucz uk:progress:<id>).
 // Strona przepisu, tryb gotowania i lista zakupów czytają ten sam stan (porcje, zamienniki).
 export function useCookingProgress(recipeId: number, defaultServings: number) {
@@ -78,16 +84,30 @@ export function useCookingProgress(recipeId: number, defaultServings: number) {
     /** „Przywróć przepis” — wszystkie wiersze wracają do składników głównych. */
     const clearSubs = () => (progress.value.subs = {});
 
-    const hasProgress = computed(
-        () =>
-            progress.value.ing.length > 0 ||
-            progress.value.steps.length > 0 ||
-            progress.value.servings !== defaultServings
+    /** Coś odhaczone (składnik albo krok) — „Odznacz wszystko” aktywne. */
+    const hasChecks = computed(
+        () => progress.value.ing.length > 0 || progress.value.steps.length > 0
     );
 
-    // „Zacznij od nowa” czyści gotowanie (odhaczenia, kroki, porcje); wybór zamienników zostaje —
-    // to wariant przepisu, nie postęp („Przywróć przepis” go czyści).
-    const reset = () => (progress.value = { ...blank(), subs: progress.value.subs });
+    // „Odznacz wszystko” (20.11) czyści TYLKO odhaczenia; porcje mają licznik, zamienniki „Przywróć przepis”.
+    // Zwraca kopię do „Cofnij”.
+    const uncheckAll = (): ICheckSnapshot => {
+        const snap = { ing: [...progress.value.ing], steps: [...progress.value.steps] };
+        progress.value = { ...progress.value, ing: [], steps: [] };
+        return snap;
+    };
+    const restoreChecks = (snap: ICheckSnapshot) =>
+        (progress.value = { ...progress.value, ing: [...snap.ing], steps: [...snap.steps] });
 
-    return { progress, toggle, setStep, setServings, setSub, clearSubs, hasProgress, reset };
+    return {
+        progress,
+        toggle,
+        setStep,
+        setServings,
+        setSub,
+        clearSubs,
+        hasChecks,
+        uncheckAll,
+        restoreChecks,
+    };
 }

@@ -52,14 +52,6 @@ const doneCount = computed(
                         {{ doneCount }} z {{ total }}
                     </span>
                     <button
-                        v-if="canReset"
-                        type="button"
-                        class="btn btn--ghost btn--sm"
-                        @click="emit('reset')"
-                    >
-                        Zacznij od nowa
-                    </button>
-                    <button
                         v-if="total || !recipe"
                         type="button"
                         class="btn btn--accent"
@@ -180,6 +172,43 @@ const doneCount = computed(
                     </li>
                 </ol>
             </div>
+        </div>
+
+        <!-- „Odznacz wszystko” na końcu kroków (20.11): bez pytania, „Cofnij” w toaście -->
+        <div
+            v-if="recipe && total"
+            class="uncheck"
+        >
+            <button
+                type="button"
+                class="btn btn--secondary uncheck__btn"
+                :disabled="!canReset"
+                aria-describedby="uncheck-note"
+                @click="emit('reset')"
+            >
+                <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                >
+                    <path
+                        d="M3.5 6.5h6.2a3.3 3.3 0 010 6.6H6.5M6 3.8L3.3 6.5 6 9.2"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+                </svg>
+                Odznacz wszystko
+            </button>
+            <span
+                id="uncheck-note"
+                class="uncheck__note"
+            >
+                Odznacza składniki i kroki. Porcje i zamienniki zostają.
+            </span>
         </div>
     </section>
 </template>
@@ -339,7 +368,38 @@ const doneCount = computed(
     text-wrap: pretty;
 }
 
+/* prototyp pz-main.jsx (ResetBlock): linia, przycisk drugorzędny 44 px z ikoną, podpis 13 px */
+.uncheck {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.uncheck__btn {
+    min-height: 44px;
+    font-size: 15px;
+    gap: 8px;
+}
+.uncheck__btn:disabled,
+.uncheck__btn:disabled:hover {
+    opacity: 0.45;
+    cursor: default;
+    background: var(--bg-alt);
+}
+.uncheck__note {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink-muted);
+}
+
 @media (max-width: 900px) {
+    .uncheck {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
     .steps-head__actions .btn--accent {
         padding: 12px 18px;
     }

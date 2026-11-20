@@ -12,14 +12,33 @@ import RecipeHero from './RecipeHero.vue';
 import StepsList from './StepsList.vue';
 
 import { useCookingProgress } from '@/composables/useCookingProgress';
+import { showToast } from '@/composables/useToast';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { uncheckedText } from '@/shared/utils/progress';
 import { activeSubs, swapSummary, variantNutrition } from '@/shared/utils/substitutes';
 
 const props = defineProps<{ recipe: RecipeDto; dicts: IDictionaries | undefined }>();
 
-const { progress, toggle, setStep, setServings, setSub, clearSubs, hasProgress, reset } =
-    useCookingProgress(props.recipe.id, props.recipe.servings || 1);
+const {
+    progress,
+    toggle,
+    setStep,
+    setServings,
+    setSub,
+    clearSubs,
+    hasChecks,
+    uncheckAll,
+    restoreChecks,
+} = useCookingProgress(props.recipe.id, props.recipe.servings || 1);
+
+// „Odznacz wszystko”: bez pytania, z „Cofnij” w toaście przez 8 s (20.11).
+function onUncheckAll() {
+    const snap = uncheckAll();
+    showToast(uncheckedText(snap.steps.length, snap.ing.length), {
+        action: { label: 'Cofnij', run: () => restoreChecks(snap) },
+    });
+}
 const cooking = ref(false);
 
 // Ikony obecne w przepisie → karta „Ikony przy składnikach”.
@@ -77,10 +96,10 @@ const swapNote = computed(() =>
                 class="recipe-grid__steps"
                 :recipe="recipe"
                 :done="progress.steps"
-                :can-reset="hasProgress"
+                :can-reset="hasChecks"
                 @toggle="toggle('steps', $event)"
                 @cook="cooking = true"
-                @reset="reset"
+                @reset="onUncheckAll"
             />
             <NutritionCard
                 v-if="nutrition"
