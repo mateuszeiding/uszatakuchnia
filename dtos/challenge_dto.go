@@ -18,6 +18,7 @@ type ChallengeDto struct {
 	TimeLimitMin *int                     `json:"timeLimitMin"`
 	Difficulty   int                      `json:"difficulty"`
 	Source       *string                  `json:"source"`
+	Cautions     []string                 `json:"cautions"`
 	Ingredients  []ChallengeIngredientDto `json:"ingredients"`
 	CreatedAt    time.Time                `json:"createdAt"`
 	UpdatedAt    time.Time                `json:"updatedAt"`
@@ -33,6 +34,7 @@ type UpsertChallengeRequest struct {
 	TimeLimitMin *int                     `json:"timeLimitMin"`
 	Difficulty   int                      `json:"difficulty"`
 	Source       *string                  `json:"source"`
+	Cautions     *[]string                `json:"cautions"` // nil = bez zmian (PUT), przy tworzeniu nil = []
 	Ingredients  []ChallengeIngredientDto `json:"ingredients"`
 }
 

@@ -41,6 +41,7 @@ func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 		Description: e.Description,
 		Tagline:     e.Tagline,
 		Tip:         e.Tip,
+		Cautions:    append([]string{}, e.Cautions...),
 		TimeMin:     e.TimeMin,
 		TimeMax:     e.TimeMax,
 		Difficulty:  e.Difficulty,

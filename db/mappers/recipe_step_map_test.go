@@ -24,3 +24,17 @@ func TestMapStepHints(t *testing.T) {
 		t.Errorf("hints = %v", dto.Hints)
 	}
 }
+
+func TestMapCautionsNilIsEmpty(t *testing.T) {
+	for name, v := range map[string]any{
+		"recipe":    MapRecipeToDto(entities.Recipe{}),
+		"challenge": MapChallengeToDto(entities.Challenge{}),
+	} {
+		b, _ := json.Marshal(v)
+		var m map[string]any
+		_ = json.Unmarshal(b, &m)
+		if c, ok := m["cautions"].([]any); !ok || len(c) != 0 {
+			t.Errorf("%s: cautions = %#v, want []", name, m["cautions"])
+		}
+	}
+}

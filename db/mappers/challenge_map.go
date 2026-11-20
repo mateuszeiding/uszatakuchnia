@@ -20,6 +20,7 @@ func MapChallengeToDto(c entities.Challenge) dtos.ChallengeDto {
 		TimeLimitMin: c.TimeLimitMin,
 		Difficulty:   c.Difficulty,
 		Source:       c.Source,
+		Cautions:     append([]string{}, c.Cautions...),
 		Ingredients:  ings,
 		CreatedAt:    c.CreatedAt,
 		UpdatedAt:    c.UpdatedAt,

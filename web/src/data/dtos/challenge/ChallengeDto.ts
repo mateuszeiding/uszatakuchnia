@@ -17,6 +17,8 @@ export interface IChallenge {
     /** 1 rozgrzewka … 5 mistrzowskie. */
     difficulty: number;
     source: string | null;
+    /** Uwagi „czego nie zawalić” w kolejności autora. */
+    cautions: string[];
     ingredients: IChallengeIngredient[];
     createdAt: string;
     updatedAt: string;
@@ -29,6 +31,8 @@ export interface IUpsertChallengeRequest {
     timeLimitMin: number | null;
     difficulty: number;
     source: string | null;
+    /** Bez pustych pozycji; brak pola = bez zmian. */
+    cautions?: string[];
     ingredients: IChallengeIngredient[];
 }
 

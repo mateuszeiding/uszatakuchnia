@@ -101,6 +101,9 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 		}
 	}
 
+	if req.Cautions != nil {
+		validateCautions(*req.Cautions, add)
+	}
 	validateSteps(req, add)
 	if err := validateSubstitutes(tx, req, add); err != nil {
 		return nil, err
@@ -187,6 +190,9 @@ func ApplyRecipeRequest(e *entities.Recipe, req dtos.UpsertRecipeRequest) {
 	e.TimeMax = req.TimeMax
 	e.Difficulty = req.Difficulty
 	e.Status = req.Status
+	if req.Cautions != nil {
+		e.Cautions = CleanCautions(*req.Cautions)
+	}
 }
 
 // ReplaceRecipeChildren zastępuje zdjęcie, kroki, składniki i klasyfikację przepisu. Wołać w transakcji.

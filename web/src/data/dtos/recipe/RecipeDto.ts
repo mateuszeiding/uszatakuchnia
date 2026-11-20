@@ -69,6 +69,8 @@ export class RecipeDto extends RecipeBaseDto {
     servings: number = 1;
     description: string | null = null;
     tip: string | null = null;
+    /** Uwagi „czego nie zawalić” (zakupy, bezpieczeństwo, czas) w kolejności autora. */
+    cautions: string[] = [];
     /** Makro na porcję wyliczone ze składników; null = brak danych. */
     nutrition: IRecipeNutrition | null = null;
     /** Kody alergenów wyliczone ze składników. */
@@ -85,6 +87,7 @@ export class RecipeDto extends RecipeBaseDto {
         Object.assign(this, obj);
         this.taxonomy = obj.taxonomy ?? {};
         this.allergens = obj.allergens ?? [];
+        this.cautions = obj.cautions ?? [];
         this.steps = (obj.steps ?? []).map((s) => new RecipeStepDto(s));
         this.ingredients = (obj.ingredients ?? []).map((i) => new RecipeIngredientDto(i));
         this.linkedFrom = obj.linkedFrom ?? [];
@@ -98,6 +101,8 @@ export interface IUpsertRecipeRequest {
     description?: string | null;
     tagline?: string | null;
     tip?: string | null;
+    /** Uwagi bez pustych pozycji; brak pola = bez zmian. */
+    cautions?: string[];
     timeMin: number;
     timeMax?: number | null;
     difficulty?: number | null;

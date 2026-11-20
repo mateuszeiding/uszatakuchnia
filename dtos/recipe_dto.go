@@ -12,6 +12,7 @@ type RecipeDto struct {
 	Description *string           `json:"description,omitempty"`
 	Tagline     *string           `json:"tagline,omitempty"`
 	Tip         *string           `json:"tip,omitempty"`
+	Cautions    []string          `json:"cautions"`
 	TimeMin     int               `json:"timeMin"`
 	TimeMax     *int              `json:"timeMax,omitempty"`
 	Difficulty  *int              `json:"difficulty,omitempty"`
@@ -63,6 +64,8 @@ type UpsertRecipeRequest struct {
 	Difficulty  *int    `json:"difficulty"`
 	PhotoUrl    *string `json:"photoUrl"`
 	Status      string  `json:"status"`
+	// Uwagi; nil = bez zmian (starszy klient), przy tworzeniu nil = [].
+	Cautions *[]string `json:"cautions"`
 
 	TaxonomyValueIDs []uint `json:"taxonomyValueIds"`
 

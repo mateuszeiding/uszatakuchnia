@@ -12,6 +12,8 @@ type Recipe struct {
 	Description *string
 	Tagline     *string `gorm:"type:varchar(500)"`
 	Tip         *string // wskazówka pod krokami
+	// Uwagi „czego nie zawalić” (zakupy, bezpieczeństwo, czas) w kolejności autora; nil zapisuje się jako [].
+	Cautions StringList `gorm:"type:jsonb;not null;default:'[]'"`
 
 	// Czas w minutach: od–do. TimeMin 0 = nie podano (szkic); TimeMax nil = bez zakresu.
 	TimeMin    int `gorm:"not null;default:0"`

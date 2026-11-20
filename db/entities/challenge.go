@@ -26,6 +26,8 @@ type Challenge struct {
 	Source       *string `gorm:"type:varchar(255)"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+	// Uwagi „czego nie zawalić” w kolejności autora; nil zapisuje się jako [].
+	Cautions StringList `gorm:"type:jsonb;not null;default:'[]'"`
 
 	Ingredients []ChallengeIngredient `gorm:"foreignKey:ChallengeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }

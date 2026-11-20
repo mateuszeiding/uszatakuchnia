@@ -5,6 +5,7 @@
   "timeMax": 300,
   "difficulty": 1,
   "status": "published",
+  "cautions": [],
   "taxonomy": {
     "base": [
       "mięso"

@@ -67,6 +67,10 @@ func NormalizeChallengeRequest(req dtos.UpsertChallengeRequest) dtos.UpsertChall
 		ings = append(ings, dtos.ChallengeIngredientDto{Name: name, Required: i.Required})
 	}
 	req.Ingredients = ings
+	if req.Cautions != nil {
+		c := CleanCautions(*req.Cautions)
+		req.Cautions = &c
+	}
 	return req
 }
 
@@ -102,6 +106,9 @@ func validateChallengeFields(req dtos.UpsertChallengeRequest) []dtos.FieldError 
 			add(fmt.Sprintf("ingredients[%d].name", i),
 				fmt.Sprintf("Składnik może mieć najwyżej %d znaków", MaxChallengeIngredientLen))
 		}
+	}
+	if req.Cautions != nil {
+		validateCautions(*req.Cautions, add)
 	}
 	if req.FormatID == 0 && req.Format == "" {
 		add("formatId", "Wybierz format")
@@ -170,14 +177,21 @@ func SaveChallenge(conn *gorm.DB, id uint, req dtos.UpsertChallengeRequest) (uin
 			Difficulty:   req.Difficulty,
 			Source:       req.Source,
 		}
+		if req.Cautions != nil {
+			c.Cautions = *req.Cautions
+		}
 		if id == 0 {
 			if err := tx.Omit("Format", "Ingredients").Create(&c).Error; err != nil {
 				return err
 			}
 			id = c.ID
 		} else {
+			cols := []any{"format_id", "description", "time_limit_min", "difficulty", "source", "updated_at"}
+			if req.Cautions != nil {
+				cols = append(cols, "cautions")
+			}
 			res := tx.Model(&entities.Challenge{}).Where("id = ?", id).
-				Select("title", "format_id", "description", "time_limit_min", "difficulty", "source", "updated_at").
+				Select("title", cols...).
 				Updates(&c)
 			if res.Error != nil {
 				return res.Error
