@@ -5,6 +5,7 @@ import { DIFFICULTY, leadText } from '../recipeView';
 
 import UsefulRecipes from './UsefulRecipes.vue';
 
+import CautionsBlock from '@/components/CautionsBlock.vue';
 import USpinner from '@/components/USpinner.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import { avg, fmt, type IRecipeNutrition, nf } from '@/shared/utils/nutrition';
@@ -22,7 +23,12 @@ const dish = computed(() => props.recipe?.taxonomy.dish ?? []);
 const cuisine = computed(() => props.recipe?.taxonomy.cuisine?.[0]?.label);
 const diets = computed(() => props.recipe?.taxonomy.diet ?? []);
 const practical = computed(() => props.recipe?.taxonomy.practical ?? []);
-const prepSteps = computed(() => props.recipe?.steps.filter((s) => s.prep) ?? []);
+// kroki „przygotuj wcześniej” — pierwsze pozycje bloku Uwagi
+const prep = computed(() =>
+    (props.recipe?.steps ?? [])
+        .filter((s) => s.prep)
+        .map((s) => ({ lead: leadText(s), step: s.stepNo }))
+);
 const kcal = computed(() => {
     const n = props.nutrition !== undefined ? props.nutrition : props.recipe?.nutrition;
     const f = fmt(n?.perPortion.kcal, 'kcal', 'recipe');
@@ -166,50 +172,12 @@ function scrollToStep(no: number) {
                     </dd>
                 </div>
             </dl>
-            <div
-                v-if="prepSteps.length"
-                class="hero__prep"
-            >
-                <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 12 12"
-                    aria-hidden="true"
-                >
-                    <circle
-                        cx="6"
-                        cy="6"
-                        r="4.8"
-                        stroke="currentColor"
-                        stroke-width="1.3"
-                    />
-                    <path
-                        d="M6 3.5v2.7l1.7 1"
-                        stroke="currentColor"
-                        stroke-width="1.3"
-                        stroke-linecap="round"
-                    />
-                </svg>
-                <div>
-                    <strong>Wymaga przygotowania</strong>
-                    <div
-                        v-for="s in prepSteps"
-                        :key="s.stepNo"
-                        class="hero__prep-line"
-                    >
-                        <template v-if="leadText(s)">
-                            {{ leadText(s)!.charAt(0).toUpperCase() + leadText(s)!.slice(1) }}:
-                        </template>
-                        <button
-                            type="button"
-                            class="hero__prep-link"
-                            @click="scrollToStep(s.stepNo)"
-                        >
-                            krok {{ s.stepNo }}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <CautionsBlock
+                class="hero__cautions"
+                :items="recipe.cautions"
+                :prep="prep"
+                @step="scrollToStep"
+            />
             <ul
                 v-if="diets.length || practical.length"
                 class="hero__tags"
@@ -347,38 +315,9 @@ function scrollToStep(no: number) {
     background: var(--accent);
     border-color: var(--accent);
 }
-.hero__prep {
+.hero__cautions {
     margin-top: 20px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 14px;
-    background: var(--prep-soft);
-    border: 1px solid var(--prep-line);
-    border-radius: var(--r-lg);
     max-width: 580px;
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--prep);
-}
-.hero__prep svg {
-    margin-top: 3px;
-    flex-shrink: 0;
-}
-.hero__prep strong {
-    font-weight: 600;
-}
-.hero__prep-line {
-    color: var(--ink-dim);
-}
-.hero__prep-link {
-    background: none;
-    border: none;
-    padding: 0;
-    color: var(--ink);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    cursor: pointer;
 }
 .hero__tags {
     list-style: none;

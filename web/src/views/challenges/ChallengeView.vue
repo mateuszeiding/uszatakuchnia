@@ -8,6 +8,7 @@ import ChallengeIngredients from './components/ChallengeIngredients.vue';
 import ChallengeRolledBar, { type RerollState } from './components/ChallengeRolledBar.vue';
 import ChallengeViewSkeleton from './components/ChallengeViewSkeleton.vue';
 
+import CautionsBlock from '@/components/CautionsBlock.vue';
 import { useChallengesDone } from '@/composables/useChallengesDone';
 import { useNarrow } from '@/composables/useNarrow';
 import { fetchChallengesWithClient, fetchChallengeWithClient } from '@/data/api/challenges/fetch';
@@ -22,7 +23,8 @@ import {
 
 // Strona wyzwania. Z losowania (?los=) zamiast „← Wszystkie wyzwania” pasek „Wylosowane”.
 // Desktop: treść + karta „Składniki” po prawej (przyklejona); bez składników — jedna kolumna 760 px.
-// Telefon: format, tytuł, metadane, opis, składniki, „Oznacz jako zrobione” na całą szerokość, źródło.
+// Pod metadanymi blok „Uwagi” (przed „Oznacz jako zrobione” i opisem).
+// Telefon: format, tytuł, metadane, uwagi, opis, składniki, „Oznacz jako zrobione” na całą szerokość, źródło.
 const props = defineProps<{ id: string }>();
 
 const route = useRoute();
@@ -134,6 +136,7 @@ async function rollAgain(includeDone: boolean, sel = los.value ?? []) {
                         <dd class="ch-detail__time">{{ timeLimitText(challenge.timeLimitMin) }}</dd>
                     </div>
                 </dl>
+                <CautionsBlock :items="challenge.cautions" />
                 <div v-if="!narrow">
                     <button
                         type="button"
