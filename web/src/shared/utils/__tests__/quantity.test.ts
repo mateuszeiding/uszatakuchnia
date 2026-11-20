@@ -82,3 +82,35 @@ describe('scaleQuantity — bez zmian', () => {
         expect(scaleQuantity('trochę', 'g', U.g, 2)).toEqual({ qty: 'trochę', unit: 'g' });
     });
 });
+
+describe('przegląd 18.11, #12', () => {
+    const lodyga = unit('łodyga', ['łodyga', 'łodygi', 'łodyg']);
+    const lyzka = unit('łyżka', ['łyżka', 'łyżki', 'łyżek']);
+    const garsc = unit('garść', ['garść', 'garście', 'garści']);
+
+    it('jednostka z odmianą spoza miarek (łodyga z panelu) zaokrąglana jak sztuka', () => {
+        expect(show('2', lodyga, 8 / 6)).toBe('2–3 łodygi');
+        expect(show('2', lodyga)).toBe('2 łodygi');
+        expect(show('3', lodyga, 0.5)).toBe('1–2 łodygi');
+        expect(show('1', lodyga, 0.5)).toBe('½ łodygi');
+    });
+
+    it('łyżki i łyżeczki od 1 w górę do połówek', () => {
+        expect(show('2', lyzka, 8 / 6)).toBe('2½ łyżki');
+        expect(show('1', lyzka, 8 / 6)).toBe('1½ łyżki');
+        expect(show('1', U.lyzeczka, 1.75)).toBe('2 łyżeczki');
+        expect(show('2', lyzka, 2.4)).toBe('5 łyżek');
+        expect(show('1,5', lyzka)).toBe('1½ łyżki');
+    });
+
+    it('poniżej 1 łyżki bez zmian: ćwiartki i tercje', () => {
+        expect(show('1/4', U.lyzeczka)).toBe('¼ łyżeczki');
+        expect(show('1', lyzka, 2 / 3)).toBe('⅔ łyżki');
+    });
+
+    it('szklanka i garść dalej z tercjami; g bez zmian', () => {
+        expect(show('2', U.szklanka, 4 / 3)).toBe('2⅔ szklanki');
+        expect(show('2', garsc, 4 / 3)).toBe('2⅔ garście');
+        expect(show('500', U.g, 8 / 6)).toBe('665 g');
+    });
+});

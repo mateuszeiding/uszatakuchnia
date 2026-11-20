@@ -216,3 +216,41 @@ describe('notes — doprecyzowanie (przegląd 18.11, #3)', () => {
         expect(item([line(null, 4, 'sól', null, 'do smaku')]).notes).toEqual([]);
     });
 });
+
+describe('jednostki z panelu i łyżki (przegląd 18.11, #12)', () => {
+    const extra: IUnit[] = [
+        ...units,
+        { id: 17, name: 'łodyga', forms: ['łodyga', 'łodygi', 'łodyg'], noQty: false },
+    ];
+    it('łodyga w sklepie w górę, jak sztuka', () => {
+        const items = buildShopping(
+            [
+                new RecipeIngredientDto({
+                    ingredientId: 9,
+                    ingredientName: 'seler',
+                    quantity: '2',
+                    unitId: 17,
+                    unit: 'łodyga',
+                }),
+            ],
+            extra,
+            8 / 6
+        );
+        expect(sumText(items[0]!.sum)).toBe('3 łodygi');
+    });
+    it('łyżki zsumowane do połówek, odmiana po zaokrągleniu', () => {
+        expect(
+            sumText(
+                item(
+                    [
+                        line('Baza', 1, 'oliwa', '2', 'łyżka'),
+                        line('Mięso', 1, 'oliwa', '1', 'łyżka'),
+                    ],
+                    8 / 6
+                ).sum
+            )
+        ).toBe('4 łyżki');
+        expect(sumText(item([line('Baza', 1, 'oliwa', '2', 'łyżka')], 2.4).sum)).toBe('5 łyżek');
+        expect(sumText(item([line('Baza', 1, 'oliwa', '2', 'łyżka')], 8 / 6).sum)).toBe('2½ łyżki');
+    });
+});

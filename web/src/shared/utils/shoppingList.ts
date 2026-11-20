@@ -9,7 +9,7 @@
 
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
-import { COUNT, fmtNum, parseQty, unitLabel } from '@/shared/utils/quantity';
+import { fmtNum, isCountUnit, parseQty, shownAmount, unitLabel } from '@/shared/utils/quantity';
 
 export interface IRange {
     min: number;
@@ -52,18 +52,19 @@ export interface IShopItem {
 
 const GPU: Record<string, number> = { g: 1, kg: 1000 };
 
-const isCount = (unit: string) => COUNT.has(unit);
+const isCount = (unit: string, def?: IUnit) => isCountUnit(unit, def);
 const noQty = (p: { unitDef: IUnit | undefined }) => !!p.unitDef?.noQty;
 
 /** Liczba do listy: w sklepie sztuki zaokrąglone w górę (nie kupisz 2½ jajka). */
-function fmtN(v: number, unit: string, shop: boolean): string {
-    if (shop && isCount(unit)) return String(Math.ceil(v - 0.001));
-    return fmtNum(v, unit);
+function fmtN(v: number, unit: string, shop: boolean, def?: IUnit): string {
+    const count = isCount(unit, def);
+    if (shop && count) return String(Math.ceil(v - 0.001));
+    return fmtNum(v, unit, count);
 }
-export function fmtQ(q: IRange | null, unit: string, shop = false): string {
+export function fmtQ(q: IRange | null, unit: string, shop = false, def?: IUnit): string {
     if (!q) return '';
-    const a = fmtN(q.min, unit, shop);
-    const b = fmtN(q.max, unit, shop);
+    const a = fmtN(q.min, unit, shop, def);
+    const b = fmtN(q.max, unit, shop, def);
     return a === b ? a : `${a}–${b}`;
 }
 const uLabel = (b: { unit: string; unitDef: IUnit | undefined }, n: number) =>
@@ -153,8 +154,13 @@ export function sumText(s: ShopSum | null): string {
     return [s.main, ...s.rest]
         .map((b) =>
             join(
-                fmtQ(b, b.unit, true),
-                uLabel(b, isCount(b.unit) ? Math.ceil(b.max - 0.001) : b.max)
+                fmtQ(b, b.unit, true, b.unitDef),
+                uLabel(
+                    b,
+                    isCount(b.unit, b.unitDef)
+                        ? Math.ceil(b.max - 0.001)
+                        : shownAmount(b.max, b.unit)
+                )
             )
         )
         .join(' + ');

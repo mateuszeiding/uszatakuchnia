@@ -61,6 +61,18 @@ export function unitLabel(
 // ─── Skalowanie ───────────────────────────────────────────────
 export const COUNT = new Set(['sztuka', 'ząbek', 'listek', 'plaster', 'pęczek', 'filet', '']);
 export const SPOON = new Set(['łyżka', 'łyżeczka', 'szklanka', 'szczypta', 'garść']);
+/** Łyżki i łyżeczki od 1 w górę: do połówek (2⅔ → 2½), poniżej 1 jak inne miarki (¼, ⅓, ½, ¾). */
+const HALVES = new Set(['łyżka', 'łyżeczka']);
+
+/**
+ * Jednostka sztukowa (zaokrąglana do całości albo zakresu, w sklepie w górę): znana sztuka (COUNT)
+ * albo każda jednostka ze słownika z odmianą, która nie jest miarką (SPOON) — np. „łodyga” dodana
+ * w panelu. g / ml / l nie mają odmiany, więc nigdy nie są sztukami.
+ */
+export function isCountUnit(name: string, unit?: IUnit): boolean {
+    if (COUNT.has(name)) return true;
+    return !!unit?.forms?.length && !SPOON.has(name);
+}
 const QUARTERS: Record<string, string> = { '0.25': '¼', '0.5': '½', '0.75': '¾' };
 const THIRDS: Record<string, string> = { '0.33': '⅓', '0.67': '⅔' };
 
@@ -78,9 +90,25 @@ function fraction(v: number): string {
     return third ? `${whole || ''}${third}` : quarters(v);
 }
 
-/** Liczba do wyświetlenia: ułamki tylko dla łyżek/szklanek i sztuk < 1; g / ml / l zawsze dziesiętnie. */
-export function fmtNum(v: number, unit: string): string {
-    if (SPOON.has(unit) || (COUNT.has(unit) && v < 1)) return fraction(v);
+/** Do połówek: 2⅔ → 2½, 1⅓ → 1½, 1¾ → 2. */
+function halves(v: number): string {
+    const h = Math.round(v * 2) / 2;
+    const whole = Math.floor(h);
+    return h > whole ? `${whole || ''}½` : String(whole);
+}
+
+/** Ilość do odmiany jednostki — po tym samym zaokrągleniu co liczba na ekranie. */
+export function shownAmount(v: number, unit: string): number {
+    if (HALVES.has(unit) && v >= 1) return Math.round(v * 2) / 2;
+    if (SPOON.has(unit)) return Math.round(v * 4) / 4;
+    return v;
+}
+
+/** Liczba do wyświetlenia: ułamki tylko dla łyżek/szklanek i sztuk < 1; g / ml / l zawsze dziesiętnie.
+ *  `count` — jednostka sztukowa (isCountUnit); domyślnie znane sztuki z COUNT. */
+export function fmtNum(v: number, unit: string, count = COUNT.has(unit)): string {
+    if (HALVES.has(unit) && v >= 1) return halves(v);
+    if (SPOON.has(unit) || (count && v < 1)) return fraction(v);
     if (v < 10 && !Number.isInteger(v))
         return (Math.round(v * 10) / 10).toString().replace('.', ',');
     if (v >= 50) return String(Math.round(v / 5) * 5);
@@ -104,14 +132,15 @@ export function scaleQuantity(
     if (q.empty) return { qty: '', unit: name };
     let lo = q.min * ratio;
     let hi = q.max * ratio;
-    if (COUNT.has(name) && lo >= 1) {
+    const count = isCountUnit(name, unit);
+    if (count && lo >= 1) {
         const near = (x: number) => Math.abs(x - Math.round(x)) < 0.05;
         lo = near(lo) ? Math.round(lo) : Math.floor(lo);
         hi = near(hi) ? Math.round(hi) : Math.ceil(hi);
         hi = Math.max(lo, hi);
     }
-    const a = fmtNum(lo, name);
-    const b = fmtNum(hi, name);
-    const shownHi = SPOON.has(name) ? Math.round(hi * 4) / 4 : hi;
+    const a = fmtNum(lo, name, count);
+    const b = fmtNum(hi, name, count);
+    const shownHi = shownAmount(hi, name);
     return { qty: a === b ? a : `${a}–${b}`, unit: unitLabel(unit, unitName, shownHi) };
 }
