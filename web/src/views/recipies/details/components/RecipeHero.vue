@@ -11,7 +11,9 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import { avg, fmt, type IRecipeNutrition, nf } from '@/shared/utils/nutrition';
 import { formatTime } from '@/shared/utils/time';
 
-// recipe null = ładowanie: ten sam .hero (zdjęcie 1:1, metadane) ze szkieletami w miejscu treści.
+// recipe null = ładowanie: ten sam .hero (bez zdjęcia — przepisy nie mają zdjęć) ze szkieletami w miejscu treści.
+// Przepis bez zdjęcia (20.11): bez zastępczego kadru — hero w jednej kolumnie (desktop max 760 px),
+// na telefonie tytuł 38 px, żeby składniki zaczynały się na pierwszym ekranie.
 const props = defineProps<{
     recipe: RecipeDto | null;
     servings: number;
@@ -49,18 +51,15 @@ function scrollToStep(no: number) {
 <template>
     <div
         v-if="!recipe"
-        class="hero"
+        class="hero hero--text"
         aria-busy="true"
     >
-        <div class="hero__photo hero__photo--sk">
-            <div class="sk hero__sk-fill" />
-            <div
-                class="hero__loading"
-                role="status"
-            >
-                <USpinner :size="28" />
-                <span>ładowanie przepisu…</span>
-            </div>
+        <div
+            class="hero__loading"
+            role="status"
+        >
+            <USpinner :size="20" />
+            <span>ładowanie przepisu…</span>
         </div>
         <div
             class="hero__text"
@@ -96,17 +95,15 @@ function scrollToStep(no: number) {
     <div
         v-else
         class="hero"
+        :class="{ 'hero--text': !recipe.photoUrl }"
     >
-        <div class="hero__photo">
+        <div
+            v-if="recipe.photoUrl"
+            class="hero__photo"
+        >
             <img
-                v-if="recipe.photoUrl"
                 :src="recipe.photoUrl"
                 :alt="`Zdjęcie: ${recipe.name}`"
-            />
-            <div
-                v-else
-                class="photo hero__placeholder"
-                aria-hidden="true"
             />
         </div>
         <div class="hero__text">
@@ -218,9 +215,7 @@ function scrollToStep(no: number) {
     border: 1px solid var(--rule);
     overflow: hidden;
 }
-.hero__photo img,
-.hero__placeholder,
-.hero__sk-fill {
+.hero__photo img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -340,21 +335,32 @@ function scrollToStep(no: number) {
     border: 1.5px solid var(--rule-strong);
 }
 
+/* bez zdjęcia: jedna kolumna, wymiary z prototypu pz-main.jsx (Hero) */
+.hero--text {
+    display: block;
+    max-width: 760px;
+}
+.hero--text .hero__flags {
+    margin-bottom: 20px;
+}
+.hero--text .hero__title {
+    font-size: clamp(48px, 6vw, 72px);
+    line-height: 1;
+    letter-spacing: -2.6px;
+}
+.hero--text .hero__tagline {
+    margin-top: 18px;
+}
+.hero--text .hero__meta {
+    margin-top: 28px;
+}
+
 /* szkielet: te same klasy co treść, wypełnienia .sk w miejscu tekstu */
-.hero__photo--sk {
-    position: relative;
-}
-.hero__sk-fill {
-    border-radius: 0;
-}
 .hero__loading {
-    position: absolute;
-    inset: 0;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
+    gap: 10px;
+    margin-bottom: 16px;
     font-size: 14px;
     color: var(--ink-muted);
 }
@@ -409,6 +415,30 @@ function scrollToStep(no: number) {
     .hero__meta {
         margin-top: 24px;
         gap: 24px;
+    }
+    .hero--text {
+        padding-top: 14px;
+    }
+    .hero--text .hero__flags {
+        margin-bottom: 12px;
+    }
+    .hero--text .hero__title {
+        font-size: 38px;
+        line-height: 1;
+        letter-spacing: -1.3px;
+    }
+    .hero--text .hero__tagline {
+        margin-top: 12px;
+        font-size: 16px;
+    }
+    .hero--text .hero__meta {
+        margin-top: 18px;
+        padding-top: 14px;
+        gap: 14px 22px;
+    }
+    .hero--text .hero__cautions,
+    .hero--text .hero__tags {
+        margin-top: 14px;
     }
 }
 </style>

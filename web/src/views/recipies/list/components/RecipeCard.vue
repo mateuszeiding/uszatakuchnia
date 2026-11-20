@@ -30,45 +30,38 @@ const kcal = computed(() => {
         :to="{ name: 'recipe-details', params: { id: recipe.id } }"
         class="r-card"
     >
-        <div class="r-card__photo">
+        <!-- bez zdjęcia — bez kadru (20.11: żadnego zastępczego obrazka) -->
+        <div
+            v-if="recipe.photoUrl"
+            class="r-card__photo"
+        >
             <img
-                v-if="recipe.photoUrl"
                 :src="recipe.photoUrl"
                 alt=""
                 loading="lazy"
             />
-            <div
-                v-else
-                class="photo r-card__placeholder"
-            />
-            <span
-                v-if="recipe.needsPrep"
-                class="r-card__prep"
-            >
-                <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    aria-hidden="true"
-                >
-                    <circle
-                        cx="6"
-                        cy="6"
-                        r="4.8"
-                        stroke="currentColor"
-                        stroke-width="1.3"
-                    />
-                    <path
-                        d="M6 3.5v2.7l1.7 1"
-                        stroke="currentColor"
-                        stroke-width="1.3"
-                        stroke-linecap="round"
-                    />
-                </svg>
-                wymaga przygotowania
-            </span>
         </div>
         <div class="r-card__body">
+            <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                aria-hidden="true"
+            >
+                <circle
+                    cx="6"
+                    cy="6"
+                    r="4.8"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                />
+                <path
+                    d="M6 3.5v2.7l1.7 1"
+                    stroke="currentColor"
+                    stroke-width="1.3"
+                    stroke-linecap="round"
+                />
+            </svg>
             <div
                 v-if="dish || cuisine"
                 class="r-card__flags"
@@ -113,6 +106,33 @@ const kcal = computed(() => {
                     na porcję, orientacyjnie
                 </span>
             </div>
+            <span
+                v-if="recipe.needsPrep"
+                class="r-card__prep"
+            >
+                <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    aria-hidden="true"
+                >
+                    <circle
+                        cx="6"
+                        cy="6"
+                        r="4.8"
+                        stroke="currentColor"
+                        stroke-width="1.3"
+                    />
+                    <path
+                        d="M6 3.5v2.7l1.7 1"
+                        stroke="currentColor"
+                        stroke-width="1.3"
+                        stroke-linecap="round"
+                    />
+                </svg>
+                wymaga przygotowania
+            </span>
         </div>
     </RouterLink>
 </template>
@@ -152,26 +172,20 @@ const kcal = computed(() => {
     position: relative;
     border-bottom: 1px solid var(--rule);
 }
-.r-card__photo img,
-.r-card__placeholder {
+.r-card__photo img {
     display: block; /* inline img dokładał linię tekstu — zdjęcie było o 1 px wyższe niż 1:1 */
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
+/* „wymaga przygotowania” w treści karty (dawniej na kadrze) */
 .r-card__prep {
-    position: absolute;
-    left: 10px;
-    bottom: 10px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    background: rgba(255, 248, 230, 0.95);
-    color: #5c420a;
-    padding: 4px 10px;
-    border-radius: var(--r-pill);
+    gap: 6px;
     font-size: 12px;
     font-weight: 600;
+    color: var(--prep);
 }
 .r-card__body {
     padding: 16px;

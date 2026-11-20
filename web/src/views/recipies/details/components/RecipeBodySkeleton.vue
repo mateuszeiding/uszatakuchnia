@@ -59,7 +59,7 @@ import StepsList from './StepsList.vue';
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: none;
         gap: 40px;
-        margin-top: 32px;
+        margin-top: 24px;
     }
     .recipe-grid__ing,
     .recipe-grid__steps,

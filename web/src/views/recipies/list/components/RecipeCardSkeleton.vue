@@ -1,11 +1,10 @@
 <template>
-    <!-- Ten sam układ co RecipeCard: zdjęcie 1:1 z linią, body 16 px / odstęp 10 px,
+    <!-- Ten sam układ co RecipeCard bez zdjęcia (przepisy nie mają zdjęć — bez kadru), body 16 px / odstęp 10 px,
          badge typu dania (prawdziwa klasa .badge — ta sama wysokość), tytuł na 2 linie, linia metadanych. -->
     <div
         class="skc"
         aria-hidden="true"
     >
-        <div class="skc__photo"><div class="sk skc__img" /></div>
         <div class="skc__body">
             <div class="skc__flags">
                 <span class="badge skc__badge">
@@ -33,18 +32,6 @@
     border: 1px solid var(--rule);
     border-radius: var(--r-lg);
     overflow: hidden;
-}
-/* jak .r-card__photo: kontener 1:1 z linią, wypełnienie w środku */
-.skc__photo {
-    box-sizing: content-box;
-    aspect-ratio: 1 / 1;
-    position: relative;
-    border-bottom: 1px solid var(--rule);
-}
-.skc__img {
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
 }
 .skc__body {
     padding: 16px;

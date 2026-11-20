@@ -133,7 +133,7 @@ const swapNote = computed(() =>
     .recipe-grid {
         grid-template-columns: minmax(0, 1fr);
         gap: 40px;
-        margin-top: 32px;
+        margin-top: 24px;
     }
     /* ikony → składniki → makro → sprzęt → kroki */
     .recipe-grid__side,

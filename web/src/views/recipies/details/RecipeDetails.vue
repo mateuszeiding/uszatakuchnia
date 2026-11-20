@@ -100,7 +100,7 @@ watch(
 
 @media (max-width: 900px) {
     .recipe-page__back {
-        padding-top: 16px;
+        padding-top: 12px;
     }
     .recipe-page__footer {
         padding: 32px 0 40px;
