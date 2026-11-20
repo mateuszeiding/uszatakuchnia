@@ -10,7 +10,7 @@
   font-family: var(--font-sans); line-height: 1.2;
   border: 1px solid transparent; cursor: pointer;
   background: var(--ink); color: var(--bg);
-  transition: background .15s, transform .1s, box-shadow .15s, opacity .15s;
+  transition: background .15s, box-shadow .15s, opacity .15s;
   text-decoration: none;
 }
 .btn svg { width: 15px; height: 15px; }
@@ -18,7 +18,7 @@
 .btn:disabled, .btn.is-disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
 .btn--saving { opacity: .75; cursor: not-allowed; pointer-events: none; }
 .btn--accent { background: var(--accent-fill); color: var(--on-accent); }
-.btn--accent:hover { background: var(--accent-fill); transform: translateY(-1px); box-shadow: var(--shadow-accent); }
+.btn--accent:hover { background: var(--accent-fill-hover); }
 .btn--secondary { background: var(--bg-alt); color: var(--ink); border-color: var(--rule-strong); }
 .btn--secondary:hover { background: var(--bg); }
 .btn--ghost { background: transparent; color: var(--ink-dim); }
@@ -197,11 +197,17 @@
 
 /* ── CARD / RECIPE CARD ── */
 .card { background: var(--bg-alt); border: 1px solid var(--rule); border-radius: var(--r-lg); overflow: hidden; }
-.recipe-card { display: block; color: inherit; text-decoration: none; transition: transform .15s, box-shadow .15s; }
-.recipe-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); text-decoration: none; }
+/* hover nie przesuwa i nie skaluje niczego z tekstem: ramka + tytuł w akcencie */
+.recipe-card { display: block; color: inherit; text-decoration: none; transition: border-color var(--dur-fast) var(--ease); }
+@media (hover: hover) {
+  .recipe-card:hover { border-color: var(--rule-strong); }
+  .recipe-card:hover .title { color: var(--accent); }
+}
+.recipe-card:focus-visible { border-color: var(--rule-strong); }
+.recipe-card:focus-visible .title { color: var(--accent); }
 .recipe-card .photo { border-bottom: 1px solid var(--rule); }
 .recipe-card .body { padding: 18px; display: flex; flex-direction: column; min-height: 130px; }
-.recipe-card .title { font-size: 18px; font-weight: 600; letter-spacing: -0.4px; line-height: 1.25; flex: 1; text-wrap: balance; }
+.recipe-card .title { font-size: 18px; font-weight: 600; letter-spacing: -0.4px; line-height: 1.25; flex: 1; text-wrap: balance; transition: color var(--dur-fast) var(--ease); }
 .recipe-card .meta { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-family: var(--font-mono); font-size: var(--text-meta); color: var(--ink-dim); letter-spacing: 0.4px; }
 .recipe-card .meta .sep { color: var(--ink-faint); }
 

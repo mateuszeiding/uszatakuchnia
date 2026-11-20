@@ -127,14 +127,23 @@ const kcal = computed(() => {
     border-radius: var(--r-lg);
     overflow: hidden;
     color: var(--ink);
-    transition:
-        transform 0.15s,
-        box-shadow 0.15s;
-}
-.r-card:hover {
     text-decoration: none;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-card);
+    transition: border-color var(--dur-fast) var(--ease);
+}
+/* hover nie przesuwa karty — translateY rozmywał tekst przy skalowaniu ekranu Windows */
+@media (hover: hover) {
+    .r-card:hover {
+        border-color: var(--rule-strong);
+    }
+    .r-card:hover .r-card__title {
+        color: var(--accent);
+    }
+}
+.r-card:focus-visible {
+    border-color: var(--rule-strong);
+}
+.r-card:focus-visible .r-card__title {
+    color: var(--accent);
 }
 .r-card__photo {
     /* kwadrat bez linii pod spodem (linia dochodzi) — ten sam wymiar w szkielecie */
@@ -187,6 +196,7 @@ const kcal = computed(() => {
     letter-spacing: -0.4px;
     line-height: 1.25;
     text-wrap: balance;
+    transition: color var(--dur-fast) var(--ease);
     flex: 1;
     /* dwie linie zarezerwowane — karta ma tę samą wysokość co szkielet i sąsiednie karty */
     min-height: calc(2 * 1.25em);

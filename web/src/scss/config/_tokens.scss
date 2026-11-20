@@ -94,6 +94,7 @@
   --accent-soft: #EDE8FB;
   /* tło przycisków z białym tekstem — w obu motywach to samo (biały 5,4:1); --accent zostaje dla linków, ikon, obramowań */
   --accent-fill: #6B4EE6;
+  --accent-fill-hover: #5A3FD0; /* hover przycisku akcentowego — biały 6,6:1 */
   --on-accent:   #FFFFFF;
 
   --success:      #2F6B3F; --success-soft: rgba(47, 107, 63, 0.12);
@@ -139,6 +140,7 @@
   --accent:      #9D8FE8;
   --accent-soft: rgba(157, 143, 232, 0.16);
   --accent-fill: #6B4EE6; /* biały na #9D8FE8 = 2,8:1 — za mało dla tekstu */
+  --accent-fill-hover: #5A3FD0;
   --on-accent:   #FFFFFF;
 
   --success: #5E9A6A; --success-soft: rgba(94, 154, 106, 0.18);
@@ -162,7 +164,7 @@
     --bg: #0A0A0F; --bg-alt: #13131C; --bg-elev: #1A1A26;
     --ink: #F8F8FF; --ink-dim: #D8D8E5; --ink-muted: #A0A0B2; --ink-faint: #8A8A9C;
     --rule: rgba(248, 248, 255, 0.08); --rule-strong: rgba(248, 248, 255, 0.18);
-    --accent: #9D8FE8; --accent-soft: rgba(157, 143, 232, 0.16); --accent-fill: #6B4EE6;
+    --accent: #9D8FE8; --accent-soft: rgba(157, 143, 232, 0.16); --accent-fill: #6B4EE6; --accent-fill-hover: #5A3FD0;
     --success: #5E9A6A; --success-soft: rgba(94, 154, 106, 0.18);
     --warning: #E8B95A; --warning-soft: rgba(232, 185, 90, 0.18);
     --danger:  #E55D4D; --danger-soft:  rgba(229, 93, 77, 0.18);

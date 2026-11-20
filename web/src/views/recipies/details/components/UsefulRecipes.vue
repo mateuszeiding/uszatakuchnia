@@ -104,10 +104,21 @@ const items = computed(() => usefulRecipes(props.ingredients));
     border-radius: var(--r-lg);
     color: var(--ink);
     text-decoration: none;
-    transition: border-color var(--dur);
+    transition: border-color var(--dur-fast) var(--ease);
 }
-.useful__card:hover {
+@media (hover: hover) {
+    .useful__card:hover {
+        border-color: var(--rule-strong);
+    }
+    .useful__card:hover .useful__name {
+        color: var(--accent);
+    }
+}
+.useful__card:focus-visible {
     border-color: var(--rule-strong);
+}
+.useful__card:focus-visible .useful__name {
+    color: var(--accent);
 }
 .useful__thumb {
     width: 48px;
@@ -127,6 +138,7 @@ const items = computed(() => usefulRecipes(props.ingredients));
     font-size: 14px;
     font-weight: 600;
     line-height: 1.3;
+    transition: color var(--dur-fast) var(--ease);
 }
 .useful__for {
     display: block;

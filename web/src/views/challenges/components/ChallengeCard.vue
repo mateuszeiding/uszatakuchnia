@@ -96,11 +96,21 @@ const lead = computed(() => paragraphs(props.challenge.description)[0] ?? '');
     border-radius: var(--r-xl);
     color: var(--ink);
     text-decoration: none;
-    transition: border-color var(--dur-fast);
+    transition: border-color var(--dur-fast) var(--ease);
 }
-.ch-card__link:hover {
+@media (hover: hover) {
+    .ch-card__link:hover {
+        border-color: var(--rule-strong);
+    }
+    .ch-card__link:hover .ch-card__title {
+        color: var(--accent);
+    }
+}
+.ch-card__link:focus-visible {
     border-color: var(--rule-strong);
-    text-decoration: none;
+}
+.ch-card__link:focus-visible .ch-card__title {
+    color: var(--accent);
 }
 .is-done .ch-card__link {
     background: var(--bg);
@@ -124,6 +134,7 @@ const lead = computed(() => paragraphs(props.challenge.description)[0] ?? '');
     letter-spacing: -0.4px;
     line-height: 1.25;
     min-height: calc(2 * 1.25em);
+    transition: color var(--dur-fast) var(--ease);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
