@@ -27,6 +27,7 @@
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
+  "ignoreCommand": "[ -n \"$VERCEL_GIT_COMMIT_REF\" ] && [ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ] && exit 0 || exit 1",
   "installCommand": "pnpm -C web install",
   "buildCommand": "pnpm -C web run build",
   "outputDirectory": "web/dist"

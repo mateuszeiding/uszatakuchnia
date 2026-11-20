@@ -56,6 +56,7 @@ Design przygotowuje Claude Design w artefakcie powyżej, pliki pod `project/`: `
   - Router sam odpowiada 404 (nieznana ścieżka) i 405 (zła metoda, z `Allow`) w JSON — handler nie sprawdza metody.
   - Handler **nie woła** `resp.Begin` (robi to raz `api/index.go`).
 - Wyjątek: `GET /recipes/{id}` i `/recipes/{id}/zakupy` (`handlers/share.go`) to strony dla botów podglądu linków (meta OG). `vercel.json` ma dla nich dwa rewrite'y z `has: user-agent`, a `router_test` pilnuje, żeby poza `/api/` były tylko takie trasy.
+- Vercel buduje tylko `main` (`ignoreCommand` w `vercel.json`): gałęzie i PR-y nie dostają wdrożeń podglądowych, bo podgląd łączyłby się z produkcyjną bazą i odpalał na niej migracje z niezatwierdzonego kodu. Włączenie podglądów = najpierw osobna baza dla Preview (gałąź Neon w `DB_DATABASE_URL`).
 - Router to zwykły `http.Handler` — poza Vercelem wystarczy `http.ListenAndServe(addr, http.HandlerFunc(api.Handler))`.
 - Encje DB: `db/entities/`, mappery: `db/mappers/`, DTOs: `dtos/`.
 - GORM AutoMigrate — nie piszesz ręcznych migracji SQL.
