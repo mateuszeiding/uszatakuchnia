@@ -9,18 +9,18 @@ type RecipeIngredient struct {
 	IngredientID uint       `gorm:"not null;index:ix_recing_ingredient"`
 	Ingredient   Ingredient `gorm:"foreignKey:IngredientID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 
-	// Ilość jako tekst: liczba, ułamek ("½", "1/4", "1,5") lub zakres ("2–3"). Parsowana przez services.ParseQuantity.
+	// Quantity as text: a number, a fraction ("½", "1/4", "1,5") or a range ("2–3"). Parsed by services.ParseQuantity.
 	Quantity *string `gorm:"type:varchar(32)"`
 	UnitID   *uint   `gorm:"index:ix_recing_unit"`
 	Unit     *Unit   `gorm:"foreignKey:UnitID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 	Note     *string `gorm:"type:varchar(255)"`
 	Optional bool    `gorm:"not null;default:false"`
 
-	// Link do przepisu na ten składnik (np. bułka → „Bułki do hamburgerów”). Usunięcie przepisu zeruje link.
+	// Link to the recipe for this ingredient (e.g. bun → "Bułki do hamburgerów"). Deleting that recipe clears the link.
 	LinkedRecipeID *uint   `gorm:"index:ix_recing_linked_recipe"`
 	LinkedRecipe   *Recipe `gorm:"foreignKey:LinkedRecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 
-	// Zamienniki w kolejności position. Usunięcie wiersza (zapis formularza zastępuje wiersze) usuwa zamienniki.
+	// Substitutes ordered by position. Deleting the row (saving the form replaces rows) deletes its substitutes.
 	Substitutes []RecipeIngredientSubstitute `gorm:"foreignKey:RecipeID,SortOrder;references:RecipeID,SortOrder;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	Recipe Recipe `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

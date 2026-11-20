@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// LoadNutritionIndex wczytuje wszystkie składniki, przeliczniki i jednostki (tabele są małe).
+// LoadNutritionIndex loads all ingredients, conversions and units (the tables are small).
 func LoadNutritionIndex(tx *gorm.DB) (*NutritionIndex, error) {
 	var ings []entities.Ingredient
 	if err := tx.Omit("Type", "Parent", "Image").Find(&ings).Error; err != nil {
@@ -61,8 +61,8 @@ func LoadNutritionIndex(tx *gorm.DB) (*NutritionIndex, error) {
 	return ix, nil
 }
 
-// RecomputeRecipes przelicza i zapisuje recipes.nutrition. Bez argumentów — wszystkie przepisy
-// (zmiana składnika wpływa na przodków i potomków w drzewie, a przepisów jest niewiele).
+// RecomputeRecipes computes and saves recipes.nutrition. Without arguments, all recipes
+// (an ingredient change affects ancestors and descendants in the tree, and there are few recipes).
 func RecomputeRecipes(tx *gorm.DB, recipeIDs ...uint) error {
 	ix, err := LoadNutritionIndex(tx)
 	if err != nil {

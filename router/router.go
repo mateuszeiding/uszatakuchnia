@@ -1,8 +1,8 @@
-// Package router — rozdziela żądania API na handlery po metodzie i ścieżce (http.ServeMux z Go ≥ 1.22).
+// Package router dispatches API requests to handlers by method and path (http.ServeMux, Go ≥ 1.22).
 //
-// To zwykły http.Handler: na Vercelu woła go jedyna funkcja w api/index.go (po resp.Begin), a po
-// wyprowadzce z Vercela wystarczy http.ListenAndServe(addr, http.HandlerFunc(api.Handler)).
-// Trasy są w routes.go — nowy endpoint to jedna linijka w tabeli Routes.
+// It's a plain http.Handler: on Vercel the only function in api/index.go calls it (after resp.Begin);
+// off Vercel, http.ListenAndServe(addr, http.HandlerFunc(api.Handler)) is enough.
+// Routes live in routes.go: a new endpoint is one line in the Routes table.
 package router
 
 import (
@@ -13,21 +13,20 @@ import (
 	resp "uszatakuchnia/http"
 )
 
-// Route — jedna metoda jednej ścieżki.
 type Route struct {
-	Method string // GET obejmuje też HEAD
-	// Path — wzorzec http.ServeMux. {id} przepuszcza tylko liczbę ≥ 1, inaczej 404
-	// (jak dawne :id(\d+) w vercel.json; handlery czytają go przez r.PathValue("id")).
+	Method string // GET also covers HEAD
+	// Path is an http.ServeMux pattern. {id} matches only numbers ≥ 1, otherwise 404
+	// (handlers read it via r.PathValue("id")).
 	Path    string
 	Handler http.HandlerFunc
 }
 
-// New — router z tabeli tras. Nieznana ścieżka → 404, znana ścieżka ze złą metodą → 405
-// (z nagłówkiem Allow), oba jako JSON {"error": …} przez resp.Error. Nie woła resp.Begin —
-// to robi raz funkcja w api/ przed routerem. Panikuje przy kolidujących trasach (jak ServeMux).
+// New builds the router from the route table. Unknown path → 404, known path with a wrong method → 405
+// (with an Allow header), both as JSON {"error": …} via resp.Error. It doesn't call resp.Begin:
+// the function in api/ does that once, before the router. Panics on conflicting routes (like ServeMux).
 func New(routes []Route) http.Handler {
 	mux := http.NewServeMux()
-	paths := http.NewServeMux() // te same ścieżki bez metody — odróżnia 405 od 404
+	paths := http.NewServeMux() // the same paths without a method: tells 405 from 404
 	allow := map[string][]string{}
 	for _, rt := range routes {
 		h := rt.Handler
@@ -36,13 +35,13 @@ func New(routes []Route) http.Handler {
 		}
 		mux.HandleFunc(rt.Method+" "+rt.Path, h)
 		if _, seen := allow[rt.Path]; !seen {
-			paths.HandleFunc(rt.Path, http.NotFound) // nigdy niewołany, tylko do dopasowania
+			paths.HandleFunc(rt.Path, http.NotFound) // never called, only used for matching
 		}
 		allow[rt.Path] = append(allow[rt.Path], rt.Method)
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// ServeHTTP (nie sam handler z mux.Handler), bo dopiero on ustawia r.PathValue.
+		// ServeHTTP (not the handler from mux.Handler), because only it sets r.PathValue.
 		if _, pattern := mux.Handler(r); pattern != "" {
 			mux.ServeHTTP(w, r)
 			return

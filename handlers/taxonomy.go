@@ -17,8 +17,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// Dictionaries — GET /api/taxonomy/list: wszystkie słowniki: osie klasyfikacji z wartościami,
-// jednostki, alergeny, typy składników, sprzęt, formaty wyzwań.
+// Dictionaries returns every dictionary: classification axes with their values,
+// units, allergens, ingredient types, equipment and challenge formats.
 func Dictionaries(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 
@@ -76,7 +76,7 @@ func Dictionaries(w http.ResponseWriter, r *http.Request) {
 		equipmentDto = append(equipmentDto, d)
 	}
 
-	// Liczby użyć (panel: usuwanie używanej wartości = przeniesienie przepisów).
+	// Usage counts (admin panel: deleting a used value = moving its recipes).
 	type count struct {
 		ID uint
 		N  int
@@ -123,11 +123,11 @@ func Dictionaries(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// ─── Wartości osi klasyfikacji (panel → Klasyfikacja) ─────────────────
+// ─── Classification axis values (admin → Classification) ─────────────────
 //
 //	POST   /api/taxonomy/values                  {axisId, label, color?}
 //	PUT    /api/taxonomy/values/{id}             {label, color?}
-//	DELETE /api/taxonomy/values/{id}?moveTo=<id>  przepisy z tą wartością dostają moveTo
+//	DELETE /api/taxonomy/values/{id}?moveTo=<id>  recipes with this value get moveTo
 
 type valueRequest struct {
 	AxisID uint    `json:"axisId"`
@@ -143,7 +143,6 @@ func labelTaken(tx *gorm.DB, axisID uint, label string, exceptID uint) bool {
 	return n > 0
 }
 
-// ValueCreate — POST /api/taxonomy/values.
 func ValueCreate(w http.ResponseWriter, r *http.Request) {
 	var req valueRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -182,7 +181,6 @@ func ValueCreate(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusCreated, mappers.MapTaxonomyValueToDto(val))
 }
 
-// ValueUpdate — PUT /api/taxonomy/values/{id}.
 func ValueUpdate(w http.ResponseWriter, r *http.Request) {
 	var req valueRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -221,7 +219,6 @@ func ValueUpdate(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, mappers.MapTaxonomyValueToDto(val))
 }
 
-// ValueDelete — DELETE /api/taxonomy/values/{id}?moveTo=<id>.
 func ValueDelete(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 
@@ -258,7 +255,7 @@ func ValueDelete(w http.ResponseWriter, r *http.Request) {
 
 	if err := conn.Transaction(func(tx *gorm.DB) error {
 		if moveTo != 0 {
-			// przepisy, które mają już wartość docelową, nie dostają jej drugi raz
+			// recipes that already have the target value don't get it twice
 			if err := tx.Exec(
 				"INSERT INTO recipe_taxonomy (recipe_id, value_id) "+
 					"SELECT recipe_id, ? FROM recipe_taxonomy WHERE value_id = ? ON CONFLICT DO NOTHING",

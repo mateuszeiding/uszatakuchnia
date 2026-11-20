@@ -16,25 +16,23 @@ import (
 	"gorm.io/gorm"
 )
 
-// ─── Jednostki (panel → Klasyfikacja → Jednostki) ─────────────────
+// ─── Units (admin → Classification → Units) ─────────────────
 //
 //	POST   /api/taxonomy/units                    {name, forms, noQty}
 //	PUT    /api/taxonomy/units/{id}               {name, forms, noQty}
-//	DELETE /api/taxonomy/units/{id}?moveTo=<id>   składniki w przepisach dostają moveTo (bez = bez jednostki)
+//	DELETE /api/taxonomy/units/{id}?moveTo=<id>   recipe ingredients get moveTo (none = no unit)
 
 type unitRequest struct {
 	Name  string   `json:"name"`
-	Forms []string `json:"forms"` // [1, 2–4, 5+] albo puste = nieodmienna
+	Forms []string `json:"forms"` // [1, 2–4, 5+] or empty = doesn't inflect
 	NoQty bool     `json:"noQty"`
 }
 
-// UnitCreate — POST /api/taxonomy/units.
 func UnitCreate(w http.ResponseWriter, r *http.Request) { saveUnit(w, r, 0) }
 
-// UnitUpdate — PUT /api/taxonomy/units/{id}.
 func UnitUpdate(w http.ResponseWriter, r *http.Request) { saveUnit(w, r, pathID(r)) }
 
-// saveUnit — id 0 = nowa jednostka (na końcu listy), inaczej zapis istniejącej.
+// saveUnit: id 0 = new unit (appended at the end), otherwise update the existing one.
 func saveUnit(w http.ResponseWriter, r *http.Request, id uint) {
 	var req unitRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -92,7 +90,6 @@ func saveUnit(w http.ResponseWriter, r *http.Request, id uint) {
 	resp.JSON(w, status, mappers.MapUnitToDto(unit))
 }
 
-// UnitDelete — DELETE /api/taxonomy/units/{id}?moveTo=<id>.
 func UnitDelete(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 	var unit entities.Unit
@@ -132,17 +129,15 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, map[string]any{"deleted": unit.ID, "moved": used})
 }
 
-// ─── Sprzęt (panel → Klasyfikacja → Sprzęt) ─────────────────
+// ─── Equipment (admin → Classification → Equipment) ─────────────────
 //
 //	POST   /api/taxonomy/equipment                       {name}
 //	PUT    /api/taxonomy/equipment/{id}                  {name}
-//	DELETE /api/taxonomy/equipment/{id}?replaceWith=<id>  przepisy dostają inny sprzęt (doprecyzowania zostają)
+//	DELETE /api/taxonomy/equipment/{id}?replaceWith=<id>  recipes get other equipment (details stay)
 //	DELETE /api/taxonomy/equipment/{id}?removeFromRecipes=true
 
-// EquipmentCreate — POST /api/taxonomy/equipment.
 func EquipmentCreate(w http.ResponseWriter, r *http.Request) { saveEquipment(w, r, 0) }
 
-// EquipmentUpdate — PUT /api/taxonomy/equipment/{id}.
 func EquipmentUpdate(w http.ResponseWriter, r *http.Request) { saveEquipment(w, r, pathID(r)) }
 
 func saveEquipment(w http.ResponseWriter, r *http.Request, id uint) {
@@ -170,7 +165,6 @@ func saveEquipment(w http.ResponseWriter, r *http.Request, id uint) {
 	}
 }
 
-// EquipmentDelete — DELETE /api/taxonomy/equipment/{id}[?replaceWith=<id>|?removeFromRecipes=true].
 func EquipmentDelete(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	id := pathID(r)

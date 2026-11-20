@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Limity jak kolumny w bazie (znaki).
+// Limits match the database columns (characters).
 const (
 	MaxChallengeTitleLen      = 255
 	MaxChallengeSourceLen     = 255
@@ -35,8 +35,8 @@ var (
 
 var manyBlankLines = regexp.MustCompile(`\n[ \t]*\n(?:[ \t]*\n)+`)
 
-// NormalizeChallengeRequest — przycina pola, ujednolica akapity opisu (jedna pusta linia między nimi),
-// pomija puste pozycje składników, puste źródło = brak.
+// NormalizeChallengeRequest trims fields, normalizes description paragraphs (one blank line between them),
+// drops empty ingredient items; an empty source = none.
 func NormalizeChallengeRequest(req dtos.UpsertChallengeRequest) dtos.UpsertChallengeRequest {
 	req.Title = strings.Join(strings.Fields(req.Title), " ")
 	req.Format = strings.Join(strings.Fields(req.Format), " ")
@@ -74,7 +74,7 @@ func NormalizeChallengeRequest(req dtos.UpsertChallengeRequest) dtos.UpsertChall
 	return req
 }
 
-// validateChallengeFields — walidacja bez bazy (format sprawdza ValidateChallenge).
+// validateChallengeFields validates without the database (ValidateChallenge checks the format).
 func validateChallengeFields(req dtos.UpsertChallengeRequest) []dtos.FieldError {
 	errs := []dtos.FieldError{}
 	add := func(field, msg string) { errs = append(errs, dtos.FieldError{Field: field, Message: msg}) }
@@ -116,7 +116,7 @@ func validateChallengeFields(req dtos.UpsertChallengeRequest) []dtos.FieldError 
 	return errs
 }
 
-// ValidateChallenge — req po NormalizeChallengeRequest. Format podany nazwą zamienia na formatId.
+// ValidateChallenge expects req after NormalizeChallengeRequest. A format given by name is turned into formatId.
 func ValidateChallenge(tx *gorm.DB, req *dtos.UpsertChallengeRequest) ([]dtos.FieldError, error) {
 	errs := validateChallengeFields(*req)
 	if req.FormatID == 0 && req.Format == "" {
@@ -141,7 +141,7 @@ func ValidateChallenge(tx *gorm.DB, req *dtos.UpsertChallengeRequest) ([]dtos.Fi
 	return errs, nil
 }
 
-// LoadChallenges — wszystkie wyzwania, najnowsze na górze.
+// LoadChallenges returns all challenges, newest first.
 func LoadChallenges(tx *gorm.DB) ([]entities.Challenge, error) {
 	var list []entities.Challenge
 	err := tx.Preload("Format").
@@ -165,8 +165,8 @@ func LoadChallenge(tx *gorm.DB, id uint) (entities.Challenge, error) {
 	return c, nil
 }
 
-// SaveChallenge tworzy (id 0) albo nadpisuje wyzwanie razem z listą składników.
-// req po NormalizeChallengeRequest i ValidateChallenge (formatId ustawiony).
+// SaveChallenge creates (id 0) or overwrites a challenge along with its ingredient list.
+// req must have gone through NormalizeChallengeRequest and ValidateChallenge (formatId set).
 func SaveChallenge(conn *gorm.DB, id uint, req dtos.UpsertChallengeRequest) (uint, error) {
 	err := conn.Transaction(func(tx *gorm.DB) error {
 		c := entities.Challenge{
@@ -225,7 +225,7 @@ func DeleteChallenge(tx *gorm.DB, id uint) error {
 	return nil
 }
 
-// ─── Formaty (Panel → Klasyfikacja → Formaty wyzwań) ─────────
+// ─── Formats (admin → Classification → Challenge formats) ─────────
 
 func cleanChallengeFormatName(name string) (string, error) {
 	name = strings.Join(strings.Fields(name), " ")
@@ -238,7 +238,7 @@ func cleanChallengeFormatName(name string) (string, error) {
 	return name, nil
 }
 
-// SaveChallengeFormat tworzy (id 0, na końcu kolejności) albo zmienia nazwę formatu.
+// SaveChallengeFormat creates (id 0, last in order) or renames a format.
 func SaveChallengeFormat(tx *gorm.DB, id uint, rawName string) (entities.ChallengeFormat, error) {
 	name, err := cleanChallengeFormatName(rawName)
 	if err != nil {
@@ -264,7 +264,7 @@ func SaveChallengeFormat(tx *gorm.DB, id uint, rawName string) (entities.Challen
 	return f, tx.Save(&f).Error
 }
 
-// ChallengeFormatUsage — w ilu wyzwaniach użyty każdy format.
+// ChallengeFormatUsage: number of challenges using each format.
 func ChallengeFormatUsage(tx *gorm.DB) (map[uint]int, error) {
 	var rows []struct {
 		ID uint
@@ -281,8 +281,8 @@ func ChallengeFormatUsage(tx *gorm.DB) (map[uint]int, error) {
 	return out, nil
 }
 
-// DeleteChallengeFormat usuwa format. Używany wymaga moveTo (format jest wymagany w wyzwaniu):
-// wyzwania przechodzą do innego formatu. Zwraca liczbę przeniesionych wyzwań.
+// DeleteChallengeFormat deletes a format. One in use needs moveTo (a challenge requires a format):
+// its challenges move to the other format. Returns the number of challenges moved.
 func DeleteChallengeFormat(conn *gorm.DB, id, moveTo uint) (int64, error) {
 	var f entities.ChallengeFormat
 	if err := conn.First(&f, id).Error; err != nil {
@@ -303,7 +303,7 @@ func DeleteChallengeFormat(conn *gorm.DB, id, moveTo uint) (int64, error) {
 	}
 	err := conn.Transaction(func(tx *gorm.DB) error {
 		if used > 0 {
-			// bez UpdatedAt: zmiana słownika to nie edycja wyzwania
+			// no UpdatedAt: a dictionary change isn't a challenge edit
 			if err := tx.Exec(`UPDATE challenges SET format_id = ? WHERE format_id = ?`, moveTo, id).Error; err != nil {
 				return err
 			}

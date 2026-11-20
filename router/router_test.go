@@ -14,15 +14,15 @@ import (
 
 const testKey = "0123456789abcdef0123456789abcdef-router"
 
-// isBotPage — strona dla botów podglądu linków: jedyne trasy poza /api/, tylko GET pod /recipes/.
+// isBotPage: a page for link-preview bots, the only routes outside /api/, GET only, under /recipes/.
 func isBotPage(rt router.Route) bool {
 	return rt.Method == http.MethodGet && strings.HasPrefix(rt.Path, "/recipes/")
 }
 
-// samplePath — adres trasy z {id} podmienionym na liczbę.
+// samplePath: the route path with {id} replaced by a number.
 func samplePath(rt router.Route) string { return strings.ReplaceAll(rt.Path, "{id}", "7") }
 
-// call — żądanie do prawdziwej funkcji Vercela (api.Handler: Begin + router).
+// call sends a request to the real Vercel function (api.Handler: Begin + router).
 func call(method, path string, hdr map[string]string) *httptest.ResponseRecorder {
 	r := httptest.NewRequest(method, path, nil)
 	for k, v := range hdr {
@@ -47,8 +47,8 @@ func jsonError(t *testing.T, w *httptest.ResponseRecorder) string {
 	return body.Error
 }
 
-// Każda trasa z tabeli (nowa trafia tu sama): zapis bez tokenu i ze złym kluczem → 401,
-// preflight z dozwolonego originu → 204 z CORS, nagłówki CORS ustawione raz.
+// Every route in the table (new ones are picked up automatically): a write without a token or with a bad key → 401,
+// preflight from an allowed origin → 204 with CORS, CORS headers set once.
 func TestEveryRouteIsGuardedByBegin(t *testing.T) {
 	t.Setenv("API_ADMIN_KEY", testKey)
 	if len(router.Routes) == 0 {
@@ -89,8 +89,8 @@ func TestEveryRouteIsGuardedByBegin(t *testing.T) {
 	}
 }
 
-// Begin działa też przed 404 i 405: zapis na nieznany adres albo złą metodą bez tokenu → 401.
-// Z kluczem router odpowiada 404 / 405 w JSON. Żadne z tych żądań nie dotyka bazy.
+// Begin also runs before 404 and 405: a write to an unknown path or with a wrong method, no token → 401.
+// With the key, the router answers 404 / 405 in JSON. None of these requests touch the database.
 func TestBeginRunsBeforeNotFoundAndMethodNotAllowed(t *testing.T) {
 	t.Setenv("API_ADMIN_KEY", testKey)
 	withKey := map[string]string{"Authorization": "Bearer " + testKey}
@@ -106,7 +106,7 @@ func TestBeginRunsBeforeNotFoundAndMethodNotAllowed(t *testing.T) {
 		{http.MethodGet, "/api/nope", nil, http.StatusNotFound},
 		{http.MethodGet, "/api", nil, http.StatusNotFound},
 		{http.MethodGet, "/api/recipes/", nil, http.StatusNotFound},
-		{http.MethodGet, "/api/recipes/abc", nil, http.StatusNotFound}, // jak dawne :id(\d+)
+		{http.MethodGet, "/api/recipes/abc", nil, http.StatusNotFound},
 		{http.MethodGet, "/api/recipes/0", nil, http.StatusNotFound},
 		{http.MethodGet, "/api/recipes/1x", nil, http.StatusNotFound},
 		{http.MethodGet, "/api/taxonomy/units?kind=equipment", nil, http.StatusMethodNotAllowed},
@@ -132,8 +132,8 @@ func TestBeginRunsBeforeNotFoundAndMethodNotAllowed(t *testing.T) {
 	}
 }
 
-// Każda trasa trafia do swojego handlera z {id} w r.PathValue (handlery podmienione na zaślepki —
-// bez bazy). Query zostaje nietknięte (?moveTo=, ?admin=true).
+// Every route reaches its own handler with {id} in r.PathValue (handlers replaced with stubs,
+// no database). The query string stays intact (?moveTo=, ?admin=true).
 func TestEveryRouteReachesItsHandler(t *testing.T) {
 	stubs := make([]router.Route, len(router.Routes))
 	hit := -1
@@ -195,8 +195,8 @@ func readVercelRewrites(t *testing.T) ([]vercelRewrite, string) {
 	return cfg.Rewrites, string(raw)
 }
 
-// vercel.json: całe API jednym rewrite'em (bez warunków) do jedynej funkcji, bez dawnych ?kind=.
-// Pozostałe rewrite'y do funkcji to strony dla botów podglądu — każdy z warunkiem na user-agent.
+// vercel.json: the whole API in one rewrite (no conditions) to the only function.
+// The other rewrites to the function are bot preview pages, each conditioned on the user agent.
 func TestVercelJSONHasSingleAPIRewrite(t *testing.T) {
 	rewrites, raw := readVercelRewrites(t)
 	api := 0
@@ -218,8 +218,8 @@ func TestVercelJSONHasSingleAPIRewrite(t *testing.T) {
 	}
 }
 
-// Strony dla botów podglądu: każda trasa poza /api/ ma w vercel.json rewrite do /api/index
-// z warunkiem na user-agent (ludzie dostają statyczny index.html), i to przed rewrite'em SPA.
+// Bot preview pages: every route outside /api/ has a rewrite to /api/index in vercel.json,
+// conditioned on the user agent (people get the static index.html), placed before the SPA rewrite.
 func TestBotPagesRewrittenOnlyForBots(t *testing.T) {
 	rewrites, _ := readVercelRewrites(t)
 	spa := -1

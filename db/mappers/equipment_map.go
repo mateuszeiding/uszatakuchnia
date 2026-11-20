@@ -5,7 +5,7 @@ import (
 	"uszatakuchnia/dtos"
 )
 
-// MapRecipeEquipmentToDto wymaga preloadu Equipment.Equipment (kolejność sort_order).
+// MapRecipeEquipmentToDto needs Equipment.Equipment preloaded (ordered by sort_order).
 func MapRecipeEquipmentToDto(a []entities.RecipeEquipment) []dtos.RecipeEquipmentDto {
 	out := make([]dtos.RecipeEquipmentDto, 0, len(a))
 	for _, e := range a {

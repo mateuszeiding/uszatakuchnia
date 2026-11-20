@@ -1,10 +1,10 @@
-// Package auth rozpoznaje, kto wysyła żądanie do API.
+// Package auth identifies who sent an API request.
 //
-// Prawo zapisu (i podglądu szkiców) ma tylko właściciel, na dwa sposoby:
-//   - przeglądarka: token dostępu Auth0 (JWT RS256), którego `sub` = AUTH0_OWNER_SUB,
-//   - sesje Claude Code na komputerze właściciela: klucz API_ADMIN_KEY z `.env.local`.
+// Only the owner may write (and preview drafts), in one of two ways:
+//   - browser: an Auth0 access token (JWT RS256) whose `sub` = AUTH0_OWNER_SUB,
+//   - Claude Code sessions on the owner's machine: the API_ADMIN_KEY from `.env.local`.
 //
-// Oba idą w nagłówku `Authorization: Bearer …`.
+// Both come in the `Authorization: Bearer …` header.
 package auth
 
 import (
@@ -19,28 +19,27 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Result — wynik sprawdzenia żądania.
 type Result int
 
 const (
-	Anonymous Result = iota // brak nagłówka Authorization → 401
-	Invalid                 // zły klucz, nieważny / wygasły token → 401
-	Forbidden               // ważny token, ale nie właściciela → 403
-	Owner                   // właściciel (przeglądarka albo klucz API)
+	Anonymous Result = iota // no Authorization header → 401
+	Invalid                 // wrong key, invalid / expired token → 401
+	Forbidden               // valid token, but not the owner's → 403
+	Owner                   // owner (browser or API key)
 )
 
-// MinKeyLen — krótszy klucz API jest ignorowany (za łatwy do zgadnięcia).
+// MinKeyLen: a shorter API key is ignored (too easy to guess).
 const MinKeyLen = 32
 
 type Config struct {
 	APIKey   string // API_ADMIN_KEY
 	Issuer   string // https://<AUTH0_DOMAIN>/
-	Audience string // identyfikator API w Auth0
-	OwnerSub string // AUTH0_OWNER_SUB, np. "google-oauth2|123…"
-	JWKSURL  string // domyślnie Issuer + ".well-known/jwks.json"
+	Audience string // Auth0 API identifier
+	OwnerSub string // AUTH0_OWNER_SUB, e.g. "google-oauth2|123…"
+	JWKSURL  string // defaults to Issuer + ".well-known/jwks.json"
 }
 
-// env — pierwsza niepusta zmienna. Frontend ma już VITE_AUTH0_*, więc backend przyjmuje je jako zapas.
+// env returns the first non-empty variable. The frontend already has VITE_AUTH0_*, so the backend accepts those as a fallback.
 func env(names ...string) string {
 	for _, n := range names {
 		if v := strings.TrimSpace(os.Getenv(n)); v != "" {
@@ -50,7 +49,6 @@ func env(names ...string) string {
 	return ""
 }
 
-// FromEnv — konfiguracja ze zmiennych środowiskowych (Vercel / .env.local).
 func FromEnv() Config {
 	c := Config{
 		APIKey:   env("API_ADMIN_KEY"),
@@ -64,10 +62,8 @@ func FromEnv() Config {
 	return c
 }
 
-// Check — kto wysłał żądanie.
 func Check(r *http.Request) Result { return FromEnv().Check(r) }
 
-// IsOwner — skrót do warunków typu „pokaż szkic”.
 func IsOwner(r *http.Request) bool { return Check(r) == Owner }
 
 func (c Config) Check(r *http.Request) Result {
@@ -85,7 +81,7 @@ func (c Config) Check(r *http.Request) Result {
 		return Owner
 	}
 	if strings.Count(token, ".") != 2 {
-		return Invalid // nie JWT, a klucz się nie zgadza
+		return Invalid // not a JWT, and the key doesn't match
 	}
 
 	sub, err := c.verifyJWT(token)
@@ -102,7 +98,7 @@ func (c Config) keyMatches(token string) bool {
 	if len(c.APIKey) < MinKeyLen {
 		return false
 	}
-	// porównanie skrótów: stały czas niezależnie od długości
+	// compare hashes: constant time regardless of length
 	a := sha256.Sum256([]byte(token))
 	b := sha256.Sum256([]byte(c.APIKey))
 	return subtle.ConstantTimeCompare(a[:], b[:]) == 1

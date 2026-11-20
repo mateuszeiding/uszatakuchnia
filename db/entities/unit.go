@@ -1,14 +1,14 @@
 package entities
 
-// Unit — jednostka miary. Formy odmiany dla liczebników: 1 / 2–4 / 5+ (np. ząbek / ząbki / ząbków).
-// Brak form = jednostka nieodmienna (g, ml).
+// Unit is a unit of measure. Inflected forms for numerals: 1 / 2–4 / 5+ (e.g. ząbek / ząbki / ząbków).
+// No forms = the unit doesn't inflect (g, ml).
 type Unit struct {
 	ID        uint    `gorm:"primaryKey;autoIncrement"`
 	Name      string  `gorm:"type:varchar(32);not null;uniqueIndex:ux_units_name"`
 	FormOne   *string `gorm:"type:varchar(32)"`
 	FormFew   *string `gorm:"type:varchar(32)"`
 	FormMany  *string `gorm:"type:varchar(32)"`
-	NoQty     bool    `gorm:"not null;default:false"` // "do smaku" — bez ilości
+	NoQty     bool    `gorm:"not null;default:false"` // "do smaku" (to taste): no quantity
 	SortOrder int     `gorm:"not null;default:0"`
 }
 

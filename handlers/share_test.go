@@ -26,7 +26,7 @@ const tplIndex = `<!doctype html>
 func sp(s string) *string { return &s }
 func ip(n int) *int       { return &n }
 
-// stub — przepisy bez bazy i index.html bez sieci; przywraca oryginały po teście.
+// stub: recipes without a database and index.html without the network; restores the originals after the test.
 func stub(t *testing.T, recipes map[uint]*shareRecipe, tpl string) {
 	t.Helper()
 	origLoad, origFetch := loadShareRecipe, fetchIndex
@@ -79,7 +79,7 @@ func TestRecipePageMeta(t *testing.T) {
 		`<meta property="og:image:height" content="630" />`,
 		`<meta property="og:image:alt" content="uszatakuchnia — przepisy z domowej kuchni" />`,
 		`<meta name="twitter:card" content="summary_large_image" />`,
-		`<script type="module" src="/assets/index-abc.js">`, // reszta index.html bez zmian
+		`<script type="module" src="/assets/index-abc.js">`, // rest of index.html unchanged
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("missing %s\n%s", want, body)
@@ -102,7 +102,7 @@ func TestShoppingPageMeta(t *testing.T) {
 			t.Errorf("missing %s\n%s", want, body)
 		}
 	}
-	// bez ?porcje= (albo z bzdurą) — porcje przepisu
+	// without ?porcje= (or with garbage): the recipe's servings
 	for _, path := range []string{"/recipes/6/zakupy", "/recipes/6/zakupy?porcje=99"} {
 		if b := get(path, ShoppingSharePage, "6"); !strings.Contains(b, `· 6 porcji" />`) {
 			t.Errorf("%s: servings from recipe expected\n%s", path, b)

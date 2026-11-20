@@ -84,7 +84,7 @@ func TestValidateIngredientParentCycle(t *testing.T) {
 	ix.Children[3] = []uint{7}
 	ix.Parent[7] = up(3)
 	ix.Names[7] = "fusilli mini"
-	for _, parent := range []uint{3, 7} { // sam siebie, wnuk
+	for _, parent := range []uint{3, 7} { // itself, grandchild
 		req := validReq()
 		req.ParentID = up(parent)
 		if got := fieldMsgs(ValidateIngredientRequest(req, ix, 3))["parentId"]; got != "Składnik nie może być własnym podskładnikiem" {

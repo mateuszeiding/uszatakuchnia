@@ -12,13 +12,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// MaxEquipmentSpecLen — najdłuższe doprecyzowanie sprzętu (znaki), jak varchar(160).
+// MaxEquipmentSpecLen is the longest equipment detail (characters), matching varchar(160).
 const MaxEquipmentSpecLen = 160
 
-// MaxEquipmentNameLen — najdłuższa nazwa sprzętu w słowniku (znaki), jak varchar(120).
+// MaxEquipmentNameLen is the longest equipment name in the dictionary (characters), matching varchar(120).
 const MaxEquipmentNameLen = 120
 
-// validateEquipment — sprzęt istnieje w słowniku, doprecyzowanie mieści się w kolumnie.
+// validateEquipment: the equipment exists in the dictionary and the detail fits the column.
 func validateEquipment(tx *gorm.DB, req dtos.UpsertRecipeRequest, add func(field, msg string)) error {
 	if req.Equipment == nil {
 		return nil
@@ -49,7 +49,7 @@ func validateEquipment(tx *gorm.DB, req dtos.UpsertRecipeRequest, add func(field
 	return nil
 }
 
-// replaceRecipeEquipment zastępuje sprzęt przepisu (nil w requeście = bez zmian).
+// replaceRecipeEquipment replaces the recipe's equipment (nil in the request = unchanged).
 func replaceRecipeEquipment(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequest) error {
 	if req.Equipment == nil {
 		return nil
@@ -73,7 +73,7 @@ func replaceRecipeEquipment(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeReq
 	return nil
 }
 
-// ─── Słownik (Panel → Klasyfikacja → Sprzęt) ─────────────────
+// ─── Dictionary (admin → Classification → Equipment) ─────────────────
 
 var (
 	ErrEquipmentName     = errors.New("name is required")
@@ -100,7 +100,7 @@ func equipmentNameTaken(tx *gorm.DB, name string, exceptID uint) (bool, error) {
 	return n > 0, err
 }
 
-// SaveEquipment tworzy (id 0) albo zmienia nazwę pozycji słownika.
+// SaveEquipment creates (id 0) or renames a dictionary item.
 func SaveEquipment(tx *gorm.DB, id uint, rawName string) (entities.Equipment, error) {
 	name, err := cleanEquipmentName(rawName)
 	if err != nil {
@@ -121,7 +121,7 @@ func SaveEquipment(tx *gorm.DB, id uint, rawName string) (entities.Equipment, er
 	return e, tx.Save(&e).Error
 }
 
-// EquipmentUsage — w ilu przepisach użyty każdy sprzęt.
+// EquipmentUsage: number of recipes using each equipment item.
 func EquipmentUsage(tx *gorm.DB) (map[uint]int, error) {
 	var rows []struct {
 		ID uint
@@ -139,8 +139,8 @@ func EquipmentUsage(tx *gorm.DB) (map[uint]int, error) {
 	return out, nil
 }
 
-// DeleteEquipment usuwa pozycję słownika. Używaną: replaceWith (≠ 0) przepina przepisy na inny sprzęt
-// (doprecyzowania zostają), removeFromRecipes usuwa ją z przepisów. Zwraca liczbę przepisów, których dotyczyło.
+// DeleteEquipment deletes a dictionary item. If it's in use: replaceWith (≠ 0) moves recipes to other equipment
+// (details stay), removeFromRecipes removes it from recipes. Returns the number of recipes affected.
 func DeleteEquipment(tx *gorm.DB, id, replaceWith uint, removeFromRecipes bool) (int64, error) {
 	var e entities.Equipment
 	if err := tx.First(&e, id).Error; err != nil {
@@ -187,12 +187,12 @@ func DeleteEquipment(tx *gorm.DB, id, replaceWith uint, removeFromRecipes bool) 
 	return used, err
 }
 
-// renumberRecipeEquipment — po usunięciu pozycji kolejność bez dziur (1, 2, 3…).
+// renumberRecipeEquipment: after a delete, the order has no gaps (1, 2, 3…).
 func renumberRecipeEquipment(tx *gorm.DB, recipeIDs []uint) error {
 	if len(recipeIDs) == 0 {
 		return nil
 	}
-	// dwa kroki, żeby nie zderzyć się z kluczem (recipe_id, sort_order)
+	// two steps, so we don't collide with the (recipe_id, sort_order) key
 	if err := tx.Exec(`UPDATE recipe_equipment SET sort_order = -sort_order WHERE recipe_id IN ?`, recipeIDs).Error; err != nil {
 		return err
 	}

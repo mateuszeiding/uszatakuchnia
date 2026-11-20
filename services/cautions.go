@@ -6,11 +6,11 @@ import (
 	"unicode/utf8"
 )
 
-// MaxCautionLen — najdłuższa uwaga przepisu / wyzwania (znaki, nie bajty).
+// MaxCautionLen is the longest recipe / challenge note (characters, not bytes).
 const MaxCautionLen = 220
 
-// CleanCautions przycina uwagi (białe znaki w środku → jedna spacja) i pomija puste.
-// Zawsze zwraca niepustą referencję (zapis jako []).
+// CleanCautions trims notes (inner whitespace → one space) and drops empty ones.
+// Always returns a non-nil slice (stored as []).
 func CleanCautions(in []string) []string {
 	out := make([]string, 0, len(in))
 	for _, c := range in {
@@ -21,7 +21,7 @@ func CleanCautions(in []string) []string {
 	return out
 }
 
-// validateCautions — limit długości; pole cautions[i] liczy tylko niepuste uwagi (puste są pomijane przy zapisie).
+// validateCautions checks the length limit; the cautions[i] field counts only non-empty notes (empty ones are dropped on save).
 func validateCautions(in []string, add func(field, msg string)) {
 	for i, c := range CleanCautions(in) {
 		if utf8.RuneCountInString(c) > MaxCautionLen {

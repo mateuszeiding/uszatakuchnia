@@ -1,7 +1,7 @@
 package entities
 
-// IngredientUnitConversion — ile gramów waży jednostka danego składnika (np. jajko: 1 sztuka ≈ 50–65 g).
-// g / kg / ml / l przeliczane w kodzie (services.GramsPerUnit), bez wierszy.
+// IngredientUnitConversion: how many grams one unit of an ingredient weighs (e.g. egg: 1 piece ≈ 50–65 g).
+// g / kg / ml / l are converted in code (services.GramsPerUnit), without rows.
 type IngredientUnitConversion struct {
 	ID           uint     `gorm:"primaryKey;autoIncrement"`
 	IngredientID uint     `gorm:"not null;uniqueIndex:ux_ing_unit_conv"`

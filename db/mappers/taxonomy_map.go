@@ -11,7 +11,7 @@ func MapTaxonomyValueToDto(e entities.TaxonomyValue) dtos.TaxonomyValueDto {
 	return dtos.TaxonomyValueDto{ID: e.ID, Label: e.Label, Color: e.Color}
 }
 
-// MapRecipeTaxonomyToDto grupuje wartości po kodzie osi. Wymaga preloadu "Taxonomy.Value.Axis".
+// MapRecipeTaxonomyToDto groups values by axis code. Needs "Taxonomy.Value.Axis" preloaded.
 func MapRecipeTaxonomyToDto(a []entities.RecipeTaxonomy) dtos.RecipeTaxonomyDto {
 	sorted := make([]entities.RecipeTaxonomy, len(a))
 	copy(sorted, a)

@@ -8,16 +8,16 @@ import (
 	"uszatakuchnia/auth"
 )
 
-// Begin — pierwsza instrukcja KAŻDEGO handlera w api/ (pilnuje tego test w begin_test.go):
+// Begin is the first statement of EVERY handler in api/ (enforced by begin_test.go):
 //
 //	if resp.Begin(w, r) {
 //		return
 //	}
 //
-// Ustawia CORS, odpowiada na preflight i odrzuca zapis (każda metoda poza GET/HEAD)
-// bez uprawnień właściciela: 401 bez tokenu / ze złym tokenem, 403 z tokenem kogoś innego.
-// Zwraca true, gdy odpowiedź jest już wysłana. Nowy endpoint zapisujący jest więc
-// chroniony domyślnie — nie trzeba o tym pamiętać w handlerze.
+// It sets CORS, answers preflight and rejects writes (any method but GET/HEAD)
+// without owner rights: 401 without a token / with a bad one, 403 with someone else's token.
+// Returns true when the response has already been sent. A new write endpoint is therefore
+// protected by default; the handler doesn't need to remember it.
 func Begin(w http.ResponseWriter, r *http.Request) bool {
 	setCORS(w, r)
 	if r.Method == http.MethodOptions {
@@ -39,13 +39,13 @@ func Begin(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-// IsOwner — do odczytów, które pokazują więcej właścicielowi (szkice).
+// IsOwner is for reads that show the owner more (drafts).
 func IsOwner(r *http.Request) bool { return auth.IsOwner(r) }
 
-// Produkcja i podglądy Vercela serwują frontend i API z jednej domeny, więc CORS
-// potrzebny jest tylko lokalnie (Vite na :5173 woła API na :3000). Dodatkowe domeny:
-// CORS_ORIGINS="https://a.pl,https://b.pl". Klienci spoza przeglądarki (curl, sesje
-// Claude Code) CORS nie dotyczy.
+// Production and Vercel previews serve the frontend and the API from one domain, so CORS
+// is needed only locally (Vite on :5173 calls the API on :3000). Extra domains:
+// CORS_ORIGINS="https://a.pl,https://b.pl". Non-browser clients (curl, Claude Code
+// sessions) aren't affected by CORS.
 var devOrigins = []string{
 	"http://localhost:5173",
 	"http://127.0.0.1:5173",

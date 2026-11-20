@@ -5,7 +5,7 @@ import (
 	"uszatakuchnia/dtos"
 )
 
-// recipeAllergens — suma alergenów składników, w kolejności listy UE.
+// recipeAllergens: union of the ingredients' allergens, in EU list order.
 func recipeAllergens(items []entities.RecipeIngredient) []string {
 	present := map[string]bool{}
 	for _, it := range items {
@@ -31,8 +31,8 @@ func recipeNeedsPrep(steps []entities.RecipeStep) bool {
 	return false
 }
 
-// MapRecipeToDto wymaga preloadów: Photo, Steps, Ingredients.Ingredient.Allergens, Ingredients.Ingredient.Type, Ingredients.Unit, Taxonomy.Value.Axis.
-// gramsPerUnit składników uzupełnia services.FillGramsPerUnit.
+// MapRecipeToDto needs these preloads: Photo, Steps, Ingredients.Ingredient.Allergens, Ingredients.Ingredient.Type, Ingredients.Unit, Taxonomy.Value.Axis.
+// Ingredient gramsPerUnit is filled in by services.FillGramsPerUnit.
 func MapRecipeToDto(e entities.Recipe) dtos.RecipeDto {
 	return dtos.RecipeDto{
 		ID:          e.ID,

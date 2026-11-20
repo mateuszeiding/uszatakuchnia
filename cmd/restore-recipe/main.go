@@ -1,18 +1,18 @@
-// Przywraca jeden przepis z kopii zapasowej do bazy docelowej (zwykle produkcji).
+// Restores a single recipe from a backup into the target database (usually production).
 //
-// Kopię najpierw odtwarzasz do lokalnej bazy (docs/backup-bazy.md), potem:
+// First restore the backup into a local database (docs/backup-bazy.md), then:
 //
-//	go run ./cmd/restore-recipe -from "<DSN lokalnej kopii>" -id 12           # podgląd, nic nie zapisuje
-//	go run ./cmd/restore-recipe -from "<DSN lokalnej kopii>" -id 12 -apply    # zapis
+//	go run ./cmd/restore-recipe -from "<local backup DSN>" -id 12           # dry run, writes nothing
+//	go run ./cmd/restore-recipe -from "<local backup DSN>" -id 12 -apply    # write
 //
-// Baza docelowa: flaga -to, a bez niej DB_DATABASE_URL.
+// Target database: the -to flag, or DB_DATABASE_URL without it.
 //
-// Co robi (w jednej transakcji): wiersz w `recipes` wstawia albo nadpisuje (to samo id),
-// kroki, składniki, zamienniki, tagi, sprzęt i link do zdjęcia przepisu kasuje i wstawia z kopii,
-// a brakujące zdjęcie (`photos`) dokłada. Inne przepisy zostają nietknięte. Kolumny dopasowuje
-// po nazwie, więc kopia sprzed zmiany schematu też zadziała (nowe kolumny dostają NULL).
-// Składniki, jednostki, tagi i sprzęt muszą istnieć w bazie docelowej — jeśli któregoś brakuje,
-// transakcja się wycofuje z błędem klucza obcego.
+// What it does (in one transaction): inserts or overwrites the `recipes` row (same id); deletes
+// the recipe's steps, ingredients, substitutes, tags, equipment and photo link and inserts them from
+// the backup; adds the photo (`photos`) if it's missing. Other recipes stay untouched. Columns are
+// matched by name, so a backup taken before a schema change works too (new columns get NULL).
+// Ingredients, units, tags and equipment must exist in the target database; if any is missing,
+// the transaction rolls back with a foreign key error.
 package main
 
 import (
@@ -31,7 +31,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// Kolejność wstawiania; kasowanie idzie od końca (zamienniki przed składnikami).
+// Insert order; deletes run in reverse (substitutes before ingredients).
 var childTables = []string{
 	"recipe_steps",
 	"recipe_ingredients",
@@ -72,7 +72,7 @@ func main() {
 	if tx.Error != nil {
 		log.Fatalf("transakcja: %v", tx.Error)
 	}
-	defer tx.Rollback() // po Commit nic nie robi
+	defer tx.Rollback() // no-op after Commit
 
 	var current string
 	tx.Raw(`SELECT name FROM recipes WHERE id = ?`, *id).Scan(&current)
@@ -124,7 +124,7 @@ func main() {
 }
 
 func open(dsn string) *gorm.DB {
-	// Cichy logger: SQL z danymi (np. bajtami zdjęć) nie trafia na ekran.
+	// Quiet logger: SQL with data (e.g. photo bytes) doesn't hit the screen.
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		log.Fatalf("połączenie z %s: %v", hostOf(dsn), err)
@@ -165,7 +165,7 @@ func columns(db *gorm.DB, table string) []string {
 	return cols
 }
 
-// commonColumns — kolumny obecne w obu bazach, w kolejności z bazy docelowej.
+// commonColumns returns the columns present in both databases, in target order.
 func commonColumns(src, dst *gorm.DB, table string) []string {
 	have := map[string]bool{}
 	for _, c := range columns(src, table) {
@@ -180,7 +180,7 @@ func commonColumns(src, dst *gorm.DB, table string) []string {
 	return out
 }
 
-// sourceRows zwraca wiersze jako JSON (row_to_json), żeby przenieść je bez znajomości typów kolumn.
+// sourceRows returns rows as JSON (row_to_json) so they can be copied without knowing column types.
 func sourceRows(src *gorm.DB, table, key string, val uint) []string {
 	var rows []string
 	err := src.Raw(fmt.Sprintf(`SELECT row_to_json(t)::text FROM public.%s t WHERE %s = ?`, quote(table), quote(key)), val).
@@ -229,7 +229,7 @@ func upsertRecipe(src, dst *gorm.DB, id uint) error {
 	return nil
 }
 
-// copyPhoto dokłada zdjęcie z kopii, jeśli link przepisu wskazuje na /api/photos/<id>, którego w celu nie ma.
+// copyPhoto copies the photo from the backup if the recipe links to /api/photos/<id> that the target lacks.
 func copyPhoto(src, dst *gorm.DB, recipePhotoJSON string) error {
 	var rp struct {
 		ImageURL string `json:"image_url"`

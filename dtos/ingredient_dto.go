@@ -6,17 +6,17 @@ type IngredientDto struct {
 	ID        uint      `json:"id"`
 	Name      string    `json:"name"`
 	ParentID  *uint     `json:"parentId"`
-	Allergens []string  `json:"allergens"` // kody z entities.Allergens
-	UsedIn    int       `json:"usedIn"`    // liczba przepisów (tylko lista)
+	Allergens []string  `json:"allergens"` // codes from entities.Allergens
+	UsedIn    int       `json:"usedIn"`    // number of recipes (list only)
 	Type      TypeDto   `json:"type"`
 	Image     *ImageDto `json:"image"`
-	// Nie dodawaj do listy zakupów (np. woda).
+	// Never added to the shopping list (e.g. water).
 	SkipShopping bool `json:"skipShopping"`
 
-	// Makro na 100 g: własne oraz wynikowe (własne albo odziedziczone z podskładników), po kluczu z entities.NutrientKeys.
+	// Macros per 100 g: own and resolved (own or inherited from sub-ingredients), keyed by entities.NutrientKeys.
 	Nutrition         map[string]entities.MacroRange `json:"nutrition"`
 	ResolvedNutrition map[string]entities.MacroRange `json:"resolvedNutrition"`
-	// Przeliczniki jednostek: własne + odziedziczone od przodków (inherited) dla jednostek bez własnego.
+	// Unit conversions: own + inherited from ancestors (inherited) for units without an own one.
 	Conversions []ConversionDto `json:"conversions"`
 }
 
@@ -28,7 +28,7 @@ type ConversionDto struct {
 	Inherited bool     `json:"inherited"`
 }
 
-// IngredientRequest — tworzenie i edycja składnika (panel). Brak klucza w Nutrition = brak własnych danych.
+// IngredientRequest creates or edits an ingredient (admin panel). A missing key in Nutrition = no own data.
 type IngredientRequest struct {
 	Name         string                         `json:"name"`
 	TypeCode     string                         `json:"typeCode"`

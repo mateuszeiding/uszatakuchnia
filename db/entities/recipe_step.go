@@ -6,11 +6,11 @@ type RecipeStep struct {
 	Section  *string `gorm:"type:varchar(64)"`
 	Text     string  `gorm:"not null"`
 
-	// Krok do zrobienia wcześniej (marynata, namaczanie). Przepis "wymaga przygotowania" = ma taki krok.
+	// Step to do ahead (marinade, soaking). A recipe "needs prep" = it has such a step.
 	Prep     bool    `gorm:"not null;default:false"`
-	PrepLead *string `gorm:"type:varchar(32)"` // np. "12 h", "dzień wcześniej"
+	PrepLead *string `gorm:"type:varchar(32)"` // e.g. "12 h", "dzień wcześniej"
 
-	// Wskazówki pod treścią kroku („jeśli…”, „możesz też…”), 0–n.
+	// Hints below the step text ("jeśli…", "możesz też…"), 0–n.
 	Hints StringList `gorm:"type:jsonb;not null;default:'[]'"`
 
 	Recipe Recipe `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

@@ -13,10 +13,10 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// Odcisk schematu: encje (nazwy pól, typy, tagi gorm) + ID wersjonowanych migracji.
-// Zimny start funkcji porównuje go z bazą i pomija AutoMigrate + migracje, gdy nic się nie zmieniło —
-// zamiast setek zapytań o schemat pod advisory lockiem jest jedno SELECT.
-// Zmiana encji albo nowa migracja = inny odcisk = migracje odpalają się jak dotąd.
+// Schema fingerprint: entities (field names, types, gorm tags) + versioned migration IDs.
+// A cold start compares it with the database and skips AutoMigrate + migrations when nothing changed:
+// one SELECT instead of hundreds of schema queries under the advisory lock.
+// A changed entity or a new migration = a different fingerprint = migrations run as before.
 
 const fingerprintKey = "fingerprint"
 
@@ -57,7 +57,7 @@ func SchemaFingerprint() string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// schemaCurrent — czy baza ma już schemat w wersji z tego kodu. Brak tabeli / błąd = nie.
+// schemaCurrent reports whether the database already has this code's schema. Missing table / error = no.
 func schemaCurrent(db *gorm.DB, fp string) bool {
 	if !db.Migrator().HasTable(&SchemaState{}) {
 		return false
@@ -77,8 +77,8 @@ func saveFingerprint(tx *gorm.DB) error {
 	}).Create(&SchemaState{Key: fingerprintKey, Value: SchemaFingerprint()}).Error
 }
 
-// ensureSchema — migracje przy zimnym starcie tylko wtedy, gdy odcisk się zmienił.
-// Po wzięciu locka sprawdza jeszcze raz: równoległy zimny start mógł już zmigrować.
+// ensureSchema runs migrations on a cold start only when the fingerprint changed.
+// Checks again after taking the lock: a parallel cold start may have migrated already.
 func ensureSchema(ctx context.Context, db *gorm.DB) error {
 	fp := SchemaFingerprint()
 	if schemaCurrent(db, fp) {

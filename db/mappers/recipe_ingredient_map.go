@@ -28,8 +28,8 @@ func MapRecipeIngredientToDto(e entities.RecipeIngredient) dtos.RecipeIngredient
 	}
 }
 
-// mapSubstitutes wymaga preloadu Ingredients.Substitutes.Ingredient.{Allergens,Type}.
-// gramsPerUnit, hasNutrition i nutrition uzupełnia services.FillLineNutrition.
+// mapSubstitutes needs Ingredients.Substitutes.Ingredient.{Allergens,Type} preloaded.
+// gramsPerUnit, hasNutrition and nutrition are filled in by services.FillLineNutrition.
 func mapSubstitutes(a []entities.RecipeIngredientSubstitute) []dtos.RecipeSubstituteDto {
 	out := make([]dtos.RecipeSubstituteDto, 0, len(a))
 	for _, s := range a {
@@ -45,7 +45,7 @@ func mapSubstitutes(a []entities.RecipeIngredientSubstitute) []dtos.RecipeSubsti
 	return out
 }
 
-// mapLinkedRecipe wymaga preloadu Ingredients.LinkedRecipe.Photo.
+// mapLinkedRecipe needs Ingredients.LinkedRecipe.Photo preloaded.
 func mapLinkedRecipe(r *entities.Recipe) *dtos.LinkedRecipeDto {
 	if r == nil || r.ID == 0 {
 		return nil

@@ -1,7 +1,7 @@
 package entities
 
-// Equipment — słownik sprzętu (robot planetarny, tortownica, termometr…). Nazwa unikalna bez wielkości liter
-// (indeks ux_equipment_name_lower, migracja 0007).
+// Equipment is the equipment dictionary (stand mixer, springform pan, thermometer…). Name is unique
+// case-insensitively (index ux_equipment_name_lower, migration 0007).
 type Equipment struct {
 	ID   uint   `gorm:"primaryKey;autoIncrement"`
 	Name string `gorm:"type:varchar(120);not null"`
@@ -9,8 +9,8 @@ type Equipment struct {
 
 func (Equipment) TableName() string { return "equipment" }
 
-// RecipeEquipment — pozycja sprzętu w przepisie. Usunięcie przepisu usuwa pozycje; sprzętu używanego
-// w przepisie nie da się usunąć ze słownika bez zamiany albo usunięcia z przepisów (API).
+// RecipeEquipment is an equipment item in a recipe. Deleting the recipe deletes its items; equipment
+// used in a recipe can't be deleted from the dictionary without replacing or removing it there (API).
 type RecipeEquipment struct {
 	RecipeID  uint `gorm:"not null;primaryKey"`
 	SortOrder int  `gorm:"not null;primaryKey"`
@@ -18,7 +18,7 @@ type RecipeEquipment struct {
 	EquipmentID uint      `gorm:"not null;index:ix_receq_equipment"`
 	Equipment   Equipment `gorm:"foreignKey:EquipmentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 
-	// Doprecyzowanie: „3–4 l, grube dno”, „albo ręcznie — ok. 10–12 minut”.
+	// Details, e.g. "3–4 l, grube dno", "albo ręcznie — ok. 10–12 minut".
 	Spec     *string `gorm:"type:varchar(160)"`
 	Optional bool    `gorm:"not null;default:false"`
 }

@@ -5,7 +5,7 @@ import (
 	"uszatakuchnia/dtos"
 )
 
-// MapChallengeToDto wymaga preloadu Format i Ingredients (kolejność sort_order).
+// MapChallengeToDto needs Format and Ingredients preloaded (ordered by sort_order).
 func MapChallengeToDto(c entities.Challenge) dtos.ChallengeDto {
 	ings := make([]dtos.ChallengeIngredientDto, 0, len(c.Ingredients))
 	for _, i := range c.Ingredients {

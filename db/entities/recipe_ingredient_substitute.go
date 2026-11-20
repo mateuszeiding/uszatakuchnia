@@ -1,8 +1,8 @@
 package entities
 
-// RecipeIngredientSubstitute — zamiennik składnika w wierszu przepisu (recipe_ingredients: recipe_id + sort_order).
-// Mix = „pół na pół”: składnik główny + zamiennik, po połowie ilości. Zamiennik liczy się jako użycie składnika
-// (ON DELETE RESTRICT). Usunięcie wiersza przepisu usuwa jego zamienniki (FK złożony, migracja 0008).
+// RecipeIngredientSubstitute is a substitute for an ingredient in a recipe row (recipe_ingredients: recipe_id + sort_order).
+// Mix = "half and half": main ingredient + substitute, half the quantity each. A substitute counts as a use of the
+// ingredient (ON DELETE RESTRICT). Deleting the recipe row deletes its substitutes (composite FK, migration 0008).
 type RecipeIngredientSubstitute struct {
 	RecipeID  uint `gorm:"not null;primaryKey;uniqueIndex:ux_recsub_option,priority:1"`
 	SortOrder int  `gorm:"not null;primaryKey;uniqueIndex:ux_recsub_option,priority:2"`

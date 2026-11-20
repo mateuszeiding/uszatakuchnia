@@ -2,7 +2,7 @@ package dtos
 
 import "uszatakuchnia/db/entities"
 
-// RecipeTaxonomyDto — wartości klasyfikacji pogrupowane po kodzie osi (dish, base, cuisine, diet, practical).
+// RecipeTaxonomyDto: classification values grouped by axis code (dish, base, cuisine, diet, practical).
 type RecipeTaxonomyDto map[string][]TaxonomyValueDto
 
 type RecipeDto struct {
@@ -20,13 +20,13 @@ type RecipeDto struct {
 	NeedsPrep   bool              `json:"needsPrep"`
 	Taxonomy    RecipeTaxonomyDto `json:"taxonomy"`
 	Allergens   []string          `json:"allergens"`
-	// Makro na porcję wyliczone ze składników; null = brak danych.
+	// Per-serving macros computed from the ingredients; null = no data.
 	Nutrition   *entities.RecipeNutrition `json:"nutrition"`
 	Photo       *RecipePhotoDto           `json:"photo,omitempty"`
 	Steps       []RecipeStepDto           `json:"steps"`
 	Ingredients []RecipeIngredientDto     `json:"ingredients"`
 	Equipment   []RecipeEquipmentDto      `json:"equipment"`
-	// Składniki innych przepisów, które prowadzą do tego (treść modalu usuwania).
+	// Ingredient rows of other recipes that link to this one (content of the delete modal).
 	LinkedFrom []RecipeLinkSourceDto `json:"linkedFrom"`
 }
 
@@ -47,11 +47,11 @@ type RecipeBaseDto struct {
 	NeedsPrep  bool              `json:"needsPrep"`
 	Taxonomy   RecipeTaxonomyDto `json:"taxonomy"`
 	Photo      *RecipePhotoDto   `json:"photo,omitempty"`
-	// Kcal na porcję (zakres); null = brak danych.
+	// Kcal per serving (range); null = no data.
 	Kcal *entities.SumRange `json:"kcal"`
-	// Nazwy składników — wyszukiwarka listy szuka też po nich.
+	// Ingredient names: the list search matches them too.
 	IngredientNames []string `json:"ingredientNames"`
-	// Nazwy zamienników (bez powtórzeń) — wyszukiwarka listy szuka też po nich („pancetta” → Ragù).
+	// Substitute names (deduplicated): the list search matches them too ("pancetta" → Ragù).
 	SubstituteNames []string `json:"substituteNames"`
 }
 
@@ -61,19 +61,19 @@ type UpsertRecipeRequest struct {
 	Description *string `json:"description"`
 	Tagline     *string `json:"tagline"`
 	Tip         *string `json:"tip"`
-	TimeMin     int     `json:"timeMin"` // minuty; 0 = nie podano (tylko szkic)
+	TimeMin     int     `json:"timeMin"` // minutes; 0 = not given (drafts only)
 	TimeMax     *int    `json:"timeMax"`
 	Difficulty  *int    `json:"difficulty"`
 	PhotoUrl    *string `json:"photoUrl"`
 	Status      string  `json:"status"`
-	// Uwagi; nil = bez zmian (starszy klient), przy tworzeniu nil = [].
+	// Notes; nil = unchanged (older client), on create nil = [].
 	Cautions *[]string `json:"cautions"`
 
 	TaxonomyValueIDs []uint `json:"taxonomyValueIds"`
 
 	Steps       []UpsertStepRequest       `json:"steps"`
 	Ingredients []UpsertIngredientRequest `json:"ingredients"`
-	// nil = bez zmian (starszy klient); [] = przepis bez sprzętu.
+	// nil = unchanged (older client); [] = recipe without equipment.
 	Equipment *[]UpsertEquipmentRequest `json:"equipment"`
 }
 
@@ -94,9 +94,9 @@ type UpsertIngredientRequest struct {
 	UnitId       *uint   `json:"unitId"`
 	Note         *string `json:"note"`
 	Optional     bool    `json:"optional"`
-	// Link do przepisu na ten składnik; nil = brak.
+	// Link to the recipe for this ingredient; nil = none.
 	LinkedRecipeId *uint `json:"linkedRecipeId"`
-	// Zamienniki w kolejności; nil / [] = brak.
+	// Substitutes in order; nil / [] = none.
 	Substitutes []UpsertSubstituteRequest `json:"substitutes"`
 }
 
@@ -105,7 +105,7 @@ type UpsertSubstituteRequest struct {
 	Mix          bool `json:"mix"`
 }
 
-// FieldError — błąd walidacji przypięty do pola formularza (np. "ingredients[2].quantity").
+// FieldError is a validation error attached to a form field (e.g. "ingredients[2].quantity").
 type FieldError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`

@@ -30,7 +30,7 @@ const (
 	unitDoSmaku
 )
 
-// Drzewko: makaron(1) → spaghetti(2), fusilli(3); jajko(4); oliwa(5) → oliwa extra virgin(8); oregano(6, bez danych); mleko(7, przelicznik tylko dla l).
+// Tree: makaron(1) → spaghetti(2), fusilli(3); jajko(4); oliwa(5) → oliwa extra virgin(8); oregano(6, no data); mleko(7, conversion only for l).
 func testIndex() *NutritionIndex {
 	return &NutritionIndex{
 		Own: map[uint]Macros{
@@ -69,7 +69,7 @@ func eqRange(got entities.MacroRange, min float64, max *float64) bool {
 
 func TestResolveMacrosInherits(t *testing.T) {
 	ix := testIndex()
-	ix.Own[3]["kcal"] = rng(330) // pojedyncza wartość liczona jako 330–330
+	ix.Own[3]["kcal"] = rng(330) // a single value counts as 330–330
 	m := ix.ResolveMacros(1)
 	if !eqRange(m["kcal"], 330, fp(360)) {
 		t.Errorf("kcal = %+v, want 330–360", m["kcal"])
@@ -106,7 +106,7 @@ func TestResolveMacrosOwnWins(t *testing.T) {
 func TestResolveMacrosCycle(t *testing.T) {
 	ix := testIndex()
 	ix.Children[2] = []uint{1} // 1 → 2 → 1
-	_ = ix.ResolveMacros(1)    // nie może się zawiesić
+	_ = ix.ResolveMacros(1)    // must not hang
 }
 
 func TestGramsPerUnit(t *testing.T) {
@@ -154,11 +154,11 @@ func TestComputeRanges(t *testing.T) {
 	if n == nil {
 		t.Fatal("nil")
 	}
-	// spaghetti 700–720 + jajka 2×(50–65) g × 140/100 = 140–182 → 840–902 / 2
+	// spaghetti 700–720 + eggs 2×(50–65) g × 140/100 = 140–182 → 840–902 / 2
 	if got := n.PerPortion["kcal"]; !near(got.Min, 420) || !near(got.Max, 451) {
 		t.Errorf("kcal = %+v, want 420–451", got)
 	}
-	// białko tylko z jajek: 100–130 g × 12–13 / 100 = 12–16,9 → /2
+	// protein only from the eggs: 100–130 g × 12–13 / 100 = 12–16.9 → /2
 	if got := n.PerPortion["protein"]; !near(got.Min, 6) || !near(got.Max, 8.45) {
 		t.Errorf("protein = %+v, want 6–8.45", got)
 	}
@@ -185,10 +185,10 @@ func TestComputeSkipsAndMissing(t *testing.T) {
 		line(2, "100", up(unitG), "g"),
 		optional,
 		toTaste,
-		line(5, "", up(unitLyzka), "łyżka"),  // brak ilości — pomijane
-		line(6, "1", up(unitG), "g"),         // brak makro
-		line(4, "1", up(unitLyzka), "łyżka"), // brak przelicznika
-		line(6, "2", up(unitG), "g"),         // duplikat nazwy
+		line(5, "", up(unitLyzka), "łyżka"),  // no quantity: skipped
+		line(6, "1", up(unitG), "g"),         // no macros
+		line(4, "1", up(unitLyzka), "łyżka"), // no conversion
+		line(6, "2", up(unitG), "g"),         // duplicate name
 	}, 1)
 	if got := n.PerPortion["kcal"]; !near(got.Min, 350) || !near(got.Max, 360) {
 		t.Errorf("kcal = %+v, want 350–360 (tylko spaghetti)", got)
@@ -201,7 +201,7 @@ func TestComputeSkipsAndMissing(t *testing.T) {
 func TestComputePartialFields(t *testing.T) {
 	ix := testIndex()
 	n := ix.Compute([]NutritionLine{
-		line(5, "100", up(unitG), "g"), // oliwa: kcal + fat, bez błonnika
+		line(5, "100", up(unitG), "g"), // olive oil: kcal + fat, no fiber
 		line(2, "100", up(unitG), "g"), // spaghetti: kcal + fiber
 	}, 1)
 	if len(n.Missing) != 0 {
@@ -240,7 +240,7 @@ func TestComputeIncomplete(t *testing.T) {
 	ix.Names[9] = "tofu naturalne"
 	n := ix.Compute([]NutritionLine{
 		line(9, "200", up(unitG), "g"),
-		line(9, "100", up(unitG), "g"), // duplikat — nazwa raz
+		line(9, "100", up(unitG), "g"), // duplicate: name listed once
 	}, 2)
 	if got := n.PerPortion["kcal"]; !near(got.Min, 180) || !near(got.Max, 217.5) {
 		t.Errorf("kcal = %+v, want 180–217,5", got)
@@ -262,8 +262,8 @@ func TestComputeIncomplete(t *testing.T) {
 func TestComputeIncompleteMixed(t *testing.T) {
 	ix := testIndex()
 	n := ix.Compute([]NutritionLine{
-		line(4, "1", up(unitSzt), "sztuka"), // jajko: kcal + białko
-		line(5, "10", up(unitG), "g"),       // oliwa: kcal + tłuszcz
+		line(4, "1", up(unitSzt), "sztuka"), // egg: kcal + protein
+		line(5, "10", up(unitG), "g"),       // olive oil: kcal + fat
 	}, 1)
 	if _, ok := n.Incomplete["kcal"]; ok {
 		t.Errorf("kcal mają wszystkie, a incomplete = %v", n.Incomplete["kcal"])
@@ -282,9 +282,9 @@ func TestFillGramsPerUnit(t *testing.T) {
 	items := []dtos.RecipeIngredientDto{
 		{IngredientID: 2, UnitID: up(unitG), Unit: str("g")},
 		{IngredientID: 4, UnitID: up(unitSzt), Unit: str("sztuka")},
-		{IngredientID: 2, UnitID: up(unitLyzka), Unit: str("łyżka")}, // przelicznik u rodzica
-		{IngredientID: 6, UnitID: up(unitLyzka), Unit: str("łyżka")}, // brak przelicznika
-		{IngredientID: 2, UnitID: up(unitMl), Unit: str("ml")},       // ml jak woda
+		{IngredientID: 2, UnitID: up(unitLyzka), Unit: str("łyżka")}, // conversion on the parent
+		{IngredientID: 6, UnitID: up(unitLyzka), Unit: str("łyżka")}, // no conversion
+		{IngredientID: 2, UnitID: up(unitMl), Unit: str("ml")},       // ml as water
 		{IngredientID: 6, UnitID: up(unitDoSmaku), Unit: str("do smaku")},
 	}
 	FillGramsPerUnit(items, ix)

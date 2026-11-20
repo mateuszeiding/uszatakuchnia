@@ -7,15 +7,15 @@ import (
 	"uszatakuchnia/dtos"
 )
 
-// Suma wkładów pozycji = Compute (front składa makro wariantu z wkładów; bez wyboru wynik musi być dzisiejszy).
+// The rows' shares add up to Compute (the frontend builds variant macros from shares; with no choice the result must stay as before).
 func TestLineNutritionSumsToCompute(t *testing.T) {
 	ix := testIndex()
 	lines := []NutritionLine{
 		{IngredientID: 2, Qty: Quantity{Min: 200, Max: 250}, UnitID: up(unitG), UnitName: "g"},
 		{IngredientID: 4, Qty: Quantity{Min: 2, Max: 2}, UnitID: up(unitSzt), UnitName: "sztuka"},
 		{IngredientID: 5, Qty: Quantity{Min: 2, Max: 2}, UnitID: up(unitLyzka), UnitName: "łyżka"},
-		{IngredientID: 6, Qty: Quantity{Min: 1, Max: 1}, UnitID: up(unitG), UnitName: "g"},                         // bez danych → Missing
-		{IngredientID: 5, Qty: Quantity{Min: 1, Max: 1}, UnitID: up(unitLyzka), UnitName: "łyżka", Optional: true}, // nie liczy się
+		{IngredientID: 6, Qty: Quantity{Min: 1, Max: 1}, UnitID: up(unitG), UnitName: "g"},                         // no data → Missing
+		{IngredientID: 5, Qty: Quantity{Min: 1, Max: 1}, UnitID: up(unitLyzka), UnitName: "łyżka", Optional: true}, // doesn't count
 	}
 	want := ix.Compute(lines, 4)
 
@@ -50,7 +50,7 @@ func TestLineNutritionSumsToCompute(t *testing.T) {
 	}
 }
 
-// Mieszanka = połowa głównego + połowa zamiennika; zamiennik bez danych → Missing i hasNutrition false.
+// Mix = half main + half substitute; a substitute without data → Missing and hasNutrition false.
 func TestFillLineNutritionSubstitutes(t *testing.T) {
 	ix := testIndex()
 	qty := "200"
@@ -60,9 +60,9 @@ func TestFillLineNutritionSubstitutes(t *testing.T) {
 	items := []dtos.RecipeIngredientDto{{
 		IngredientID: 2,
 		Substitutes: []dtos.RecipeSubstituteDto{
-			{IngredientID: 3},            // fusilli zamiast
-			{IngredientID: 3, Mix: true}, // pół na pół
-			{IngredientID: 6},            // oregano — bez danych
+			{IngredientID: 3},            // fusilli instead
+			{IngredientID: 3, Mix: true}, // half and half
+			{IngredientID: 6},            // oregano: no data
 		},
 	}}
 	FillLineNutrition(items, recipe, ix)

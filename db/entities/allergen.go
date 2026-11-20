@@ -5,7 +5,7 @@ type Allergen struct {
 	Label string
 }
 
-// Allergens — 14 alergenów UE (rozporządzenie 1169/2011). Lista stała, kolejność wyświetlania.
+// Allergens: the 14 EU allergens (Regulation 1169/2011). Fixed list, in display order.
 var Allergens = []Allergen{
 	{"gluten", "gluten"},
 	{"milk", "mleko"},

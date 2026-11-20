@@ -9,11 +9,11 @@ type Ingredient struct {
 	TypeID uint           `gorm:"not null;index:ix_ingredients_type"`
 	Type   IngredientType `gorm:"foreignKey:TypeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 
-	// Nie dodawaj do listy zakupów (np. woda).
+	// Never added to the shopping list (e.g. water).
 	SkipShopping bool `gorm:"not null;default:false"`
 
-	// Makro na 100 g, orientacyjnie (marki się różnią). *Min nil = brak własnych danych (dziedziczy z podskładników),
-	// *Max nil = jedna wartość.
+	// Macros per 100 g, approximate (brands differ). *Min nil = no own data (inherited from sub-ingredients),
+	// *Max nil = single value.
 	KcalMin    *float64 `gorm:"type:numeric"`
 	KcalMax    *float64 `gorm:"type:numeric"`
 	ProteinMin *float64 `gorm:"type:numeric"`
@@ -33,7 +33,7 @@ type Ingredient struct {
 
 func (Ingredient) TableName() string { return "ingredients" }
 
-// macroFields — wskaźniki na pary min/max po kluczu z NutrientKeys.
+// macroFields: pointers to the min/max pair by NutrientKeys key.
 func (i *Ingredient) macroFields(key string) (min, max **float64) {
 	switch key {
 	case "kcal":
@@ -50,7 +50,7 @@ func (i *Ingredient) macroFields(key string) (min, max **float64) {
 	return nil, nil
 }
 
-// MacroOf — własna wartość na 100 g; nil = brak danych.
+// MacroOf returns the own value per 100 g; nil = no data.
 func (i Ingredient) MacroOf(key string) *MacroRange {
 	min, max := i.macroFields(key)
 	if min == nil || *min == nil {
@@ -59,7 +59,7 @@ func (i Ingredient) MacroOf(key string) *MacroRange {
 	return &MacroRange{Min: **min, Max: *max}
 }
 
-// SetMacro — ustawia (r != nil) albo czyści (r == nil) parę min/max.
+// SetMacro sets (r != nil) or clears (r == nil) the min/max pair.
 func (i *Ingredient) SetMacro(key string, r *MacroRange) {
 	min, max := i.macroFields(key)
 	if min == nil {

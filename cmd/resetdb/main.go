@@ -1,6 +1,6 @@
-// Reset lokalnej bazy: drop → migrate → seed.
-// Użycie: go run ./cmd/resetdb
-// Wymaga zmiennej środowiskowej DB_DATABASE_URL.
+// Resets a local database: drop → migrate → seed.
+// Usage: go run ./cmd/resetdb
+// Requires the DB_DATABASE_URL environment variable.
 package main
 
 import (

@@ -4,7 +4,7 @@ type TaxonomyValueDto struct {
 	ID    uint    `json:"id"`
 	Label string  `json:"label"`
 	Color *string `json:"color,omitempty"`
-	// Liczba przepisów z tą wartością — tylko w słownikach (GET /api/taxonomy/list).
+	// Number of recipes with this value; only in the dictionaries (GET /api/taxonomy/list).
 	RecipeCount *int `json:"recipeCount,omitempty"`
 }
 
@@ -22,9 +22,9 @@ type TaxonomyAxisDto struct {
 type UnitDto struct {
 	ID    uint     `json:"id"`
 	Name  string   `json:"name"`
-	Forms []string `json:"forms,omitempty"` // [1, 2–4, 5+]; brak = nieodmienna
+	Forms []string `json:"forms,omitempty"` // [1, 2–4, 5+]; empty = doesn't inflect
 	NoQty bool     `json:"noQty"`
-	// W ilu składnikach przepisów użyta.
+	// Number of recipe ingredient rows using it.
 	UsedIn int `json:"usedIn"`
 }
 
@@ -33,7 +33,7 @@ type AllergenDto struct {
 	Label string `json:"label"`
 }
 
-// DictionariesDto — wszystkie słowniki w jednym zapytaniu (GET /api/taxonomy).
+// DictionariesDto: all dictionaries in one response.
 type DictionariesDto struct {
 	Axes             []TaxonomyAxisDto    `json:"axes"`
 	Units            []UnitDto            `json:"units"`

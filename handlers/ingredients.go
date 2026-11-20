@@ -15,7 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// IngredientList — GET /api/ingredients/list.
 func IngredientList(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 
@@ -30,7 +29,7 @@ func IngredientList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// W ilu przepisach jest składnik (też jako zamiennik) — panel blokuje usuwanie używanych.
+	// Number of recipes using the ingredient (also as a substitute): the admin panel blocks deleting used ones.
 	usedIn, err := services.IngredientUsage(conn)
 	if err != nil {
 		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
@@ -51,7 +50,6 @@ func IngredientList(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, dtos)
 }
 
-// IngredientCreate — POST /api/ingredients.
 func IngredientCreate(w http.ResponseWriter, r *http.Request) {
 	var req dtos.IngredientRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -62,7 +60,6 @@ func IngredientCreate(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, res.Status, res.Body)
 }
 
-// IngredientUpdate — PUT /api/ingredients/{id}.
 func IngredientUpdate(w http.ResponseWriter, r *http.Request) {
 	var req dtos.IngredientRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -73,8 +70,8 @@ func IngredientUpdate(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, res.Status, res.Body)
 }
 
-// IngredientDelete — DELETE /api/ingredients/{id}. Używanego w przepisach składnika nie da się
-// usunąć (409 + liczba przepisów).
+// IngredientDelete: an ingredient used in recipes can't be deleted
+// (409 + the number of recipes).
 func IngredientDelete(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 
@@ -89,7 +86,7 @@ func IngredientDelete(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	used := usage[ing.ID] // też jako zamiennik
+	used := usage[ing.ID] // also as a substitute
 	if used > 0 {
 		resp.JSON(w, http.StatusConflict, map[string]any{
 			"error":  fmt.Sprintf("ingredient used in %d recipes", used),
@@ -98,7 +95,7 @@ func IngredientDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Usunięcie zmienia drzewko (dziedziczone makro i przeliczniki) — przelicz makro przepisów.
+	// Deleting changes the tree (inherited macros and conversions), so recompute recipe macros.
 	if err := conn.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Delete(&ing).Error; err != nil {
 			return err
@@ -111,7 +108,6 @@ func IngredientDelete(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, map[string]any{"deleted": ing.ID})
 }
 
-// IngredientTypes — GET /api/enums/ingredient.
 func IngredientTypes(w http.ResponseWriter, r *http.Request) {
 	var list []entities.IngredientType
 	db.DB().Find(&list)
