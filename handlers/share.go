@@ -25,9 +25,15 @@ import (
 // w którym blok między <!-- meta:start --> a <!-- meta:end --> zastępujemy meta przepisu.
 // Gdy pobranie się nie uda — minimalny HTML z samymi meta (bot i tak nie uruchamia JS).
 
-// ogDefaultImage — obraz podglądu (adres bezwzględny albo ścieżka od korzenia, np. "/og.png").
-// Pusty = bez og:image. Obraz domyślny dojdzie od designera: wpisz go tutaj i w web/index.html.
-const ogDefaultImage = ""
+// ogDefaultImage — obraz podglądu (adres bezwzględny albo ścieżka od korzenia). Pusty = bez og:image.
+// Jeden obraz od designera dla wszystkich stron, dopóki przepisy nie mają zdjęć (web/public/og-image.png,
+// ten sam w web/index.html).
+const (
+	ogDefaultImage       = "/og-image.png"
+	ogDefaultImageWidth  = 1200
+	ogDefaultImageHeight = 630
+	ogDefaultImageAlt    = "uszatakuchnia — przepisy z domowej kuchni"
+)
 
 const (
 	siteName        = "Uszata Kuchnia"
@@ -308,6 +314,9 @@ func metaBlock(m pageMeta) string {
 	card := "summary"
 	if m.Image != "" {
 		fmt.Fprintf(&b, "    <meta property=\"og:image\" content=\"%s\" />\n", e(m.Image))
+		fmt.Fprintf(&b, "    <meta property=\"og:image:width\" content=\"%d\" />\n", ogDefaultImageWidth)
+		fmt.Fprintf(&b, "    <meta property=\"og:image:height\" content=\"%d\" />\n", ogDefaultImageHeight)
+		fmt.Fprintf(&b, "    <meta property=\"og:image:alt\" content=\"%s\" />\n", e(ogDefaultImageAlt))
 		card = "summary_large_image"
 	}
 	fmt.Fprintf(&b, "    <meta name=\"twitter:card\" content=\"%s\" />\n", card)

@@ -74,7 +74,11 @@ func TestRecipePageMeta(t *testing.T) {
 		`<meta name="description" content="Przepis na 6 porcji · 3–5 h · Uszata Kuchnia" />`,
 		`<meta property="og:url" content="https://uszatakuchnia.test/recipes/6" />`,
 		`<meta property="og:type" content="article" />`,
-		`<meta name="twitter:card" content="summary" />`,
+		`<meta property="og:image" content="https://uszatakuchnia.test/og-image.png" />`,
+		`<meta property="og:image:width" content="1200" />`,
+		`<meta property="og:image:height" content="630" />`,
+		`<meta property="og:image:alt" content="uszatakuchnia — przepisy z domowej kuchni" />`,
+		`<meta name="twitter:card" content="summary_large_image" />`,
 		`<script type="module" src="/assets/index-abc.js">`, // reszta index.html bez zmian
 	} {
 		if !strings.Contains(body, want) {
@@ -83,9 +87,6 @@ func TestRecipePageMeta(t *testing.T) {
 	}
 	if strings.Contains(body, "ogólny") || strings.Count(body, "<title>") != 1 {
 		t.Errorf("generic meta not replaced:\n%s", body)
-	}
-	if strings.Contains(body, "og:image") {
-		t.Error("og:image without a default image")
 	}
 }
 
