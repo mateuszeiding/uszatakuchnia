@@ -3,11 +3,11 @@ import { computed, onMounted, reactive, ref } from 'vue';
 
 import UModal from '@/components/UModal.vue';
 
-// Kadrowanie do kwadratu: przeciąganie / strzałki, suwak powiększenia. Wynik: 1200×1200 JPEG.
+// Square crop: drag / arrow keys, zoom slider. Output: a 1200×1200 JPEG.
 const props = defineProps<{ src: string }>();
 const emit = defineEmits<{ cancel: []; done: [blob: Blob] }>();
 
-const V = 360; // rozmiar podglądu w px
+const V = 360; // preview size in px
 const OUT = 1200;
 
 const img = ref<HTMLImageElement>();
@@ -44,7 +44,7 @@ function onZoom(e: Event) {
     const z = Number((e.target as HTMLInputElement).value);
     const ns = base.value * z;
     const k = ns / scale.value;
-    // powiększenie względem środka kadru
+    // zoom around the crop center
     setPos(V / 2 - (V / 2 - pos.x) * k, V / 2 - (V / 2 - pos.y) * k, ns);
     zoom.value = z;
 }

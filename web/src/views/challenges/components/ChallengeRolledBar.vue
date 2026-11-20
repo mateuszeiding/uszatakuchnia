@@ -4,8 +4,8 @@ import { computed } from 'vue';
 import DiceIcon from '@/components/DiceIcon.vue';
 import { losParam, rangeText } from '@/shared/utils/challenges';
 
-// Pasek „Wylosowane” nad wyzwaniem (strona otwarta z losowania, ?los=). „Zmień trudność” wraca na listę
-// z tym wyborem w „Losuj”; „Losuj jeszcze raz” losuje z tej samej puli. Gdy się nie da — komunikat pod paskiem.
+// The "Wylosowane" bar above a challenge (page opened from a random pick, ?los=). "Zmień trudność" goes back to the list
+// with this choice in "Losuj"; "Losuj jeszcze raz" picks from the same pool. When that's impossible, a message below the bar.
 export type RerollState = 'none' | 'alldone' | 'onlycurrent' | 'single' | null;
 
 const props = defineProps<{ sel: number[]; state: RerollState }>();

@@ -7,9 +7,9 @@ import DoneToggle from './DoneToggle.vue';
 import type { IChallenge } from '@/data/dtos/challenge/ChallengeDto';
 import { paragraphs, timeLimitText } from '@/shared/utils/challenges';
 
-// Karta wyzwania: <li> = link (cała karta) + rodzeństwo — przycisk „zrobione” w prawym górnym rogu
-// (osobny cel dla myszy i Tab). Zrobione zostaje na miejscu: tło --bg, tytuł --ink-dim, „✓ zrobione”.
-// Tytuł i opis mają zarezerwowane 2 linie — karty tej samej wysokości (szkielet ma ten sam układ).
+// Challenge card: <li> = a link (the whole card) + a sibling "done" button in the top right corner
+// (a separate target for the mouse and Tab). A done card stays in place, marked "✓ zrobione".
+// Title and description reserve 2 lines each, so all cards have the same height (the skeleton has the same layout).
 const props = defineProps<{ challenge: IChallenge; done: boolean }>();
 defineEmits<{ toggle: [] }>();
 
@@ -61,7 +61,7 @@ const lead = computed(() => paragraphs(props.challenge.description)[0] ?? '');
                     <span class="sr-only">Limit czasu:</span>
                     {{ timeLimitText(challenge.timeLimitMin) }}
                 </span>
-                <!-- miejsce zarezerwowane zawsze: przełączenie nie zmienia wysokości karty -->
+                <!-- space always reserved: toggling doesn't change the card height -->
                 <span
                     class="ch-card__done"
                     :class="{ 'is-hidden': !done }"
@@ -115,7 +115,7 @@ const lead = computed(() => paragraphs(props.challenge.description)[0] ?? '');
 .is-done .ch-card__link {
     background: var(--bg);
 }
-/* miejsce na przycisk „zrobione” w rogu */
+/* space for the "done" button in the corner */
 .ch-card__format {
     display: flex;
     padding-right: 40px;

@@ -16,7 +16,7 @@ import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Baza składników: typ, alergeny UE, liczba użyć. Używanego składnika nie da się usunąć.
+// Ingredient database: type, EU allergens, usage count. An ingredient in use can't be deleted.
 const qc = useQueryClient();
 const ingredients = ref<IngredientDto[]>([]);
 const dicts = ref<IDictionaries>();
@@ -242,8 +242,8 @@ async function remove(ing: IngredientDto) {
     height: 40px;
     background: var(--bg-alt);
 }
-/* ładowanie: tabela od razu, wiersze-szkielety na klasach prawdziwych komórek (ta sama wysokość),
-   spinner nad tabelą — poza układem */
+/* loading: the table right away, skeleton rows on the real cell classes (same height),
+   spinner above the table, outside the layout */
 .tbl-wrap {
     position: relative;
 }

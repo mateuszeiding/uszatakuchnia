@@ -1,5 +1,5 @@
-// Formularz składnika w panelu: stan pól (tekst, bo przecinek/kropka), walidacja jak w API
-// (services/ingredients.go) i zamiana na payload.
+// Ingredient form in the admin panel: field state (text, because of comma/period), validation as in the API
+// (services/ingredients.go) and conversion to the payload.
 
 import type { IIngredientPayload } from '@/data/api/ingredients/fetch';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
@@ -12,7 +12,7 @@ export interface IRangeInput {
 }
 
 export interface IConvRow extends IRangeInput {
-    /** Klucz wiersza w v-for (nie wysyłany). */
+    /** Row key for v-for (not sent). */
     key: number;
     unitId: number | null;
 }
@@ -29,11 +29,11 @@ export interface IIngredientForm {
 
 export type RowState = { err: string } | { empty: true } | { val: Range };
 
-/** Jednostki przeliczane automatycznie albo bez ilości — bez przelicznika (jak fixedGrams / NoQty w API). */
+/** Units converted automatically or without a quantity: no conversion (like fixedGrams / NoQty in the API). */
 export const convertibleUnits = (units: IUnit[]) =>
     units.filter((u) => !u.noQty && u.name !== 'g' && u.name !== 'kg');
 
-/** '' → null; przecinek lub kropka; liczba ujemna lub śmieci → NaN. */
+/** '' → null; comma or period; a negative number or garbage → NaN. */
 export function parseNum(s: string): number | null {
     const t = s.trim().replace(',', '.');
     if (!t) return null;
@@ -81,7 +81,7 @@ export function formFromIngredient(ing?: IngredientDto): IIngredientForm {
     };
 }
 
-/** Błędy formularza: klucze `name`, `typeCode`, `nutrition.<key>`, `conversions[<i>]`. */
+/** Form errors: keys `name`, `typeCode`, `nutrition.<key>`, `conversions[<i>]`. */
 export function validateForm(f: IIngredientForm): Record<string, string> {
     const errs: Record<string, string> = {};
     if (!f.name.trim()) errs.name = 'Podaj nazwę';
@@ -102,7 +102,7 @@ export function validateForm(f: IIngredientForm): Record<string, string> {
     return errs;
 }
 
-/** Błędy z API (422) → te same klucze co validateForm (`nutrition.kcal.max` → `nutrition.kcal`). */
+/** API errors (422) → the same keys as validateForm (`nutrition.kcal.max` → `nutrition.kcal`). */
 export function mapServerErrors(
     fields: { field: string; message: string }[]
 ): Record<string, string> {
@@ -136,7 +136,7 @@ export function toPayload(f: IIngredientForm): IIngredientPayload {
     };
 }
 
-/** Id składnika i wszystkich jego potomków — nie mogą zostać jego rodzicem. */
+/** Id of the ingredient and all its descendants: none of them can become its parent. */
 export function selfAndDescendants(id: number, all: IngredientDto[]): Set<number> {
     const out = new Set([id]);
     let grew = true;
@@ -152,7 +152,7 @@ export function selfAndDescendants(id: number, all: IngredientDto[]): Set<number
     return out;
 }
 
-/** Zakres z podskładników (najniższe min, najwyższe max) — jak ResolveMacros w API; null = brak dzieci. */
+/** Range from sub-ingredients (lowest min, highest max), like ResolveMacros in the API; null = no children. */
 export function inheritedFromChildren(children: IngredientDto[]): Macros | null {
     if (!children.length) return null;
     const out: Macros = {};

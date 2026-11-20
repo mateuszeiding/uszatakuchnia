@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import UModal from '@/components/UModal.vue';
 import type { IEquipment } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Usuwanie używanego sprzętu: zamiana na inny (domyślnie; doprecyzowania zostają) albo usunięcie z przepisów.
+// Deleting equipment in use: replace it with another one (default; details stay) or remove it from recipes.
 const props = defineProps<{ item: IEquipment; others: IEquipment[] }>();
 const emit = defineEmits<{
     confirm: [opt: { replaceWith?: number; removeFromRecipes?: boolean }];

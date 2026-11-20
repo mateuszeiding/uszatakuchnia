@@ -3,8 +3,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import type { IEquipment } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Combobox sprzętu: podpowiedzi ze słownika, ↑ ↓ wybór, Enter zatwierdza, Esc zamyka.
-// Ostatnia opcja „+ Dodaj „…” do słownika” (gdy nie ma dokładnego trafienia).
+// Equipment combobox: suggestions from the dictionary, ↑ ↓ to pick, Enter confirms, Esc closes.
+// The last option is "+ Dodaj „…” do słownika" (when there's no exact match).
 const props = defineProps<{
     id: string;
     name: string;

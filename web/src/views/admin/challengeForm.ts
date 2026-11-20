@@ -1,4 +1,4 @@
-// Formularz wyzwania (panel): model, walidacja przed wysłaniem, payload, błędy z serwera.
+// Challenge form (admin): model, pre-submit validation, payload, server errors.
 import type { IChallenge, IUpsertChallengeRequest } from '@/data/dtos/challenge/ChallengeDto';
 import {
     cautionRows,
@@ -16,12 +16,12 @@ export interface IChallengeIngRow {
 export interface IChallengeForm {
     title: string;
     formatId: number | '';
-    /** Minuty jako tekst z pola; puste = bez limitu. */
+    /** Minutes as field text; empty = no limit. */
     timeLimit: string;
     difficulty: number | null;
     source: string;
     description: string;
-    /** Uwagi (sekcja 03); puste wiersze pomijane przy zapisie. */
+    /** Notes; empty rows are skipped on save. */
     cautions: ICautionRow[];
     ingredients: IChallengeIngRow[];
 }
@@ -54,15 +54,15 @@ export function toPayload(f: IChallengeForm): IUpsertChallengeRequest {
         difficulty: f.difficulty ?? 0,
         source: f.source.trim() || null,
         cautions: cautionTexts(f.cautions),
-        // puste wiersze pomijane
+        // empty rows skipped
         ingredients: filledRows(f).map((r) => ({ name: r.name.trim(), required: r.required })),
     };
 }
 
-/** Porównanie „czy są niezapisane zmiany” — bez id wierszy i pustych wierszy. */
+/** Comparison for "unsaved changes": ignores row ids and empty rows. */
 export const snapshot = (f: IChallengeForm) => JSON.stringify(toPayload(f));
 
-/** Błędy pól; klucze: title, formatId, difficulty, description, timeLimitMin, source, ing-<id wiersza>, caution-<id wiersza>. */
+/** Field errors; keys: title, formatId, difficulty, description, timeLimitMin, source, ing-<row id>, caution-<row id>. */
 export function validateForm(f: IChallengeForm): Record<string, string> {
     const e: Record<string, string> = {};
     if (!f.title.trim()) e.title = 'Wpisz tytuł';
@@ -82,7 +82,7 @@ export function validateForm(f: IChallengeForm): Record<string, string> {
     return e;
 }
 
-/** Błędy z API (422) → klucze formularza; ingredients[i] i cautions[i] liczą tylko niepuste wiersze. */
+/** API errors (422) → form keys; ingredients[i] and cautions[i] count only non-empty rows. */
 export function mapServerErrors(
     fields: { field: string; message: string }[],
     f: IChallengeForm

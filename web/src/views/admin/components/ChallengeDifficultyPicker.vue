@@ -2,8 +2,8 @@
 import FlameIcon from '@/components/FlameIcon.vue';
 import { DIFFICULTIES, levelName } from '@/shared/utils/challenges';
 
-// Trudność wyzwania w formularzu: radiogroup z 5 przyciskami (płomienie + „3 · średnie”).
-// Klawiatura jak w grupie radio: Tab wchodzi na zaznaczony, strzałki zmieniają wybór.
+// Challenge difficulty in the form: a radiogroup of 5 buttons (flames + "3 · średnie").
+// Keyboard as in a radio group: Tab lands on the selected one, arrows change the choice.
 defineProps<{ labelledby: string; invalid?: boolean }>();
 const level = defineModel<number | null>({ required: true });
 

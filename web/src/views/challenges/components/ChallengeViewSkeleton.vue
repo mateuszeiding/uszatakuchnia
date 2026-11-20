@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-// Ładowanie strony wyzwania: ten sam układ co ChallengeView (chip formatu, tytuł, metadane, przycisk,
-// akapity; po prawej karta „Składniki”). Na telefonie karta pod opisem, przycisk na całą szerokość.
+// Challenge page loading: the same layout as ChallengeView (format chip, title, metadata, button,
+// paragraphs; the "Składniki" card on the right). On a phone the card goes below the description, the button full width.
 defineProps<{ narrow: boolean }>();
 </script>
 

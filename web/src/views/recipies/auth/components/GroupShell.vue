@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Obudowa grupy składników / etapu kroków: nazwa grupy, lista, pole upuszczenia na końcu.
+// Wrapper of an ingredient group / step stage: group name, list, drop slot at the end.
 defineProps<{
     label: string;
     index: number;
@@ -90,7 +90,7 @@ const emit = defineEmits<{ 'update:label': [v: string]; remove: [] }>();
     text-transform: uppercase;
     color: var(--ink);
     padding: 4px 0;
-    line-height: 17px; /* stała — wysokość nie zależy od tego, czy font już się wczytał */
+    line-height: 17px; /* fixed: the height doesn't depend on whether the font has loaded */
 }
 .group-shell__label::placeholder {
     color: var(--ink-muted);

@@ -2,8 +2,8 @@
 import UFieldError from '@/components/form/UFieldError.vue';
 import { fromMinutes, type TimeUnit, toMinutes } from '@/shared/utils/time';
 
-// Czas przepisu: „od” (wymagane), „do” (opcjonalnie, zakres) + jednostka min/h.
-// Przełączenie jednostki przelicza wpisane wartości; zapis w minutach robi toRequest().
+// Recipe time: "od" (required), "do" (optional, range) + min/h unit.
+// Switching the unit converts the entered values; toRequest() stores minutes.
 const time = defineModel<string>('time', { required: true });
 const timeMax = defineModel<string>('timeMax', { required: true });
 const unit = defineModel<TimeUnit>('unit', { required: true });
@@ -13,7 +13,7 @@ const UNITS: TimeUnit[] = ['min', 'h'];
 
 function setUnit(next: TimeUnit) {
     if (next === unit.value) return;
-    // niepoprawny tekst zostaje bez zmian — walidacja go pokaże
+    // invalid text stays as is; validation will show it
     const conv = (v: string) => {
         const m = toMinutes(v, unit.value);
         return m ? fromMinutes(m, next) : v;

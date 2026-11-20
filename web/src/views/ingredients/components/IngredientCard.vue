@@ -34,7 +34,7 @@ defineProps<{
     display: flex;
     flex-direction: row;
     overflow: hidden;
-    /* bez efektu najechania — karta nie jest linkiem */
+    /* no hover effect: the card isn't a link */
 }
 
 .image-wrapper {

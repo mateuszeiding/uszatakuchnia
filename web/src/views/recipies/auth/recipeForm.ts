@@ -1,5 +1,5 @@
-// Stan formularza przepisu: typy, konwersja z/do API, walidacja.
-// Szkic wymaga tylko nazwy; publikacja — kompletu (nazwa, składnik, krok, wymagane osie, trudność, porcje).
+// Recipe form state: types, conversion from/to the API, validation.
+// A draft needs only a name; publishing needs everything (name, ingredient, step, required axes, difficulty, servings).
 
 import type { IUpsertRecipeRequest, RecipeDto, RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
 import type { ILinkedRecipe } from '@/data/dtos/recipe/RecipeIngredientDto';
@@ -11,7 +11,7 @@ import { defaultTimeUnit, fromMinutes, type TimeUnit, toMinutes } from '@/shared
 let seq = 0;
 export const uid = () => ++seq;
 
-/** Najdłuższa wskazówka kroku (jak w API). */
+/** Longest step hint (as in the API). */
 export const MAX_HINT_LEN = 300;
 
 export const PREP_LEADS = ['30 min', '1 h', '2 h', '4 h', '12 h', 'dzień wcześniej'];
@@ -19,15 +19,15 @@ export const PREP_LEADS = ['30 min', '1 h', '2 h', '4 h', '12 h', 'dzień wcześ
 export interface IIngItem {
     id: number;
     ingredientId: number;
-    /** Tekst w polu podpowiadania; ingredientId > 0 dopiero po wyborze z bazy. */
+    /** Text in the autosuggest field; ingredientId > 0 only after picking from the database. */
     name: string;
     qty: string;
     unitId: number | null;
     note: string;
     optional: boolean;
-    /** Link do przepisu na ten składnik; null = brak. */
+    /** Link to the recipe for this ingredient; null = none. */
     linked: ILinkedRef | null;
-    /** Zamienniki („zamiast” albo „pół na pół”) w kolejności dodania. */
+    /** Substitutes ("zamiast" or "pół na pół") in the order added. */
     substitutes: ISubItem[];
 }
 
@@ -44,15 +44,15 @@ export interface IStepItem {
     text: string;
     prep: boolean;
     prepLead: string;
-    /** Wskazówki pod treścią kroku; puste pomijane przy zapisie. */
+    /** Hints below the step text; empty ones are skipped on save. */
     hints: string[];
 }
 
 export interface IEquipItem {
     id: number;
-    /** 0 = jeszcze nie wybrano ze słownika (wiersz pomijany przy zapisie). */
+    /** 0 = not picked from the dictionary yet (row skipped on save). */
     equipmentId: number;
-    /** Tekst w polu podpowiadania. */
+    /** Text in the autosuggest field. */
     name: string;
     spec: string;
     optional: boolean;
@@ -69,10 +69,10 @@ export interface IRecipeForm {
     tagline: string;
     tip: string;
     photoUrl: string | null;
-    /** Wybrane wartości per kod osi (dish, base, cuisine, diet, practical, …). */
+    /** Selected values per axis code (dish, base, cuisine, diet, practical, …). */
     taxonomy: Record<string, number[]>;
     difficulty: number | null;
-    /** Czas „od” / „do” jako tekst w jednostce timeUnit (np. „2,5” h). */
+    /** "od" / "do" time as text in the timeUnit unit (e.g. "2,5" h). */
     time: string;
     timeMax: string;
     timeUnit: TimeUnit;
@@ -80,7 +80,7 @@ export interface IRecipeForm {
     ingGroups: IGroup<IIngItem>[];
     stepGroups: IGroup<IStepItem>[];
     equipment: IEquipItem[];
-    /** Uwagi „czego nie zawalić” (sekcja 02); puste wiersze pomijane przy zapisie. */
+    /** "Don't mess this up" notes; empty rows are skipped on save. */
     cautions: ICautionRow[];
 }
 
@@ -129,7 +129,7 @@ export const newForm = (): IRecipeForm => ({
     cautions: [],
 });
 
-/** Grupuje kolejne elementy o tej samej sekcji (kolejność z API zachowana). */
+/** Groups consecutive items with the same section (API order preserved). */
 function groupBy<T, R>(
     items: T[],
     section: (x: T) => string | null,
@@ -145,7 +145,7 @@ function groupBy<T, R>(
     return out;
 }
 
-/** Czas z API (minuty) → pola formularza; przy edycji < 60 min w minutach, inaczej w godzinach. */
+/** Time from the API (minutes) → form fields; when editing, < 60 min in minutes, otherwise hours. */
 function timeFields(min: number, max: number | null) {
     const timeUnit = defaultTimeUnit(min);
     return {
@@ -263,13 +263,13 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
                     note: orNull(i.note),
                     optional: i.optional,
                     linkedRecipeId: i.linked?.id ?? null,
-                    // zamiennik równy składnikowi głównemu (zmieniono składnik w wierszu) — pomijany
+                    // a substitute equal to the main ingredient (the row's ingredient was changed): skipped
                     substitutes: i.substitutes
                         .filter((s) => s.ingredientId !== i.ingredientId)
                         .map((s) => ({ ingredientId: s.ingredientId, mix: s.mix })),
                 }))
         ),
-        // pusty / niewybrany ze słownika wiersz pomijany
+        // an empty row / not picked from the dictionary: skipped
         equipment: f.equipment
             .filter((e) => e.equipmentId > 0)
             .map((e) => ({
@@ -280,7 +280,7 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
     };
 }
 
-/** Przenosi starą wskazówkę przepisu (tip) na koniec wskazówek kroku i czyści tip. Zapis do bazy dopiero przy „Zapisz”. */
+/** Moves the old recipe hint (tip) to the end of the step's hints and clears tip. Saved to the database only on "Zapisz". */
 export function moveTipToStep(f: IRecipeForm, stepId: number): void {
     const tip = f.tip.trim();
     const step = f.stepGroups.flatMap((g) => g.items).find((s) => s.id === stepId);
@@ -289,8 +289,8 @@ export function moveTipToStep(f: IRecipeForm, stepId: number): void {
     f.tip = '';
 }
 
-/** Dzieli tekst dłuższy niż MAX_HINT_LEN po zdaniach (. ! ? …) na kawałki ≤ MAX_HINT_LEN.
- *  Zdanie dłuższe od limitu zostaje w całości — walidacja pokaże je przy kroku. */
+/** Splits text longer than MAX_HINT_LEN at sentence ends (. ! ? …) into chunks ≤ MAX_HINT_LEN.
+ *  A sentence longer than the limit stays whole; validation will flag it at the step. */
 function splitHint(text: string): string[] {
     const len = (s: string) => [...s].length;
     if (len(text) <= MAX_HINT_LEN) return [text];
@@ -319,9 +319,9 @@ export type FormErrors = Partial<
 >;
 
 export interface IValidation {
-    /** Błędy wymagane do publikacji. */
+    /** Errors required for publishing. */
     errors: FormErrors;
-    /** Wiersze składników i sprzętu z błędem (id wiersza → komunikat). */
+    /** Ingredient and equipment rows with errors (row id → message). */
     rows: Record<number, string>;
 }
 
@@ -370,7 +370,7 @@ export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IVal
 
     const steps = f.stepGroups.flatMap((g) => g.items);
     if (!steps.some((s) => s.text.trim())) errors.steps = 'Dodaj co najmniej jeden krok.';
-    // Numer jak w edytorze (ciągła numeracja wierszy).
+    // Number as in the editor (continuous row numbering).
     const longAt = steps.findIndex((s) => s.hints.some((h) => [...h.trim()].length > MAX_HINT_LEN));
     if (longAt >= 0)
         errors.steps = `Krok ${longAt + 1}: wskazówka może mieć najwyżej ${MAX_HINT_LEN} znaków.`;

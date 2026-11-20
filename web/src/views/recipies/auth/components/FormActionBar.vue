@@ -13,9 +13,9 @@ const props = defineProps<{
     dirty: boolean;
     lastSaved: Date | null;
     busy: BusyAction;
-    /** Liczba błędów blokujących publikację — pokazywana po próbie zapisu. */
+    /** Number of errors blocking publishing, shown after a save attempt. */
     errorCount: number;
-    /** Id zapisanego przepisu — link „Zobacz na stronie” przy opublikowanym. */
+    /** Id of the saved recipe, for the "Zobacz na stronie" link when published. */
     recipeId: number | null;
 }>();
 const emit = defineEmits<{
@@ -90,7 +90,7 @@ const state = computed<{ kind: 'error' | 'dirty' | 'saved' | 'idle'; text: strin
                     Anuluj
                 </button>
                 <template v-if="pub">
-                    <!-- opublikowany: bez podglądu niezapisanych zmian (zapis od razu publikuje) — tylko link -->
+                    <!-- published: no preview of unsaved changes (saving publishes right away), just a link -->
                     <RouterLink
                         v-if="recipeId"
                         :to="{ name: 'recipe-details', params: { id: recipeId } }"
@@ -138,7 +138,7 @@ const state = computed<{ kind: 'error' | 'dirty' | 'saved' | 'idle'; text: strin
                         title="Zapisuje szkic i otwiera stronę w nowej karcie"
                         @click="emit('preview')"
                     >
-                        <!-- w trakcie zapisu ikona ustępuje spinnerowi, ale trzyma miejsce (przyciski się nie przesuwają) -->
+                        <!-- while saving, the icon gives way to the spinner but keeps its space (the buttons don't shift) -->
                         <UIcon
                             name="external"
                             :class="{ 'action-bar__icon-off': busy === 'preview' }"

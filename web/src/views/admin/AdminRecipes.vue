@@ -14,7 +14,7 @@ import {
     STATUS_LABEL,
 } from '@/data/dtos/recipe/RecipeDto';
 
-// Jedyna lista przepisów dla admina: zakładki statusów, podgląd / edycja / usuwanie.
+// The admin's only recipe list: status tabs, preview / edit / delete.
 const qc = useQueryClient();
 const recipes = ref<RecipeBaseDto[]>([]);
 const loading = ref(true);
@@ -184,7 +184,7 @@ async function remove(r: RecipeBaseDto) {
                     </td>
                     <td>
                         <div class="actions">
-                            <!-- oko przy każdym przepisie, zawsze nowa karta; szkic widzi tylko właściciel (pasek „Szkic”) -->
+                            <!-- eye icon on every recipe, always a new tab; only the owner sees a draft ("Szkic" bar) -->
                             <RouterLink
                                 :to="{ name: 'recipe-details', params: { id: r.id } }"
                                 class="tbl-btn"
@@ -253,8 +253,8 @@ async function remove(r: RecipeBaseDto) {
     height: 40px;
     background: var(--bg-alt);
 }
-/* ładowanie: tabela od razu, wiersze-szkielety na klasach prawdziwych komórek (ta sama wysokość),
-   spinner nad tabelą — poza układem */
+/* loading: the table right away, skeleton rows on the real cell classes (same height),
+   spinner above the table, outside the layout */
 .tbl-wrap {
     position: relative;
 }

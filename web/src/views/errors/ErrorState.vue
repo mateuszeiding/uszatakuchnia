@@ -4,12 +4,12 @@ import { nextTick, onMounted, ref } from 'vue';
 import { useNoindex } from '@/composables/useNoindex';
 import { setTitle } from '@/shared/utils/title';
 
-// Strona błędu (20.11, prototyp pz-main.jsx → Missing): nadtytuł Geist Mono 12, h1, opis, przyciski,
-// opcjonalnie sekcja pod spodem. Tytuł karty = nagłówek, noindex, fokus na h1 po wczytaniu.
+// Error page: eyebrow, h1, description, buttons, an optional section below.
+// Tab title = the heading, noindex, focus on h1 after load.
 const props = defineProps<{
     kicker: string;
     title: string;
-    /** Nadtytuł w --prep (błąd połączenia), inaczej --ink-muted. */
+    /** Eyebrow in --prep (connection error), otherwise --ink-muted. */
     warn?: boolean;
 }>();
 

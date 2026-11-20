@@ -3,8 +3,8 @@ import { useRoute } from 'vue-router';
 
 import ErrorState from './ErrorState.vue';
 
-// Nieznany adres (catch-all w routerze): „Nie ma takiej strony” z wpisaną ścieżką. Bez przekierowania —
-// adres w pasku zostaje taki, jak wpisany (20.11).
+// Unknown URL (catch-all in the router): "Nie ma takiej strony" with the typed path. No redirect:
+// the URL in the address bar stays as typed.
 const route = useRoute();
 </script>
 

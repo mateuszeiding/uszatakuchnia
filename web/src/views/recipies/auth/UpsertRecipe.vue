@@ -69,7 +69,7 @@ const showErrors = ref<'draft' | 'full' | null>(null);
 const serverError = ref('');
 const dicts = ref<IDictionaries>();
 const ingredients = ref<IngredientDto[]>([]);
-/** Wszystkie przepisy (także szkice) — do wyboru linku w składnikach. */
+/** All recipes (drafts too), for picking a link in ingredients. */
 const recipes = ref<RecipeBaseDto[]>([]);
 const addIng = ref<{ name: string; item: IIngItem } | null>(null);
 let leaving = false;
@@ -94,7 +94,7 @@ onMounted(async () => {
     loading.value = false;
 });
 
-// ─── Walidacja ────────────────────────────────────────────────
+// ─── Validation ──────────────────────────────────────────────
 const validation = computed(() => validate(form.value, dicts.value));
 const errors = computed<FormErrors>(() => {
     if (showErrors.value === 'full') return validation.value.errors;
@@ -125,8 +125,8 @@ async function scrollToFirstError() {
     );
 }
 
-// ─── Zapis ────────────────────────────────────────────────────
-/** Zapis; true = zapisano. */
+// ─── Save ────────────────────────────────────────────────────
+/** Resolves true when saved. */
 async function submit(
     kind: Exclude<BusyAction, null>,
     nextStatus: RecipeStatus,
@@ -134,7 +134,7 @@ async function submit(
 ): Promise<boolean> {
     busy.value = kind;
     serverError.value = '';
-    // stan wysłany na serwer — edycja w trakcie zapisu zostaje „niezapisana” (dirty)
+    // the state sent to the server: edits made while saving stay "unsaved" (dirty)
     const snapshot = JSON.stringify(form.value);
     try {
         const body = toRequest(form.value, nextStatus);
@@ -172,8 +172,8 @@ function saveDraft() {
 }
 
 /**
- * „Podgląd” (tylko szkic): zapisuje szkic na zasadach „Zapisz szkic” (bez walidacji publikacji)
- * i otwiera stronę przepisu w nowej karcie; formularz zostaje. Nowy przepis najpierw powstaje jako szkic.
+ * "Podgląd" (drafts only): saves the draft like "Zapisz szkic" (without publish validation)
+ * and opens the recipe page in a new tab; the form stays. A new recipe is created as a draft first.
  */
 async function preview() {
     if (validation.value.errors.name) {
@@ -181,7 +181,7 @@ async function preview() {
         scrollToFirstError();
         return;
     }
-    // karta otwarta od razu, w obsłudze kliknięcia — po await zapisu przeglądarka blokuje wyskakujące okna
+    // the tab is opened right away, in the click handler: after awaiting the save, the browser blocks popups
     const tab = window.open('', '_blank');
     if (tab) tab.opener = null;
     const ok =
@@ -248,7 +248,7 @@ async function removeRecipe() {
     router.push(PANEL);
 }
 
-// ─── Ostrzeżenie przy wyjściu ─────────────────────────────────
+// ─── Leave warning ────────────────────────────────────────────
 const onBeforeUnload = (e: BeforeUnloadEvent) => {
     if (!dirty.value) return;
     e.preventDefault();
@@ -259,7 +259,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', onBeforeUnload)
 
 onBeforeRouteLeave((to) => {
     if (leaving || !dirty.value) return true;
-    // przejście /recipes/new → /recipes/:id/edit po pierwszym zapisie
+    // /recipes/new → /recipes/:id/edit after the first save
     if (to.name === 'recipe-edit' && Number(to.params.id) === recipeId.value) return true;
     return confirmAction({
         title: 'Wyjść bez zapisywania?',
@@ -269,7 +269,7 @@ onBeforeRouteLeave((to) => {
     });
 });
 
-// ─── Składnik spoza bazy ──────────────────────────────────────
+// ─── Ingredient not in the database ──────────────────────────
 function onIngredientCreated(ing: IngredientDto) {
     ingredients.value = [...ingredients.value, ing];
     if (addIng.value) {
@@ -281,13 +281,13 @@ function onIngredientCreated(ing: IngredientDto) {
     addIng.value = null;
 }
 
-// ─── Sprzęt dodany do słownika z formularza ──────────────────
+// ─── Equipment added to the dictionary from the form ─────────
 function onEquipmentCreated(e: IEquipment) {
     if (dicts.value) dicts.value = { ...dicts.value, equipment: [...dicts.value.equipment, e] };
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────
-// W trakcie ładowania osie ze szkieletu (te same liczby wartości) — formularz ma docelowy układ.
+// While loading, the axes come from the skeleton (same value counts), so the form has its final layout.
 const axesView = computed(() => (dicts.value ?? LOADING_DICTIONARIES).axes);
 const classificationAxes = computed(() =>
     axesView.value.filter((a) => !SIDEBAR_AXES_LAST.includes(a.code))
@@ -355,8 +355,8 @@ const prepSummary = computed(() => {
             </div>
         </header>
 
-        <!-- ładowanie: ten sam formularz nieaktywny (puste pola, szkielety chipów osi);
-             spinner nad formularzem, poza układem -->
+        <!-- loading: the same form, disabled (empty fields, axis chip skeletons);
+             the spinner sits above the form, outside the layout -->
         <div
             class="upsert-body"
             :class="{ 'is-loading': loading }"
@@ -715,7 +715,7 @@ const prepSummary = computed(() => {
     justify-content: center;
     pointer-events: none;
 }
-/* ładowanie: chipy osi bez etykiet (sam kształt) */
+/* loading: axis chips without labels (shape only) */
 .upsert-body.is-loading :deep(.chip) {
     color: transparent;
 }

@@ -6,7 +6,6 @@ import ChallengeDifficultyPicker from './ChallengeDifficultyPicker.vue';
 import UFieldError from '@/components/form/UFieldError.vue';
 import type { IChallengeFormat } from '@/data/dtos/challenge/ChallengeDto';
 
-// Formularz wyzwania, sekcja 01 Podstawowe: tytuł, format, limit czasu, trudność, źródło.
 defineProps<{ formats: IChallengeFormat[]; errors: Record<string, string> }>();
 const form = defineModel<IChallengeForm>({ required: true });
 </script>

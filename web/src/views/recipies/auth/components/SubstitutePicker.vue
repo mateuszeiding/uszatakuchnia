@@ -5,8 +5,8 @@ import type { ISubItem } from '../recipeForm';
 
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 
-// Dodawanie zamiennika: wyszukiwanie po bazie składników (bez składnika głównego i już dodanych opcji),
-// przy wyniku „zamiast” i „pół na pół”. ↑ ↓ wybór, Enter = „zamiast”, Esc zamyka.
+// Adding a substitute: search the ingredient database (excluding the main ingredient and options already added);
+// each result offers "zamiast" and "pół na pół". ↑ ↓ to pick, Enter = "zamiast", Esc closes.
 const props = defineProps<{
     id: string;
     ingredientName: string;

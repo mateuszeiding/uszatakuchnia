@@ -29,11 +29,11 @@ const groups = defineModel<IGroup<IIngItem>[]>('groups', { required: true });
 const props = defineProps<{
     ingredients: IngredientDto[];
     units: IUnit[];
-    /** Błędy wierszy (id wiersza → komunikat); puste, dopóki nie próbowano zapisać. */
+    /** Row errors (row id → message); empty until a save was attempted. */
     rowErrors: Record<number, string>;
-    /** Przepisy do linkowania (wszystkie, także szkice). */
+    /** Recipes to link to (all of them, drafts too). */
     recipes: RecipeBaseDto[];
-    /** Edytowany przepis (null = nowy) — znika z listy wyboru. */
+    /** The edited recipe (null = new); excluded from the picker. */
     currentId: number | null;
 }>();
 const emit = defineEmits<{ 'add-new': [name: string, item: IIngItem] }>();
@@ -49,7 +49,7 @@ function onUnit(it: IIngItem, value: string) {
 
 function onName(it: IIngItem, v: string) {
     it.name = v;
-    // Zmiana tekstu odpina wybrany składnik, dopóki nie wybierze się z listy.
+    // Editing the text unlinks the chosen ingredient until one is picked from the list.
     const match = props.ingredients.find((i) => i.id === it.ingredientId);
     if (!match || match.name !== v) it.ingredientId = 0;
 }
@@ -84,10 +84,10 @@ function removeItem(g: IGroup<IIngItem>, it: IIngItem) {
     g.items.splice(g.items.indexOf(it), 1);
 }
 
-// ─── Link do przepisu ────────────────────────────────────────
+// ─── Recipe link ─────────────────────────────────────────────
 const picking = ref<number | null>(null);
 
-/** Po zamknięciu wyboru fokus wraca na „Przepis…” / „Zmień”. */
+/** After the picker closes, focus returns to "Przepis…" / "Zmień". */
 async function focusLinkBtn(it: IIngItem) {
     await nextTick();
     document.getElementById(`lk-btn-${it.id}`)?.focus();
@@ -109,7 +109,7 @@ const togglePicker = (it: IIngItem) => {
     picking.value = picking.value === it.id ? null : it.id;
 };
 
-// ─── Zamienniki ──────────────────────────────────────────────
+// ─── Substitutes ─────────────────────────────────────────────
 const subPicking = ref<number | null>(null);
 
 async function focusSubBtn(it: IIngItem) {
@@ -506,7 +506,7 @@ const subLabel = (s: ISubItem) => (s.mix ? `pół na pół z: ${s.name}` : s.nam
     color: var(--accent);
     border-color: var(--accent);
 }
-/* linie pod wierszem: zamienniki i ustawiony link — etykieta w kolumnie 96 px */
+/* lines below the row: substitutes and the set link, label in a 96 px column */
 .ing-row__lines {
     padding-left: 28px;
     display: grid;
