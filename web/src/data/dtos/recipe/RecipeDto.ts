@@ -35,6 +35,8 @@ export class RecipeBaseDto {
     kcal: SumRange | null = null;
     /** Nazwy składników (lista — wyszukiwanie po składnikach). */
     ingredientNames: string[] = [];
+    /** Nazwy zamienników (lista — wyszukiwanie: „pancetta” znajduje przepis z boczkiem). */
+    substituteNames: string[] = [];
 
     constructor(obj: Partial<RecipeBaseDto> & { photo?: BackendRecipePhoto }) {
         Object.assign(this, obj);

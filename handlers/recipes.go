@@ -61,11 +61,34 @@ func RecipeList(w http.ResponseWriter, r *http.Request) {
 		names[r.RecipeID] = append(names[r.RecipeID], r.Name)
 	}
 
+	// Nazwy zamienników per przepis (wyszukiwanie: „pancetta” znajduje przepis z boczkiem).
+	var subRows []struct {
+		RecipeID uint
+		Name     string
+	}
+	if err := conn.Table("recipe_ingredient_substitutes s").
+		Select("s.recipe_id, i.name, MIN(s.sort_order) AS so").
+		Joins("JOIN ingredients i ON i.id = s.ingredient_id").
+		Group("s.recipe_id, i.name").
+		Order("s.recipe_id, so, i.name").
+		Scan(&subRows).Error; err != nil {
+		resp.JSON(w, http.StatusInternalServerError, map[string]any{"error": err.Error()})
+		return
+	}
+	subs := map[uint][]string{}
+	for _, r := range subRows {
+		subs[r.RecipeID] = append(subs[r.RecipeID], r.Name)
+	}
+
 	dtos := mappers.MapRecipeBaseArrayToDto(list)
 	for i := range dtos {
 		dtos[i].IngredientNames = names[dtos[i].ID]
 		if dtos[i].IngredientNames == nil {
 			dtos[i].IngredientNames = []string{}
+		}
+		dtos[i].SubstituteNames = subs[dtos[i].ID]
+		if dtos[i].SubstituteNames == nil {
+			dtos[i].SubstituteNames = []string{}
 		}
 	}
 	resp.JSON(w, http.StatusOK, dtos)

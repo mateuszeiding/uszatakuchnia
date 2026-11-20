@@ -51,6 +51,8 @@ type RecipeBaseDto struct {
 	Kcal *entities.SumRange `json:"kcal"`
 	// Nazwy składników — wyszukiwarka listy szuka też po nich.
 	IngredientNames []string `json:"ingredientNames"`
+	// Nazwy zamienników (bez powtórzeń) — wyszukiwarka listy szuka też po nich („pancetta” → Ragù).
+	SubstituteNames []string `json:"substituteNames"`
 }
 
 type UpsertRecipeRequest struct {

@@ -6,6 +6,7 @@ import type { LocationQuery, LocationQueryRaw } from 'vue-router';
 
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
+import { matches, prepareQuery } from '@/shared/utils/search';
 
 export type SortKey = 'newest' | 'fastest' | 'az';
 
@@ -86,19 +87,24 @@ export function applyFilters(
     f: IListFilters,
     axes: ITaxonomyAxis[]
 ): IResult[] {
-    const q = f.q.trim().toLowerCase();
+    // bez polskich znaków, z prostą odmianą słów, także po zamiennikach (shared/utils/search.ts)
+    const q = prepareQuery(f.q);
     let out: IResult[] = [];
     for (const r of list) {
         if (!q) {
             out.push({ recipe: r, hits: null });
             continue;
         }
-        const cuisine = r.taxonomy.cuisine?.[0]?.label.toLowerCase() ?? '';
-        if (r.name.toLowerCase().includes(q) || cuisine.includes(q)) {
+        const cuisine = r.taxonomy.cuisine?.[0]?.label ?? '';
+        if (matches(q, r.name) || (cuisine && matches(q, cuisine))) {
             out.push({ recipe: r, hits: null });
             continue;
         }
-        const hits = r.ingredientNames.filter((n) => n.toLowerCase().includes(q));
+        const hits = [
+            ...new Set(
+                [...r.ingredientNames, ...(r.substituteNames ?? [])].filter((n) => matches(q, n))
+            ),
+        ];
         if (hits.length) out.push({ recipe: r, hits });
     }
 
