@@ -5,51 +5,99 @@ import BookIcon from '@/components/BookIcon.vue';
 import SwapIcon from '@/components/SwapIcon.vue';
 
 // Objaśnienie ikon przy składnikach — osobna karta nad kartą składników. Tylko ikony obecne w przepisie
-// (rodzic nie renderuje karty, gdy żadnej nie ma). „Ukryj” zapamiętane na urządzeniu (uk:legend:hidden).
+// (rodzic nie renderuje karty, gdy żadnej nie ma). Zwijana (20.11, zamiast „Ukryj” na zawsze): nagłówek to
+// przycisk „Zwiń / Pokaż”; zwinięta — tytuł i małe ikony. Stan na urządzeniu: uk:legend:collapsed
+// (domyślnie rozwinięta); stary uk:legend:hidden („Ukryj”) = zwinięta, klucz usuwany.
 defineProps<{ swap: boolean; link: boolean }>();
 
-const KEY = 'uk:legend:hidden';
-const read = () => {
+const KEY = 'uk:legend:collapsed';
+const OLD_KEY = 'uk:legend:hidden';
+function read(): boolean {
     try {
-        return localStorage.getItem(KEY) === '1';
+        const old = localStorage.getItem(OLD_KEY);
+        if (old != null) {
+            localStorage.removeItem(OLD_KEY);
+            if (old === '1' || old === 'true') {
+                localStorage.setItem(KEY, 'true');
+                return true;
+            }
+        }
+        return localStorage.getItem(KEY) === 'true';
     } catch {
         return false;
     }
-};
-const hidden = ref(read());
+}
+const collapsed = ref(read());
 
-function hide() {
-    hidden.value = true;
+function toggle() {
+    collapsed.value = !collapsed.value;
     try {
-        localStorage.setItem(KEY, '1');
+        localStorage.setItem(KEY, String(collapsed.value));
     } catch {
-        /* tryb prywatny — ukryte do odświeżenia */
+        /* tryb prywatny — stan do odświeżenia */
     }
 }
 </script>
 
 <template>
     <aside
-        v-if="!hidden"
         class="legend"
         aria-labelledby="h-legend"
     >
-        <div class="legend__head">
-            <h2
-                id="h-legend"
-                class="legend__title"
-            >
-                Ikony przy składnikach
-            </h2>
+        <h2
+            id="h-legend"
+            class="legend__h"
+        >
             <button
                 type="button"
-                class="legend__hide"
-                @click="hide"
+                class="legend__head"
+                :aria-expanded="!collapsed"
+                aria-controls="legend-list"
+                @click="toggle"
             >
-                Ukryj
+                <span class="legend__title">Ikony przy składnikach</span>
+                <span
+                    v-if="collapsed"
+                    class="legend__mini"
+                    aria-hidden="true"
+                >
+                    <SwapIcon
+                        v-if="swap"
+                        :size="13"
+                    />
+                    <BookIcon
+                        v-if="link"
+                        external
+                        :size="12"
+                    />
+                </span>
+                <span class="legend__toggle">
+                    {{ collapsed ? 'Pokaż' : 'Zwiń' }}
+                    <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        aria-hidden="true"
+                        class="legend__chev"
+                        :class="{ 'is-up': !collapsed }"
+                    >
+                        <path
+                            d="M3 4.5L6 7.5 9 4.5"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </span>
             </button>
-        </div>
-        <ul class="legend__list">
+        </h2>
+        <ul
+            id="legend-list"
+            class="legend__list"
+            :hidden="collapsed"
+        >
             <li
                 v-if="swap"
                 class="legend__item"
@@ -89,20 +137,48 @@ function hide() {
 </template>
 
 <style scoped>
+/* prototyp zm-main.jsx (Legend): nagłówek = przycisk na całą szerokość, 44 px (telefon 48 px) */
 .legend {
     background: var(--bg-alt);
     border: 1px solid var(--rule);
     border-radius: var(--r-xl);
-    padding: 16px 20px;
+    padding: 0 20px;
+}
+.legend__h {
+    margin: 0;
 }
 .legend__head {
+    width: 100%;
+    min-height: 44px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 10px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--ink);
+    font-family: var(--font-sans);
+    text-align: left;
+    cursor: pointer;
+}
+.legend__mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent);
+}
+.legend__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--ink-muted);
+}
+.legend__chev.is-up {
+    transform: rotate(180deg);
 }
 .legend__title {
+    flex: 1;
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 600;
@@ -110,20 +186,10 @@ function hide() {
     text-transform: uppercase;
     color: var(--ink);
 }
-.legend__hide {
-    padding: 4px 0;
-    border: none;
-    background: none;
-    color: var(--ink-muted);
-    font-size: 13px;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    cursor: pointer;
-}
 .legend__list {
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 2px 0 16px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -155,14 +221,19 @@ function hide() {
     color: var(--ink);
 }
 
+.legend__list[hidden] {
+    display: none;
+}
+
 @media (max-width: 900px) {
     .legend {
-        padding: 14px 16px;
+        padding: 0 16px;
     }
-    /* cel dotyku 44 px bez wzrostu nagłówka */
-    .legend__hide {
-        padding: 12px 0 12px 12px;
-        margin: -12px 0;
+    .legend__head {
+        min-height: 48px;
+    }
+    .legend__list {
+        padding-bottom: 14px;
     }
 }
 </style>

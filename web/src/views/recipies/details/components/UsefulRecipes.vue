@@ -6,7 +6,8 @@ import { usefulRecipes } from '../recipeView';
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 
 // „Przydatne przepisy” (v3, 16.11): opublikowane przepisy, do których prowadzą składniki.
-// Karta = jeden link: miniatura 1:1, tytuł (max 2 linie), „do: …”, strzałka.
+// Karta = jeden link: miniatura 1:1, tytuł (max 2 linie), strzałka. Bez „do: …” (20.11: powtarzało tytuł;
+// do którego składnika — mówi ikona w wierszu).
 // Desktop: siatka 3 kolumn; ≤ 900 px: lista oddzielona liniami. Bez linków → bez bloku.
 // Karta otwiera nową kartę (decyzja 20.11).
 const props = defineProps<{ ingredients: RecipeIngredientDto[] }>();
@@ -35,7 +36,7 @@ const items = computed(() => usefulRecipes(props.ingredients));
                     class="useful__card"
                     target="_blank"
                     rel="noopener"
-                    :aria-label="`${r.title}, do: ${r.for.join(', ')} (otwiera się w nowej karcie)`"
+                    :aria-label="`${r.title} (otwiera się w nowej karcie)`"
                 >
                     <img
                         v-if="r.image"
@@ -50,7 +51,6 @@ const items = computed(() => usefulRecipes(props.ingredients));
                     />
                     <span class="useful__text">
                         <span class="useful__name">{{ r.title }}</span>
-                        <span class="useful__for">do: {{ r.for.join(', ') }}</span>
                     </span>
                     <svg
                         class="useful__arrow"
@@ -143,15 +143,6 @@ const items = computed(() => usefulRecipes(props.ingredients));
     font-weight: 600;
     line-height: 1.3;
     transition: color var(--dur-fast) var(--ease);
-}
-.useful__for {
-    display: block;
-    margin-top: 2px;
-    font-size: 12px;
-    color: var(--ink-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 .useful__arrow {
     color: var(--ink-muted);
