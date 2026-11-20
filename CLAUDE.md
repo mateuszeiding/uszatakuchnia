@@ -6,6 +6,12 @@
 - **Frontend:** Vue 3 + TypeScript, SCSS (DS v2), Vite, Auth0
 - **DB:** PostgreSQL (Neon), connection string w `DB_DATABASE_URL`
 
+## Język
+
+- **Po angielsku:** kod (nazwy, komentarze), commit messages, tytuły i opisy PR, odpowiedzi na review w PR.
+- **Po polsku:** dokumenty dla nas — `docs/`, `CLAUDE.md`, briefy, prompty, notatki — oraz teksty w UI i treść przepisów/wyzwań (`content/`).
+- Gałąź PR z polskimi commitami → squash merge z angielskim komunikatem. Historii `main` nie przepisujemy.
+
 ## Zasady kodu — Frontend (Vue)
 
 ### Formatowanie
