@@ -8,6 +8,7 @@ import IngGroupHeader from './IngGroupHeader.vue';
 import IngRow from './IngRow.vue';
 import StepHints from './StepHints.vue';
 
+import CautionsBlock from '@/components/CautionsBlock.vue';
 import UModal from '@/components/UModal.vue';
 import type { ISubChoice } from '@/composables/useCookingProgress';
 import { useWakeLock } from '@/composables/useWakeLock';
@@ -158,6 +159,13 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
                     class="cook__content"
                     aria-live="polite"
                 >
+                    <!-- uwagi tylko na ekranie kroku 1, nad treścią kroku -->
+                    <CautionsBlock
+                        v-if="i === 0"
+                        class="cook__cautions"
+                        :items="recipe.cautions"
+                        variant="large"
+                    />
                     <div
                         v-if="step.section"
                         class="cook__section"
@@ -327,13 +335,18 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
     overflow-y: auto;
     scrollbar-gutter: stable;
     display: flex;
-    align-items: center;
     justify-content: center;
     padding: 32px 24px;
 }
+/* wyśrodkowane w pionie auto-marginesami: gdy treść (np. uwagi na kroku 1) jest wyższa
+   od ekranu, przewija się od góry zamiast uciekać nad krawędź */
 .cook__content {
     max-width: 760px;
     width: 100%;
+    margin-block: auto;
+}
+.cook__cautions {
+    margin-bottom: 22px;
 }
 .cook__section {
     font-family: var(--font-mono);

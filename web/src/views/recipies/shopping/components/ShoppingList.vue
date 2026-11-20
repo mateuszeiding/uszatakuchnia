@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import ShoppingHeader from './ShoppingHeader.vue';
 import ShoppingRow from './ShoppingRow.vue';
 
+import CautionsBlock from '@/components/CautionsBlock.vue';
 import { useCookingProgress } from '@/composables/useCookingProgress';
 import { useShoppingChecks } from '@/composables/useShoppingChecks';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
@@ -81,10 +82,20 @@ const today = new Date().toLocaleDateString('pl-PL');
         @servings="changeServings"
     />
     <div class="shop">
+        <CautionsBlock
+            class="shop__cautions"
+            :items="recipe.cautions"
+            variant="compact"
+        />
         <p class="shop__hint">
             Odhacz to, co masz w domu albo już w koszyku. Ilości zsumowane ze wszystkich grup
             przepisu.
         </p>
+        <CautionsBlock
+            class="shop__cautions-print"
+            :items="recipe.cautions"
+            variant="print"
+        />
 
         <div class="shop__cols">
             <section
@@ -159,6 +170,16 @@ const today = new Date().toLocaleDateString('pl-PL');
     flex-direction: column;
     gap: 24px;
 }
+.shop__cautions {
+    margin-top: 14px;
+}
+/* uwagi zajmują miejsce pod nagłówkiem — podpowiedź bez własnego odstępu */
+.shop__cautions + .shop__hint {
+    margin-top: 0;
+}
+.shop__cautions-print {
+    display: none;
+}
 .shop__hint {
     margin-top: 14px;
     font-size: 13px;
@@ -216,8 +237,12 @@ const today = new Date().toLocaleDateString('pl-PL');
         padding: 4px 16px 28px;
         gap: 20px;
     }
-    .shop__hint {
+    .shop__hint,
+    .shop__cautions {
         margin-top: 10px;
+    }
+    .shop__cautions + .shop__hint {
+        margin-top: 0;
     }
     .shop__cols {
         gap: 20px;
@@ -232,8 +257,12 @@ const today = new Date().toLocaleDateString('pl-PL');
         gap: 16px;
     }
     .shop__hint,
+    .shop__cautions,
     .done {
         display: none;
+    }
+    .shop__cautions-print {
+        display: block;
     }
     .shop__cols {
         display: block;
