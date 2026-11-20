@@ -42,26 +42,6 @@ const kcal = computed(() => {
             />
         </div>
         <div class="r-card__body">
-            <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                aria-hidden="true"
-            >
-                <circle
-                    cx="6"
-                    cy="6"
-                    r="4.8"
-                    stroke="currentColor"
-                    stroke-width="1.3"
-                />
-                <path
-                    d="M6 3.5v2.7l1.7 1"
-                    stroke="currentColor"
-                    stroke-width="1.3"
-                    stroke-linecap="round"
-                />
-            </svg>
             <div
                 v-if="dish || cuisine"
                 class="r-card__flags"
