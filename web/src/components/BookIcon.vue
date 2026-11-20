@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Ikona linku do przepisu: książka; external = „otwiera się w nowej karcie” (tryb gotowania).
+// Ikona linku do przepisu: książka; external = „otwiera się w nowej karcie” (wiersz składnika, legenda, „Przydatne przepisy”).
 withDefaults(defineProps<{ size?: number; external?: boolean }>(), { size: 15 });
 </script>
 

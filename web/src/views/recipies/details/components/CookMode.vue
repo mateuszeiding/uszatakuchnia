@@ -244,7 +244,6 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
                             :sub="chosenSub(ing, subs)"
                             :allergen-label="allergenLabel"
                             roomy
-                            new-tab
                             @toggle="emit('toggle-ing', ing.sortOrder)"
                             @sub="emit('sub', ing.sortOrder, $event)"
                         />

@@ -74,11 +74,14 @@ function hide() {
                     class="legend__icon"
                     aria-hidden="true"
                 >
-                    <BookIcon />
+                    <BookIcon
+                        external
+                        :size="14"
+                    />
                 </span>
                 <span class="legend__text">
                     <strong>Przepis na ten składnik</strong>
-                    — otwiera przepis, z którego go zrobisz.
+                    — otwiera w nowej karcie przepis, z którego go zrobisz.
                 </span>
             </li>
         </ul>

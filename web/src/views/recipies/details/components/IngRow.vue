@@ -19,7 +19,8 @@ import { optionName } from '@/shared/utils/substitutes';
 // Wiersz składnika z odhaczaniem (panel przepisu i tryb gotowania).
 // Przekreślenie po odhaczeniu tylko na ilości i nazwie — notatka zostaje czytelna.
 // Ikony (⇄ zamienniki, książka — link do przepisu) to RODZEŃSTWO przycisku (nie w nim): klik w ikonę nie odhacza,
-// Tab trafia osobno. Wybrany zamiennik: nazwa wiersza = zamiennik, pod nią „zamiast: …” / „pół na pół”.
+// Tab trafia osobno. Link do przepisu zawsze otwiera nową kartę (decyzja 20.11) — bieżący przepis zostaje.
+// Wybrany zamiennik: nazwa wiersza = zamiennik, pod nią „zamiast: …” / „pół na pół”.
 const props = defineProps<{
     ing: RecipeIngredientDto;
     amount: { qty: string; unit: string };
@@ -31,8 +32,6 @@ const props = defineProps<{
     allergenLabel?: (code: string) => string;
     /** Większe wiersze (tryb gotowania). */
     roomy?: boolean;
-    /** Link otwiera nową kartę (tryb gotowania — gotowanie zostaje). */
-    newTab?: boolean;
 }>();
 const emit = defineEmits<{ toggle: []; sub: [choice: ISubChoice | null] }>();
 
@@ -147,14 +146,14 @@ async function close() {
                 class="ing-icon ing-link"
                 :class="{ 'ing-icon--roomy': roomy }"
                 :title="`Przepis: ${link.title}`"
-                :aria-label="`Przepis: ${link.title}${newTab ? ' (otwiera się w nowej karcie)' : ''}`"
-                :target="newTab ? '_blank' : undefined"
-                :rel="newTab ? 'noopener' : undefined"
+                :aria-label="`Przepis: ${link.title} (otwiera się w nowej karcie)`"
+                target="_blank"
+                rel="noopener"
             >
                 <span class="ing-icon__sq">
                     <BookIcon
-                        :external="newTab"
-                        :size="newTab ? 14 : 15"
+                        external
+                        :size="14"
                     />
                 </span>
             </RouterLink>
