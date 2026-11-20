@@ -24,6 +24,7 @@ import {
     validate,
 } from './recipeForm';
 
+import CautionsEditor from '@/components/CautionsEditor.vue';
 import UFieldError from '@/components/form/UFieldError.vue';
 import IngredientModal from '@/components/IngredientModal.vue';
 import USpinner from '@/components/USpinner.vue';
@@ -388,8 +389,20 @@ const prepSummary = computed(() => {
                 </FormSection>
 
                 <FormSection
-                    id="f-ingredients"
+                    id="f-cautions"
                     n="02"
+                    title="Uwagi"
+                    optional
+                >
+                    <CautionsEditor
+                        v-model="form.cautions"
+                        label="przepisie"
+                    />
+                </FormSection>
+
+                <FormSection
+                    id="f-ingredients"
+                    n="03"
                     title="Składniki"
                     hint="Grupuj, jeśli przepis ma części (np. ciasto i krem). Kolejność zmienisz, przeciągając za uchwyt."
                     :error="errors.ingredients"
@@ -407,7 +420,7 @@ const prepSummary = computed(() => {
 
                 <FormSection
                     id="f-equipment"
-                    n="03"
+                    n="04"
                     title="Sprzęt"
                     optional
                     hint="To, czego może zabraknąć: robot, forma, termometr, garnek o konkretnej pojemności. Bez oczywistości — nóż, deska, łyżka."
@@ -423,7 +436,7 @@ const prepSummary = computed(() => {
 
                 <FormSection
                     id="f-steps"
-                    n="04"
+                    n="05"
                     title="Kroki"
                     hint="Jeśli krok trzeba zrobić dużo wcześniej (marynata, namaczanie, wyrastanie), zaznacz „Przygotuj wcześniej”. Przepis dostanie wtedy oznaczenie."
                     :error="errors.steps"

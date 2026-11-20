@@ -15,6 +15,7 @@ import ChallengeBasics from './components/ChallengeBasics.vue';
 import ChallengeIngredientsEditor from './components/ChallengeIngredientsEditor.vue';
 
 import BusyLabel from '@/components/BusyLabel.vue';
+import CautionsEditor from '@/components/CautionsEditor.vue';
 import UFieldError from '@/components/form/UFieldError.vue';
 import USpinner from '@/components/USpinner.vue';
 import { confirmAction } from '@/composables/useConfirm';
@@ -29,7 +30,7 @@ import {
 import { fetchDictionariesWithClient, invalidateDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IChallenge, IChallengeFormat } from '@/data/dtos/challenge/ChallengeDto';
 
-// Edycja wyzwania jako strona: 01 Podstawowe, 02 Zadanie, 03 Składniki (opcjonalne).
+// Edycja wyzwania jako strona: 01 Podstawowe, 02 Zadanie, 03 Uwagi (opcjonalne), 04 Składniki (opcjonalne).
 // Ostrzeżenie przy wyjściu z niezapisanymi zmianami (Anuluj, nawigacja, zamknięcie karty).
 const props = defineProps<{ id?: string }>();
 const LIST = '/admin/challenges';
@@ -252,6 +253,19 @@ onBeforeRouteUpdate(guard);
         <section class="edit__section">
             <div class="edit__head">
                 <span class="edit__no">03</span>
+                <h2 class="edit__title">Uwagi</h2>
+                <span class="edit__opt">opcjonalne</span>
+            </div>
+            <CautionsEditor
+                v-model="form.cautions"
+                label="wyzwaniu"
+                :errors="errors"
+            />
+        </section>
+
+        <section class="edit__section">
+            <div class="edit__head">
+                <span class="edit__no">04</span>
                 <h2 class="edit__title">Składniki</h2>
                 <span class="edit__opt">opcjonalne</span>
             </div>

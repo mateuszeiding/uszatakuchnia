@@ -4,6 +4,7 @@
 import type { IUpsertRecipeRequest, RecipeDto, RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
 import type { ILinkedRecipe } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IDictionaries, IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
+import { cautionRows, cautionTexts, type ICautionRow } from '@/shared/utils/cautions';
 import { parseQty } from '@/shared/utils/quantity';
 import { defaultTimeUnit, fromMinutes, type TimeUnit, toMinutes } from '@/shared/utils/time';
 
@@ -79,6 +80,8 @@ export interface IRecipeForm {
     ingGroups: IGroup<IIngItem>[];
     stepGroups: IGroup<IStepItem>[];
     equipment: IEquipItem[];
+    /** Uwagi „czego nie zawalić” (sekcja 02); puste wiersze pomijane przy zapisie. */
+    cautions: ICautionRow[];
 }
 
 export const blankIng = (): IIngItem => ({
@@ -123,6 +126,7 @@ export const newForm = (): IRecipeForm => ({
     ingGroups: [{ id: uid(), label: '', items: [blankIng()] }],
     stepGroups: [{ id: uid(), label: '', items: [blankStep()] }],
     equipment: [],
+    cautions: [],
 });
 
 /** Grupuje kolejne elementy o tej samej sekcji (kolejność z API zachowana). */
@@ -210,6 +214,7 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
             spec: e.spec ?? '',
             optional: e.optional,
         })),
+        cautions: cautionRows(r.cautions),
     };
 }
 
@@ -226,6 +231,7 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
         name: f.name.trim(),
         tagline: orNull(f.tagline),
         tip: orNull(f.tip),
+        cautions: cautionTexts(f.cautions),
         servings: toInt(f.servings) ?? 0,
         timeMin: toMinutes(f.time, f.timeUnit),
         timeMax: f.timeMax.trim() ? toMinutes(f.timeMax, f.timeUnit) || null : null,
