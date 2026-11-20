@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Wskazówki pod treścią kroku: strona przepisu (md) i tryb gotowania (lg). Brak wskazówek = nic.
+// Hints below the step text: recipe page (md) and cooking mode (lg). No hints = nothing.
 import BulbIcon from '@/components/BulbIcon.vue';
 
 withDefaults(defineProps<{ hints: string[]; done?: boolean; size?: 'md' | 'lg' }>(), {

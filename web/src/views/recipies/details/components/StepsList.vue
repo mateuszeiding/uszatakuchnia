@@ -9,7 +9,7 @@ import BulbIcon from '@/components/BulbIcon.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 
 const props = defineProps<{
-    /** null = ładowanie: ten sam nagłówek i karty kroków ze szkieletem tekstu. */
+    /** null = loading: the same header and step cards with text skeletons. */
     recipe: RecipeDto | null;
     done: number[];
     canReset: boolean;
@@ -174,7 +174,7 @@ const doneCount = computed(
             </div>
         </div>
 
-        <!-- „Odznacz wszystko” na końcu kroków (20.11): bez pytania, „Cofnij” w toaście -->
+        <!-- "Odznacz wszystko" at the end of the steps: no confirmation, "Cofnij" in the toast -->
         <div
             v-if="recipe && total"
             class="uncheck"
@@ -214,7 +214,7 @@ const doneCount = computed(
 </template>
 
 <style scoped>
-/* szkielet: wypełnienia w liniach tekstu (17 px × 1,6) */
+/* skeleton: fills in the text lines (17 px × 1.6) */
 .steps-sk__line {
     display: block;
     height: 27.2px;
@@ -368,7 +368,6 @@ const doneCount = computed(
     text-wrap: pretty;
 }
 
-/* prototyp pz-main.jsx (ResetBlock): linia, przycisk drugorzędny 44 px z ikoną, podpis 13 px */
 .uncheck {
     margin-top: 20px;
     padding-top: 16px;

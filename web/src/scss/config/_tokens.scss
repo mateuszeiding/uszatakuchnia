@@ -163,7 +163,7 @@
   color-scheme: dark;
 }
 
-/* ── KOLOR — dark auto (system preference) ── */
+/* ── COLOR: dark auto (system preference) ── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
     --bg: #0A0A0F; --bg-alt: #13131C; --bg-elev: #1A1A26;

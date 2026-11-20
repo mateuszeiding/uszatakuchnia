@@ -32,7 +32,7 @@ const {
     restoreChecks,
 } = useCookingProgress(props.recipe.id, props.recipe.servings || 1);
 
-// „Odznacz wszystko”: bez pytania, z „Cofnij” w toaście przez 8 s (20.11).
+// "Odznacz wszystko": no confirmation, with "Cofnij" in the toast for 8 s.
 function onUncheckAll() {
     const snap = uncheckAll();
     showToast(uncheckedText(snap.steps.length, snap.ing.length), {
@@ -41,11 +41,11 @@ function onUncheckAll() {
 }
 const cooking = ref(false);
 
-// Ikony obecne w przepisie → karta „Ikony przy składnikach”.
+// Icons present in the recipe → the "Ikony przy składnikach" card.
 const hasSwap = computed(() => props.recipe.ingredients.some((i) => i.substitutes.length));
 const hasLink = computed(() => props.recipe.ingredients.some((i) => publicLink(i)));
 
-// Wybrany wariant (zamienniki): makro i zdanie w karcie.
+// Chosen variant (substitutes): macros and the sentence in the card.
 const subsActive = computed(
     () => activeSubs(props.recipe.ingredients, progress.value.subs).size > 0
 );
@@ -63,8 +63,8 @@ const swapNote = computed(() =>
         :nutrition="nutrition"
         :servings="progress.servings"
     />
-    <!-- Desktop: po lewej karta ikon (odjeżdża) i panel składników (przyklejony); po prawej Sprzęt → Kroki → Wartości odżywcze.
-         Mobile: ikony → składniki → makro → sprzęt → kroki. -->
+    <!-- Desktop: on the left the icons card (scrolls away) and the ingredients panel (sticky); on the right Sprzęt → Kroki → Wartości odżywcze.
+         Mobile: icons → ingredients → macros → equipment → steps. -->
     <div class="recipe-grid">
         <div class="recipe-grid__side">
             <IconLegend
@@ -136,7 +136,7 @@ const swapNote = computed(() =>
     margin-top: 56px;
     align-items: start;
 }
-/* lewa kolumna na całą wysokość siatki — panel składników przykleja się w niej, karta ikon odjeżdża */
+/* the left column spans the full grid height: the ingredients panel sticks inside it, the icons card scrolls away */
 .recipe-grid__side {
     align-self: stretch;
     display: flex;
@@ -156,21 +156,21 @@ const swapNote = computed(() =>
         gap: 40px;
         margin-top: 24px;
     }
-    /* ikony → składniki → makro → sprzęt → kroki */
+    /* icons → ingredients → macros → equipment → steps */
     .recipe-grid__side,
     .recipe-grid__main {
         display: contents;
     }
     .recipe-grid__legend {
-        margin-bottom: -28px; /* karta ikon zaraz nad składnikami (12 px) */
+        margin-bottom: -28px; /* the icons card right above the ingredients (12 px) */
     }
     .recipe-grid__nutri {
         order: 1;
-        margin-top: -16px; /* karta zaraz po składnikach (jak w v1: odstęp 24px) */
+        margin-top: -16px; /* the card right after the ingredients (24 px gap) */
     }
     .recipe-grid__equip {
         order: 2;
-        margin-bottom: -16px; /* sprzęt czyta się razem z krokami */
+        margin-bottom: -16px; /* equipment reads together with the steps */
     }
     .recipe-grid__steps {
         order: 3;

@@ -5,11 +5,11 @@ import { usefulRecipes } from '../recipeView';
 
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 
-// „Przydatne przepisy” (v3, 16.11): opublikowane przepisy, do których prowadzą składniki.
-// Karta = jeden link: miniatura 1:1, tytuł (max 2 linie), strzałka. Bez „do: …” (20.11: powtarzało tytuł;
-// do którego składnika — mówi ikona w wierszu).
-// Desktop: siatka 3 kolumn; ≤ 900 px: lista oddzielona liniami. Bez linków → bez bloku.
-// Karta otwiera nową kartę (decyzja 20.11).
+// "Przydatne przepisy": published recipes that the ingredients link to.
+// Card = one link: 1:1 thumbnail, title (max 2 lines), arrow. No "do: …" (it repeated the title;
+// the row icon tells which ingredient).
+// Desktop: a 3-column grid; ≤ 900 px: a list separated by lines. No links → no block.
+// A card opens a new tab.
 const props = defineProps<{ ingredients: RecipeIngredientDto[] }>();
 const items = computed(() => usefulRecipes(props.ingredients));
 </script>

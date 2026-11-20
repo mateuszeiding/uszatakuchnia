@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-// Szkielet pozycji listy zakupów — siatka, paddingi i wysokości linii jak w ShoppingRow.vue
-// (nazwa 15 px × 1,35 + linia „do: …” 13 px; telefon: nazwa 17 px, pole 22 px, min. 56 px).
+// Shopping list item skeleton: grid, paddings and line heights as in ShoppingRow.vue
+// (name 15 px × 1.35 + a 13 px "do: …" line; phone: name 17 px, box 22 px, min 56 px).
 </script>
 
 <template>

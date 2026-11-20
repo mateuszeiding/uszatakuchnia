@@ -9,7 +9,7 @@ export interface ISection<T> {
     items: T[];
 }
 
-/** Kolejne elementy z tą samą sekcją → jedna grupa (kolejność z API). */
+/** Consecutive items with the same section → one group (API order). */
 export function bySection<T extends { section: string | null }>(items: T[]): ISection<T>[] {
     const out: ISection<T>[] = [];
     for (const it of items) {
@@ -20,14 +20,14 @@ export function bySection<T extends { section: string | null }>(items: T[]): ISe
     return out;
 }
 
-/** Grupy do wyświetlenia: >1 grupa → nagłówki; jedna nazwana → nazwa przy tytule; bez grup → sama lista. */
+/** Groups to display: >1 group → headers; one named group → its name next to the title; no groups → a plain list. */
 export function ingredientGroups(items: RecipeIngredientDto[]) {
     const sections = bySection(items);
     const single = sections.length === 1 ? sections[0]!.label : null;
     return { sections, grouped: sections.length > 1, single };
 }
 
-/** Link do przepisu widoczny na stronie publicznej — szkic się nie wyświetla. */
+/** Recipe link visible on the public page; drafts aren't shown. */
 export const publicLink = (ing: RecipeIngredientDto): ILinkedRecipe | null =>
     ing.linkedRecipe?.status === 'published' ? ing.linkedRecipe : null;
 
@@ -35,11 +35,11 @@ export interface IUsefulRecipe {
     id: number;
     title: string;
     image: string | null;
-    /** Nazwy składników, które do niego prowadzą („do: bułka do hamburgera”). */
+    /** Names of the ingredients that link to it ("do: bułka do hamburgera"). */
     for: string[];
 }
 
-/** „Przydatne przepisy”: opublikowane linki ze składników, ten sam przepis z kilku wierszy → jedna karta. */
+/** "Przydatne przepisy": published links from the ingredients; the same recipe from several rows → one card. */
 export function usefulRecipes(items: RecipeIngredientDto[]): IUsefulRecipe[] {
     const out: IUsefulRecipe[] = [];
     for (const ing of items) {
@@ -68,6 +68,6 @@ export const servingsLabel = (n: number) =>
           ? 'porcje'
           : 'porcji';
 
-/** „12 h” → „12 h wcześniej”, „dzień wcześniej” bez zmian. */
+/** "12 h" → "12 h wcześniej"; "dzień wcześniej" stays as is. */
 export const leadText = (s: Pick<RecipeStepDto, 'prepLead'>) =>
     s.prepLead ? (s.prepLead.endsWith('wcześniej') ? s.prepLead : `${s.prepLead} wcześniej`) : null;

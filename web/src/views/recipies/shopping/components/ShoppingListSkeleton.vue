@@ -4,8 +4,8 @@ import ShoppingRowSkeleton from './ShoppingRowSkeleton.vue';
 
 import USpinner from '@/components/USpinner.vue';
 
-// Ładowanie listy zakupów: prawdziwy nagłówek (szkielet nazwy, porcji, licznika) i działy z wierszami
-// o wysokości ShoppingRow. Kontener .shop jak w ShoppingList.vue. Spinner na liście, poza układem.
+// Shopping list loading: the real header (skeletons for name, servings, counter) and aisles with rows
+// of ShoppingRow height. The .shop container as in ShoppingList.vue. The spinner sits on the list, outside the layout.
 defineProps<{ recipeId: number }>();
 const AISLES = [3, 2, 2];
 </script>
@@ -53,7 +53,7 @@ const AISLES = [3, 2, 2];
     </div>
 </template>
 
-<!-- .shop / .aisle jak w ShoppingList.vue — trzymać w zgodzie -->
+<!-- .shop / .aisle as in ShoppingList.vue: keep them in sync -->
 <style lang="scss" scoped>
 .shop {
     max-width: 640px;
@@ -85,7 +85,7 @@ const AISLES = [3, 2, 2];
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
-/* wysokość linii z prawdziwego tekstu (nbsp) */
+/* line height from real text (nbsp) */
 .shop__sk-title {
     display: block;
     width: 110px;

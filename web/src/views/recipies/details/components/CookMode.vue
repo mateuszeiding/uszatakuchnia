@@ -13,14 +13,14 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import type { SubsMap } from '@/shared/utils/substitutes';
 
-// Tryb gotowania: jeden krok naraz, duże Wstecz / Dalej, ← → na klawiaturze, ekran nie gaśnie.
+// Cooking mode: one step at a time, big Wstecz / Dalej, ← → on the keyboard, the screen stays on.
 const props = defineProps<{
     recipe: RecipeDto;
     dicts: IDictionaries | undefined;
     servings: number;
     done: number[];
     checkedIng: number[];
-    /** Wybrane zamienniki — wspólne ze stroną przepisu. */
+    /** Chosen substitutes, shared with the recipe page. */
     subs: SubsMap;
 }>();
 const emit = defineEmits<{
@@ -39,14 +39,14 @@ const showIng = ref(false);
 const wake = useWakeLock();
 const root = ref<HTMLElement>();
 const stage = ref<HTMLElement>();
-// nowy krok zawsze od góry (inaczej po przewinięciu długiego kroku następny zaczyna się w połowie)
+// a new step always starts at the top (otherwise, after scrolling a long step, the next one starts halfway down)
 watch(i, () => stage.value?.scrollTo({ top: 0 }));
 
 const step = computed(() => steps.value[i.value]!);
 const last = computed(() => i.value === steps.value.length - 1);
 const ingBtn = ref<HTMLButtonElement>();
 
-// arkusz „Sprzęt i składniki”: po zamknięciu fokus wraca na „Składniki”
+// the "Sprzęt i składniki" sheet: after closing, focus returns to "Składniki"
 async function closeIng() {
     showIng.value = false;
     await nextTick();
@@ -79,7 +79,7 @@ function trapTab(e: KeyboardEvent) {
 }
 
 function onKey(e: KeyboardEvent) {
-    if (showIng.value) return; // arkusz składników ma własną obsługę (Esc, fokus)
+    if (showIng.value) return; // the ingredients sheet has its own handling (Esc, focus)
     if (e.key === 'Tab') trapTab(e);
     else if (e.key === 'Escape') emit('close');
     else if (e.key === 'ArrowRight') next();
@@ -165,7 +165,7 @@ onBeforeUnmount(() => {
                     class="cook__content"
                     aria-live="polite"
                 >
-                    <!-- uwagi tylko na ekranie kroku 1, nad treścią kroku -->
+                    <!-- notes only on the step 1 screen, above the step text -->
                     <CautionsBlock
                         v-if="i === 0"
                         class="cook__cautions"
@@ -316,8 +316,8 @@ onBeforeUnmount(() => {
     justify-content: center;
     padding: 32px 24px;
 }
-/* wyśrodkowane w pionie auto-marginesami: gdy treść (np. uwagi na kroku 1) jest wyższa
-   od ekranu, przewija się od góry zamiast uciekać nad krawędź */
+/* vertically centered with auto margins: when the content (e.g. notes on step 1) is taller
+   than the screen, it scrolls from the top instead of escaping past the edge */
 .cook__content {
     max-width: 760px;
     width: 100%;
@@ -384,7 +384,7 @@ onBeforeUnmount(() => {
     color: var(--ink-muted);
     padding-bottom: 10px;
 }
-/* podpowiedź o strzałkach tylko tam, gdzie jest klawiatura i kursor (na telefonie to szum) */
+/* the arrow-key hint only where there's a keyboard and a pointer (noise on a phone) */
 .cook__hint--keys {
     display: none;
 }

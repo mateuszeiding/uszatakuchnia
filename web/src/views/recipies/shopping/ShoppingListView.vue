@@ -13,7 +13,7 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import { setTitle } from '@/shared/utils/title';
 
-// /recipes/:id/zakupy — lista zakupów przepisu (telefon w sklepie, desktop, wydruk).
+// /recipes/:id/zakupy: the recipe's shopping list (phone in the store, desktop, print).
 const props = defineProps<{ id: string | number }>();
 
 const recipe = ref<RecipeDto>();
@@ -24,7 +24,7 @@ const failed = ref(false);
 const qc = useQueryClient();
 const route = useRoute();
 const router = useRouter();
-// pasek tylko nad wczytaną listą bieżącego przepisu — nie zostaje po poprzednim w trakcie ładowania ani przy błędzie
+// the bar only above the loaded list of the current recipe; it doesn't linger from the previous one while loading or on error
 useDraftBar(
     'list',
     computed(() =>
@@ -34,7 +34,7 @@ useDraftBar(
     )
 );
 
-/** Porcje z adresu (?porcje=) — link z panelu albo udostępniony; null = weź z postępu przepisu. */
+/** Servings from the URL (?porcje=): a link from the panel or a shared one; null = take them from the recipe progress. */
 const urlServings = computed(() => {
     const n = Number(route.query.porcje);
     return Number.isInteger(n) && n >= 1 && n <= 20 ? n : null;
@@ -62,7 +62,7 @@ watch(
     { immediate: true }
 );
 
-/** Zamienniki z adresu (?zamienniki=) — wariant nadawcy linku; parsuje ShoppingList (zna przepis). */
+/** Substitutes from the URL (?zamienniki=): the link sender's variant; ShoppingList parses it (it knows the recipe). */
 const urlSubs = computed(() => {
     const v = route.query.zamienniki;
     return (Array.isArray(v) ? v[0] : v) ?? null;
@@ -111,7 +111,7 @@ const onSync = (q: Record<string, string>) => router.replace({ query: { ...route
     font-size: 14px;
 }
 
-/* wydruk: bez paska nawigacji, czarno-biało niezależnie od motywu */
+/* print: no nav bar, black and white regardless of the theme */
 @include m.print {
     :global(.topbar) {
         display: none;

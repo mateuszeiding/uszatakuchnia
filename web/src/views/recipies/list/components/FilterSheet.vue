@@ -3,7 +3,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { recipesLabel } from '../listFilters';
 
-// Filtry na telefonie: bottom sheet z pułapką fokusu, Esc zamyka.
+// Filters on a phone: a bottom sheet with a focus trap; Esc closes.
 defineProps<{ count: number; activeCount: number }>();
 const emit = defineEmits<{ close: []; clear: [] }>();
 

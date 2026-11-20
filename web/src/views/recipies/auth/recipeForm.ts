@@ -378,7 +378,7 @@ export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IVal
     return { errors, rows };
 }
 
-/** Kolejność pól do przewinięcia przy błędzie (id elementów w formularzu). */
+/** Order of fields to scroll to on error (form element ids). */
 export const ERROR_ORDER: [keyof FormErrors | string, string][] = [
     ['name', 'f-name'],
     ['ingredients', 'f-ingredients'],

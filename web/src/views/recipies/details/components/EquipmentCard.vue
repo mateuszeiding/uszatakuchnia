@@ -3,10 +3,10 @@ import { computed } from 'vue';
 
 import type { IRecipeEquipment } from '@/data/dtos/recipe/RecipeDto';
 
-// Sprzęt potrzebny do przepisu: lista do przejrzenia przed gotowaniem (bez odhaczania).
-// Desktop od 4 pozycji dwie kolumny (siatka wierszami). Linie tylko MIĘDZY pozycjami —
-// ostatnia pozycja w każdej kolumnie bez linii (index + kolumny >= liczba pozycji).
-// compact = sekcja arkusza „Sprzęt i składniki” w trybie gotowania: nagłówek jak grupa składników, jedna kolumna.
+// Equipment needed for the recipe: a list to look over before cooking (no checking off).
+// Desktop, from 4 items: two columns (row-wise grid). Lines only BETWEEN items:
+// the last item in each column has no line (index + columns >= item count).
+// compact = a section of the "Sprzęt i składniki" sheet in cooking mode: header like an ingredient group, one column.
 const props = defineProps<{ items: IRecipeEquipment[]; compact?: boolean }>();
 
 const twoCols = computed(() => !props.compact && props.items.length >= 4);
@@ -68,7 +68,7 @@ const headingId = computed(() => (props.compact ? 'h-equip-cook' : 'h-equip'));
     letter-spacing: -0.6px;
     margin-bottom: 8px;
 }
-/* tryb gotowania: nagłówek jak nagłówek grupy składników */
+/* cooking mode: header like an ingredient group header */
 .equip--compact .equip__title {
     font-family: var(--font-mono);
     font-size: 12px;

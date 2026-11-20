@@ -9,19 +9,19 @@ import type {
 } from '@/data/dtos/recipe/RecipeIngredientDto';
 import { optionAllergens, optionName } from '@/shared/utils/substitutes';
 
-// Wybór zamiennika: desktop — popover przy wierszu (wychodzi nad kolumnę kroków), ≤ 900 px — arkusz od dołu.
-// Radio: składnik główny („w przepisie”) + zamienniki; wybór działa od razu. Esc / klik poza zamyka,
-// fokus wraca na ikonę. Teleport: lista składników przewija się w panelu (popover nie może być w niej przycięty).
+// Substitute chooser: on desktop a popover by the row (extends over the steps column); ≤ 900 px a bottom sheet.
+// Radio: the main ingredient ("w przepisie") + substitutes; the choice applies immediately. Esc / click outside closes,
+// focus returns to the icon. Teleport: the ingredient list scrolls inside the panel (it must not clip the popover).
 const props = defineProps<{
     ing: RecipeIngredientDto;
     selected: IRecipeSubstitute | null;
     amount: { qty: string; unit: string };
-    /** Połowa ilości (mieszanka „pół na pół”). */
+    /** Half the quantity ("pół na pół" mix). */
     half: { qty: string; unit: string };
     allergenLabel: (code: string) => string;
-    /** Alergeny całego przepisu — „zawiera: X” tylko, gdy opcja dodaje alergen, którego przepis nie ma. */
+    /** Whole-recipe allergens: "zawiera: X" only when the option adds an allergen the recipe doesn't have. */
     recipeAllergens?: string[];
-    /** Wiersz, przy którym stoi popover. */
+    /** The row the popover is attached to. */
     anchor: HTMLElement | null;
     sheet: boolean;
 }>();
@@ -39,7 +39,7 @@ const isOn = (o: IRecipeSubstitute | null) =>
           props.selected.ingredientId === o.ingredientId &&
           props.selected.mix === o.mix;
 
-/** Alergeny, które opcja dodaje do przepisu (nie ma ich ani składnik główny, ani reszta przepisu). */
+/** Allergens the option adds to the recipe (neither the main ingredient nor the rest of the recipe has them). */
 const added = (o: IRecipeSubstitute | null) =>
     optionAllergens(props.ing, o)
         .filter((a) => !props.ing.allergens.includes(a) && !props.recipeAllergens?.includes(a))
@@ -77,7 +77,7 @@ function trap(e: KeyboardEvent) {
     }
 }
 
-// Faza przechwytywania: Esc nie zamyka przy okazji modalu pod spodem (tryb gotowania).
+// Capture phase: Esc doesn't also close the modal underneath (cooking mode).
 function onKey(e: KeyboardEvent) {
     if (e.key === 'Escape') {
         e.stopPropagation();
@@ -92,7 +92,7 @@ function onKey(e: KeyboardEvent) {
 function onDown(e: PointerEvent) {
     const t = e.target as Node;
     if (root.value?.contains(t)) return;
-    // klik w ikonę obsługuje sam wiersz (przełącza)
+    // clicking the icon is handled by the row itself (toggles)
     if (props.anchor?.querySelector('.ing-swap')?.contains(t)) return;
     emit('close');
 }

@@ -19,12 +19,12 @@ const props = defineProps<{ id: string | number }>();
 const recipe = ref<RecipeDto>();
 const dicts = ref<IDictionaries>();
 const loading = ref(true);
-/** missing = API 404 (nie ma, usunięty, szkic dla nie-właściciela); error = sieć / 5xx / timeout. */
+/** missing = API 404 (doesn't exist, deleted, a draft for a non-owner); error = network / 5xx / timeout. */
 const failed = ref<'missing' | 'error' | null>(null);
 const retrying = ref(false);
 
 const qc = useQueryClient();
-// pasek tylko nad wczytanym bieżącym przepisem (nie po poprzednim w trakcie ładowania ani przy błędzie)
+// the bar only above the loaded current recipe (not the previous one while loading, nor on error)
 useDraftBar(
     'recipe',
     computed(() =>
@@ -58,7 +58,7 @@ async function load(id: number) {
     loading.value = false;
 }
 
-/** „Spróbuj ponownie” — w miejscu, strona błędu zostaje do odpowiedzi („Wczytuję…”). */
+/** "Spróbuj ponownie": in place; the error page stays until the response ("Wczytuję…"). */
 async function retry() {
     retrying.value = true;
     await fetchAll(Number(props.id));
@@ -111,7 +111,7 @@ watch(
     font-size: 13px;
     color: var(--ink-muted);
 }
-/* link pod przepisem; linia i „Zaloguj” są w stopce strony (UFooter) */
+/* link below the recipe; the border and "Zaloguj" are in the page footer (UFooter) */
 .recipe-page__footer {
     margin-top: 56px;
     font-size: 13px;
