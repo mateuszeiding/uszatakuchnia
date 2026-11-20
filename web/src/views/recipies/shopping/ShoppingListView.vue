@@ -24,7 +24,15 @@ const failed = ref(false);
 const qc = useQueryClient();
 const route = useRoute();
 const router = useRouter();
-useDraftBar('list', recipe);
+// pasek tylko nad wczytaną listą bieżącego przepisu — nie zostaje po poprzednim w trakcie ładowania ani przy błędzie
+useDraftBar(
+    'list',
+    computed(() =>
+        !loading.value && !failed.value && recipe.value?.id === Number(props.id)
+            ? recipe.value
+            : undefined
+    )
+);
 
 /** Porcje z adresu (?porcje=) — link z panelu albo udostępniony; null = weź z postępu przepisu. */
 const urlServings = computed(() => {

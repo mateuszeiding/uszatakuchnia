@@ -134,6 +134,8 @@ async function submit(
 ): Promise<boolean> {
     busy.value = kind;
     serverError.value = '';
+    // stan wysłany na serwer — edycja w trakcie zapisu zostaje „niezapisana” (dirty)
+    const snapshot = JSON.stringify(form.value);
     try {
         const body = toRequest(form.value, nextStatus);
         const res = recipeId.value
@@ -142,7 +144,7 @@ async function submit(
         const created = recipeId.value == null;
         recipeId.value = res.id;
         status.value = nextStatus;
-        saved.value = JSON.stringify(form.value);
+        saved.value = snapshot;
         lastSaved.value = new Date();
         showErrors.value = null;
         invalidateRecipes(qc);

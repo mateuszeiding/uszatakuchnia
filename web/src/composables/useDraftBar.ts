@@ -13,8 +13,9 @@ export const draftBar = shallowRef<DraftBarState | null>(null);
 /**
  * Pokazuje pasek, gdy wczytany przepis jest szkicem, a ogląda go zalogowany właściciel.
  * Opublikowany przepis (także oglądany przez właściciela) i tryb gotowania — bez paska.
+ * `recipe` = tylko pomyślnie wczytany bieżący przepis (w trakcie ładowania i przy błędzie: undefined).
  */
-export function useDraftBar(kind: DraftBarKind, recipe: Ref<RecipeDto | undefined>) {
+export function useDraftBar(kind: DraftBarKind, recipe: Readonly<Ref<RecipeDto | undefined>>) {
     let mine: DraftBarState | null = null;
 
     watchEffect(() => {

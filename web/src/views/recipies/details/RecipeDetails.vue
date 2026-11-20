@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useQueryClient } from '@tanstack/vue-query';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import RecipeBody from './components/RecipeBody.vue';
 import RecipeBodySkeleton from './components/RecipeBodySkeleton.vue';
@@ -24,7 +24,15 @@ const failed = ref<'missing' | 'error' | null>(null);
 const retrying = ref(false);
 
 const qc = useQueryClient();
-useDraftBar('recipe', recipe);
+// pasek tylko nad wczytanym bieżącym przepisem (nie po poprzednim w trakcie ładowania ani przy błędzie)
+useDraftBar(
+    'recipe',
+    computed(() =>
+        !loading.value && !failed.value && recipe.value?.id === Number(props.id)
+            ? recipe.value
+            : undefined
+    )
+);
 
 const isNotFound = (e: unknown) =>
     (e as { response?: { status?: number } } | null)?.response?.status === 404;
