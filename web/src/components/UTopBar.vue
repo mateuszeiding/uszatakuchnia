@@ -2,8 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
-import AuthButton from './auth/AuthButton.vue';
-
 import { isOwner } from '@/auth/createAuth';
 
 const route = useRoute();
@@ -81,16 +79,10 @@ function toggleTheme() {
                 <button
                     type="button"
                     class="topbar__theme"
-                    :aria-label="dark ? 'Włącz tryb jasny' : 'Włącz tryb ciemny'"
-                    :title="dark ? 'Włącz tryb jasny' : 'Włącz tryb ciemny'"
+                    :aria-label="dark ? 'Włącz jasny motyw' : 'Włącz ciemny motyw'"
+                    :title="dark ? 'Włącz jasny motyw' : 'Włącz ciemny motyw'"
                     @click="toggleTheme"
                 >
-                    <span
-                        class="topbar__theme-label"
-                        aria-hidden="true"
-                    >
-                        {{ dark ? 'ciemny' : 'jasny' }}
-                    </span>
                     <span
                         class="topbar__theme-dot"
                         aria-hidden="true"
@@ -99,7 +91,7 @@ function toggleTheme() {
                     </span>
                 </button>
 
-                <!-- admin pracuje na desktopie: na telefonie bez „Panel” i „Zaloguj” -->
+                <!-- admin pracuje na desktopie: „Panel” tylko na desktopie; „Zaloguj” jest w stopce (20.11) -->
                 <template v-if="isOwner">
                     <RouterLink
                         to="/admin"
@@ -108,10 +100,6 @@ function toggleTheme() {
                         Panel
                     </RouterLink>
                 </template>
-
-                <div class="topbar__desktop">
-                    <AuthButton />
-                </div>
             </div>
         </div>
     </header>
@@ -130,7 +118,8 @@ function toggleTheme() {
 .topbar__inner {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 14px 56px;
+    /* 9 + 44 (motyw) + 9 — pasek tej samej wysokości co z dawną pigułką motywu i „Zaloguj” */
+    padding: 9px 56px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -178,17 +167,18 @@ function toggleTheme() {
     gap: 12px;
 }
 
+/* motyw: sama ikona, cel 44 px na każdej szerokości (20.11) */
 .topbar__theme {
+    width: 44px;
+    height: 44px;
+    padding: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: var(--bg-alt);
-    color: var(--ink);
-    border: 1px solid var(--rule);
+    justify-content: center;
+    background: transparent;
+    border: none;
     border-radius: var(--r-pill);
-    padding: 5px 4px 5px 12px;
-    font-size: 12px;
-    font-family: var(--font-mono);
+    color: var(--ink);
     cursor: pointer;
 }
 
@@ -239,17 +229,8 @@ function toggleTheme() {
         min-height: 44px;
         white-space: nowrap;
     }
-    .topbar__theme-label,
     .topbar__desktop {
         display: none;
-    }
-    .topbar__theme {
-        width: 44px;
-        height: 44px;
-        padding: 0;
-        justify-content: center;
-        background: transparent;
-        border: none;
     }
 }
 </style>

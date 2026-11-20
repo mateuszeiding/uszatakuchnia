@@ -88,10 +88,9 @@ watch(
     color: var(--ink-muted);
     font-size: 14px;
 }
+/* link pod przepisem; linia i „Zaloguj” są w stopce strony (UFooter) */
 .recipe-page__footer {
-    margin-top: 80px;
-    padding: 40px 0;
-    border-top: 1px solid var(--rule);
+    margin-top: 56px;
     font-size: 13px;
 }
 .recipe-page__footer a {
@@ -103,7 +102,7 @@ watch(
         padding-top: 12px;
     }
     .recipe-page__footer {
-        padding: 32px 0 40px;
+        margin-top: 40px;
     }
 }
 </style>
