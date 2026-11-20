@@ -1,10 +1,13 @@
 <script lang="ts" setup>
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+
 import ServingsStepper from '@/views/recipies/details/components/ServingsStepper.vue';
 import { servingsLabel } from '@/views/recipies/details/recipeView';
 
 // Nagłówek listy zakupów: powrót, Drukuj (desktop), tytuł, licznik porcji, postęp „n z m”.
 // Na telefonie przyklejony pod paskiem nawigacji.
-defineProps<{
+const props = defineProps<{
     recipeId: number;
     recipeName: string;
     servings: number;
@@ -16,15 +19,29 @@ defineProps<{
 const emit = defineEmits<{ servings: [n: number] }>();
 
 const print = () => window.print();
+
+// „‹ Przepis”: przyszedłeś z przepisu → wstecz w historii (to samo miejsce na stronie, bez nowego wpisu);
+// wszedłeś z linku prosto na listę → przepis przewinięty do składników, w miejsce listy w historii.
+const router = useRouter();
+const recipePath = computed(() => `/recipes/${props.recipeId}`);
+const recipeHref = computed(() => router.resolve(recipePath.value).href);
+function back(e: MouseEvent) {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; // nowa karta / okno
+    e.preventDefault();
+    const prev = (window.history.state as { back?: string | null } | null)?.back;
+    if (prev && prev.split(/[?#]/)[0] === recipePath.value) router.back();
+    else router.replace({ path: recipePath.value, hash: '#skladniki' });
+}
 </script>
 
 <template>
     <header class="head">
         <div class="head__inner">
             <div class="head__bar">
-                <RouterLink
-                    :to="`/recipes/${recipeId}`"
+                <a
+                    :href="recipeHref"
                     class="head__back"
+                    @click="back"
                 >
                     <svg
                         viewBox="0 0 14 14"
@@ -40,7 +57,7 @@ const print = () => window.print();
                         />
                     </svg>
                     Przepis
-                </RouterLink>
+                </a>
                 <button
                     type="button"
                     class="btn btn--secondary btn--sm head__print"

@@ -121,3 +121,40 @@ export function swapSummary(items: RecipeIngredientDto[], subs: SubsMap): string
     }
     return parts.join(', ');
 }
+
+// ─── Zamienniki w adresie listy zakupów (?zamienniki=) ───────────────────────
+// Format: „<sortOrder wiersza>:<ingredientId zamiennika>[m]” po przecinku, „m” = pół na pół,
+// np. ?porcje=6&zamienniki=6:21,8:40m. „brak” = przepis bez zamienników (odbiorca widzi wariant nadawcy,
+// nawet jeśli sam coś wybrał). Przepis bez zamienników nie dostaje parametru.
+
+export const SUBS_NONE = 'brak';
+
+/** Wartość parametru dla wybranego wariantu; undefined = przepis nie ma zamienników. */
+export function subsToParam(items: RecipeIngredientDto[], subs: SubsMap): string | undefined {
+    if (!items.some((i) => i.substitutes.length)) return undefined;
+    const parts = [...activeSubs(items, subs)].map(
+        ([sortOrder, s]) => `${sortOrder}:${s.ingredientId}${s.mix ? 'm' : ''}`
+    );
+    return parts.length ? parts.join(',') : SUBS_NONE;
+}
+
+/** Wariant z adresu; null = brak parametru albo nic sensownego (zostaje pamięć urządzenia).
+ *  Pozycje, których nie ma w przepisie, są pomijane. */
+export function parseSubsParam(
+    raw: string | null | undefined,
+    items: RecipeIngredientDto[]
+): SubsMap | null {
+    const s = (raw ?? '').trim();
+    if (!s) return null;
+    if (s === SUBS_NONE) return {};
+    const out: SubsMap = {};
+    for (const part of s.split(',')) {
+        const m = part.trim().match(/^(\d+):(\d+)(m?)$/);
+        if (!m) continue;
+        const sortOrder = Number(m[1]);
+        const choice = { ingredientId: Number(m[2]), mix: m[3] === 'm' };
+        const ing = items.find((i) => i.sortOrder === sortOrder);
+        if (ing && chosenSub(ing, { [sortOrder]: choice })) out[sortOrder] = choice;
+    }
+    return Object.keys(out).length ? out : null;
+}

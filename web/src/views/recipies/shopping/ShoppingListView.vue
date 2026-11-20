@@ -52,7 +52,14 @@ watch(
     { immediate: true }
 );
 
+/** Zamienniki z adresu (?zamienniki=) — wariant nadawcy linku; parsuje ShoppingList (zna przepis). */
+const urlSubs = computed(() => {
+    const v = route.query.zamienniki;
+    return (Array.isArray(v) ? v[0] : v) ?? null;
+});
+
 const onServings = (n: number) => router.replace({ query: { ...route.query, porcje: String(n) } });
+const onSync = (q: Record<string, string>) => router.replace({ query: { ...route.query, ...q } });
 </script>
 
 <template>
@@ -74,7 +81,9 @@ const onServings = (n: number) => router.replace({ query: { ...route.query, porc
             :recipe="recipe"
             :dicts="dicts"
             :url-servings="urlServings"
+            :url-subs="urlSubs"
             @servings="onServings"
+            @sync="onSync"
         />
     </div>
 </template>

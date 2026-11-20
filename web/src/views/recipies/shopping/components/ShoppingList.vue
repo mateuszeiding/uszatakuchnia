@@ -11,19 +11,34 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import { pluralPL } from '@/shared/utils/quantity';
 import { buildShopping, type IShopItem } from '@/shared/utils/shoppingList';
-import { effectiveLines } from '@/shared/utils/substitutes';
+import { effectiveLines, parseSubsParam, subsToParam } from '@/shared/utils/substitutes';
 
 const props = defineProps<{
     recipe: RecipeDto;
     dicts: IDictionaries | undefined;
     urlServings: number | null;
+    /** Surowe ?zamienniki= z adresu (wariant nadawcy linku). */
+    urlSubs: string | null;
 }>();
-const emit = defineEmits<{ servings: [n: number] }>();
+const emit = defineEmits<{
+    servings: [n: number];
+    /** Uzupełnienie adresu o stan z pamięci, gdy link go nie miał (żeby adres dało się dalej wysłać). */
+    sync: [query: Record<string, string>];
+}>();
 
-// Porcje wspólne z przepisem (uk:progress:<id>.servings); adres ?porcje= ma pierwszeństwo (link z panelu / udostępniony).
+// Porcje i zamienniki wspólne z przepisem (uk:progress:<id>); adres ma pierwszeństwo (link udostępniony)
+// i — tak jak dotąd porcje — zapisuje się w pamięci urządzenia, więc „‹ Przepis” pokaże ten sam wariant.
 const { progress, setServings } = useCookingProgress(props.recipe.id, props.recipe.servings || 1);
+const missing: Record<string, string> = {};
 if (props.urlServings != null) setServings(props.urlServings);
-else emit('servings', progress.value.servings);
+else missing.porcje = String(progress.value.servings);
+const urlSubs = parseSubsParam(props.urlSubs, props.recipe.ingredients);
+if (urlSubs) progress.value.subs = urlSubs;
+else {
+    const param = subsToParam(props.recipe.ingredients, progress.value.subs);
+    if (param) missing.zamienniki = param;
+}
+if (Object.keys(missing).length) emit('sync', missing);
 const changeServings = (n: number) => {
     setServings(n);
     emit('servings', progress.value.servings);

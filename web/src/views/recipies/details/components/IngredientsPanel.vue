@@ -12,7 +12,13 @@ import SwapIcon from '@/components/SwapIcon.vue';
 import type { ISubChoice } from '@/composables/useCookingProgress';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
-import { activeSubs, chosenSub, effectiveLines, type SubsMap } from '@/shared/utils/substitutes';
+import {
+    activeSubs,
+    chosenSub,
+    effectiveLines,
+    type SubsMap,
+    subsToParam,
+} from '@/shared/utils/substitutes';
 
 const props = defineProps<{
     /** null = ładowanie: nagłówek i licznik porcji w tym samym miejscu, szkielety wierszy. */
@@ -36,10 +42,14 @@ const allergenLabel = (code: string) =>
 
 const ratio = computed(() => (props.recipe?.servings ? props.servings / props.recipe.servings : 1));
 const groups = computed(() => ingredientGroups(props.recipe?.ingredients ?? []));
-const shopLink = computed(() => ({
-    path: `/recipes/${props.recipe?.id ?? 0}/zakupy`,
-    query: { porcje: String(props.servings) },
-}));
+// Link do listy zakupów niesie porcje i wybrany wariant (zamienniki) — odbiorca widzi to samo co nadawca.
+const shopLink = computed(() => {
+    const zamienniki = subsToParam(props.recipe?.ingredients ?? [], props.subs);
+    return {
+        path: `/recipes/${props.recipe?.id ?? 0}/zakupy`,
+        query: { porcje: String(props.servings), ...(zamienniki ? { zamienniki } : {}) },
+    };
+});
 
 function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
     return scaledAmount(ing, props.dicts?.units ?? [], ratio.value * factor);
@@ -83,6 +93,7 @@ onBeforeUnmount(() => ro?.disconnect());
 
 <template>
     <section
+        id="skladniki"
         class="ing-panel"
         aria-labelledby="h-ing"
         :aria-busy="!recipe"
@@ -391,6 +402,8 @@ onBeforeUnmount(() => ro?.disconnect());
         position: static;
         max-height: none;
         padding: 20px;
+        /* powrót z listy zakupów (#skladniki): nagłówek panelu pod paskiem nawigacji */
+        scroll-margin-top: 72px;
     }
     .ing-panel__list {
         overflow: visible;
