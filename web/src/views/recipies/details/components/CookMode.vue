@@ -1,20 +1,17 @@
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
-import { ingredientGroups, leadText, publicLink, scaledAmount, servingsLabel } from '../recipeView';
+import { leadText } from '../recipeView';
 
-import EquipmentCard from './EquipmentCard.vue';
-import IngGroupHeader from './IngGroupHeader.vue';
-import IngRow from './IngRow.vue';
+import CookIngredientsSheet from './CookIngredientsSheet.vue';
 import StepHints from './StepHints.vue';
 
 import CautionsBlock from '@/components/CautionsBlock.vue';
-import UModal from '@/components/UModal.vue';
 import type { ISubChoice } from '@/composables/useCookingProgress';
 import { useWakeLock } from '@/composables/useWakeLock';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
-import { chosenSub, type SubsMap } from '@/shared/utils/substitutes';
+import type { SubsMap } from '@/shared/utils/substitutes';
 
 // Tryb gotowania: jeden krok naraz, duże Wstecz / Dalej, ← → na klawiaturze, ekran nie gaśnie.
 const props = defineProps<{
@@ -31,9 +28,9 @@ const emit = defineEmits<{
     'set-step': [stepNo: number, done: boolean];
     'toggle-ing': [sortOrder: number];
     sub: [sortOrder: number, choice: ISubChoice | null];
+    servings: [n: number];
+    'clear-subs': [];
 }>();
-const allergenLabel = (code: string) =>
-    props.dicts?.allergens.find((a) => a.code === code)?.label ?? code;
 
 const steps = computed(() => props.recipe.steps);
 const firstOpen = steps.value.findIndex((s) => !props.done.includes(s.stepNo));
@@ -47,9 +44,14 @@ watch(i, () => stage.value?.scrollTo({ top: 0 }));
 
 const step = computed(() => steps.value[i.value]!);
 const last = computed(() => i.value === steps.value.length - 1);
-const groups = computed(() => ingredientGroups(props.recipe.ingredients));
-const ratio = computed(() => (props.recipe.servings ? props.servings / props.recipe.servings : 1));
-const hasLinks = computed(() => props.recipe.ingredients.some((x) => publicLink(x)));
+const ingBtn = ref<HTMLButtonElement>();
+
+// arkusz „Sprzęt i składniki”: po zamknięciu fokus wraca na „Składniki”
+async function closeIng() {
+    showIng.value = false;
+    await nextTick();
+    ingBtn.value?.focus();
+}
 
 function next() {
     emit('set-step', step.value.stepNo, true);
@@ -77,7 +79,7 @@ function trapTab(e: KeyboardEvent) {
 }
 
 function onKey(e: KeyboardEvent) {
-    if (showIng.value) return; // panel składników ma własny modal (Esc, fokus)
+    if (showIng.value) return; // arkusz składników ma własną obsługę (Esc, fokus)
     if (e.key === 'Tab') trapTab(e);
     else if (e.key === 'Escape') emit('close');
     else if (e.key === 'ArrowRight') next();
@@ -98,10 +100,6 @@ onBeforeUnmount(() => {
     document.removeEventListener('keydown', onKey);
     prevFocus?.focus?.();
 });
-
-function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
-    return scaledAmount(ing, props.dicts?.units ?? [], ratio.value * factor);
-}
 </script>
 
 <template>
@@ -120,8 +118,10 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
                 </div>
                 <div class="cook__tools">
                     <button
+                        ref="ingBtn"
                         type="button"
                         class="cook__pill"
+                        aria-haspopup="dialog"
                         @click="showIng = true"
                     >
                         Składniki
@@ -222,53 +222,20 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
             </div>
         </div>
 
-        <UModal
+        <CookIngredientsSheet
             v-if="showIng"
-            :title="`${recipe.equipment.length ? 'Sprzęt i składniki' : 'Składniki'} · ${servings} ${servingsLabel(servings)}`"
-            :width="480"
-            @close="showIng = false"
-        >
-            <div class="cook-ing">
-                <EquipmentCard
-                    v-if="recipe.equipment.length"
-                    :items="recipe.equipment"
-                    compact
-                />
-                <div
-                    v-for="(sec, si) in groups.sections"
-                    :key="si"
-                >
-                    <IngGroupHeader
-                        v-if="groups.grouped && sec.label"
-                        :label="sec.label"
-                        :count="sec.items.length"
-                        :done="sec.items.filter((x) => checkedIng.includes(x.sortOrder)).length"
-                    />
-                    <ul class="cook-ing__list">
-                        <IngRow
-                            v-for="ing in sec.items"
-                            :key="ing.sortOrder"
-                            :ing="ing"
-                            :amount="amount(ing)"
-                            :half="ing.substitutes.length ? amount(ing, 0.5) : undefined"
-                            :checked="checkedIng.includes(ing.sortOrder)"
-                            :sub="chosenSub(ing, subs)"
-                            :allergen-label="allergenLabel"
-                            :recipe-allergens="recipe.allergens"
-                            roomy
-                            @toggle="emit('toggle-ing', ing.sortOrder)"
-                            @sub="emit('sub', ing.sortOrder, $event)"
-                        />
-                    </ul>
-                </div>
-                <p
-                    v-if="hasLinks"
-                    class="cook-ing__note"
-                >
-                    Linki do przepisów otwierają się w nowej karcie — gotowanie zostaje tutaj.
-                </p>
-            </div>
-        </UModal>
+            :recipe="recipe"
+            :dicts="dicts"
+            :servings="servings"
+            :checked-ing="checkedIng"
+            :subs="subs"
+            :step-no="i + 1"
+            @close="closeIng"
+            @toggle-ing="emit('toggle-ing', $event)"
+            @sub="(so, c) => emit('sub', so, c)"
+            @servings="emit('servings', $event)"
+            @clear-subs="emit('clear-subs')"
+        />
     </Teleport>
 </template>
 
@@ -425,24 +392,5 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
     .cook__hint--keys {
         display: block;
     }
-}
-.cook-ing {
-    max-height: 60vh;
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-}
-.cook-ing__list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-.cook-ing__note {
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--ink-muted);
 }
 </style>

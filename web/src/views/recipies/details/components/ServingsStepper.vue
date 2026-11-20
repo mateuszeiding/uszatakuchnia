@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { useId } from 'vue';
 
-// Licznik porcji (1–20). `compact` — wersja w nagłówku listy zakupów (bez ramki, mniejsze przyciski).
-defineProps<{ value: number; compact?: boolean }>();
+// Licznik porcji (1–20). `compact` — wersja w nagłówku listy zakupów (bez ramki, mniejsze przyciski);
+// `big` — przyciski 44 px (arkusz składników w trybie gotowania).
+defineProps<{ value: number; compact?: boolean; big?: boolean }>();
 const emit = defineEmits<{ set: [n: number] }>();
 
 const id = useId();
@@ -11,7 +12,7 @@ const id = useId();
 <template>
     <div
         class="servings"
-        :class="{ 'servings--compact': compact }"
+        :class="{ 'servings--compact': compact, 'servings--big': big }"
     >
         <span
             :id="id"
@@ -121,5 +122,9 @@ const id = useId();
 .servings--compact .servings__value {
     min-width: 30px;
     font-size: 18px;
+}
+.servings--big .servings__btn {
+    width: 44px;
+    height: 44px;
 }
 </style>

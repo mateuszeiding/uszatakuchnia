@@ -123,6 +123,8 @@ const swapNote = computed(() =>
         @set-step="setStep"
         @toggle-ing="toggle('ing', $event)"
         @sub="setSub"
+        @servings="setServings"
+        @clear-subs="clearSubs"
     />
 </template>
 
