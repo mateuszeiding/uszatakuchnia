@@ -41,7 +41,6 @@ func AutoMigrate(gdb *gorm.DB) error {
 	return gdb.AutoMigrate(models...)
 }
 
-// runMigrations: AutoMigrate first (adds columns/tables), then the versioned data migrations.
 func runMigrations(gdb *gorm.DB) error {
 	if err := AutoMigrate(gdb); err != nil {
 		return err

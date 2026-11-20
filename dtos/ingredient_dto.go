@@ -7,7 +7,7 @@ type IngredientDto struct {
 	Name      string    `json:"name"`
 	ParentID  *uint     `json:"parentId"`
 	Allergens []string  `json:"allergens"` // codes from entities.Allergens
-	UsedIn    int       `json:"usedIn"`    // number of recipes (list only)
+	UsedIn    int       `json:"usedIn"`    // list only
 	Type      TypeDto   `json:"type"`
 	Image     *ImageDto `json:"image"`
 	// Never added to the shopping list (e.g. water).
@@ -28,7 +28,7 @@ type ConversionDto struct {
 	Inherited bool     `json:"inherited"`
 }
 
-// IngredientRequest creates or edits an ingredient (admin panel). A missing key in Nutrition = no own data.
+// A missing key in Nutrition = no own data.
 type IngredientRequest struct {
 	Name         string                         `json:"name"`
 	TypeCode     string                         `json:"typeCode"`

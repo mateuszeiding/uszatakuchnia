@@ -25,7 +25,7 @@ const (
 	Anonymous Result = iota // no Authorization header → 401
 	Invalid                 // wrong key, invalid / expired token → 401
 	Forbidden               // valid token, but not the owner's → 403
-	Owner                   // owner (browser or API key)
+	Owner
 )
 
 // MinKeyLen: a shorter API key is ignored (too easy to guess).
@@ -34,7 +34,7 @@ const MinKeyLen = 32
 type Config struct {
 	APIKey   string // API_ADMIN_KEY
 	Issuer   string // https://<AUTH0_DOMAIN>/
-	Audience string // Auth0 API identifier
+	Audience string
 	OwnerSub string // AUTH0_OWNER_SUB, e.g. "google-oauth2|123…"
 	JWKSURL  string // defaults to Issuer + ".well-known/jwks.json"
 }

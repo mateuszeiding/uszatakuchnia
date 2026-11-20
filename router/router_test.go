@@ -19,7 +19,6 @@ func isBotPage(rt router.Route) bool {
 	return rt.Method == http.MethodGet && strings.HasPrefix(rt.Path, "/recipes/")
 }
 
-// samplePath: the route path with {id} replaced by a number.
 func samplePath(rt router.Route) string { return strings.ReplaceAll(rt.Path, "{id}", "7") }
 
 // call sends a request to the real Vercel function (api.Handler: Begin + router).

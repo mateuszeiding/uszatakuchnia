@@ -17,8 +17,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Dictionaries returns every dictionary: classification axes with their values,
-// units, allergens, ingredient types, equipment and challenge formats.
 func Dictionaries(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 

@@ -1,6 +1,5 @@
 package entities
 
-// TaxonomyAxis is a recipe classification axis (dish type, base, cuisine, diets, practical).
 // New axes are added as table rows, without changing the model.
 type TaxonomyAxis struct {
 	ID         uint   `gorm:"primaryKey;autoIncrement"`

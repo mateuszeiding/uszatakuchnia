@@ -60,7 +60,6 @@ func FetchPhotoMeta(photoID string) (PhotoMeta, error) {
 		return PhotoMeta{}, err
 	}
 
-	// (optional) download tracking, async
 	if p.Links.DownloadLocation != "" {
 		go func(url string) {
 			dl, _ := http.NewRequest("GET", url, nil)

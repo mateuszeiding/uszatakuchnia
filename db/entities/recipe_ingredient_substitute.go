@@ -1,6 +1,5 @@
 package entities
 
-// RecipeIngredientSubstitute is a substitute for an ingredient in a recipe row (recipe_ingredients: recipe_id + sort_order).
 // Mix = "half and half": main ingredient + substitute, half the quantity each. A substitute counts as a use of the
 // ingredient (ON DELETE RESTRICT). Deleting the recipe row deletes its substitutes (composite FK, migration 0008).
 type RecipeIngredientSubstitute struct {

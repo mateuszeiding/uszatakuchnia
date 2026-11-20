@@ -48,7 +48,7 @@ func seedIngredientTypes(tx *gorm.DB) error {
 
 type taxonomyValueSeed struct {
 	Label string
-	Color string // token key, "" = none
+	Color string
 }
 
 type taxonomyAxisSeed struct {
@@ -334,8 +334,8 @@ type RecipeIngredientSeed struct {
 	IngredientName       string
 	IngredientParentName *string
 
-	Quantity string // "2", "½", "2–3"; "" = none
-	Unit     string // unit name from the dictionary; "" = none
+	Quantity string // "2", "½", "2–3"
+	Unit     string
 	Note     *string
 }
 
@@ -426,7 +426,6 @@ func SeedOneRecipe(tx *gorm.DB, seed RecipeSeed) (uint, error) {
 		}
 	}
 
-	// Steps, ingredients and classification: delete the old ones, insert the new
 	for _, m := range []any{&entities.RecipeStep{}, &entities.RecipeIngredient{}, &entities.RecipeTaxonomy{}} {
 		if err := tx.Where("recipe_id = ?", r.ID).Delete(m).Error; err != nil {
 			return 0, err
@@ -493,7 +492,6 @@ func SeedAll(db *gorm.DB) error {
 
 		// ── Ingredients ──────────────────────────────────────────
 		ings := []IngredientSeed{
-			// Vegetables and mushrooms
 			{Name: "Cebula", TypeCode: "VEGETABLE", Nutrition: nut(one(40), one(1.1), one(0.1), one(9.3), one(1.7)), Conversions: conv("sztuka", rg(100, 150)), Image: &IngredientImageSeed{PostID: "bC1fXU1v98U"}},
 			{Name: "Czosnek", TypeCode: "VEGETABLE", Nutrition: nut(one(149), one(6.4), one(0.5), one(33), one(2.1)), Conversions: conv("ząbek", rg(4, 6)), Image: &IngredientImageSeed{PostID: "_b8n1KTZ8rw"}},
 			{Name: "Pomidor", TypeCode: "VEGETABLE", Nutrition: nut(rg(18, 24), rg(0.9, 1.2), one(0.2), rg(3.5, 4.5), rg(1, 1.2)), Conversions: conv("sztuka", rg(100, 150)), Image: &IngredientImageSeed{PostID: "Jy7e7RjOFVo"}},
@@ -503,28 +501,20 @@ func SeedAll(db *gorm.DB) error {
 			{Name: "Szpinak", TypeCode: "VEGETABLE", Nutrition: nut(one(23), one(2.9), one(0.4), one(3.6), one(2.2)), Conversions: conv("garść", rg(25, 35)), Image: &IngredientImageSeed{PostID: "GI39ElkDQFo"}},
 			{Name: "Cukinia", TypeCode: "VEGETABLE", Nutrition: nut(one(17), one(1.2), one(0.3), one(3.1), one(1)), Conversions: conv("sztuka", rg(200, 300)), Image: &IngredientImageSeed{PostID: "SbzMoWL0xvw"}},
 			{Name: "Papryka czerwona", TypeCode: "VEGETABLE", Nutrition: nut(one(31), one(1), one(0.3), one(6), one(2.1)), Conversions: conv("sztuka", rg(150, 200)), Image: &IngredientImageSeed{PostID: "iKKOhzHXR9E"}},
-			// Fruit
 			{Name: "Cytryna", TypeCode: "FRUIT", Nutrition: nut(one(29), one(1.1), one(0.3), one(9.3), one(2.8)), Conversions: conv("sztuka", rg(100, 130)), Image: &IngredientImageSeed{PostID: "7WAGthfGJ9w"}},
 			{Name: "Limonka", TypeCode: "FRUIT", Nutrition: nut(one(30), one(0.7), one(0.2), one(10.5), one(2.8)), Conversions: conv("sztuka", rg(50, 70))},
-			// Meat and poultry
 			{Name: "Kurczak", TypeCode: "MEAT", Nutrition: nut(rg(110, 180), rg(18, 23), rg(1.5, 10), one(0), one(0)), Conversions: conv("filet", rg(150, 250)), Image: &IngredientImageSeed{PostID: "pNcFMdEe09Q"}},
 			{Name: "Wołowina", TypeCode: "MEAT", Nutrition: nut(rg(150, 250), rg(18, 21), rg(7, 18), one(0), one(0)), Image: &IngredientImageSeed{PostID: "u2QnkcLNsBY"}},
 			{Name: "Boczek", TypeCode: "MEAT", Nutrition: nut(rg(400, 540), rg(12, 16), rg(37, 50), rg(0, 1.5), one(0)), Conversions: conv("plaster", rg(15, 25))},
-			// Fish and seafood
 			{Name: "Łosoś", TypeCode: "FISH", Allergens: []string{"fish"}, Nutrition: nut(rg(180, 210), rg(19, 20.5), rg(11, 14), one(0), one(0)), Conversions: conv("filet", rg(120, 180))},
 			{Name: "Dorsz", TypeCode: "FISH", Allergens: []string{"fish"}, Nutrition: nut(rg(78, 82), rg(17.5, 18.5), rg(0.6, 0.8), one(0), one(0)), Conversions: conv("filet", rg(120, 180))},
-			// Dairy and eggs
 			{Name: "Masło", TypeCode: "DAIRY", Allergens: []string{"milk"}, Nutrition: nut(rg(735, 745), one(0.7), rg(81, 83), one(0.6), one(0)), Conversions: conv("łyżka", one(15), "łyżeczka", one(5))},
 			{Name: "Parmezan", TypeCode: "DAIRY", Allergens: []string{"milk"}, Nutrition: nut(rg(390, 431), rg(32, 38), rg(26, 29), rg(0, 4), one(0)), Conversions: conv("łyżka", rg(5, 7))},
 			{Name: "Jajka", TypeCode: "DAIRY", Allergens: []string{"eggs"}, Nutrition: nut(rg(140, 143), rg(12.5, 13), rg(9.5, 10), one(0.7), one(0)), Conversions: conv("sztuka", rg(50, 65))},
 			{Name: "Śmietana 30%", TypeCode: "DAIRY", Allergens: []string{"milk"}, Nutrition: nut(rg(290, 300), rg(2.2, 2.5), one(30), rg(3, 3.5), one(0)), Conversions: conv("łyżka", rg(12, 15))},
-			// Grains and pasta
 			{Name: "Makaron spaghetti", TypeCode: "GRAIN", Allergens: []string{"gluten"}, Nutrition: nut(rg(350, 360), rg(12, 13), rg(1.5, 2), rg(70, 72), rg(3, 3.5))},
-			// Oils and fats
 			{Name: "Oliwa z oliwek", TypeCode: "FAT", Nutrition: nut(one(884), one(0), one(100), one(0), one(0)), Conversions: conv("łyżka", one(10), "łyżeczka", rg(4, 5), "ml", one(0.92))},
-			// Other
 			{Name: "Bulion warzywny", TypeCode: "OTHER", Allergens: []string{"celery"}, Nutrition: nut(rg(5, 15), rg(0.2, 0.5), rg(0, 0.5), rg(0.5, 2), one(0))},
-			// Spices and herbs
 			{Name: "Bazylia", TypeCode: "SPICE", Nutrition: nut(one(23), one(3.2), one(0.6), one(2.7), one(1.6)), Conversions: conv("garść", rg(5, 10), "listek", rg(0.3, 0.6)), Image: &IngredientImageSeed{PostID: "DDKdfRe1GxA"}},
 			{Name: "Pietruszka (nać)", TypeCode: "SPICE", Nutrition: nut(one(36), one(3), one(0.8), one(6.3), one(3.3)), Conversions: conv("garść", rg(10, 15), "pęczek", rg(30, 50)), Image: &IngredientImageSeed{PostID: "r6BUzN_jTHg"}},
 			{Name: "Tymianek", TypeCode: "SPICE", Nutrition: nut(one(101), one(5.6), one(1.7), one(24), one(14)), Conversions: conv("pęczek", rg(20, 30))},
@@ -678,7 +668,6 @@ func SeedAll(db *gorm.DB) error {
 			}
 		}
 
-		// Recipe macros computed from the ingredients (recipes.nutrition).
 		if err := services.RecomputeRecipes(tx); err != nil {
 			return err
 		}

@@ -2,7 +2,6 @@ package dtos
 
 import "uszatakuchnia/db/entities"
 
-// RecipeTaxonomyDto: classification values grouped by axis code (dish, base, cuisine, diet, practical).
 type RecipeTaxonomyDto map[string][]TaxonomyValueDto
 
 type RecipeDto struct {

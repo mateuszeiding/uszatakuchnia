@@ -9,7 +9,6 @@ type Ingredient struct {
 	TypeID uint           `gorm:"not null;index:ix_ingredients_type"`
 	Type   IngredientType `gorm:"foreignKey:TypeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 
-	// Never added to the shopping list (e.g. water).
 	SkipShopping bool `gorm:"not null;default:false"`
 
 	// Macros per 100 g, approximate (brands differ). *Min nil = no own data (inherited from sub-ingredients),
@@ -33,7 +32,6 @@ type Ingredient struct {
 
 func (Ingredient) TableName() string { return "ingredients" }
 
-// macroFields: pointers to the min/max pair by NutrientKeys key.
 func (i *Ingredient) macroFields(key string) (min, max **float64) {
 	switch key {
 	case "kcal":
@@ -50,7 +48,6 @@ func (i *Ingredient) macroFields(key string) (min, max **float64) {
 	return nil, nil
 }
 
-// MacroOf returns the own value per 100 g; nil = no data.
 func (i Ingredient) MacroOf(key string) *MacroRange {
 	min, max := i.macroFields(key)
 	if min == nil || *min == nil {

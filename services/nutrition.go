@@ -5,10 +5,8 @@ import (
 	"uszatakuchnia/dtos"
 )
 
-// Macros: macros per 100 g keyed by entities.NutrientKeys; a missing key = no data.
 type Macros map[string]entities.MacroRange
 
-// NutritionIndex holds the data for the calculations: own macros, the ingredient tree and unit conversions.
 type NutritionIndex struct {
 	Own          map[uint]Macros
 	Children     map[uint][]uint

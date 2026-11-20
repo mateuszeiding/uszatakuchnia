@@ -6,16 +6,14 @@ import (
 	"fmt"
 )
 
-// NutrientKeys: macro keys in a fixed order (kcal, protein, fat, carbs, fiber).
 var NutrientKeys = []string{"kcal", "protein", "fat", "carbs", "fiber"}
 
-// MacroRange is an approximate value (per 100 g, or grams per unit). Max nil = single value.
+// MacroRange: per 100 g, or grams per unit. Max nil = single value.
 type MacroRange struct {
 	Min float64  `json:"min"`
 	Max *float64 `json:"max"`
 }
 
-// Upper returns the upper bound; equals Min for a single value.
 func (r MacroRange) Upper() float64 {
 	if r.Max == nil {
 		return r.Min
@@ -23,7 +21,6 @@ func (r MacroRange) Upper() float64 {
 	return *r.Max
 }
 
-// SumRange is a value computed for a recipe (always a pair).
 type SumRange struct {
 	Min float64 `json:"min"`
 	Max float64 `json:"max"`

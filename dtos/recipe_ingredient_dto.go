@@ -15,7 +15,7 @@ type RecipeIngredientDto struct {
 	Note     *string `json:"note,omitempty"`
 	Optional bool    `json:"optional"`
 
-	Allergens []string `json:"allergens"` // the ingredient's allergen codes (for the recipe's allergen list)
+	Allergens []string `json:"allergens"`
 
 	// Store aisle (shopping list).
 	IngredientType IngredientTypeRefDto `json:"ingredientType"`
@@ -24,8 +24,7 @@ type RecipeIngredientDto struct {
 	// Grams per 1 unit of this row; nil = can't convert (the shopping list adds up mixed units via grams).
 	GramsPerUnit *GramsRangeDto `json:"gramsPerUnit"`
 
-	// Recipe this ingredient links to; nil = none. Drafts are returned too (with their status):
-	// the public page hides them, the form shows them.
+	// Drafts are returned too (with their status): the public page hides them, the form shows them.
 	LinkedRecipe *LinkedRecipeDto `json:"linkedRecipe"`
 
 	// This row's share of the per-serving macros (shares add up to RecipeDto.nutrition); nil = the row doesn't count
@@ -55,7 +54,7 @@ type LinkedRecipeDto struct {
 	ID     uint    `json:"id"`
 	Title  string  `json:"title"`
 	Status string  `json:"status"`
-	Image  *string `json:"image"` // recipe photo URL (thumbnail); nil = no photo
+	Image  *string `json:"image"`
 }
 
 type IngredientTypeRefDto struct {
@@ -63,7 +62,6 @@ type IngredientTypeRefDto struct {
 	Label string `json:"label"`
 }
 
-// GramsRangeDto: grams per unit; Max = Min for a single value.
 type GramsRangeDto struct {
 	Min float64 `json:"min"`
 	Max float64 `json:"max"`

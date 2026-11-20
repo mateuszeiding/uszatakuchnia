@@ -2,7 +2,6 @@ package entities
 
 import "time"
 
-// ChallengeFormat is the dictionary of challenge formats ("z podanych składników", "na temat", "odtwórz danie"…).
 // Name is unique case-insensitively (index ux_challenge_formats_name_lower, migration 0009).
 type ChallengeFormat struct {
 	ID        uint   `gorm:"primaryKey;autoIncrement"`
@@ -12,7 +11,7 @@ type ChallengeFormat struct {
 
 func (ChallengeFormat) TableName() string { return "challenge_formats" }
 
-// Challenge is a cooking challenge. No status (public right away) and no links to recipes.
+// No status (public right away) and no links to recipes.
 // CHECK: difficulty 1–5, time_limit_min > 0 (migration 0009).
 type Challenge struct {
 	ID          uint            `gorm:"primaryKey;autoIncrement"`
@@ -34,12 +33,12 @@ type Challenge struct {
 
 func (Challenge) TableName() string { return "challenges" }
 
-// ChallengeIngredient is a free-text item ("ryba białego mięsa"), not linked to the ingredients table.
+// ChallengeIngredient is free text, not linked to the ingredients table.
 type ChallengeIngredient struct {
 	ChallengeID uint   `gorm:"not null;primaryKey"`
 	SortOrder   int    `gorm:"not null;primaryKey"`
 	Name        string `gorm:"type:varchar(120);not null"`
-	Required    bool   `gorm:"not null;default:false"` // "Musisz użyć" (must use)
+	Required    bool   `gorm:"not null;default:false"`
 }
 
 func (ChallengeIngredient) TableName() string { return "challenge_ingredients" }

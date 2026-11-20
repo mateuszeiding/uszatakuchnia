@@ -179,7 +179,6 @@ func uniqueUints(a []uint) []uint {
 	return out
 }
 
-// ApplyRecipeRequest copies request fields onto the entity (without saving).
 func ApplyRecipeRequest(e *entities.Recipe, req dtos.UpsertRecipeRequest) {
 	e.Name = strings.TrimSpace(req.Name)
 	e.Servings = req.Servings

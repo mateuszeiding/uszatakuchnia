@@ -11,7 +11,7 @@ type Recipe struct {
 	Servings    int    `gorm:"not null;default:0"` // 0 = not set (draft)
 	Description *string
 	Tagline     *string `gorm:"type:varchar(500)"`
-	Tip         *string // hint below the steps
+	Tip         *string
 	// "Don't mess this up" notes (shopping, safety, timing) in the author's order; nil is stored as [].
 	Cautions StringList `gorm:"type:jsonb;not null;default:'[]'"`
 

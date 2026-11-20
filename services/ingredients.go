@@ -120,7 +120,6 @@ func SaveIngredient(tx *gorm.DB, ing *entities.Ingredient, req dtos.IngredientRe
 	return RecomputeRecipes(tx)
 }
 
-// FillIngredientNutrition adds own and resolved macros and conversions (with inheritance) to the DTO.
 func FillIngredientNutrition(d *dtos.IngredientDto, ix *NutritionIndex) {
 	d.Nutrition = map[string]entities.MacroRange(ix.Own[d.ID])
 	if d.Nutrition == nil {

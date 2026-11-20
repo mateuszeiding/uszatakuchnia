@@ -18,7 +18,6 @@ const MaxEquipmentSpecLen = 160
 // MaxEquipmentNameLen is the longest equipment name in the dictionary (characters), matching varchar(120).
 const MaxEquipmentNameLen = 120
 
-// validateEquipment: the equipment exists in the dictionary and the detail fits the column.
 func validateEquipment(tx *gorm.DB, req dtos.UpsertRecipeRequest, add func(field, msg string)) error {
 	if req.Equipment == nil {
 		return nil

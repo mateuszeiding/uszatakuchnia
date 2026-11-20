@@ -47,12 +47,12 @@ func RecipeSharePage(w http.ResponseWriter, r *http.Request) { sharePage(w, r, f
 func ShoppingSharePage(w http.ResponseWriter, r *http.Request) { sharePage(w, r, true) }
 
 type pageMeta struct {
-	Title       string // <title>
+	Title       string
 	OGTitle     string
 	Description string
-	URL         string // og:url; "" = none
-	Image       string // og:image; "" = none
-	Type        string // og:type
+	URL         string
+	Image       string
+	Type        string
 }
 
 // shareRecipe: what the meta tags need (no steps or ingredients).

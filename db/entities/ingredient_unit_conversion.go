@@ -1,6 +1,5 @@
 package entities
 
-// IngredientUnitConversion: how many grams one unit of an ingredient weighs (e.g. egg: 1 piece ≈ 50–65 g).
 // g / kg / ml / l are converted in code (services.GramsPerUnit), without rows.
 type IngredientUnitConversion struct {
 	ID           uint     `gorm:"primaryKey;autoIncrement"`
