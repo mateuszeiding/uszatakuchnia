@@ -184,12 +184,22 @@ async function remove(r: RecipeBaseDto) {
                     </td>
                     <td>
                         <div class="actions">
+                            <!-- oko przy każdym przepisie, zawsze nowa karta; szkic widzi tylko właściciel (pasek „Szkic”) -->
                             <RouterLink
-                                v-if="r.status === 'published'"
                                 :to="{ name: 'recipe-details', params: { id: r.id } }"
                                 class="tbl-btn"
-                                :aria-label="`Zobacz „${r.name}”`"
-                                title="Zobacz na stronie"
+                                target="_blank"
+                                rel="noopener"
+                                :aria-label="
+                                    r.status === 'draft'
+                                        ? `Podgląd szkicu „${r.name}” (nowa karta)`
+                                        : `Zobacz „${r.name}” na stronie (nowa karta)`
+                                "
+                                :title="
+                                    r.status === 'draft'
+                                        ? 'Podgląd szkicu (nowa karta)'
+                                        : 'Zobacz na stronie (nowa karta)'
+                                "
                             >
                                 <UIcon name="eye" />
                             </RouterLink>

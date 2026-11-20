@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 // Proste ikony liniowe (dekoracyjne — przycisk niesie aria-label).
-defineProps<{ name: 'edit' | 'trash' | 'eye' | 'x' | 'check'; size?: number }>();
+defineProps<{
+    name: 'edit' | 'trash' | 'eye' | 'x' | 'check' | 'lock' | 'external';
+    size?: number;
+}>();
 </script>
 
 <template>
@@ -37,6 +40,21 @@ defineProps<{ name: 'edit' | 'trash' | 'eye' | 'x' | 'check'; size?: number }>()
         <path
             v-else-if="name === 'check'"
             d="M2.5 6.8L5.2 9.5 10.5 3.8"
+        />
+        <template v-else-if="name === 'lock'">
+            <rect
+                x="2.5"
+                y="5.8"
+                width="8"
+                height="5.7"
+                rx="1.2"
+            />
+            <path d="M4.5 5.8V4.1a2 2 0 014 0v1.7" />
+        </template>
+        <!-- nowa karta -->
+        <path
+            v-else-if="name === 'external'"
+            d="M5.5 2.5H3a.5.5 0 00-.5.5v7a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V7.5M7.5 2.5h3v3M10.5 2.5L6 7"
         />
     </svg>
 </template>

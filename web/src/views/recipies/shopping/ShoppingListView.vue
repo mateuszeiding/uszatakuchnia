@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router';
 import ShoppingList from './components/ShoppingList.vue';
 import ShoppingListSkeleton from './components/ShoppingListSkeleton.vue';
 
+import { useDraftBar } from '@/composables/useDraftBar';
 import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
@@ -23,6 +24,15 @@ const failed = ref(false);
 const qc = useQueryClient();
 const route = useRoute();
 const router = useRouter();
+// pasek tylko nad wczytaną listą bieżącego przepisu — nie zostaje po poprzednim w trakcie ładowania ani przy błędzie
+useDraftBar(
+    'list',
+    computed(() =>
+        !loading.value && !failed.value && recipe.value?.id === Number(props.id)
+            ? recipe.value
+            : undefined
+    )
+);
 
 /** Porcje z adresu (?porcje=) — link z panelu albo udostępniony; null = weź z postępu przepisu. */
 const urlServings = computed(() => {

@@ -107,6 +107,8 @@
   --prep:      #8A6410;
   --prep-soft: rgba(217, 164, 65, 0.14);
   --prep-line: rgba(217, 164, 65, 0.55);
+  /* pasek „Szkic” nad nawigacją (podgląd szkicu) */
+  --bar-bg:    #FBF3E2;
 
   --c-blue:       #3F70A8;  /* ryby */
   --c-terracotta: #B85A2E;  /* mięso */
@@ -150,6 +152,7 @@
   --danger:  #E55D4D; --danger-soft:  rgba(229, 93, 77, 0.18);
   --info:    #6B98D0; --info-soft:    rgba(107, 152, 208, 0.18);
   --prep: #E8B95A; --prep-soft: rgba(232, 185, 90, 0.12); --prep-line: rgba(232, 185, 90, 0.45);
+  --bar-bg: #2A2213;
 
   --c-blue:       #6B98D0; --c-terracotta: #D87A50; --c-sage: #9DB373; --c-forest: #5E9A6A;
   --c-mustard:    #E8B95A; --c-wheat:      #D4B088; --c-tomato: #E55D4D; --c-lime: #C5D45A;
@@ -173,6 +176,7 @@
     --danger:  #E55D4D; --danger-soft:  rgba(229, 93, 77, 0.18);
     --info:    #6B98D0; --info-soft:    rgba(107, 152, 208, 0.18);
     --prep: #E8B95A; --prep-soft: rgba(232, 185, 90, 0.12); --prep-line: rgba(232, 185, 90, 0.45);
+    --bar-bg: #2A2213;
     --c-blue: #6B98D0; --c-terracotta: #D87A50; --c-sage: #9DB373; --c-forest: #5E9A6A;
     --c-mustard: #E8B95A; --c-wheat: #D4B088; --c-tomato: #E55D4D; --c-lime: #C5D45A;
     --c-brown: #A57050; --c-pink: #E892B0; --c-coral: #F0AC7A; --c-plum: #B07090;
