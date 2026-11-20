@@ -13,7 +13,7 @@ import (
 )
 
 // ValidateRecipe: a draft needs only a name and valid data; publishing needs everything
-// (name, at least 1 ingredient, at least 1 step, required axes, difficulty, servings).
+// (name, at least 1 ingredient, at least 1 step, required axes, difficulty, servings, time).
 // selfID is the edited recipe's id (0 on create); an ingredient can't link to its own recipe.
 func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]dtos.FieldError, error) {
 	errs := []dtos.FieldError{}

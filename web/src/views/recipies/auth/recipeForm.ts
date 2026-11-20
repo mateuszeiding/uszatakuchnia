@@ -1,4 +1,4 @@
-// A draft needs only a name; publishing needs everything (name, ingredient, step, required axes, difficulty, servings).
+// A draft needs only a name; publishing needs everything (name, ingredient, step, required axes, difficulty, servings, time).
 
 import type { IUpsertRecipeRequest, RecipeDto, RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
 import type { ILinkedRecipe } from '@/data/dtos/recipe/RecipeIngredientDto';
