@@ -137,9 +137,9 @@ Lokalnie: `go run ./cmd/...` łączy się z bazą bezpośrednio — autoryzacja 
 Przepisy i wyzwania wprowadza się przez API produkcyjne z kluczem `API_ADMIN_KEY` — jak w „Zapis przez API z sesji Claude Code” wyżej.
 
 Przepisy i wyzwania wprowadzane przez API (nie przez formularz) mają kopię w `content/`:
-- `content/recipes/<slug>.json` — przepis z nazwami składników, jednostek i wartości taksonomii (nie ID), więc da się go odtworzyć na każdej bazie,
+- `content/recipes/<slug>.json` — przepis z nazwami składników, jednostek i wartości taksonomii (nie ID), więc da się go odtworzyć na każdej bazie; `cautions` = lista uwag „czego nie zawalić” (krótkie teksty, maks. 220 znaków, `[]` gdy brak — to nie wskazówki do kroków),
 - `content/ingredients/<data>-<temat>.json` — składniki założone przy okazji (makro na 100 g, przeliczniki),
-- `content/challenges/<slug>.json` — wyzwanie: dokładnie body dla `POST /api/challenges`, z formatem jako nazwą (`"format": "na temat"` zamiast `formatId`) — API przyjmuje oba. Pola: `title`, `format`, `description` (akapity oddzielone `\n\n`), `difficulty` 1–5, `timeLimitMin` (null = bez limitu), `source` (null = nie pokazujemy), `ingredients` (`[{ "name", "required" }]`, tekst bez powiązania z bazą składników). Wyzwanie z API jest od razu publiczne (bez szkicu).
+- `content/challenges/<slug>.json` — wyzwanie: dokładnie body dla `POST /api/challenges`, z formatem jako nazwą (`"format": "na temat"` zamiast `formatId`) — API przyjmuje oba. Pola: `title`, `format`, `description` (akapity oddzielone `\n\n`), `difficulty` 1–5, `timeLimitMin` (null = bez limitu), `source` (null = nie pokazujemy), `ingredients` (`[{ "name", "required" }]`, tekst bez powiązania z bazą składników), `cautions` (lista uwag jak w przepisie, `[]` gdy brak). Wyzwanie z API jest od razu publiczne (bez szkicu).
 
 Poprawki zrobione potem w aplikacji nie wracają do tych plików — to backup stanu z dnia dodania.
 
