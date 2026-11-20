@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Analytics } from '@vercel/analytics/vue';
 import { computed, onMounted } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 
@@ -9,6 +10,10 @@ import UFooter from './components/UFooter.vue';
 import UToastHost from './components/UToastHost.vue';
 import UTopBar from './components/UTopBar.vue';
 import { draftBar } from './composables/useDraftBar';
+import { skipAdmin } from './shared/utils/analytics';
+
+// Explicit, so `vite dev` never reports even if process.env.NODE_ENV is not inlined.
+const analyticsMode = import.meta.env.DEV ? 'development' : 'production';
 
 // stopka na stronach publicznych; panel ma własny układ
 const route = useRoute();
@@ -33,4 +38,8 @@ onMounted(() => {
     <UFooter v-if="isPublic" />
     <UConfirmHost />
     <UToastHost />
+    <Analytics
+        :mode="analyticsMode"
+        :before-send="skipAdmin"
+    />
 </template>
