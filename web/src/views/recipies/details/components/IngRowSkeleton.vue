@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-// Ingredient row skeleton: grid, paddings and line height as in IngRow.vue
-// (18 px box | 92 px quantity | name; 8 px / phone 11 px; name 15 px × 1.4).
+// Ingredient row skeleton: grid, paddings and line height as in IngRow.vue.
 defineProps<{ wide?: boolean }>();
 </script>
 

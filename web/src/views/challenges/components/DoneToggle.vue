@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-// Round "done" toggle on the card: 44 px target, 24 px circle, aria-pressed.
 const props = defineProps<{ on: boolean; title: string }>();
 defineEmits<{ toggle: [] }>();
 </script>

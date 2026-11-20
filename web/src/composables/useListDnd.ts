@@ -49,7 +49,6 @@ export function useListDnd<T extends IWithId>(groups: Ref<IGroupLike<T>[]>) {
         reset();
     }
 
-    /** Handle attributes (icon button). */
     const handle = (gid: number, iid: number) => ({
         draggable: true,
         onDragstart: (e: DragEvent) => {

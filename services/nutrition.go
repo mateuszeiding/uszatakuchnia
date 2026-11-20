@@ -156,7 +156,6 @@ func FillGramsPerUnit(items []dtos.RecipeIngredientDto, ix *NutritionIndex) {
 	}
 }
 
-// NutritionLine is a recipe row for the macro calculation.
 type NutritionLine struct {
 	IngredientID uint
 	Qty          Quantity

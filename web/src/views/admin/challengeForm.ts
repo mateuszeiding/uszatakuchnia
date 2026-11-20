@@ -1,4 +1,3 @@
-// Challenge form (admin): model, pre-submit validation, payload, server errors.
 import type { IChallenge, IUpsertChallengeRequest } from '@/data/dtos/challenge/ChallengeDto';
 import {
     cautionRows,

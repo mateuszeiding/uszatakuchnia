@@ -121,7 +121,6 @@ func SaveEquipment(tx *gorm.DB, id uint, rawName string) (entities.Equipment, er
 	return e, tx.Save(&e).Error
 }
 
-// EquipmentUsage: number of recipes using each equipment item.
 func EquipmentUsage(tx *gorm.DB) (map[uint]int, error) {
 	var rows []struct {
 		ID uint

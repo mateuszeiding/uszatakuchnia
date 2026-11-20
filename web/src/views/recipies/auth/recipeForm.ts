@@ -1,4 +1,3 @@
-// Recipe form state: types, conversion from/to the API, validation.
 // A draft needs only a name; publishing needs everything (name, ingredient, step, required axes, difficulty, servings).
 
 import type { IUpsertRecipeRequest, RecipeDto, RecipeStatus } from '@/data/dtos/recipe/RecipeDto';

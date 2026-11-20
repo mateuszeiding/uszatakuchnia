@@ -33,7 +33,6 @@ type AllergenDto struct {
 	Label string `json:"label"`
 }
 
-// DictionariesDto: all dictionaries in one response.
 type DictionariesDto struct {
 	Axes             []TaxonomyAxisDto    `json:"axes"`
 	Units            []UnitDto            `json:"units"`

@@ -176,7 +176,6 @@ type IngredientSeed struct {
 	Conversions map[string]entities.MacroRange // unit name → grams
 }
 
-// rg builds a range for the seed.
 func rg(min, max float64) entities.MacroRange {
 	r := entities.MacroRange{Min: min}
 	if max > min {
@@ -185,7 +184,6 @@ func rg(min, max float64) entities.MacroRange {
 	return r
 }
 
-// one builds a single value for the seed.
 func one(v float64) entities.MacroRange { return entities.MacroRange{Min: v} }
 
 // nut builds macros per 100 g in order: kcal, protein, fat, carbs, fiber.

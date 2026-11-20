@@ -1,6 +1,5 @@
 package dtos
 
-// RecipeEquipmentDto is an equipment item in a recipe (ordered by sort_order).
 type RecipeEquipmentDto struct {
 	EquipmentID uint    `json:"equipmentId"`
 	Name        string  `json:"name"`

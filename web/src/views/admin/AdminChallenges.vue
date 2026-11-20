@@ -16,7 +16,6 @@ import type { IChallenge } from '@/data/dtos/challenge/ChallengeDto';
 import { timeLimitText } from '@/shared/utils/challenges';
 import ChallengeDifficulty from '@/views/challenges/components/ChallengeDifficulty.vue';
 
-// Admin → Challenges: search, table, edit, delete with confirmation.
 const qc = useQueryClient();
 const items = ref<IChallenge[]>([]);
 const loading = ref(true);

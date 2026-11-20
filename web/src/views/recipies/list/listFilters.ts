@@ -186,7 +186,6 @@ function withValue(f: IListFilters, dim: FacetDim, v: number): IListFilters {
 export const facetPresent = (list: RecipeBaseDto[], dim: FacetDim, v: number) =>
     list.some((r) => hasValue(r, dim, v));
 
-/** Counter next to a filter value. */
 export function facetCount(
     list: RecipeBaseDto[],
     f: IListFilters,

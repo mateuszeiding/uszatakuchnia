@@ -39,7 +39,6 @@ export class RecipeIngredientDto {
     unit: string | null = null;
     note: string | null = null;
     optional: boolean = false;
-    /** The ingredient's allergen codes. */
     allergens: string[] = [];
     /** Store aisle (ingredient type), for the shopping list. */
     ingredientType: { code: string; label: string } = { code: 'OTHER', label: 'inne' };

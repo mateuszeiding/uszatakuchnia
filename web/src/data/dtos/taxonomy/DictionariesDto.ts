@@ -44,7 +44,6 @@ export interface IAllergen {
 export interface IEquipment {
     id: number;
     name: string;
-    /** Number of recipes using it. */
     usedIn: number;
 }
 

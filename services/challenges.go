@@ -264,7 +264,6 @@ func SaveChallengeFormat(tx *gorm.DB, id uint, rawName string) (entities.Challen
 	return f, tx.Save(&f).Error
 }
 
-// ChallengeFormatUsage: number of challenges using each format.
 func ChallengeFormatUsage(tx *gorm.DB) (map[uint]int, error) {
 	var rows []struct {
 		ID uint

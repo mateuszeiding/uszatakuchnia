@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-// Shopping list item skeleton: grid, paddings and line heights as in ShoppingRow.vue
-// (name 15 px × 1.35 + a 13 px "do: …" line; phone: name 17 px, box 22 px, min 56 px).
+// Shopping list item skeleton: grid, paddings and line heights as in ShoppingRow.vue.
 </script>
 
 <template>
