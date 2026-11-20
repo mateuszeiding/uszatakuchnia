@@ -196,3 +196,23 @@ describe('skipShopping', () => {
         expect(items.map((i) => i.name)).toEqual(['mąka']);
     });
 });
+
+describe('notes — doprecyzowanie (przegląd 18.11, #3)', () => {
+    it('jedno wystąpienie → jego doprecyzowanie', () => {
+        expect(item([line('Mięso', 2, 'wołowina', '450', 'g', { note: 'mielona' })]).notes).toEqual(
+            ['mielona']
+        );
+    });
+    it('różne doprecyzowania tego samego składnika → wszystkie, bez powtórzeń i pustych', () => {
+        const it = item([
+            line('Ciasto', 3, 'jajka', '1', 'sztuka', { note: 'duże' }),
+            line('Dodatkowo', 3, 'jajka', '1', 'sztuka', { note: 'duże, do smarowania' }),
+            line('Inne', 3, 'jajka', '1', 'sztuka', { note: ' duże ' }),
+            line('Inne', 3, 'jajka', '1', 'sztuka', { note: '' }),
+        ]);
+        expect(it.notes).toEqual(['duże', 'duże, do smarowania']);
+    });
+    it('bez doprecyzowania → pusta lista', () => {
+        expect(item([line(null, 4, 'sól', null, 'do smaku')]).notes).toEqual([]);
+    });
+});

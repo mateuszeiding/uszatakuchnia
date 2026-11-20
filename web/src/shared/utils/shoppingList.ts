@@ -46,6 +46,8 @@ export interface IShopItem {
     sum: ShopSum | null;
     parts: IShopPart[];
     groups: string[];
+    /** Doprecyzowania („mielona”, „wędzony”) ze wszystkich wystąpień, bez powtórzeń, w kolejności przepisu. */
+    notes: string[];
 }
 
 const GPU: Record<string, number> = { g: 1, kg: 1000 };
@@ -139,6 +141,7 @@ export function buildShopping(
             sum: mergeParts(base),
             parts,
             groups: [...new Set(parts.map((p) => p.group).filter((x): x is string => !!x))],
+            notes: [...new Set(parts.map((p) => p.note?.trim()).filter((x): x is string => !!x))],
         });
     });
     return items;

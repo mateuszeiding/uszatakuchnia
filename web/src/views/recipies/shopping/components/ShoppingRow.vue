@@ -4,7 +4,7 @@ import { computed } from 'vue';
 import QtyText from '@/components/QtyText.vue';
 import { forText, type IShopItem, sumText } from '@/shared/utils/shoppingList';
 
-// Pozycja listy zakupów: odhaczenie, nazwa + „do: …” (grupy przepisu), suma.
+// Pozycja listy zakupów: odhaczenie, nazwa, doprecyzowanie („mielona”) + „do: …” (grupy przepisu), suma.
 // Odhaczona zostaje na swoim miejscu — przekreślona i przygaszona (16.11).
 const props = defineProps<{ item: IShopItem; checked: boolean }>();
 const emit = defineEmits<{ toggle: [] }>();
@@ -42,6 +42,12 @@ const forGroups = computed(() => forText(props.item));
             </span>
             <span class="srow__text">
                 <span class="srow__name">{{ item.name }}</span>
+                <span
+                    v-if="item.notes.length"
+                    class="srow__note"
+                >
+                    {{ item.notes.join(' · ') }}
+                </span>
                 <span
                     v-if="forGroups"
                     class="srow__for"
@@ -102,6 +108,14 @@ const forGroups = computed(() => forText(props.item));
     display: block;
     font-size: 15px;
     line-height: 1.35;
+}
+/* doprecyzowanie jak pod ilością na stronie przepisu (.ing-item__note): 12 px, --ink-muted */
+.srow__note {
+    display: block;
+    margin-top: 1px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ink-muted);
 }
 .srow__for {
     display: block;
@@ -175,6 +189,7 @@ const forGroups = computed(() => forText(props.item));
     .srow__name {
         font-size: 12.5px;
     }
+    .srow__note,
     .srow__for {
         font-size: 11px;
         color: #444;
