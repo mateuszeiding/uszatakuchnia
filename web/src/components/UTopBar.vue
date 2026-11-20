@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 import AuthButton from './auth/AuthButton.vue';
@@ -16,17 +16,36 @@ const section = computed(
     () => LINKS.find((l) => route.path === l.to || route.path.startsWith(`${l.to}/`))?.to
 );
 
-const dark = ref(localStorage.getItem('theme') === 'dark');
+// Motyw: zapisany wybór, a bez niego systemowy (prefers-color-scheme). Stan przycisku = widoczny motyw,
+// więc pierwsze dotknięcie zawsze przełącza na przeciwny. Dopóki nie ma wyboru, przycisk idzie za systemem.
+const readSaved = () => {
+    try {
+        const t = localStorage.getItem('theme');
+        return t === 'dark' || t === 'light' ? t : null;
+    } catch {
+        return null;
+    }
+};
+const system = window.matchMedia?.('(prefers-color-scheme: dark)');
+const saved = readSaved();
+const dark = ref(saved ? saved === 'dark' : !!system?.matches);
+if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+const onSystem = (e: MediaQueryListEvent) => {
+    if (!readSaved()) dark.value = e.matches;
+};
+onMounted(() => system?.addEventListener?.('change', onSystem));
+onBeforeUnmount(() => system?.removeEventListener?.('change', onSystem));
 
 function toggleTheme() {
     dark.value = !dark.value;
     const theme = dark.value ? 'dark' : 'light';
-    localStorage.setItem('theme', theme);
+    try {
+        localStorage.setItem('theme', theme);
+    } catch {
+        /* prywatne okno — motyw działa do końca wizyty */
+    }
     document.documentElement.setAttribute('data-theme', theme);
-}
-
-if (dark.value) {
-    document.documentElement.setAttribute('data-theme', 'dark');
 }
 </script>
 
@@ -62,15 +81,15 @@ if (dark.value) {
                 <button
                     type="button"
                     class="topbar__theme"
-                    aria-label="Tryb ciemny"
-                    :aria-pressed="dark"
+                    :aria-label="dark ? 'Włącz tryb jasny' : 'Włącz tryb ciemny'"
+                    :title="dark ? 'Włącz tryb jasny' : 'Włącz tryb ciemny'"
                     @click="toggleTheme"
                 >
                     <span
                         class="topbar__theme-label"
                         aria-hidden="true"
                     >
-                        {{ dark ? 'dark' : 'light' }}
+                        {{ dark ? 'ciemny' : 'jasny' }}
                     </span>
                     <span
                         class="topbar__theme-dot"
