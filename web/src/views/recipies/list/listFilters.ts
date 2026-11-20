@@ -19,12 +19,23 @@ export interface IListFilters {
     sort: SortKey;
 }
 
+/** Czas: przedziały rozłączne wg time_min (20.11). Klucz = górna granica, 121 = „ponad 2 h” (w URL „121+”). */
 export const TIMES: [number, string][] = [
-    [15, 'do 15 min'],
     [30, 'do 30 min'],
-    [60, 'do 1 h'],
-    [120, 'do 2 h'],
+    [60, '30–60 min'],
+    [120, '1–2 h'],
+    [121, 'ponad 2 h'],
 ];
+export const OVER_2H = 121;
+
+/** Przedział czasu przepisu (0 = czasu nie podano). Stare linki (czas=15/30/60/120) → najbliższy przedział. */
+export function timeBucket(min: number): number {
+    if (!min || min < 0) return 0;
+    if (min <= 30) return 30;
+    if (min <= 60) return 60;
+    if (min <= 120) return 120;
+    return OVER_2H;
+}
 export const DIFFICULTY = ['', 'łatwe', 'średnie', 'trudne'];
 export const PAGE_SIZE = 12;
 
@@ -51,7 +62,8 @@ export function readQuery(query: LocationQuery, axes: ITaxonomyAxis[]): IListFil
             .filter((n) => Number.isInteger(n) && n > 0);
         if (ids.length) f.axes[a.code] = ids;
     }
-    f.maxTime = Number(str(query.czas)) || 0;
+    const czas = str(query.czas);
+    f.maxTime = czas === '121+' ? OVER_2H : timeBucket(Number(czas) || 0);
     f.difficulty = Number(str(query.trud)) || 0;
     f.noPrep = str(query.bezprzyg) === '1';
     const sort = str(query.sort) as SortKey;
@@ -63,7 +75,7 @@ export function toQuery(f: IListFilters): LocationQueryRaw {
     const q: LocationQueryRaw = {};
     if (f.q.trim()) q.q = f.q;
     for (const [code, ids] of Object.entries(f.axes)) if (ids.length) q[code] = ids.join(',');
-    if (f.maxTime) q.czas = String(f.maxTime);
+    if (f.maxTime) q.czas = f.maxTime === OVER_2H ? '121+' : String(f.maxTime);
     if (f.difficulty) q.trud = String(f.difficulty);
     if (f.noPrep) q.bezprzyg = '1';
     if (f.sort !== 'newest') q.sort = f.sort;
@@ -108,23 +120,7 @@ export function applyFilters(
         if (hits.length) out.push({ recipe: r, hits });
     }
 
-    out = out.filter(({ recipe: r }) => {
-        for (const a of axes) {
-            const wanted = f.axes[a.code] ?? [];
-            if (!wanted.length) continue;
-            const has = new Set((r.taxonomy[a.code] ?? []).map((v) => v.id));
-            const ok =
-                a.filterMode === 'and'
-                    ? wanted.every((id) => has.has(id))
-                    : wanted.some((id) => has.has(id));
-            if (!ok) return false;
-        }
-        // po czasie minimalnym (czas „od”); przepis bez czasu (0) nie przechodzi filtra
-        if (f.maxTime && !(r.timeMin > 0 && r.timeMin <= f.maxTime)) return false;
-        if (f.difficulty && r.difficulty !== f.difficulty) return false;
-        if (f.noPrep && r.needsPrep) return false;
-        return true;
-    });
+    out = out.filter(({ recipe: r }) => passes(r, f, axes));
 
     const cmp: Record<SortKey, (a: IResult, b: IResult) => number> = {
         newest: (a, b) => b.recipe.id - a.recipe.id,
@@ -140,3 +136,65 @@ export const recipesLabel = (n: number) =>
         : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
           ? 'przepisy'
           : 'przepisów';
+
+/** Filtry bez wyszukiwania: osie (diety AND, reszta OR), przedział czasu wg time_min, trudność, bez przygotowania. */
+function passes(r: RecipeBaseDto, f: IListFilters, axes: ITaxonomyAxis[]): boolean {
+    for (const a of axes) {
+        const wanted = f.axes[a.code] ?? [];
+        if (!wanted.length) continue;
+        const has = new Set((r.taxonomy[a.code] ?? []).map((v) => v.id));
+        const ok =
+            a.filterMode === 'and'
+                ? wanted.every((id) => has.has(id))
+                : wanted.some((id) => has.has(id));
+        if (!ok) return false;
+    }
+    // przepis bez czasu (0) nie przechodzi filtra czasu
+    if (f.maxTime && timeBucket(r.timeMin) !== f.maxTime) return false;
+    if (f.difficulty && r.difficulty !== f.difficulty) return false;
+    if (f.noPrep && r.needsPrep) return false;
+    return true;
+}
+
+// ─── Fasety (20.11, wariant A) ───────────────────────────────
+// Panel pokazuje tylko wartości, które ma choć jeden opublikowany przepis (na całej liście — nic nie skacze),
+// z licznikiem: ile przepisów byłoby po dołożeniu wartości do obecnego wyboru (z wyszukiwaniem).
+// Wartość wybrana: ile z obecnych wyników ją ma. 0 i niewybrana → przygaszona, nieaktywna, na swoim miejscu.
+
+export type FacetDim = { kind: 'axis'; code: string } | { kind: 'time' } | { kind: 'difficulty' };
+
+function hasValue(r: RecipeBaseDto, dim: FacetDim, v: number): boolean {
+    if (dim.kind === 'axis') return (r.taxonomy[dim.code] ?? []).some((x) => x.id === v);
+    if (dim.kind === 'time') return timeBucket(r.timeMin) === v;
+    return r.difficulty === v;
+}
+
+function isSelected(f: IListFilters, dim: FacetDim, v: number): boolean {
+    if (dim.kind === 'axis') return (f.axes[dim.code] ?? []).includes(v);
+    if (dim.kind === 'time') return f.maxTime === v;
+    return f.difficulty === v;
+}
+
+function withValue(f: IListFilters, dim: FacetDim, v: number): IListFilters {
+    if (dim.kind === 'axis')
+        return { ...f, axes: { ...f.axes, [dim.code]: [...(f.axes[dim.code] ?? []), v] } };
+    if (dim.kind === 'time') return { ...f, maxTime: v };
+    return { ...f, difficulty: v };
+}
+
+/** Czy wartość ma choć jeden przepis z listy (bez względu na wybór). */
+export const facetPresent = (list: RecipeBaseDto[], dim: FacetDim, v: number) =>
+    list.some((r) => hasValue(r, dim, v));
+
+/** Licznik przy wartości filtra. */
+export function facetCount(
+    list: RecipeBaseDto[],
+    f: IListFilters,
+    axes: ITaxonomyAxis[],
+    dim: FacetDim,
+    v: number
+): number {
+    if (isSelected(f, dim, v))
+        return applyFilters(list, f, axes).filter(({ recipe }) => hasValue(recipe, dim, v)).length;
+    return applyFilters(list, withValue(f, dim, v), axes).length;
+}

@@ -131,7 +131,8 @@ const clear = () => (filters.value = emptyFilters(filters.value.sort));
                     <FiltersPanel
                         v-model="filters"
                         :axes="axes"
-                        :loading="!filtersReady"
+                        :recipes="recipes"
+                        :loading="!filtersReady || loading"
                     />
                 </div>
             </aside>
@@ -287,6 +288,8 @@ const clear = () => (filters.value = emptyFilters(filters.value.sort));
             <FiltersPanel
                 v-model="filters"
                 :axes="axes"
+                :recipes="recipes"
+                :loading="!filtersReady || loading"
             />
         </FilterSheet>
     </div>

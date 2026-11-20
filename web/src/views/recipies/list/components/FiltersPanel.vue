@@ -1,34 +1,123 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 
-import { DIFFICULTY, type IListFilters, TIMES } from '../listFilters';
+import {
+    DIFFICULTY,
+    facetCount,
+    type FacetDim,
+    facetPresent,
+    type IListFilters,
+    TIMES,
+} from '../listFilters';
 
+import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
 
 // Panel filtrów (sidebar na desktopie, zawartość bottom sheetu na mobile).
-// loading: słowniki jeszcze się wczytują — sekcje statyczne (przełącznik, czas, trudność) są od razu prawdziwe,
-// sekcje osi to szkielety w tych samych miejscach, z tymi samymi klasami (legenda, chipy) i liczbą rzędów
-// chipów jak po załadowaniu → panel ma od początku docelową wysokość.
-const props = defineProps<{ axes: ITaxonomyAxis[]; loading?: boolean }>();
+// Fasety (20.11, wariant A): tylko wartości, które ma choć jeden opublikowany przepis; grupa bez wartości
+// znika; przy wartości licznik — ile przepisów byłoby po jej dołożeniu. 0 i niewybrana → disabled,
+// przygaszona, na swoim miejscu. „Bez przygotowania wcześniej” tylko, gdy któryś przepis go wymaga.
+// loading: słowniki albo lista jeszcze się wczytują — szkielety sekcji w tych samych klasach.
+const props = defineProps<{
+    axes: ITaxonomyAxis[];
+    /** Opublikowane przepisy (cała lista, bez filtrów) — źródło faset i liczników. */
+    recipes: RecipeBaseDto[];
+    loading?: boolean;
+}>();
 
-/** Rzędy chipów w panelu 242 px (słowniki z 17.11: 9 / 9 / 11 / 11 / 7 wartości). */
-const SK_ROWS = { dish: 5, diet: 5, rest: [4, 5, 4] };
+/** Rzędy chipów szkieletu: typ dania, czas, trudność, diety, dwie osie (fasety to zwykle 1–2 rzędy). */
+const SK_ROWS = [2, 1, 1, 1, 1, 1];
 const f = defineModel<IListFilters>({ required: true });
 
+interface IOption {
+    id: number;
+    label: string;
+    color?: string;
+    count: number;
+    on: boolean;
+}
+interface IGroup {
+    key: string;
+    label: string;
+    dim: FacetDim;
+    hint?: string;
+    kind: 'color' | 'strong' | 'plain';
+    options: IOption[];
+}
+
+function isOn(dim: FacetDim, id: number) {
+    if (dim.kind === 'axis') return (f.value.axes[dim.code] ?? []).includes(id);
+    if (dim.kind === 'time') return f.value.maxTime === id;
+    return f.value.difficulty === id;
+}
+
+function options(dim: FacetDim, values: { id: number; label: string; color?: string }[]) {
+    const out: IOption[] = [];
+    for (const v of values) {
+        const on = isOn(dim, v.id);
+        // wybrana z linku zostaje widoczna, nawet gdy nie ma przepisów — da się ją odznaczyć
+        if (!on && !facetPresent(props.recipes, dim, v.id)) continue;
+        out.push({ ...v, on, count: facetCount(props.recipes, f.value, props.axes, dim, v.id) });
+    }
+    return out;
+}
+
+function axisGroup(a: ITaxonomyAxis, kind: IGroup['kind'], hint?: string): IGroup {
+    const dim: FacetDim = { kind: 'axis', code: a.code };
+    return { key: a.code, label: a.label, dim, kind, hint, options: options(dim, a.values) };
+}
+
 // Kolejność jak w prototypie: typ dania, czas, trudność, diety, potem reszta osi.
-const dish = computed(() => props.axes.find((a) => a.code === 'dish'));
-const diet = computed(() => props.axes.find((a) => a.code === 'diet'));
-const rest = computed(() => props.axes.filter((a) => a.code !== 'dish' && a.code !== 'diet'));
+const groups = computed<IGroup[]>(() => {
+    const dish = props.axes.find((a) => a.code === 'dish');
+    const diet = props.axes.find((a) => a.code === 'diet');
+    const g: IGroup[] = [];
+    if (dish) g.push(axisGroup(dish, 'color'));
+    const time: FacetDim = { kind: 'time' };
+    g.push({
+        key: 'time',
+        label: 'Czas',
+        dim: time,
+        kind: 'plain',
+        options: options(
+            time,
+            TIMES.map(([id, label]) => ({ id, label }))
+        ),
+    });
+    const diff: FacetDim = { kind: 'difficulty' };
+    g.push({
+        key: 'difficulty',
+        label: 'Trudność',
+        dim: diff,
+        kind: 'plain',
+        options: options(
+            diff,
+            [1, 2, 3].map((id) => ({ id, label: DIFFICULTY[id]! }))
+        ),
+    });
+    if (diet) g.push(axisGroup(diet, 'strong', 'Przepis spełnia wszystkie zaznaczone.'));
+    for (const a of props.axes)
+        if (a.code !== 'dish' && a.code !== 'diet') g.push(axisGroup(a, 'plain'));
+    return g.filter((x) => x.options.length);
+});
 
-const isOn = (code: string, id: number) => (f.value.axes[code] ?? []).includes(id);
+const showPrep = computed(() => f.value.noPrep || props.recipes.some((r) => r.needsPrep));
 
-function toggle(code: string, id: number) {
-    const cur = f.value.axes[code] ?? [];
+function toggle(dim: FacetDim, id: number) {
+    if (dim.kind === 'time') {
+        f.value = { ...f.value, maxTime: f.value.maxTime === id ? 0 : id };
+        return;
+    }
+    if (dim.kind === 'difficulty') {
+        f.value = { ...f.value, difficulty: f.value.difficulty === id ? 0 : id };
+        return;
+    }
+    const cur = f.value.axes[dim.code] ?? [];
     f.value = {
         ...f.value,
         axes: {
             ...f.value.axes,
-            [code]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id],
+            [dim.code]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id],
         },
     };
 }
@@ -39,193 +128,94 @@ function toggle(code: string, id: number) {
         class="filters"
         :inert="loading"
     >
-        <label class="filters__switch">
-            <span>Bez przygotowania wcześniej</span>
-            <input
-                v-model="f.noPrep"
-                type="checkbox"
-                role="switch"
-                class="sr-only"
-            />
-            <span
-                class="filters__track"
+        <template v-if="loading">
+            <div
+                v-for="(n, i) in SK_ROWS"
+                :key="i"
+                class="filters__group"
                 aria-hidden="true"
-            />
-        </label>
-
-        <div
-            v-if="loading"
-            class="filters__group"
-            aria-hidden="true"
-        >
-            <div class="filters__legend"><span class="sk fsk__legend" /></div>
-            <div class="filters__chips">
-                <div
-                    v-for="r in SK_ROWS.dish"
-                    :key="r"
-                    class="fsk__row"
-                >
-                    <span
-                        v-for="c in r % 2 ? 3 : 2"
-                        :key="c"
-                        class="chip fsk__chip"
+            >
+                <div class="filters__legend"><span class="sk fsk__legend" /></div>
+                <div class="filters__chips">
+                    <div
+                        v-for="r in n"
+                        :key="r"
+                        class="fsk__row"
                     >
-                        <span class="sk fsk__fill" />
-                        &nbsp;
-                    </span>
+                        <span
+                            v-for="c in r % 2 ? 3 : 2"
+                            :key="c"
+                            class="chip fsk__chip"
+                        >
+                            <span class="sk fsk__fill" />
+                            &nbsp;
+                        </span>
+                    </div>
                 </div>
             </div>
-        </div>
-        <fieldset
-            v-if="dish"
-            class="filters__group"
-        >
-            <legend class="filters__legend">{{ dish.label }}</legend>
-            <div class="filters__chips">
-                <button
-                    v-for="v in dish.values"
-                    :key="v.id"
-                    type="button"
-                    class="chip chip--color"
-                    :class="[
-                        { 'is-active': isOn('dish', v.id) },
-                        v.color ? `cat-${v.color}` : null,
-                    ]"
-                    :aria-pressed="isOn('dish', v.id)"
-                    @click="toggle('dish', v.id)"
-                >
-                    <span
-                        class="chip__dot"
-                        aria-hidden="true"
-                    />
-                    {{ v.label }}
-                </button>
-            </div>
-        </fieldset>
+        </template>
+        <template v-else>
+            <label
+                v-if="showPrep"
+                class="filters__switch"
+            >
+                <span>Bez przygotowania wcześniej</span>
+                <input
+                    v-model="f.noPrep"
+                    type="checkbox"
+                    role="switch"
+                    class="sr-only"
+                />
+                <span
+                    class="filters__track"
+                    aria-hidden="true"
+                />
+            </label>
 
-        <fieldset class="filters__group">
-            <legend class="filters__legend">Czas</legend>
-            <div class="filters__chips">
-                <button
-                    v-for="[v, l] in TIMES"
-                    :key="v"
-                    type="button"
-                    class="chip"
-                    :class="{ 'is-active': f.maxTime === v }"
-                    :aria-pressed="f.maxTime === v"
-                    @click="f = { ...f, maxTime: f.maxTime === v ? 0 : v }"
+            <fieldset
+                v-for="g in groups"
+                :key="g.key"
+                class="filters__group"
+            >
+                <legend class="filters__legend">{{ g.label }}</legend>
+                <p
+                    v-if="g.hint"
+                    class="filters__hint"
                 >
-                    {{ l }}
-                </button>
-            </div>
-        </fieldset>
-
-        <fieldset class="filters__group">
-            <legend class="filters__legend">Trudność</legend>
-            <div class="filters__chips">
-                <button
-                    v-for="v in [1, 2, 3]"
-                    :key="v"
-                    type="button"
-                    class="chip"
-                    :class="{ 'is-active': f.difficulty === v }"
-                    :aria-pressed="f.difficulty === v"
-                    @click="f = { ...f, difficulty: f.difficulty === v ? 0 : v }"
-                >
-                    {{ DIFFICULTY[v] }}
-                </button>
-            </div>
-        </fieldset>
-
-        <div
-            v-if="loading"
-            class="filters__group"
-            aria-hidden="true"
-        >
-            <div class="filters__legend"><span class="sk fsk__legend" /></div>
-            <p class="filters__hint">Przepis spełnia wszystkie zaznaczone.</p>
-            <div class="filters__chips">
-                <div
-                    v-for="r in SK_ROWS.diet"
-                    :key="r"
-                    class="fsk__row"
-                >
-                    <span
-                        v-for="c in r % 2 ? 3 : 2"
-                        :key="c"
-                        class="chip fsk__chip"
+                    {{ g.hint }}
+                </p>
+                <div class="filters__chips">
+                    <button
+                        v-for="o in g.options"
+                        :key="o.id"
+                        type="button"
+                        class="chip"
+                        :class="[
+                            {
+                                'is-active': o.on,
+                                'chip--color': g.kind === 'color',
+                                'chip--strong': g.kind === 'strong',
+                            },
+                            o.color ? `cat-${o.color}` : null,
+                        ]"
+                        :aria-pressed="o.on"
+                        :disabled="!o.on && !o.count"
+                        @click="toggle(g.dim, o.id)"
                     >
-                        <span class="sk fsk__fill" />
-                        &nbsp;
-                    </span>
+                        <span
+                            v-if="g.kind === 'color'"
+                            class="chip__dot"
+                            aria-hidden="true"
+                        />
+                        {{ o.label }}
+                        <span class="filters__count">
+                            <span class="sr-only">,</span>
+                            {{ o.count }}
+                        </span>
+                    </button>
                 </div>
-            </div>
-        </div>
-        <fieldset
-            v-if="diet"
-            class="filters__group"
-        >
-            <legend class="filters__legend">{{ diet.label }}</legend>
-            <p class="filters__hint">Przepis spełnia wszystkie zaznaczone.</p>
-            <div class="filters__chips">
-                <button
-                    v-for="v in diet.values"
-                    :key="v.id"
-                    type="button"
-                    class="chip chip--strong"
-                    :class="{ 'is-active': isOn('diet', v.id) }"
-                    :aria-pressed="isOn('diet', v.id)"
-                    @click="toggle('diet', v.id)"
-                >
-                    {{ v.label }}
-                </button>
-            </div>
-        </fieldset>
-
-        <div
-            v-for="(n, i) in loading ? SK_ROWS.rest : []"
-            :key="`sk-${i}`"
-            class="filters__group"
-            aria-hidden="true"
-        >
-            <div class="filters__legend"><span class="sk fsk__legend" /></div>
-            <div class="filters__chips">
-                <div
-                    v-for="r in n"
-                    :key="r"
-                    class="fsk__row"
-                >
-                    <span
-                        v-for="c in r % 2 ? 3 : 2"
-                        :key="c"
-                        class="chip fsk__chip"
-                    >
-                        <span class="sk fsk__fill" />
-                        &nbsp;
-                    </span>
-                </div>
-            </div>
-        </div>
-        <fieldset
-            v-for="a in rest"
-            :key="a.id"
-            class="filters__group"
-        >
-            <legend class="filters__legend">{{ a.label }}</legend>
-            <div class="filters__chips">
-                <button
-                    v-for="v in a.values"
-                    :key="v.id"
-                    type="button"
-                    class="chip"
-                    :class="{ 'is-active': isOn(a.code, v.id) }"
-                    :aria-pressed="isOn(a.code, v.id)"
-                    @click="toggle(a.code, v.id)"
-                >
-                    {{ v.label }}
-                </button>
-            </div>
-        </fieldset>
+            </fieldset>
+        </template>
     </div>
 </template>
 
@@ -299,6 +289,28 @@ input:focus-visible + .filters__track {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+}
+/* licznik przy wartości (prototyp pz-main.jsx, FChip): Geist Mono 12, --ink-muted; wybrana — akcent */
+.filters__count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-muted);
+}
+.chip.is-active .filters__count {
+    color: inherit;
+}
+/* 0 i niewybrana: przygaszona, nieaktywna, na swoim miejscu */
+.chip:disabled {
+    opacity: 0.55;
+    color: var(--ink-faint);
+    cursor: default;
+}
+.chip:disabled:hover {
+    border-color: var(--rule-strong);
+}
+.chip:disabled .filters__count {
+    color: var(--ink-faint);
 }
 /* szkielet: prawdziwe .chip / .filters__legend (te same wysokości), treść przezroczysta */
 .fsk__row {
