@@ -2,9 +2,10 @@
 import { computed } from 'vue';
 
 import BusyLabel from '@/components/BusyLabel.vue';
+import UIcon from '@/components/UIcon.vue';
 import type { RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
 
-export type BusyAction = 'draft' | 'publish' | 'save' | 'unpublish' | null;
+export type BusyAction = 'draft' | 'preview' | 'publish' | 'save' | 'unpublish' | null;
 
 const props = defineProps<{
     status: RecipeStatus;
@@ -14,10 +15,13 @@ const props = defineProps<{
     busy: BusyAction;
     /** Liczba błędów blokujących publikację — pokazywana po próbie zapisu. */
     errorCount: number;
+    /** Id zapisanego przepisu — link „Zobacz na stronie” przy opublikowanym. */
+    recipeId: number | null;
 }>();
 const emit = defineEmits<{
     cancel: [];
     'save-draft': [];
+    preview: [];
     publish: [];
     save: [];
     unpublish: [];
@@ -86,6 +90,21 @@ const state = computed<{ kind: 'error' | 'dirty' | 'saved' | 'idle'; text: strin
                     Anuluj
                 </button>
                 <template v-if="pub">
+                    <!-- opublikowany: bez podglądu niezapisanych zmian (zapis od razu publikuje) — tylko link -->
+                    <RouterLink
+                        v-if="recipeId"
+                        :to="{ name: 'recipe-details', params: { id: recipeId } }"
+                        target="_blank"
+                        rel="noopener"
+                        class="action-bar__view"
+                    >
+                        Zobacz na stronie
+                        <UIcon
+                            name="external"
+                            :size="12"
+                        />
+                        <span class="sr-only">(nowa karta)</span>
+                    </RouterLink>
                     <button
                         type="button"
                         class="btn btn--secondary"
@@ -112,6 +131,24 @@ const state = computed<{ kind: 'error' | 'dirty' | 'saved' | 'idle'; text: strin
                     </button>
                 </template>
                 <template v-else>
+                    <button
+                        type="button"
+                        class="btn btn--secondary"
+                        :disabled="!!busy"
+                        title="Zapisuje szkic i otwiera stronę w nowej karcie"
+                        @click="emit('preview')"
+                    >
+                        <!-- w trakcie zapisu ikona ustępuje spinnerowi, ale trzyma miejsce (przyciski się nie przesuwają) -->
+                        <UIcon
+                            name="external"
+                            :class="{ 'action-bar__icon-off': busy === 'preview' }"
+                        />
+                        <BusyLabel
+                            :busy="busy === 'preview'"
+                            label="Podgląd"
+                            busy-label="Zapisywanie…"
+                        />
+                    </button>
                     <button
                         type="button"
                         class="btn btn--secondary"
@@ -200,6 +237,21 @@ const state = computed<{ kind: 'error' | 'dirty' | 'saved' | 'idle'; text: strin
 }
 .action-bar__btns {
     display: flex;
+    align-items: center;
     gap: 8px;
+}
+.action-bar__icon-off {
+    visibility: hidden;
+}
+.action-bar__view {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 6px;
+    font-size: 13px;
+    color: var(--ink-muted);
+}
+.action-bar__view:hover {
+    color: var(--ink);
 }
 </style>

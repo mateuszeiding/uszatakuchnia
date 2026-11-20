@@ -126,7 +126,12 @@ async function scrollToFirstError() {
 }
 
 // ─── Zapis ────────────────────────────────────────────────────
-async function submit(kind: Exclude<BusyAction, null>, nextStatus: RecipeStatus, toast: string) {
+/** Zapis; true = zapisano. */
+async function submit(
+    kind: Exclude<BusyAction, null>,
+    nextStatus: RecipeStatus,
+    toast: string
+): Promise<boolean> {
     busy.value = kind;
     serverError.value = '';
     try {
@@ -143,11 +148,13 @@ async function submit(kind: Exclude<BusyAction, null>, nextStatus: RecipeStatus,
         invalidateRecipes(qc);
         showToast(toast);
         if (created) router.replace({ name: 'recipe-edit', params: { id: res.id } });
+        return true;
     } catch (e) {
         const data = (e as { response?: { data?: { fields?: IFieldError[] } } }).response?.data;
         serverError.value = data?.fields?.length
             ? data.fields.map((f) => f.message).join(' ')
             : 'Nie udało się zapisać. Spróbuj ponownie.';
+        return false;
     } finally {
         busy.value = null;
     }
@@ -160,6 +167,30 @@ function saveDraft() {
         return;
     }
     submit('draft', 'draft', 'Szkic zapisany');
+}
+
+/**
+ * „Podgląd” (tylko szkic): zapisuje szkic na zasadach „Zapisz szkic” (bez walidacji publikacji)
+ * i otwiera stronę przepisu w nowej karcie; formularz zostaje. Nowy przepis najpierw powstaje jako szkic.
+ */
+async function preview() {
+    if (validation.value.errors.name) {
+        showErrors.value = 'draft';
+        scrollToFirstError();
+        return;
+    }
+    // karta otwarta od razu, w obsłudze kliknięcia — po await zapisu przeglądarka blokuje wyskakujące okna
+    const tab = window.open('', '_blank');
+    if (tab) tab.opener = null;
+    const ok =
+        dirty.value || isNew.value ? await submit('preview', 'draft', 'Szkic zapisany') : true;
+    if (!ok || !recipeId.value) {
+        tab?.close();
+        return;
+    }
+    const href = router.resolve({ name: 'recipe-details', params: { id: recipeId.value } }).href;
+    if (tab) tab.location.href = href;
+    else window.open(href, '_blank', 'noopener');
 }
 
 function requireComplete(): boolean {
@@ -597,7 +628,9 @@ const prepSummary = computed(() => {
             :last-saved="lastSaved"
             :busy="busy"
             :error-count="errorCount"
+            :recipe-id="recipeId"
             @cancel="cancel"
+            @preview="preview"
             @save-draft="saveDraft"
             @publish="publish"
             @save="saveChanges"

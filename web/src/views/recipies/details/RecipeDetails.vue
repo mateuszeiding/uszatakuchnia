@@ -7,6 +7,7 @@ import RecipeBodySkeleton from './components/RecipeBodySkeleton.vue';
 import RecipeLoadError from './components/RecipeLoadError.vue';
 import RecipeMissing from './components/RecipeMissing.vue';
 
+import { useDraftBar } from '@/composables/useDraftBar';
 import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
@@ -23,6 +24,7 @@ const failed = ref<'missing' | 'error' | null>(null);
 const retrying = ref(false);
 
 const qc = useQueryClient();
+useDraftBar('recipe', recipe);
 
 const isNotFound = (e: unknown) =>
     (e as { response?: { status?: number } } | null)?.response?.status === 404;
