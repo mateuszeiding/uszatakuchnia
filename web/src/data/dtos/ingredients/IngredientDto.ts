@@ -23,7 +23,6 @@ export class IngredientDto {
         code: IngredientType.OTHER,
     };
 
-    /** Never added to the shopping list (e.g. water). */
     skipShopping: boolean = false;
     /** EU allergen codes (see IDictionaries.allergens). */
     allergens: string[] = [];
@@ -36,7 +35,6 @@ export class IngredientDto {
     nutrition: Macros = {};
     /** Macros per 100 g for display: own or inherited. */
     resolvedNutrition: Macros = {};
-    /** Conversions: own + inherited. */
     conversions: IConversion[] = [];
 
     constructor(obj: Partial<IngredientDto>) {

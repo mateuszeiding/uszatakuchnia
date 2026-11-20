@@ -25,7 +25,6 @@ export const isOwner = computed(
         auth0.user.value?.sub === import.meta.env.VITE_AUTH0_OWNER_SUB
 );
 
-/** Waits until Auth0 has checked the session after page load. */
 export function authReady(): Promise<void> {
     if (!auth0.isLoading.value) return Promise.resolve();
     return new Promise((resolve) => {
@@ -37,7 +36,6 @@ export function authReady(): Promise<void> {
     });
 }
 
-/** Token for the API, or null (logged out / Auth0 session expired). */
 export async function accessToken(): Promise<string | null> {
     await authReady();
     if (!auth0.isAuthenticated.value) return null;

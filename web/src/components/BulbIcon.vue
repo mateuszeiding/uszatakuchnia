@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-// Hint icon: a light bulb (decorative: the hint text sits next to it).
 withDefaults(defineProps<{ size?: number }>(), { size: 15 });
 </script>
 

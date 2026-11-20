@@ -21,7 +21,6 @@ export interface IShopPart {
     unit: string;
     unitDef: IUnit | undefined;
     qty: IRange | null;
-    /** Grams per 1 unit; null = can't convert. */
     gpu: IRange | null;
     optional: boolean;
     note: string | null;
@@ -122,7 +121,7 @@ export function buildShopping(
 ): IShopItem[] {
     const by = new Map<number, { ing: RecipeIngredientDto; parts: IShopPart[] }>();
     for (const x of lines) {
-        if (x.skipShopping) continue; // e.g. water: not bought
+        if (x.skipShopping) continue;
         const k = x.ingredientId;
         if (!by.has(k)) by.set(k, { ing: x, parts: [] });
         // factor 0.5 = "half and half" with a substitute (substitutes.effectiveLines)

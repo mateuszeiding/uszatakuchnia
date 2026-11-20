@@ -1,12 +1,7 @@
 <script lang="ts" setup>
 import { computed, useId } from 'vue';
 
-// The "Uwagi" block: what not to mess up across the whole recipe / challenge (shopping, safety, timing).
-// Uses the --prep color family. "Prepare ahead" steps are the first items
-// (a clock instead of a bullet; "krok N" emits `step`). No notes and no prep → renders nothing.
-// Variants: default (page), compact (shopping list), large (cooking mode), print (shopping list printout).
 export interface ICautionPrep {
-    /** e.g. "dzień wcześniej", "12 h wcześniej"; null = no time given. */
     lead: string | null;
     step: number;
 }
@@ -188,7 +183,6 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     cursor: pointer;
 }
 
-/* shopping list */
 .cautions--compact {
     padding: 12px 14px;
 }
@@ -199,7 +193,6 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     font-size: 14px;
 }
 
-/* cooking mode */
 .cautions--large {
     padding: 16px 18px;
 }
@@ -223,7 +216,6 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     padding-top: 5px;
 }
 
-/* shopping list printout */
 .cautions--print {
     padding: 8px 12px;
     background: none;

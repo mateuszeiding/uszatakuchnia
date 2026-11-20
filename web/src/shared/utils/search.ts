@@ -6,7 +6,6 @@
 //    (word ≥ 4 chars) share a prefix ≥ max(4, length − 2, 70% of length) with it:
 //    "bulka" → "bułki", "tymianek" → "tymiankiem", but "cukier" ≠ "cukinia".
 
-/** Lowercase without diacritics. */
 export function normalize(s: string): string {
     return s.toLowerCase().replace(/ł/g, 'l').normalize('NFD').replace(/\p{M}/gu, '');
 }
@@ -43,7 +42,6 @@ export function prepareQuery(raw: string): ISearchQuery | null {
     return text ? { text, words: words(text), fold } : null;
 }
 
-/** Whether the text (recipe name, cuisine, ingredient) matches the query. */
 export function matches(q: ISearchQuery, target: string): boolean {
     const t = q.fold ? normalize(target) : lower(target);
     if (t.includes(q.text)) return true;

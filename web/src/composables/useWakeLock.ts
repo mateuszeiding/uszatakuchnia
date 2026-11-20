@@ -1,6 +1,5 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 
-// Keeps the screen awake (Wake Lock API) for the component's lifetime.
 // The browser releases the lock when the tab is hidden, so we renew it on return.
 export function useWakeLock() {
     const active = ref(false);

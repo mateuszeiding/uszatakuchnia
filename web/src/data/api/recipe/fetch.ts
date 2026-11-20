@@ -37,7 +37,6 @@ export function fetchRecipesWithClient<E extends keyof RequestMap>(
 export const fetchRecipes = <E extends keyof RequestMap>(endpoint: E, admin = false) =>
     fetchRecipesWithClient(useQueryClient(), endpoint, admin);
 
-/** After save/delete: force fresh list and details data. */
 export const invalidateRecipes = (qc: QueryClient) =>
     qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith('recipes/') });
 

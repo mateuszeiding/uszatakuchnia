@@ -1,6 +1,5 @@
 import { computed, ref, watch } from 'vue';
 
-/** The row's chosen substitute: ingredient + "half and half". */
 export interface ISubChoice {
     ingredientId: number;
     mix: boolean;
@@ -81,10 +80,8 @@ export function useCookingProgress(recipeId: number, defaultServings: number) {
         progress.value.subs = subs;
     };
 
-    /** "Przywróć przepis": every row goes back to its main ingredient. */
     const clearSubs = () => (progress.value.subs = {});
 
-    /** Something is checked (an ingredient or a step), so "Odznacz wszystko" is enabled. */
     const hasChecks = computed(
         () => progress.value.ing.length > 0 || progress.value.steps.length > 0
     );

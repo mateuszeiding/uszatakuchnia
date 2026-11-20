@@ -4,7 +4,6 @@ import { API } from '@/data/api/API';
 import type { RecipeDto, RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
 
 /**
- * Confirms deleting a recipe (form and admin → Recipes).
  * If ingredient rows of other recipes link to it: a paragraph and a "Przepis · składnik" list
  * (the links go away via ON DELETE SET NULL, the ingredients stay).
  */

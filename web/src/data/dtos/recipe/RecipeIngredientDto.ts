@@ -1,6 +1,5 @@
 import type { IRecipeNutrition } from '@/shared/utils/nutrition';
 
-/** Recipe this ingredient links to (e.g. bun → "Bułki do hamburgerów"). */
 export interface ILinkedRecipe {
     id: number;
     title: string;
@@ -9,7 +8,6 @@ export interface ILinkedRecipe {
     image: string | null;
 }
 
-/** Row substitute (data for allergens, the shopping list and macros without another request). */
 export interface IRecipeSubstitute {
     ingredientId: number;
     name: string;
@@ -42,7 +40,6 @@ export class RecipeIngredientDto {
     allergens: string[] = [];
     /** Store aisle (ingredient type), for the shopping list. */
     ingredientType: { code: string; label: string } = { code: 'OTHER', label: 'inne' };
-    /** Skipped on the shopping list (e.g. water). */
     skipShopping: boolean = false;
     /** Grams per 1 unit of this row; null = can't convert. */
     gramsPerUnit: { min: number; max: number } | null = null;

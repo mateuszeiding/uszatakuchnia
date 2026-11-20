@@ -56,7 +56,6 @@ export class API {
         return response.data;
     }
 
-    /** Sends raw bytes (e.g. an image) with 0–100 progress reporting. */
     public async upload<T>(endpoint: string, file: Blob, onProgress?: (pct: number) => void) {
         const response = await http.post<T>(endpoint, file, {
             headers: { 'Content-Type': file.type },

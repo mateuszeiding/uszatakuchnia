@@ -32,7 +32,6 @@ export interface IUnit {
     /** Inflected forms [1, 2–4, 5+]; none = doesn't inflect. */
     forms?: [string, string, string];
     noQty: boolean;
-    /** Number of recipe ingredient rows using it. */
     usedIn?: number;
 }
 
@@ -56,5 +55,4 @@ export interface IDictionaries {
     challengeFormats: IChallengeFormat[];
 }
 
-/** Recipe classification values grouped by axis code. */
 export type RecipeTaxonomy = Partial<Record<AxisCode, ITaxonomyValue[]>>;

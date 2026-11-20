@@ -1,4 +1,3 @@
-/** Challenge ingredient item: plain text; required = "Musisz użyć" (must use). */
 export interface IChallengeIngredient {
     name: string;
     required: boolean;
@@ -17,7 +16,6 @@ export interface IChallenge {
     /** 1 warm-up … 5 masterclass. */
     difficulty: number;
     source: string | null;
-    /** "Don't mess this up" notes in the author's order. */
     cautions: string[];
     ingredients: IChallengeIngredient[];
     createdAt: string;
@@ -36,7 +34,6 @@ export interface IUpsertChallengeRequest {
     ingredients: IChallengeIngredient[];
 }
 
-/** Format dictionary item; usedIn = number of challenges using it. */
 export interface IChallengeFormat {
     id: number;
     name: string;

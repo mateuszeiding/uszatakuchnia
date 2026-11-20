@@ -1,7 +1,5 @@
 import { type Ref, ref } from 'vue';
 
-// Dragging items between groups (HTML5 DnD, mouse) + reordering with ↑ ↓ keys on the handle.
-
 interface IWithId {
     id: number;
 }
@@ -74,7 +72,6 @@ export function useListDnd<T extends IWithId>(groups: Ref<IGroupLike<T>[]>) {
         },
     });
 
-    /** Row attributes (drop target). */
     const row = (gid: number, iid: number) => ({
         'data-row': true,
         onDragover: (e: DragEvent) => {
@@ -87,7 +84,6 @@ export function useListDnd<T extends IWithId>(groups: Ref<IGroupLike<T>[]>) {
         onDrop,
     });
 
-    /** Attributes of the slot at the end of a group (drop into an empty group / at the end). */
     const groupEnd = (gid: number) => ({
         onDragover: (e: DragEvent) => {
             if (!drag.value) return;

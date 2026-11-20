@@ -1,4 +1,3 @@
-// Macronutrients: API types, rounding and range formatting ("20 – 22 g (~21)").
 // The calculations happen in the API (services/nutrition.go).
 
 export type NutrientKey = 'kcal' | 'protein' | 'fat' | 'carbs' | 'fiber';
@@ -13,7 +12,6 @@ export const NUTRIENTS: { key: NutrientKey; label: string; unit: string }[] = [
 
 /** Ingredient value (per 100 g) or grams per unit; max null = single value. */
 export type Range = { min: number; max: number | null };
-/** Value computed for a recipe. */
 export type SumRange = { min: number; max: number };
 
 export type Macros = Partial<Record<NutrientKey, Range>>;
@@ -68,7 +66,6 @@ export const spokenText = (f: Formatted | null, unit: string) =>
           ? `${nf(f.a)} ${unit}`
           : `od ${nf(f.a)} do ${nf(f.b)} ${unit}, średnio około ${nf(f.m)}`;
 
-/** Grams per unit: "90 – 100 g" or "10 g" (no average). */
 export function fmtGrams(r: Range): string {
     const f = fmt(r, 'g', '100g');
     if (!f) return '—';

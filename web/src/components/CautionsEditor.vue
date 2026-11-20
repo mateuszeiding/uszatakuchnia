@@ -10,7 +10,6 @@ import {
     MAX_CAUTION_LEN,
 } from '@/shared/utils/cautions';
 
-// Notes editor for the recipe and challenge forms: rows with a drag handle (↑ ↓), an auto-growing field and ✕.
 // Deleting a row doesn't ask: nothing is saved until "Zapisz". Empty rows are skipped on save.
 const props = defineProps<{
     /** "przepisie" / "wyzwaniu": completes the hint "czego nie wolno zawalić w całym …". */
@@ -226,7 +225,6 @@ const removeRow = (r: ICautionRow) => rows.value.splice(rows.value.indexOf(r), 1
     gap: 4px;
     min-width: 0;
 }
-/* at least 2 lines (rows=2), then grows with the content */
 .ce__input {
     min-height: 0;
     padding: 9px 10px;

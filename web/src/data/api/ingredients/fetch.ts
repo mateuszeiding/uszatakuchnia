@@ -26,7 +26,6 @@ export interface IIngredientPayload {
     typeCode: string;
     allergens: string[];
     parentId: number | null;
-    /** Never added to the shopping list (e.g. water). */
     skipShopping: boolean;
     /** Own macros per 100 g; an omitted key = no own data. */
     nutrition: Macros;

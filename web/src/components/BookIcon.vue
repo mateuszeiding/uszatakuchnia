@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Recipe link icon: a book; external = "opens in a new tab".
+// external: adds the "opens in a new tab" mark.
 withDefaults(defineProps<{ size?: number; external?: boolean }>(), { size: 15 });
 </script>
 

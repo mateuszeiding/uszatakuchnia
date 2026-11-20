@@ -30,7 +30,6 @@ export const fetchChallengeWithClient = (qc: QueryClient, id: number) =>
         staleTime: STALE,
     });
 
-/** After save / delete: fresh list and details. */
 export const invalidateChallenges = (qc: QueryClient) =>
     qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith('challenges/') });
 
@@ -42,8 +41,6 @@ export const updateChallenge = (id: number, body: IUpsertChallengeRequest) =>
 
 export const deleteChallenge = (id: number) =>
     API.Client.delete<{ deleted: number }>(`challenges/${id}`);
-
-// ─── Formats (admin → Classification → Challenge formats; the list comes with the dictionaries) ───
 
 export const createChallengeFormat = (name: string) =>
     API.Client.post<IChallengeFormat>('taxonomy/challenge-formats', { name });

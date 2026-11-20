@@ -33,7 +33,6 @@ code, kbd, samp { font-family: var(--font-mono); font-size: 0.9em; }
 
 button { font: inherit; }
 
-// Skeleton shimmer
 @keyframes sk-shimmer {
   0%   { background-position: -600px 0; }
   100% { background-position:  600px 0; }

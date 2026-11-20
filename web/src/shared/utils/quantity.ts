@@ -1,4 +1,3 @@
-// Ingredient quantities: parser (numbers, fractions, ranges), unit inflection, serving scaling.
 // The same parser lives in the API: services/quantity.go.
 
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
@@ -57,7 +56,6 @@ export function unitLabel(
     return pluralPL(amount, one, few, many);
 }
 
-// ─── Scaling ─────────────────────────────────────────────────
 export const COUNT = new Set(['sztuka', 'ząbek', 'listek', 'plaster', 'pęczek', 'filet', '']);
 export const SPOON = new Set(['łyżka', 'łyżeczka', 'szklanka', 'szczypta', 'garść']);
 /** Tablespoons and teaspoons from 1 up: to halves (2⅔ → 2½); below 1 like other measures (¼, ⅓, ½, ¾). */

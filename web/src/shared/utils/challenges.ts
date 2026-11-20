@@ -1,4 +1,3 @@
-// Challenges: difficulty levels, the selected difficulty range, random pick (skips done ones), description paragraphs.
 import { formatTime } from './time';
 
 /** Difficulty levels 1–5 (index = level − 1). */
@@ -7,7 +6,6 @@ export const DIFFICULTIES = [1, 2, 3, 4, 5] as const;
 
 export const levelName = (n: number) => LEVELS[n - 1] ?? '';
 
-/** Time limit: "45 min", "1 h 15 min", "bez limitu". */
 export const timeLimitText = (min: number | null) => (min ? formatTime(min) : null) ?? 'bez limitu';
 
 /** Selected difficulties in words: [] → "dowolna", [2,3] → "2–3", [1,4] → "1, 4". */
@@ -72,7 +70,6 @@ export function rollChallenge(
     return { kind: 'ok', id: candidates[Math.floor(r * candidates.length)]!.id };
 }
 
-/** Description → paragraphs (a blank line separates them). */
 export const paragraphs = (text: string) =>
     text
         .split(/\n\s*\n/)

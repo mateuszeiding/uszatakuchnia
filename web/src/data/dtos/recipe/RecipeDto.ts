@@ -20,7 +20,6 @@ export class RecipeBaseDto {
     tagline: string | null = null;
     /** Time in minutes; 0 = not given (draft). */
     timeMin: number = 0;
-    /** Upper bound of the range; null = no range. */
     timeMax: number | null = null;
     difficulty: number | null = null;
     status: RecipeStatus = 'draft';
@@ -31,7 +30,6 @@ export class RecipeBaseDto {
     photoUrl: string | null = null;
     /** URL stored in the database (e.g. /api/photos/1), sent back on save. */
     photoPath: string | null = null;
-    /** Kcal per serving (range); null = no data. */
     kcal: SumRange | null = null;
     /** Ingredient names (list: search by ingredient). */
     ingredientNames: string[] = [];
@@ -58,11 +56,9 @@ export const cuisineOf = (r: Pick<RecipeBaseDto, 'taxonomy'>): ITaxonomyValue | 
 export const taxonomyLabels = (r: Pick<RecipeBaseDto, 'taxonomy'>, axis: string): string[] =>
     (r.taxonomy[axis] ?? []).map((v) => v.label);
 
-/** Equipment item in a recipe (API order). */
 export interface IRecipeEquipment {
     equipmentId: number;
     name: string;
-    /** Details, e.g. "3–4 l, grube dno"; null = none. */
     spec: string | null;
     optional: boolean;
 }
@@ -71,11 +67,8 @@ export class RecipeDto extends RecipeBaseDto {
     servings: number = 1;
     description: string | null = null;
     tip: string | null = null;
-    /** "Don't mess this up" notes (shopping, safety, timing) in the author's order. */
     cautions: string[] = [];
-    /** Per-serving macros computed from the ingredients; null = no data. */
     nutrition: IRecipeNutrition | null = null;
-    /** Allergen codes computed from the ingredients. */
     allergens: string[] = [];
 
     steps: RecipeStepDto[] = [];

@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { useAuth0 } from '@auth0/auth0-vue';
 
-// Footer of public pages: "uszatakuchnia." on the left, "Zaloguj" on the right, desktop only
-// (the admin works on desktop). A logged-in user sees "Wyloguj".
+// "Zaloguj" only on desktop: the admin works on desktop.
 const { isAuthenticated, isLoading, loginWithRedirect, logout } = useAuth0();
 
 function onAuth() {

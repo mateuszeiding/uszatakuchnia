@@ -51,7 +51,6 @@ defineProps<{
             />
             <path d="M4.5 5.8V4.1a2 2 0 014 0v1.7" />
         </template>
-        <!-- new tab -->
         <path
             v-else-if="name === 'external'"
             d="M5.5 2.5H3a.5.5 0 00-.5.5v7a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V7.5M7.5 2.5h3v3M10.5 2.5L6 7"
