@@ -5,6 +5,13 @@ import { computed, watch } from 'vue';
 export const auth0 = createAuth0({
     domain: import.meta.env.VITE_AUTH0_DOMAIN,
     clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
+    // The default in-memory cache restores the session through a hidden iframe on every
+    // new tab or reload, and browsers block Auth0's third-party cookies there. Storing
+    // tokens in localStorage and renewing them with a rotating refresh token keeps the
+    // session without the iframe. No iframe fallback: it fails the same way, so a missing
+    // or revoked refresh token ends in a 401 and the re-login popup (reauthenticate.ts).
+    cacheLocation: 'localstorage',
+    useRefreshTokens: true,
     authorizationParams: {
         redirect_uri: globalThis.location.origin,
         // access token as a JWT for our API (the backend checks signature, audience and `sub`)
