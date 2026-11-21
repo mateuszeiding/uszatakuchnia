@@ -1,20 +1,26 @@
 <script lang="ts" setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
+import { useCookFit } from '../cookFit';
 import { leadText } from '../recipeView';
 
+import CookBar from './CookBar.vue';
+import CookBefore from './CookBefore.vue';
+import CookHints from './CookHints.vue';
 import CookIngredientsSheet from './CookIngredientsSheet.vue';
-import StepHints from './StepHints.vue';
+import CookNav from './CookNav.vue';
 
-import CautionsBlock from '@/components/CautionsBlock.vue';
+import StepText from '@/components/StepText.vue';
 import type { ISubChoice } from '@/composables/useCookingProgress';
 import { useWakeLock } from '@/composables/useWakeLock';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import type { IRefContext } from '@/shared/utils/stepRefs';
 import type { SubsMap } from '@/shared/utils/substitutes';
 
 const props = defineProps<{
     recipe: RecipeDto;
+    refs: IRefContext;
     dicts: IDictionaries | undefined;
     servings: number;
     done: number[];
@@ -32,35 +38,74 @@ const emit = defineEmits<{
 }>();
 
 const steps = computed(() => props.recipe.steps);
+const prep = computed(() =>
+    steps.value.filter((s) => s.prep).map((s) => ({ lead: leadText(s), step: s.stepNo }))
+);
+const hasBefore = computed(() => props.recipe.cautions.length > 0 || prep.value.length > 0);
+
+// -1 = "Zanim zaczniesz". Resuming (some steps checked) skips it and opens the first unchecked step.
 const firstOpen = steps.value.findIndex((s) => !props.done.includes(s.stepNo));
-const i = ref(firstOpen === -1 ? 0 : firstOpen);
+const resuming = props.done.length > 0;
+const i = ref(resuming ? Math.max(0, firstOpen) : hasBefore.value ? -1 : 0);
+
 const showIng = ref(false);
-const wake = useWakeLock();
+/** The reader opened collapsed hints once: they stay open until the mode closes. */
+const hintsOpen = ref(false);
+useWakeLock();
 const root = ref<HTMLElement>();
 const stage = ref<HTMLElement>();
-// a new step always starts at the top (otherwise, after scrolling a long step, the next one starts halfway down)
-watch(i, () => stage.value?.scrollTo({ top: 0 }));
+const bar = ref<InstanceType<typeof CookBar>>();
 
-const step = computed(() => steps.value[i.value]!);
+const { layout, size, tight, measuring, more, fit, updateMore } = useCookFit(stage);
+
+const step = computed(() => (i.value >= 0 ? steps.value[i.value]! : null));
 const last = computed(() => i.value === steps.value.length - 1);
-const ingBtn = ref<HTMLButtonElement>();
+const collapsible = computed(() => !measuring.value && tight.value);
+
+// a new step always starts at the top (otherwise, after scrolling a long step, the next one starts halfway down)
+watch(i, async () => {
+    stage.value?.scrollTo({ top: 0 });
+    await nextTick();
+    void fit();
+});
+watch(hintsOpen, async () => {
+    await nextTick();
+    updateMore();
+});
 
 // the "Sprzęt i składniki" sheet: after closing, focus returns to "Składniki"
 async function closeIng() {
     showIng.value = false;
     await nextTick();
-    ingBtn.value?.focus();
+    bar.value?.focusIngredients();
 }
 
 function next() {
+    if (!step.value) {
+        i.value = 0;
+        return;
+    }
     emit('set-step', step.value.stepNo, true);
     if (last.value) emit('close');
     else i.value++;
 }
 function prev() {
-    if (i.value === 0) return;
+    if (i.value === 0) {
+        if (hasBefore.value) i.value = -1;
+        return;
+    }
+    if (i.value < 0) return;
     i.value--;
-    emit('set-step', step.value.stepNo, false);
+    emit('set-step', step.value!.stepNo, false);
+}
+const goTo = (stepNo: number) => {
+    const idx = steps.value.findIndex((s) => s.stepNo === stepNo);
+    if (idx >= 0) i.value = idx;
+};
+
+function moreDown() {
+    const el = stage.value;
+    el?.scrollBy({ top: el.clientHeight * 0.7, behavior: 'smooth' });
 }
 
 function trapTab(e: KeyboardEvent) {
@@ -91,8 +136,9 @@ onMounted(() => {
     prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     prevFocus = document.activeElement as HTMLElement | null;
-    root.value?.querySelector<HTMLElement>('.cook__next')?.focus();
+    root.value?.querySelector<HTMLElement>('.cook-nav__next')?.focus();
     document.addEventListener('keydown', onKey);
+    void fit();
 });
 onBeforeUnmount(() => {
     document.body.style.overflow = prevOverflow;
@@ -106,118 +152,103 @@ onBeforeUnmount(() => {
         <div
             ref="root"
             class="cook"
+            :class="`cook--${layout}`"
             role="dialog"
             aria-modal="true"
             aria-label="Tryb gotowania"
         >
-            <div class="cook__bar">
-                <div class="cook__titles">
-                    <div class="cook__recipe">{{ recipe.name }}</div>
-                    <div class="cook__count">Krok {{ i + 1 }} z {{ steps.length }}</div>
+            <CookBar
+                ref="bar"
+                :n="i + 1"
+                :total="steps.length"
+                @ingredients="showIng = true"
+                @close="emit('close')"
+            />
+            <div class="cook__body">
+                <div
+                    ref="stage"
+                    class="cook__stage"
+                    @scroll="updateMore"
+                >
+                    <div
+                        class="cook__content"
+                        aria-live="polite"
+                    >
+                        <CookBefore
+                            v-if="!step"
+                            :name="recipe.name"
+                            :steps="steps.length"
+                            :cautions="recipe.cautions"
+                            :prep="prep"
+                            @step="goTo"
+                        />
+                        <template v-else>
+                            <div
+                                v-if="step.section"
+                                class="cook__section"
+                            >
+                                {{ step.section }}
+                            </div>
+                            <div
+                                v-if="step.prep"
+                                class="cook__prep"
+                            >
+                                Przygotuj wcześniej{{ step.prepLead ? ` · ${leadText(step)}` : '' }}
+                            </div>
+                            <p
+                                class="cook__text"
+                                :class="size && `cook__text--${size}`"
+                            >
+                                <StepText
+                                    :text="step.text"
+                                    :ctx="refs"
+                                />
+                            </p>
+                            <CookHints
+                                :hints="step.hints"
+                                :collapsible="collapsible"
+                                :open="hintsOpen"
+                                @toggle="hintsOpen = !hintsOpen"
+                            />
+                        </template>
+                    </div>
                 </div>
-                <div class="cook__tools">
-                    <button
-                        ref="ingBtn"
-                        type="button"
-                        class="cook__pill"
-                        aria-haspopup="dialog"
-                        @click="showIng = true"
-                    >
-                        Składniki
-                    </button>
+                <template v-if="more">
+                    <div
+                        class="cook__fade"
+                        aria-hidden="true"
+                    />
                     <button
                         type="button"
-                        class="cook__round"
-                        aria-label="Zamknij tryb gotowania"
-                        @click="emit('close')"
+                        class="cook__more"
+                        @click="moreDown"
                     >
+                        Ciąg dalszy
                         <svg
-                            width="11"
-                            height="11"
-                            viewBox="0 0 11 11"
+                            width="12"
+                            height="12"
+                            viewBox="0 0 12 12"
+                            fill="none"
                             aria-hidden="true"
                         >
                             <path
-                                d="M2 2l7 7M9 2L2 9"
+                                d="M3 4.5L6 7.5 9 4.5"
                                 stroke="currentColor"
-                                stroke-width="1.5"
+                                stroke-width="1.6"
                                 stroke-linecap="round"
+                                stroke-linejoin="round"
                             />
                         </svg>
                     </button>
-                </div>
+                </template>
             </div>
-            <div
-                class="cook__progress"
-                aria-hidden="true"
-            >
-                <div
-                    class="cook__progress-fill"
-                    :style="{ width: `${((i + 1) / steps.length) * 100}%` }"
-                />
-            </div>
-            <div
-                ref="stage"
-                class="cook__stage"
-            >
-                <div
-                    class="cook__content"
-                    aria-live="polite"
-                >
-                    <CautionsBlock
-                        v-if="i === 0"
-                        class="cook__cautions"
-                        :items="recipe.cautions"
-                        variant="large"
-                    />
-                    <div
-                        v-if="step.section"
-                        class="cook__section"
-                    >
-                        {{ step.section }}
-                    </div>
-                    <div
-                        v-if="step.prep"
-                        class="cook__prep"
-                    >
-                        Przygotuj wcześniej{{ step.prepLead ? ` · ${leadText(step)}` : '' }}
-                    </div>
-                    <p class="cook__text">{{ step.text }}</p>
-                    <StepHints
-                        :hints="step.hints"
-                        size="lg"
-                    />
-                </div>
-            </div>
-            <div class="cook__nav">
-                <button
-                    type="button"
-                    class="cook__btn cook__btn--back"
-                    :disabled="i === 0"
-                    @click="prev"
-                >
-                    ← Wstecz
-                </button>
-                <button
-                    type="button"
-                    class="cook__btn cook__next"
-                    @click="next"
-                >
-                    {{ last ? 'Gotowe' : 'Dalej →' }}
-                </button>
-            </div>
-            <div
-                v-if="wake"
-                class="cook__hint"
-            >
-                Ekran nie zgaśnie, dopóki tryb jest otwarty
-            </div>
-            <div
-                v-else
-                class="cook__hint cook__hint--keys"
-            >
-                Strzałki ← → zmieniają krok
-            </div>
+            <CookNav
+                :start="!step"
+                :can-back="i > 0 || (i === 0 && hasBefore)"
+                :last="last"
+                @back="prev"
+                @next="next"
+            />
         </div>
 
         <CookIngredientsSheet
@@ -244,85 +275,20 @@ onBeforeUnmount(() => {
     z-index: var(--z-overlay);
     background: var(--bg);
     color: var(--ink);
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: 'bar' 'progress' 'body' 'nav';
 }
-.cook__bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--rule);
-}
-.cook__titles {
-    min-width: 0;
-}
-.cook__recipe {
-    font-size: 13px;
-    color: var(--ink-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.cook__count {
-    font-size: 16px;
-    font-weight: 600;
-}
-.cook__tools {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.cook__pill {
-    height: 44px;
-    padding: 0 16px;
-    border-radius: var(--r-pill);
-    border: 1px solid var(--rule-strong);
-    background: var(--bg-alt);
-    color: var(--ink);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-}
-.cook__round {
-    width: 44px;
-    height: 44px;
-    border-radius: var(--r-pill);
-    border: 1px solid var(--rule-strong);
-    background: var(--bg-alt);
-    color: var(--ink);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-.cook__progress {
-    height: 4px;
-    background: var(--rule);
-}
-.cook__progress-fill {
-    height: 100%;
-    background: var(--accent);
-    transition: width 0.25s;
+.cook__body {
+    grid-area: body;
+    position: relative;
+    min-height: 0;
 }
 .cook__stage {
-    flex: 1;
+    height: 100%;
     overflow-y: auto;
-    scrollbar-gutter: stable;
-    display: flex;
-    justify-content: center;
-    padding: 32px 24px;
-}
-/* vertically centered with auto margins: when the content (e.g. notes on step 1) is taller
-   than the screen, it scrolls from the top instead of escaping past the edge */
-.cook__content {
-    max-width: 760px;
-    width: 100%;
-    margin-block: auto;
-}
-.cook__cautions {
-    margin-bottom: 22px;
+    padding: 22px 20px 20px;
 }
 .cook__section {
     font-family: var(--font-mono);
@@ -331,64 +297,96 @@ onBeforeUnmount(() => {
     letter-spacing: 0.5px;
     text-transform: uppercase;
     font-weight: 600;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 .cook__prep {
     font-size: 14px;
     font-weight: 600;
     color: var(--prep);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 .cook__text {
-    font-size: clamp(24px, 3.4vw, 40px);
-    line-height: 1.4;
+    font-size: 26px;
+    line-height: 1.38;
     font-weight: 500;
-    letter-spacing: -0.4px;
+    letter-spacing: -0.3px;
     text-wrap: pretty;
 }
-.cook__nav {
-    display: flex;
-    gap: 12px;
-    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--rule);
-    max-width: 800px;
-    width: 100%;
-    margin: 0 auto;
+.cook__text--23 {
+    font-size: 23px;
 }
-.cook__btn {
-    flex: 2;
-    min-height: 64px;
-    border-radius: var(--r-2xl);
-    font-size: 18px;
+.cook__text--20 {
+    font-size: 20px;
+}
+.cook__text--21 {
+    font-size: 21px;
+    line-height: 1.4;
+}
+.cook__text :deep(.ing-ref) {
+    padding: 0.08em 0.32em;
+}
+.cook--portrait :deep(.hints__text),
+.cook--landscape :deep(.hints__text) {
+    font-size: 17px;
+    line-height: 1.45;
+}
+.cook__fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 72px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+    pointer-events: none;
+}
+.cook__more {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--r-pill);
+    background: var(--bg-alt);
+    border: 1px solid var(--rule-strong);
+    color: var(--ink);
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    background: var(--accent-fill);
-    color: var(--on-accent);
-    border: none;
 }
-.cook__btn--back {
-    flex: 1;
-    background: var(--bg-alt);
-    color: var(--ink);
-    border: 1px solid var(--rule-strong);
+
+/* desktop: as before — content centred, text scaled with the window; auto margins, so content taller
+   than the screen scrolls from the top instead of escaping past the edge */
+.cook--desktop .cook__stage {
+    display: flex;
+    justify-content: center;
+    padding: 32px 24px;
+    scrollbar-gutter: stable;
 }
-.cook__btn--back:disabled {
-    opacity: 0.4;
-    cursor: default;
+.cook--desktop .cook__content {
+    max-width: 760px;
+    width: 100%;
+    margin-block: auto;
 }
-.cook__hint {
-    text-align: center;
-    font-size: 12px;
-    color: var(--ink-muted);
-    padding-bottom: 10px;
+.cook--desktop .cook__text {
+    font-size: clamp(24px, 3.4vw, 40px);
+    line-height: 1.4;
+    letter-spacing: -0.4px;
 }
-/* the arrow-key hint only where there's a keyboard and a pointer (noise on a phone) */
-.cook__hint--keys {
-    display: none;
+.cook--desktop .cook__section {
+    margin-bottom: 14px;
 }
-@media (hover: hover) and (pointer: fine) {
-    .cook__hint--keys {
-        display: block;
-    }
+
+/* landscape phone: content on the left, the buttons in a 150 px column on the right */
+.cook--landscape {
+    grid-template-columns: minmax(0, 1fr) 150px;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas: 'bar nav' 'progress nav' 'body nav';
+}
+.cook--landscape .cook__stage {
+    padding: 16px 20px;
 }
 </style>

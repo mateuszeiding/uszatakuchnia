@@ -207,7 +207,8 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     gap: 10px;
 }
 .cautions--large .cautions__item {
-    font-size: clamp(16px, 2vw, 19px);
+    font-size: 19px;
+    line-height: 1.4;
 }
 .cautions--large .cautions__dot {
     margin-top: 10px;

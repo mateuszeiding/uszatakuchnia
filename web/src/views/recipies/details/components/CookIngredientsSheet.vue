@@ -21,6 +21,7 @@ const props = defineProps<{
     servings: number;
     checkedIng: number[];
     subs: SubsMap;
+    /** 0 = the "Zanim zaczniesz" screen. */
     stepNo: number;
 }>();
 const emit = defineEmits<{
@@ -230,7 +231,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
                     class="btn btn--secondary cis__back"
                     @click="emit('close')"
                 >
-                    Wróć do kroku {{ stepNo }}
+                    {{ stepNo ? `Wróć do kroku ${stepNo}` : 'Wróć' }}
                 </button>
             </div>
         </div>
