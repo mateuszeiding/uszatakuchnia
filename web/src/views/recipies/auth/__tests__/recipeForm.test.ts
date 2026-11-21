@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 // RecipeDto imports the API client, and createAuth builds the Auth0 client at import
 // time, which needs a browser (window.location).
-vi.mock('@/auth/createAuth', () => ({ auth0: {}, accessToken: () => Promise.resolve(null) }));
+vi.mock('@/auth/createAuth', () => ({
+    auth0: {},
+    isOwner: { value: false },
+    accessToken: () => Promise.resolve(null),
+}));
 
 import {
     blankEquip,
