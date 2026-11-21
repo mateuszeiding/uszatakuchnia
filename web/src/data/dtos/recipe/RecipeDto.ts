@@ -114,6 +114,8 @@ export interface IUpsertRecipeRequest {
     }[];
     ingredients: {
         sortOrder: number;
+        /** Stable row key (kept on edit, new rows get a random one). */
+        key: string;
         section?: string | null;
         ingredientId: number;
         quantity?: string | null;

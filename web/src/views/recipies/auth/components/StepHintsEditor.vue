@@ -1,11 +1,16 @@
 <script lang="ts" setup>
 // ✕ deletes without confirmation: nothing is saved until "Zapisz".
 import { MAX_HINT_LEN } from '../recipeForm';
+import { HINT_LIMIT, HINTS_LIMIT } from '../stepRefsForm';
 
 import BulbIcon from '@/components/BulbIcon.vue';
 
 defineProps<{ stepId: number; stepNo: number }>();
 const hints = defineModel<string[]>('hints', { required: true });
+
+// Cooking mode: a warning only, saving and publishing stay possible.
+const tooLong = (h: string) => [...h.trim()].length > HINT_LIMIT;
+const warnAt = (hi: number) => tooLong(hints.value[hi] ?? '') || hi >= HINTS_LIMIT;
 </script>
 
 <template>
@@ -15,16 +20,28 @@ const hints = defineModel<string[]>('hints', { required: true });
         class="hint-row"
     >
         <span class="hint-row__icon"><BulbIcon /></span>
-        <textarea
-            :id="`hint-${stepId}-${hi}`"
-            v-model="hints[hi]"
-            v-autosize
-            class="textarea hint-row__input"
-            rows="1"
-            :maxlength="MAX_HINT_LEN"
-            :aria-label="`Krok ${stepNo}, wskazówka ${hi + 1}`"
-            placeholder="np. Jeśli ciasto się klei, odstaw je na 10 minut"
-        />
+        <div class="hint-row__field">
+            <textarea
+                :id="`hint-${stepId}-${hi}`"
+                v-model="hints[hi]"
+                v-autosize
+                class="textarea hint-row__input"
+                :class="{ 'is-warn': warnAt(hi) }"
+                rows="1"
+                :maxlength="MAX_HINT_LEN"
+                :aria-label="`Krok ${stepNo}, wskazówka ${hi + 1}`"
+                :aria-describedby="warnAt(hi) ? `hint-warn-${stepId}-${hi}` : undefined"
+                placeholder="np. Jeśli ciasto się klei, odstaw je na 10 minut"
+            />
+            <p
+                v-if="warnAt(hi)"
+                :id="`hint-warn-${stepId}-${hi}`"
+                class="hint-row__warn"
+            >
+                Za długi do trybu gotowania — na telefonie nie zmieści się bez przewijania. Podziel
+                krok na dwa albo przenieś rady do wskazówek.
+            </p>
+        </div>
         <button
             type="button"
             class="row-icon-btn"
@@ -64,6 +81,20 @@ const hints = defineModel<string[]>('hints', { required: true });
 }
 .hint-row .row-icon-btn {
     margin-top: 5px;
+}
+.hint-row__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.hint-row__input.is-warn {
+    border-color: var(--prep-line);
+}
+.hint-row__warn {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--prep);
 }
 .hint-row__input {
     min-height: 40px;

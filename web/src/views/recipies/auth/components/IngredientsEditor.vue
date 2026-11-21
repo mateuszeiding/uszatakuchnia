@@ -13,6 +13,7 @@ import {
 import GroupShell from './GroupShell.vue';
 import IngAutosuggest from './IngAutosuggest.vue';
 import RecipeLinkPicker from './RecipeLinkPicker.vue';
+import RemovedIngNotice from './RemovedIngNotice.vue';
 import SubstitutePicker from './SubstitutePicker.vue';
 
 import BookIcon from '@/components/BookIcon.vue';
@@ -24,6 +25,7 @@ import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 import { parseQty, unitLabel } from '@/shared/utils/quantity';
+import { stepRefs } from '@/shared/utils/stepRefs';
 
 const groups = defineModel<IGroup<IIngItem>[]>('groups', { required: true });
 const props = defineProps<{
@@ -35,6 +37,8 @@ const props = defineProps<{
     recipes: RecipeBaseDto[];
     /** The edited recipe (null = new); excluded from the picker. */
     currentId: number | null;
+    /** Step texts in editor order (refs to rows, for the notice after removing a row). */
+    stepTexts: string[];
 }>();
 const emit = defineEmits<{ 'add-new': [name: string, item: IIngItem] }>();
 
@@ -80,8 +84,32 @@ async function removeGroup(g: IGroup<IIngItem>) {
     groups.value.splice(groups.value.indexOf(g), 1);
 }
 
+interface IRemoved {
+    item: IIngItem;
+    groupId: number;
+    group: string | null;
+    index: number;
+    steps: number[];
+}
+const removed = ref<IRemoved | null>(null);
+
 function removeItem(g: IGroup<IIngItem>, it: IIngItem) {
-    g.items.splice(g.items.indexOf(it), 1);
+    const index = g.items.indexOf(it);
+    g.items.splice(index, 1);
+    const steps = props.stepTexts.flatMap((t, i) =>
+        stepRefs(t).some((r) => r.key === it.key) ? [i + 1] : []
+    );
+    removed.value =
+        steps.length && it.ingredientId
+            ? { item: it, groupId: g.id, group: g.label.trim() || null, index, steps }
+            : null;
+}
+function undoRemove() {
+    const r = removed.value;
+    if (!r) return;
+    const g = groups.value.find((x) => x.id === r.groupId) ?? groups.value[0];
+    g?.items.splice(Math.min(r.index, g.items.length), 0, r.item);
+    removed.value = null;
 }
 
 const picking = ref<number | null>(null);
@@ -404,6 +432,15 @@ const subLabel = (s: ISubItem) => (s.mix ? `pół na pół z: ${s.name}` : s.nam
                     </span>
                 </div>
             </div>
+            <RemovedIngNotice
+                v-if="removed?.groupId === g.id"
+                :name="removed.item.name"
+                :group="removed.group"
+                :qty="removed.item.qty"
+                :unit="unitOf(removed.item)?.name ?? ''"
+                :steps="removed.steps"
+                @undo="undoRemove"
+            />
             <template #footer>
                 <button
                     type="button"
