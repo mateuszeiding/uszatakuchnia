@@ -1,6 +1,5 @@
-// Filtry listy przepisów: stan ↔ query w URL (do udostępniania linkiem), dopasowanie przepisów.
-// Osie klasyfikacji filtrowane generycznie: param = kod osi, wartości = id po przecinku.
-// Tryb osi z bazy (filterMode): 'and' = przepis ma wszystkie (diety), 'or' = dowolną.
+// Classification axes are filtered generically: param = axis code, values = comma-separated ids.
+// Axis mode from the database (filterMode): 'and' = the recipe has all of them (diets), 'or' = any of them.
 
 import type { LocationQuery, LocationQueryRaw } from 'vue-router';
 
@@ -19,7 +18,7 @@ export interface IListFilters {
     sort: SortKey;
 }
 
-/** Czas: przedziały rozłączne wg time_min (20.11). Klucz = górna granica, 121 = „ponad 2 h” (w URL „121+”). */
+/** Time: disjoint ranges by time_min. Key = upper bound, 121 = "ponad 2 h" ("121+" in the URL). */
 export const TIMES: [number, string][] = [
     [30, 'do 30 min'],
     [60, '30–60 min'],
@@ -28,7 +27,7 @@ export const TIMES: [number, string][] = [
 ];
 export const OVER_2H = 121;
 
-/** Przedział czasu przepisu (0 = czasu nie podano). Stare linki (czas=15/30/60/120) → najbliższy przedział. */
+/** The recipe's time range (0 = no time given). Old links (czas=15/30/60/120) → the nearest range. */
 export function timeBucket(min: number): number {
     if (!min || min < 0) return 0;
     if (min <= 30) return 30;
@@ -90,7 +89,7 @@ export const activeCount = (f: IListFilters) =>
 
 export interface IResult {
     recipe: RecipeBaseDto;
-    /** Składniki pasujące do wyszukiwania (gdy trafienie nie jest w nazwie). */
+    /** Ingredients matching the search (when the match isn't in the name). */
     hits: string[] | null;
 }
 
@@ -99,7 +98,7 @@ export function applyFilters(
     f: IListFilters,
     axes: ITaxonomyAxis[]
 ): IResult[] {
-    // bez polskich znaków, z prostą odmianą słów, także po zamiennikach (shared/utils/search.ts)
+    // ignores Polish characters, simple word inflection, also matches substitutes (shared/utils/search.ts)
     const q = prepareQuery(f.q);
     let out: IResult[] = [];
     for (const r of list) {
@@ -137,7 +136,7 @@ export const recipesLabel = (n: number) =>
           ? 'przepisy'
           : 'przepisów';
 
-/** Filtry bez wyszukiwania: osie (diety AND, reszta OR), przedział czasu wg time_min, trudność, bez przygotowania. */
+/** Filters without search: axes (diets AND, the rest OR), time range by time_min, difficulty, no prep. */
 function passes(r: RecipeBaseDto, f: IListFilters, axes: ITaxonomyAxis[]): boolean {
     for (const a of axes) {
         const wanted = f.axes[a.code] ?? [];
@@ -149,17 +148,16 @@ function passes(r: RecipeBaseDto, f: IListFilters, axes: ITaxonomyAxis[]): boole
                 : wanted.some((id) => has.has(id));
         if (!ok) return false;
     }
-    // przepis bez czasu (0) nie przechodzi filtra czasu
+    // a recipe without a time (0) doesn't pass the time filter
     if (f.maxTime && timeBucket(r.timeMin) !== f.maxTime) return false;
     if (f.difficulty && r.difficulty !== f.difficulty) return false;
     if (f.noPrep && r.needsPrep) return false;
     return true;
 }
 
-// ─── Fasety (20.11, wariant A) ───────────────────────────────
-// Panel pokazuje tylko wartości, które ma choć jeden opublikowany przepis (na całej liście — nic nie skacze),
-// z licznikiem: ile przepisów byłoby po dołożeniu wartości do obecnego wyboru (z wyszukiwaniem).
-// Wartość wybrana: ile z obecnych wyników ją ma. 0 i niewybrana → przygaszona, nieaktywna, na swoim miejscu.
+// The panel shows only values that at least one published recipe has (on the whole list, so nothing jumps),
+// with a counter: how many recipes there would be after adding the value to the current choice (with the search).
+// A selected value: how many of the current results have it. 0 and not selected → dimmed, disabled, in its place.
 
 export type FacetDim = { kind: 'axis'; code: string } | { kind: 'time' } | { kind: 'difficulty' };
 
@@ -182,11 +180,9 @@ function withValue(f: IListFilters, dim: FacetDim, v: number): IListFilters {
     return { ...f, difficulty: v };
 }
 
-/** Czy wartość ma choć jeden przepis z listy (bez względu na wybór). */
 export const facetPresent = (list: RecipeBaseDto[], dim: FacetDim, v: number) =>
     list.some((r) => hasValue(r, dim, v));
 
-/** Licznik przy wartości filtra. */
 export function facetCount(
     list: RecipeBaseDto[],
     f: IListFilters,

@@ -1,5 +1,5 @@
 /* ============================================================
-   Uszatka — COMPONENTS (lustro DS)
+   Uszatka — COMPONENTS (DS mirror)
    ============================================================ */
 
 /* ── BUTTON ── */
@@ -42,7 +42,7 @@
 .icon-btn--accent.is-active { background: var(--accent-fill); color: var(--on-accent); border-color: var(--accent-fill); }
 .icon-btn:disabled { opacity: .45; cursor: not-allowed; }
 
-/* ── BADGE: KATEGORIA ── */
+/* ── BADGE: CATEGORY ── */
 .badge {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: var(--text-meta); padding: 4px 10px 4px 8px;
@@ -53,7 +53,7 @@
   content: ""; width: 6px; height: 6px; border-radius: var(--r-pill);
   background: var(--cat, var(--accent)); flex-shrink: 0;
 }
-/* typ dania → kolor z bazy (taxonomy_values.color = klucz tokenu) */
+/* dish type → color from the database (taxonomy_values.color = token key) */
 .cat-coral      { --cat: var(--c-coral); }
 .cat-tomato     { --cat: var(--c-tomato); }
 .cat-terracotta { --cat: var(--c-terracotta); }
@@ -81,7 +81,7 @@
 .cat-tluszcz    { --cat: var(--c-coral); }
 .cat-inne       { --cat: var(--c-brown); }
 
-/* ── BADGE: ATRYBUT (outline) ── */
+/* ── BADGE: ATTRIBUTE (outline) ── */
 .badge-attr {
   display: inline-flex; align-items: center;
   font-size: var(--text-meta); padding: 3px 10px;
@@ -110,7 +110,7 @@
 .dots .pip.is-on { background: var(--accent); border-color: var(--accent); }
 .dots .label { font-size: var(--text-small); font-weight: 500; color: var(--ink-dim); text-transform: capitalize; }
 
-/* ── FIELD + KONTROLKI TEKSTOWE ── */
+/* ── FIELD + TEXT CONTROLS ── */
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field-label {
   font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted);
@@ -125,11 +125,11 @@
   font-size: 14px; color: var(--ink); font-family: var(--font-sans);
   outline: none; transition: border-color .15s, box-shadow .15s;
 }
-/* stała linia: pole ma tę samą wysokość puste (placeholder), z wartością i jako select (40 px) */
+/* fixed line: the field is the same height empty (placeholder), filled and as a select (40 px) */
 .input, .select { line-height: 18px; }
 .input--mono { font-family: var(--font-mono); }
 .textarea { line-height: 1.55; resize: vertical; min-height: 72px; }
-/* v-autosize: wysokość idzie za treścią, ręczne ciągnięcie zbędne */
+/* v-autosize: height follows the content, so manual resizing isn't needed */
 .textarea--auto { resize: none; overflow-y: hidden; }
 .input:focus, .textarea:focus, .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .input::placeholder, .textarea::placeholder { color: var(--ink-faint); }
@@ -197,7 +197,7 @@
 
 /* ── CARD / RECIPE CARD ── */
 .card { background: var(--bg-alt); border: 1px solid var(--rule); border-radius: var(--r-lg); overflow: hidden; }
-/* hover nie przesuwa i nie skaluje niczego z tekstem: ramka + tytuł w akcencie */
+/* hover doesn't move or scale anything with text: border + title in the accent color */
 .recipe-card { display: block; color: inherit; text-decoration: none; transition: border-color var(--dur-fast) var(--ease); }
 @media (hover: hover) {
   .recipe-card:hover { border-color: var(--rule-strong); }
@@ -259,13 +259,13 @@
 .section-head h2 { font-size: var(--text-h3); font-weight: 600; letter-spacing: -0.6px; }
 .section-head .line { flex: 1; height: 1px; background: var(--rule); margin-left: 8px; }
 
-/* ── DOSTĘPNOŚĆ ── */
+/* ── ACCESSIBILITY ── */
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-/* ── BUTTON: danger wypełniony (potwierdzenie usunięcia) ── */
+/* ── BUTTON: filled danger (delete confirmation) ── */
 .btn--danger-fill { background: var(--danger); color: #fff; border-color: var(--danger); }
 .btn--danger-fill:hover { background: var(--danger); filter: brightness(1.06); }
 
@@ -302,13 +302,13 @@
   box-shadow: 0 8px 24px rgba(10, 10, 15, 0.2);
 }
 
-/* ── BŁĄD POLA ── */
+/* ── FIELD ERROR ── */
 .field-error {
   display: flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 500; color: var(--danger); margin-top: 2px;
 }
 
-/* ── EDYTOR LIST (formularz przepisu) ── */
+/* ── LIST EDITOR (recipe form) ── */
 .row-icon-btn {
   width: 30px; height: 30px; flex-shrink: 0; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
@@ -341,7 +341,7 @@
 }
 .add-group-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
 
-/* ── CHIP z kolorem (typ dania) / mocny (diety) ── */
+/* ── CHIP with color (dish type) / strong (diets) ── */
 .chip { gap: 6px; padding: 5px 11px; font-size: 13px; }
 .chip__dot { width: 7px; height: 7px; border-radius: var(--r-pill); background: var(--cat, var(--accent)); }
 .chip--color.is-active {
@@ -349,7 +349,7 @@
 }
 .chip--strong.is-active { background: var(--accent-fill); color: var(--on-accent); border-color: var(--accent-fill); }
 
-/* ── TABELA DANYCH (panel) ── */
+/* ── DATA TABLE (admin) ── */
 .data-table {
   width: 100%; border-collapse: separate; border-spacing: 0;
   background: var(--bg-alt); border: 1px solid var(--rule); border-radius: var(--r-xl); overflow: hidden;
@@ -365,7 +365,7 @@
 .data-table .actions { display: flex; gap: 6px; justify-content: flex-end; }
 .data-table .empty-row { text-align: center; color: var(--ink-muted); padding: 40px; }
 
-/* tabela edycji w panelu (makro, przeliczniki): pola w komórkach */
+/* admin edit table (macros, conversions): fields in cells */
 .admin-grid { border: 1px solid var(--rule); border-radius: var(--r-lg); border-collapse: separate; border-spacing: 0; overflow: hidden; }
 .admin-grid th, .admin-grid td { vertical-align: top; padding: 8px 10px; }
 .admin-grid thead th { background: var(--bg); }
@@ -378,7 +378,7 @@
 .admin-grid__own { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
 .admin-grid__err { display: block; padding-top: 8px; font-size: 12px; font-weight: 500; color: var(--danger); }
 
-/* przycisk-ikona w tabeli (edytuj / usuń / podgląd) */
+/* icon button in a table (edit / delete / preview) */
 .tbl-btn {
   width: 30px; height: 30px; padding: 0; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
@@ -389,7 +389,7 @@
 .tbl-btn--danger { color: var(--danger); }
 .tbl-btn--danger:hover { color: var(--danger); border-color: var(--danger); }
 
-/* status przepisu */
+/* recipe status */
 .status-tag {
   display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
   font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: var(--r-pill);

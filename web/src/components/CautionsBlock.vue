@@ -1,12 +1,7 @@
 <script lang="ts" setup>
 import { computed, useId } from 'vue';
 
-// Blok „Uwagi” — czego nie zawalić w całym przepisie / wyzwaniu (zakupy, bezpieczeństwo, czas).
-// Rodzina --prep (jak dawny baner „Wymaga przygotowania”). Kroki „przygotuj wcześniej” są pierwszymi
-// pozycjami (zegar zamiast punktora, „krok N” emituje `step`). Brak uwag i przygotowania → nic.
-// Warianty: default (strona), compact (lista zakupów), large (tryb gotowania), print (wydruk listy zakupów).
 export interface ICautionPrep {
-    /** „dzień wcześniej”, „12 h wcześniej”; null = bez podanego czasu. */
     lead: string | null;
     step: number;
 }
@@ -23,7 +18,7 @@ const emit = defineEmits<{ step: [no: number] }>();
 
 const headingId = useId();
 const isPrint = computed(() => props.variant === 'print');
-// wydruk (lista zakupów) pokazuje tylko uwagi
+// the printout (shopping list) shows only the notes
 const prepRows = computed(() => (isPrint.value ? [] : props.prep));
 const visible = computed(() => props.items.length > 0 || prepRows.value.length > 0);
 </script>
@@ -90,7 +85,7 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
                         />
                     </svg>
                 </span>
-                <!-- kropka po linku z CSS (::after) — bez spacji przed nią -->
+                <!-- the period after the link comes from CSS (::after), so no space before it -->
                 <span class="cautions__text cautions__text--prep">
                     Przygotuj {{ p.lead ?? 'wcześniej' }}:
                     <button
@@ -188,7 +183,6 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     cursor: pointer;
 }
 
-/* lista zakupów */
 .cautions--compact {
     padding: 12px 14px;
 }
@@ -199,7 +193,6 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     font-size: 14px;
 }
 
-/* tryb gotowania */
 .cautions--large {
     padding: 16px 18px;
 }
@@ -223,7 +216,6 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     padding-top: 5px;
 }
 
-/* wydruk listy zakupów: czarno-biała ramka, zwykła lista */
 .cautions--print {
     padding: 8px 12px;
     background: none;

@@ -21,7 +21,7 @@ export function fetchRecipesWithClient<E extends keyof RequestMap>(
     >;
     return qc.fetchQuery({
         queryKey: [base, admin],
-        // API zwraca zwykłe obiekty — budujemy klasy DTO (photoUrl, domyślne wartości).
+        // The API returns plain objects; we build DTO classes (photoUrl, defaults).
         queryFn: async () => {
             if (endpoint === 'list') {
                 const raw = await API.Client.get<Partial<RecipeBaseDto>[]>(url);
@@ -37,7 +37,6 @@ export function fetchRecipesWithClient<E extends keyof RequestMap>(
 export const fetchRecipes = <E extends keyof RequestMap>(endpoint: E, admin = false) =>
     fetchRecipesWithClient(useQueryClient(), endpoint, admin);
 
-/** Po zapisie/usunięciu: wymuś świeże dane listy i szczegółów. */
 export const invalidateRecipes = (qc: QueryClient) =>
     qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith('recipes/') });
 

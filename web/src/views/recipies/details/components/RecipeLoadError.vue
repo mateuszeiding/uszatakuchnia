@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import ErrorState from '@/views/errors/ErrorState.vue';
 
-// Sieć / 5xx / timeout (20.11): „Spróbuj ponownie” ponawia pobranie w miejscu, bez przeładowania strony.
+// Network / 5xx / timeout: "Spróbuj ponownie" refetches in place, without reloading the page.
 defineProps<{ retrying: boolean }>();
 const emit = defineEmits<{ retry: [] }>();
 </script>

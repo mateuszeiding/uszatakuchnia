@@ -5,13 +5,12 @@ import type { ILinkedRef } from '../recipeForm';
 
 import { mainDish, type RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 
-// Wybór przepisu dla składnika: combobox z wyszukiwaniem po tytule (także bez polskich znaków),
-// bez bieżącego przepisu, szkice na końcu z etykietą. ↑ ↓ wybór, Enter zatwierdza, Esc zamyka.
+// Search by title (also without Polish characters), excluding the current recipe; drafts last with a label.
 const props = defineProps<{
     id: string;
     ingredientName: string;
     recipes: RecipeBaseDto[];
-    /** Edytowany przepis — nie może prowadzić do siebie. */
+    /** The edited recipe: it can't link to itself. */
     currentId: number | null;
 }>();
 const emit = defineEmits<{ select: [r: ILinkedRef]; close: [] }>();

@@ -1,16 +1,14 @@
-// Wyzwania: poziomy trudności, zakres wybranych trudności, losowanie (pomija zrobione), akapity opisu.
 import { formatTime } from './time';
 
-/** Poziomy trudności 1–5 (indeks = poziom − 1). */
+/** Difficulty levels 1–5 (index = level − 1). */
 export const LEVELS = ['rozgrzewka', 'łatwe', 'średnie', 'trudne', 'mistrzowskie'] as const;
 export const DIFFICULTIES = [1, 2, 3, 4, 5] as const;
 
 export const levelName = (n: number) => LEVELS[n - 1] ?? '';
 
-/** Limit czasu: „45 min”, „1 h 15 min”, „bez limitu”. */
 export const timeLimitText = (min: number | null) => (min ? formatTime(min) : null) ?? 'bez limitu';
 
-/** Wybrane trudności słownie: [] → „dowolna”, [2,3] → „2–3”, [1,4] → „1, 4”. */
+/** Selected difficulties in words: [] → "dowolna", [2,3] → "2–3", [1,4] → "1, 4". */
 export function rangeText(sel: readonly number[]): string {
     const s = [...new Set(sel)].sort((a, b) => a - b);
     if (!s.length) return 'dowolna';
@@ -18,7 +16,7 @@ export function rangeText(sel: readonly number[]): string {
     return s.length > 1 && continuous ? `${s[0]}–${s[s.length - 1]}` : s.join(', ');
 }
 
-/** Parametr ?los= (trudności po przecinku). null = brak parametru, [] = dowolna. */
+/** The ?los= parameter (comma-separated difficulties). null = no parameter, [] = any. */
 export function parseLos(raw: unknown): number[] | null {
     const v = Array.isArray(raw) ? raw[0] : raw;
     if (typeof v !== 'string') return null;
@@ -39,16 +37,16 @@ interface IRollable {
 
 export type RollResult =
     | { kind: 'ok'; id: number }
-    /** nie ma wyzwań o wybranej trudności */
+    /** no challenges of the selected difficulty */
     | { kind: 'none' }
-    /** wszystkie z puli zrobione — można losować spośród zrobionych */
+    /** everything in the pool is done: picking among the done ones is possible */
     | { kind: 'alldone' }
-    /** jedynym niezrobionym w puli jest to, które jest otwarte („Losuj jeszcze raz”) */
+    /** the only undone one in the pool is the one already open ("Losuj jeszcze raz") */
     | { kind: 'onlycurrent' };
 
 /**
- * Losuje wyzwanie z wybranych trudności (wszystkie, gdy nic), z pominięciem zrobionych.
- * includeDone — „Losuj spośród zrobionych”: z całej puli. exclude — otwarte wyzwanie (nie losuj go znowu).
+ * Picks a challenge from the selected difficulties (all of them when none), skipping done ones.
+ * includeDone: "Losuj spośród zrobionych", picks from the whole pool. exclude: the open challenge (don't pick it again).
  */
 export function rollChallenge(
     items: readonly IRollable[],
@@ -72,7 +70,6 @@ export function rollChallenge(
     return { kind: 'ok', id: candidates[Math.floor(r * candidates.length)]!.id };
 }
 
-/** Opis → akapity (pusta linia rozdziela akapity). */
 export const paragraphs = (text: string) =>
     text
         .split(/\n\s*\n/)

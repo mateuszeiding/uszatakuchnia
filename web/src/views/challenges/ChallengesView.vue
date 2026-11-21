@@ -13,8 +13,6 @@ import { fetchChallengesWithClient } from '@/data/api/challenges/fetch';
 import type { IChallenge } from '@/data/dtos/challenge/ChallengeDto';
 import { losParam, parseLos, plural } from '@/shared/utils/challenges';
 
-// Lista wyzwań: desktop — kolumna 260 px z „Losuj” (przyklejona; kiedyś pod nią filtry) + siatka 2 kolumn;
-// telefon — „Losuj” nad listą, 1 kolumna. Najnowsze na górze. Do załadowania ten sam układ ze szkieletami.
 const route = useRoute();
 const router = useRouter();
 const qc = useQueryClient();
@@ -23,7 +21,7 @@ const { done, isDone, toggle } = useChallengesDone();
 const items = ref<IChallenge[]>([]);
 const loading = ref(true);
 const failed = ref(false);
-// „Zmień trudność” ze strony wyzwania przychodzi z ?los= — wybór trafia do chipów.
+// "Zmień trudność" on the challenge page arrives with ?los=; the choice goes into the chips.
 const sel = ref<number[]>(parseLos(route.query.los) ?? []);
 
 onMounted(async () => {
@@ -36,13 +34,13 @@ onMounted(async () => {
     }
 });
 
-// wybór trudności w adresie (replace — bez zaśmiecania historii)
+// difficulty choice in the URL (replace, so the history stays clean)
 watch(sel, (s) => router.replace({ query: s.length ? { los: losParam(s) } : {} }));
 
-// wpisy „zrobione” wyzwań, których już nie ma, nie liczą się
+// "done" entries of challenges that no longer exist don't count
 const doneCount = computed(() => items.value.filter((c) => done.value.has(c.id)).length);
 
-// Szkielety: tyle kart, ile było ostatnio (maks. 10) — po załadowaniu siatka ma podobną wysokość.
+// Skeletons: as many cards as last time (max 10), so the grid has a similar height after loading.
 const SK_KEY = 'uk:challenges-skeletons';
 const skeletons = (() => {
     try {
@@ -57,7 +55,7 @@ watch(loading, (l) => {
     try {
         localStorage.setItem(SK_KEY, String(Math.min(items.value.length, 10)));
     } catch {
-        /* brak localStorage — zostaje domyślne */
+        /* no localStorage: the default stays */
     }
 });
 </script>
@@ -77,7 +75,7 @@ watch(loading, (l) => {
             <div class="ch-empty__title">Jeszcze nie ma wyzwań</div>
             <p class="ch-empty__text">
                 Pierwsze pojawią się wkrótce. Do tego czasu —
-                <!-- inline-flex: bez spacji przed kropką -->
+                <!-- inline-flex: no space before the period -->
                 <span class="ch-empty__link">
                     <RouterLink to="/recipes">przepisy</RouterLink>
                     <span>.</span>
@@ -93,7 +91,6 @@ watch(loading, (l) => {
                 class="ch-aside"
                 :inert="loading"
             >
-                <!-- do załadowania karta jest na miejscu, tylko nieaktywna -->
                 <ChallengeRandomizer
                     v-model="sel"
                     :items="items"

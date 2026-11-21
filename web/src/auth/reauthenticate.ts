@@ -6,9 +6,9 @@ import { showToast } from '@/composables/useToast';
 let pending: Promise<boolean> | null = null;
 
 /**
- * API odpowiedziało 401 (sesja wygasła w trakcie pracy). Pyta o ponowne logowanie
- * w okienku — strona i wpisany formularz zostają nietknięte. Zwraca true, gdy
- * logowanie się udało i żądanie można powtórzyć. Kilka równoległych 401 = jedno pytanie.
+ * The API answered 401 (the session expired mid-work). Asks to log in again in a popup;
+ * the page and the filled-in form stay untouched. Resolves true when login succeeded
+ * and the request can be retried. Several parallel 401s = one prompt.
  */
 export function reauthenticate(): Promise<boolean> {
     pending ??= ask().finally(() => (pending = null));

@@ -4,10 +4,9 @@ import { ref } from 'vue';
 import BookIcon from '@/components/BookIcon.vue';
 import SwapIcon from '@/components/SwapIcon.vue';
 
-// Objaśnienie ikon przy składnikach — osobna karta nad kartą składników. Tylko ikony obecne w przepisie
-// (rodzic nie renderuje karty, gdy żadnej nie ma). Zwijana (20.11, zamiast „Ukryj” na zawsze): nagłówek to
-// przycisk „Zwiń / Pokaż”; zwinięta — tytuł i małe ikony. Stan na urządzeniu: uk:legend:collapsed
-// (domyślnie rozwinięta); stary uk:legend:hidden („Ukryj”) = zwinięta, klucz usuwany.
+// Only icons present in the recipe (the parent doesn't render the card when there are none).
+// Collapsed state on the device: uk:legend:collapsed (expanded by default);
+// the old uk:legend:hidden ("Ukryj") = collapsed, and that key is removed.
 defineProps<{ swap: boolean; link: boolean }>();
 
 const KEY = 'uk:legend:collapsed';
@@ -34,7 +33,7 @@ function toggle() {
     try {
         localStorage.setItem(KEY, String(collapsed.value));
     } catch {
-        /* tryb prywatny — stan do odświeżenia */
+        /* private mode: the state lasts until reload */
     }
 }
 </script>
@@ -137,7 +136,6 @@ function toggle() {
 </template>
 
 <style scoped>
-/* prototyp zm-main.jsx (Legend): nagłówek = przycisk na całą szerokość, 44 px (telefon 48 px) */
 .legend {
     background: var(--bg-alt);
     border: 1px solid var(--rule);

@@ -4,8 +4,6 @@ import { computed } from 'vue';
 import QtyText from '@/components/QtyText.vue';
 import { forText, type IShopItem, sumText } from '@/shared/utils/shoppingList';
 
-// Pozycja listy zakupów: odhaczenie, nazwa, doprecyzowanie („mielona”) + „do: …” (grupy przepisu), suma.
-// Odhaczona zostaje na swoim miejscu — przekreślona i przygaszona (16.11).
 const props = defineProps<{ item: IShopItem; checked: boolean }>();
 const emit = defineEmits<{ toggle: [] }>();
 
@@ -71,7 +69,7 @@ const forGroups = computed(() => forText(props.item));
     display: grid;
     grid-template-columns: 18px minmax(0, 1fr) auto;
     gap: 12px;
-    /* pole i suma przy pierwszej linii nazwy (pod nią „do: …"); pojedyncza linia wyśrodkowana w min-height */
+    /* checkbox and sum at the first line of the name ("do: …" below it); a single line is centered in min-height */
     align-items: start;
     align-content: center;
     min-height: 44px;
@@ -109,7 +107,7 @@ const forGroups = computed(() => forText(props.item));
     font-size: 15px;
     line-height: 1.35;
 }
-/* doprecyzowanie jak pod ilością na stronie przepisu (.ing-item__note): 12 px, --ink-muted */
+/* details as below the quantity on the recipe page (.ing-item__note) */
 .srow__note {
     display: block;
     margin-top: 1px;
@@ -137,7 +135,6 @@ const forGroups = computed(() => forText(props.item));
     text-decoration: line-through;
 }
 
-/* telefon w sklepie: większe wiersze i pole odhaczenia */
 @media (max-width: 900px) {
     .srow__check {
         grid-template-columns: 24px minmax(0, 1fr) auto;
@@ -164,7 +161,7 @@ const forGroups = computed(() => forText(props.item));
     }
 }
 
-/* wydruk: pusty kwadrat do odhaczenia długopisem, „do: …” drobnym drukiem */
+/* print: an empty square to tick with a pen, "do: …" in small print */
 @include m.print {
     .srow {
         break-inside: avoid;

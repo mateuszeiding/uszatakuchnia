@@ -11,13 +11,13 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import { avg, fmt, type IRecipeNutrition, nf } from '@/shared/utils/nutrition';
 import { formatTime } from '@/shared/utils/time';
 
-// recipe null = ładowanie: ten sam .hero (bez zdjęcia — przepisy nie mają zdjęć) ze szkieletami w miejscu treści.
-// Przepis bez zdjęcia (20.11): bez zastępczego kadru — hero w jednej kolumnie (desktop max 760 px),
-// na telefonie tytuł 38 px, żeby składniki zaczynały się na pierwszym ekranie.
+// recipe null = loading: skeletons in place of the content.
+// Without a photo the hero is one column; on a phone the title is 38 px,
+// so the ingredients start on the first screen.
 const props = defineProps<{
     recipe: RecipeDto | null;
     servings: number;
-    /** Makro wybranego wariantu (zamienniki); brak = makro przepisu. */
+    /** Macros of the chosen variant (substitutes); none = the recipe's macros. */
     nutrition?: IRecipeNutrition | null;
 }>();
 
@@ -25,7 +25,7 @@ const dish = computed(() => props.recipe?.taxonomy.dish ?? []);
 const cuisine = computed(() => props.recipe?.taxonomy.cuisine?.[0]?.label);
 const diets = computed(() => props.recipe?.taxonomy.diet ?? []);
 const practical = computed(() => props.recipe?.taxonomy.practical ?? []);
-// kroki „przygotuj wcześniej” — pierwsze pozycje bloku Uwagi
+// "prepare ahead" steps: the first items of the Uwagi block
 const prep = computed(() =>
     (props.recipe?.steps ?? [])
         .filter((s) => s.prep)
@@ -335,7 +335,6 @@ function scrollToStep(no: number) {
     border: 1.5px solid var(--rule-strong);
 }
 
-/* bez zdjęcia: jedna kolumna, wymiary z prototypu pz-main.jsx (Hero) */
 .hero--text {
     display: block;
     max-width: 760px;
@@ -355,7 +354,6 @@ function scrollToStep(no: number) {
     margin-top: 28px;
 }
 
-/* szkielet: te same klasy co treść, wypełnienia .sk w miejscu tekstu */
 .hero__loading {
     display: flex;
     align-items: center;

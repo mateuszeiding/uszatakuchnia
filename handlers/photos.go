@@ -11,11 +11,11 @@ import (
 	resp "uszatakuchnia/http"
 )
 
-const maxPhotoBytes = 4 << 20 // limit body Vercel to 4,5 MB; klient wysyła ~200–500 KB JPEG
+const maxPhotoBytes = 4 << 20 // Vercel's body limit is 4.5 MB; the client sends a ~200–500 KB JPEG
 
 var allowedPhotoTypes = map[string]bool{"image/jpeg": true, "image/png": true, "image/webp": true}
 
-// PhotoGet — GET /api/photos/{id}. Zdjęcia są niezmienne (nowe zdjęcie = nowe id), więc cache na rok.
+// PhotoGet: photos are immutable (new photo = new id), so they're cached for a year.
 func PhotoGet(w http.ResponseWriter, r *http.Request) {
 	var photo entities.Photo
 	if err := db.DB().First(&photo, pathID(r)).Error; err != nil {
@@ -29,7 +29,7 @@ func PhotoGet(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(photo.Data)
 }
 
-// PhotoUpload — POST /api/photos, body = surowe bajty obrazu, Content-Type = typ obrazu.
+// PhotoUpload: body = raw image bytes, Content-Type = the image type.
 func PhotoUpload(w http.ResponseWriter, r *http.Request) {
 	ct := r.Header.Get("Content-Type")
 	if !allowedPhotoTypes[ct] {

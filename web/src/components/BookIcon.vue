@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Ikona linku do przepisu: książka; external = „otwiera się w nowej karcie” (wiersz składnika, legenda, „Przydatne przepisy”).
+// external: adds the "opens in a new tab" mark.
 withDefaults(defineProps<{ size?: number; external?: boolean }>(), { size: 15 });
 </script>
 

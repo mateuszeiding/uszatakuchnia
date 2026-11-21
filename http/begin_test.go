@@ -12,9 +12,9 @@ import (
 	"testing"
 )
 
-// W api/ jest dokładnie jedna funkcja Vercela (całe API idzie przez router) i zaczyna od
-// `if resp.Begin(w, r) { return }` — inaczej endpoint zapisujący byłby otwarty dla każdego.
-// Trasy po kolei sprawdza router/router_test.go.
+// api/ holds exactly one Vercel function (the whole API goes through the router) and it starts with
+// `if resp.Begin(w, r) { return }`; otherwise a write endpoint would be open to anyone.
+// router/router_test.go checks the routes one by one.
 func TestEveryHandlerStartsWithBegin(t *testing.T) {
 	var files []string
 	err := filepath.WalkDir("../api", func(p string, d os.DirEntry, err error) error {
@@ -56,8 +56,8 @@ func TestEveryHandlerStartsWithBegin(t *testing.T) {
 	}
 }
 
-// Begin woła tylko funkcja w api/. Drugie wywołanie w handlerze albo routerze dublowałoby nagłówki
-// CORS (Vary), a handler, który „sam się chroni”, sugerowałby, że inne trasy tego nie robią.
+// Only the function in api/ calls Begin. A second call in a handler or the router would duplicate
+// CORS headers (Vary), and a handler that "protects itself" would suggest other routes don't.
 func TestBeginCalledOnlyInAPI(t *testing.T) {
 	err := filepath.WalkDir("..", func(p string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -151,7 +151,7 @@ func run(method, origin, authz string) *httptest.ResponseRecorder {
 	}
 	w := httptest.NewRecorder()
 	if !Begin(w, r) {
-		w.WriteHeader(http.StatusOK) // handler poszedłby dalej
+		w.WriteHeader(http.StatusOK) // the handler would carry on
 	}
 	return w
 }

@@ -12,9 +12,9 @@ import (
 	"time"
 )
 
-// Klucze publiczne Auth0 (JWKS) trzymane w pamięci funkcji. Ciepła funkcja Vercela
-// nie pobiera ich przy każdym żądaniu; nieznany `kid` (rotacja kluczy w Auth0)
-// wymusza ponowne pobranie, najwyżej raz na minutę.
+// Auth0 public keys (JWKS) cached in function memory. A warm Vercel function doesn't
+// fetch them on every request; an unknown `kid` (key rotation in Auth0) forces
+// a refetch, at most once a minute.
 
 const jwksRefetchEvery = time.Minute
 

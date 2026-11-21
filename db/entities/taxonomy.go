@@ -1,7 +1,6 @@
 package entities
 
-// TaxonomyAxis — oś klasyfikacji przepisów (Typ dania, Baza, Kuchnia, Diety, Praktyczne).
-// Nowe osie dodaje się wierszem w tabeli, bez zmiany modelu.
+// New axes are added as table rows, without changing the model.
 type TaxonomyAxis struct {
 	ID         uint   `gorm:"primaryKey;autoIncrement"`
 	Code       string `gorm:"type:varchar(32);not null;uniqueIndex:ux_taxonomy_axes_code"`
@@ -21,7 +20,7 @@ type TaxonomyValue struct {
 	Axis   TaxonomyAxis `gorm:"foreignKey:AxisID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	Label     string  `gorm:"type:varchar(64);not null;uniqueIndex:ux_taxonomy_values_axis_label,priority:2"`
-	Color     *string `gorm:"type:varchar(16)"` // klucz tokenu koloru, np. "coral" → var(--c-coral)
+	Color     *string `gorm:"type:varchar(16)"` // color token key, e.g. "coral" → var(--c-coral)
 	SortOrder int     `gorm:"not null;default:0"`
 }
 

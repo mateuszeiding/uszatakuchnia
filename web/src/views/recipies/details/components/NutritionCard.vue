@@ -13,12 +13,12 @@ import {
     scaleRange,
 } from '@/shared/utils/nutrition';
 
-// Makro na porcję (wyliczone w API; przy wybranych zamiennikach — suma wkładów wariantu).
-// Licznik porcji zmienia tylko „Całe danie”.
+// Per-serving macros (computed in the API; with chosen substitutes, the sum of the variant's shares).
+// The servings counter changes only "Całe danie".
 const props = defineProps<{
     nutrition: IRecipeNutrition;
     servings: number;
-    /** „wieprzowina mielona zamiast: wołowina” — gdy wybrano zamienniki; '' = przepis. */
+    /** "wieprzowina mielona zamiast: wołowina" when substitutes are chosen; '' = the recipe as is. */
     swapNote?: string;
 }>();
 const emit = defineEmits<{ restore: [] }>();
@@ -47,7 +47,6 @@ const portionsLabel = computed(() => {
     return d >= 2 && d <= 4 && (t < 10 || t >= 20) ? 'porcje' : 'porcji';
 });
 
-// Mobile: sekcja zwijana, domyślnie zwinięta.
 const mq = window.matchMedia('(max-width: 900px)');
 const mobile = ref(mq.matches);
 const open = ref(!mq.matches);
@@ -303,8 +302,6 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
     border-color: color-mix(in srgb, var(--info) 40%, transparent);
     letter-spacing: 0;
 }
-/* telefon, nagłówek zwijany: tytuł + badge w pierwszej linii (tytuł się nie łamie),
-   „~290 kcal/porcja” i strzałka w drugiej */
 .nutri__toggle {
     width: 100%;
     display: flex;
@@ -386,7 +383,7 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
     color: var(--ink-muted);
     margin-top: 6px;
 }
-/* etykieta tyle, ile potrzebuje (nie wchodzi pod wartość), wartość zawija się w swojej kolumnie */
+/* the label takes what it needs (doesn't go under the value); the value wraps in its own column */
 .nutri__rows {
     margin: 0;
     display: grid;
@@ -425,8 +422,8 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
     gap: 18px;
     align-items: start;
 }
-/* dwie kolumny jak w mk-main.jsx (wide): kcal + B/T/W/błonnik | „Skąd energia” + „Całe danie” —
-   gdy obie się mieszczą (karta ≥ 420 px treści, okno od ~970 px); węziej jedna kolumna */
+/* two columns: kcal + B/T/W/błonnik | "Skąd energia" + "Całe danie",
+   when both fit (card ≥ 420 px of content, window from ~970 px); narrower, one column */
 @container (min-width: 420px) {
     .nutri__cols {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

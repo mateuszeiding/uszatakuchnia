@@ -7,7 +7,7 @@ import {
     RecipeIngredientDto,
 } from '@/data/dtos/recipe/RecipeIngredientDto';
 
-// ?zamienniki= w linku do listy zakupów (przegląd 18.11, #13)
+// ?zamienniki= in the shopping list link
 const sub = (id: number, mix = false): IRecipeSubstitute => ({
     ingredientId: id,
     name: `s${id}`,

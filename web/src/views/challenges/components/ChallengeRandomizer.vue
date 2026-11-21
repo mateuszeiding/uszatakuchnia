@@ -13,9 +13,8 @@ import {
     rollChallenge,
 } from '@/shared/utils/challenges';
 
-// „Losuj wyzwanie”: chipy trudności 1–5 (wielokrotny wybór, nic = dowolna) + „Losuj”.
-// Losowanie pomija zrobione; wynik → strona wyzwania z ?los= (pasek „Wylosowane”).
-// Pula pusta / same zrobione → komunikat w karcie, bez nawigacji.
+// The pick skips done challenges; the result → the challenge page with ?los= ("Wylosowane" bar).
+// Empty pool / only done ones → a message in the card, no navigation.
 const props = defineProps<{ items: IChallenge[]; done: ReadonlySet<number>; doneCount: number }>();
 const sel = defineModel<number[]>({ required: true });
 

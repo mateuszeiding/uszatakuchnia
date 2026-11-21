@@ -3,8 +3,6 @@ import { computed } from 'vue';
 
 import { pluralPL } from '@/shared/utils/quantity';
 
-// Nagłówek grupy składników: Geist Mono 12 px, wersaliki, licznik po prawej („8”, po odhaczeniu „2/8”).
-// Cała grupa odhaczona → „✓” w kolorze akcentu i przygaszony nagłówek.
 const props = defineProps<{ label: string; count: number; done: number }>();
 
 const all = computed(() => props.count > 0 && props.done === props.count);

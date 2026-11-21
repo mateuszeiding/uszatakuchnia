@@ -3,17 +3,17 @@ import { onBeforeUnmount, type Ref, shallowRef, watchEffect } from 'vue';
 import { isOwner } from '@/auth/createAuth';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 
-/** recipe = strona przepisu, list = lista zakupów (inne zdanie w pasku). */
+/** recipe = recipe page, list = shopping list (a different sentence in the bar). */
 export type DraftBarKind = 'recipe' | 'list';
 export type DraftBarState = { recipeId: number; kind: DraftBarKind };
 
-/** Pasek „Szkic” nad nawigacją (App.vue) — ustawia go widok przepisu albo listy zakupów. */
+/** The "Szkic" bar above the nav (App.vue); set by the recipe view or the shopping list view. */
 export const draftBar = shallowRef<DraftBarState | null>(null);
 
 /**
- * Pokazuje pasek, gdy wczytany przepis jest szkicem, a ogląda go zalogowany właściciel.
- * Opublikowany przepis (także oglądany przez właściciela) i tryb gotowania — bez paska.
- * `recipe` = tylko pomyślnie wczytany bieżący przepis (w trakcie ładowania i przy błędzie: undefined).
+ * Shows the bar when the loaded recipe is a draft and the logged-in owner is viewing it.
+ * A published recipe (also when the owner views it) and cooking mode: no bar.
+ * `recipe` = only a successfully loaded current recipe (undefined while loading and on error).
  */
 export function useDraftBar(kind: DraftBarKind, recipe: Readonly<Ref<RecipeDto | undefined>>) {
     let mine: DraftBarState | null = null;
@@ -21,7 +21,7 @@ export function useDraftBar(kind: DraftBarKind, recipe: Readonly<Ref<RecipeDto |
     watchEffect(() => {
         const r = recipe.value;
         const next = r && r.status === 'draft' && isOwner.value ? { recipeId: r.id, kind } : null;
-        // czyścimy tylko własny pasek — przy przejściu przepis → lista nowy widok ustawia swój
+        // clear only our own bar: on recipe → list navigation the new view sets its own
         if (next || draftBar.value === mine) draftBar.value = next;
         mine = next;
     });

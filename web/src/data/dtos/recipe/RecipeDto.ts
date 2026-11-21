@@ -18,24 +18,22 @@ export class RecipeBaseDto {
     id: number = 0;
     name: string = '';
     tagline: string | null = null;
-    /** Czas w minutach; 0 = nie podano (szkic). */
+    /** Time in minutes; 0 = not given (draft). */
     timeMin: number = 0;
-    /** Górna granica zakresu; null = bez zakresu. */
     timeMax: number | null = null;
     difficulty: number | null = null;
     status: RecipeStatus = 'draft';
-    /** Wyliczane: przepis ma krok oznaczony jako przygotowanie wcześniej. */
+    /** Computed: the recipe has a step marked as prep ahead. */
     needsPrep: boolean = false;
     taxonomy: RecipeTaxonomy = {};
-    /** Adres do wyświetlenia (lokalnie z hostem API). */
+    /** URL for display (locally with the API host). */
     photoUrl: string | null = null;
-    /** Adres zapisany w bazie (np. /api/photos/1) — do odesłania przy zapisie. */
+    /** URL stored in the database (e.g. /api/photos/1), sent back on save. */
     photoPath: string | null = null;
-    /** Kcal na porcję (zakres); null = brak danych. */
     kcal: SumRange | null = null;
-    /** Nazwy składników (lista — wyszukiwanie po składnikach). */
+    /** Ingredient names (list: search by ingredient). */
     ingredientNames: string[] = [];
-    /** Nazwy zamienników (lista — wyszukiwanie: „pancetta” znajduje przepis z boczkiem). */
+    /** Substitute names (list search: "pancetta" finds the recipe with bacon). */
     substituteNames: string[] = [];
 
     constructor(obj: Partial<RecipeBaseDto> & { photo?: BackendRecipePhoto }) {
@@ -48,7 +46,7 @@ export class RecipeBaseDto {
     }
 }
 
-/** Pierwszy typ dania — główny badge na karcie. API zwraca zwykłe obiekty, więc helper zamiast gettera. */
+/** First dish type: the main badge on the card. The API returns plain objects, hence a helper instead of a getter. */
 export const mainDish = (r: Pick<RecipeBaseDto, 'taxonomy'>): ITaxonomyValue | null =>
     r.taxonomy.dish?.[0] ?? null;
 
@@ -58,11 +56,9 @@ export const cuisineOf = (r: Pick<RecipeBaseDto, 'taxonomy'>): ITaxonomyValue | 
 export const taxonomyLabels = (r: Pick<RecipeBaseDto, 'taxonomy'>, axis: string): string[] =>
     (r.taxonomy[axis] ?? []).map((v) => v.label);
 
-/** Pozycja sprzętu w przepisie (kolejność z API). */
 export interface IRecipeEquipment {
     equipmentId: number;
     name: string;
-    /** Doprecyzowanie: „3–4 l, grube dno”; null = brak. */
     spec: string | null;
     optional: boolean;
 }
@@ -71,17 +67,14 @@ export class RecipeDto extends RecipeBaseDto {
     servings: number = 1;
     description: string | null = null;
     tip: string | null = null;
-    /** Uwagi „czego nie zawalić” (zakupy, bezpieczeństwo, czas) w kolejności autora. */
     cautions: string[] = [];
-    /** Makro na porcję wyliczone ze składników; null = brak danych. */
     nutrition: IRecipeNutrition | null = null;
-    /** Kody alergenów wyliczone ze składników. */
     allergens: string[] = [];
 
     steps: RecipeStepDto[] = [];
     ingredients: RecipeIngredientDto[] = [];
     equipment: IRecipeEquipment[] = [];
-    /** Składniki innych przepisów, które prowadzą do tego (modal usuwania). */
+    /** Ingredient rows of other recipes that link to this one (delete modal). */
     linkedFrom: { recipeId: number; recipeName: string; ingredientName: string }[] = [];
 
     constructor(obj: Partial<RecipeDto> & { photo?: BackendRecipePhoto }) {
@@ -103,7 +96,7 @@ export interface IUpsertRecipeRequest {
     description?: string | null;
     tagline?: string | null;
     tip?: string | null;
-    /** Uwagi bez pustych pozycji; brak pola = bez zmian. */
+    /** Notes without empty items; missing field = unchanged. */
     cautions?: string[];
     timeMin: number;
     timeMax?: number | null;
@@ -133,7 +126,7 @@ export interface IUpsertRecipeRequest {
     equipment: { equipmentId: number; spec: string | null; optional: boolean }[];
 }
 
-/** Błąd walidacji z API (422). */
+/** Validation error from the API (422). */
 export interface IFieldError {
     field: string;
     message: string;

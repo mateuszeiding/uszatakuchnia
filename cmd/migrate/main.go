@@ -1,6 +1,6 @@
-// Dodaje brakujące kolumny i tabele bez usuwania danych.
-// Użycie: go run ./cmd/migrate
-// Wymaga zmiennej środowiskowej DB_DATABASE_URL.
+// Adds missing columns and tables without deleting data.
+// Usage: go run ./cmd/migrate
+// Requires the DB_DATABASE_URL environment variable.
 package main
 
 import (

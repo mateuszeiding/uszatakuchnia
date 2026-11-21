@@ -11,22 +11,21 @@ import { showToast } from '@/composables/useToast';
 import { createEquipment } from '@/data/api/taxonomy/fetch';
 import type { IEquipment } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Sekcja „Sprzęt”: uchwyt (przeciąganie + ↑ ↓), sprzęt z podpowiedziami ze słownika, doprecyzowanie,
-// „Opcjonalny” (aria-pressed), ✕ bez potwierdzenia (nic nie jest zapisane do „Zapisz”). Pusty wiersz pomijany.
+// ✕ deletes without confirmation (nothing is saved until "Zapisz"); an empty row is skipped.
 const items = defineModel<IEquipItem[]>({ required: true });
 const props = defineProps<{
     equipment: IEquipment[];
-    /** Błędy wierszy (id → komunikat); puste, dopóki nie próbowano zapisać. */
+    /** Row errors (id → message); empty until a save was attempted. */
     rowErrors: Record<number, string>;
 }>();
 const emit = defineEmits<{ created: [e: IEquipment] }>();
 
-// useListDnd pracuje na grupach — sprzęt to jedna lista.
+// useListDnd works on groups; equipment is a single list.
 const dnd = useListDnd(computed(() => [{ id: 0, items: items.value }]));
 
 function onName(it: IEquipItem, v: string) {
     it.name = v;
-    // zmiana tekstu odpina wybrany sprzęt, dopóki nie wybierze się z listy
+    // editing the text unlinks the chosen equipment until one is picked from the list
     const match = props.equipment.find((e) => e.id === it.equipmentId);
     if (!match || match.name !== v) it.equipmentId = 0;
 }

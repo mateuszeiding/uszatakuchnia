@@ -1,6 +1,5 @@
 import { onBeforeUnmount, onMounted } from 'vue';
 
-/** <meta name="robots" content="noindex"> na czas życia widoku (strony błędów, 20.11). */
 export function useNoindex() {
     let el: HTMLMetaElement | null = null;
     onMounted(() => {

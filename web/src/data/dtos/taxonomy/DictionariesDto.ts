@@ -3,15 +3,15 @@ import type { IType } from '../ingredients/IType';
 
 import type { IngredientType } from '@/shared/enums/IngredientType';
 
-/** Kody osi klasyfikacji. Osie są w bazie — mogą dojść kolejne. */
+/** Classification axis codes. Axes live in the database, so more may come. */
 export type AxisCode = 'dish' | 'base' | 'cuisine' | 'diet' | 'practical' | (string & {});
 
 export interface ITaxonomyValue {
     id: number;
     label: string;
-    /** Klucz tokenu koloru, np. "coral" → var(--c-coral). */
+    /** Color token key, e.g. "coral" → var(--c-coral). */
     color?: string;
-    /** Liczba przepisów z tą wartością (tylko w słownikach). */
+    /** Number of recipes with this value (dictionaries only). */
     recipeCount?: number;
 }
 
@@ -29,10 +29,9 @@ export interface ITaxonomyAxis {
 export interface IUnit {
     id: number;
     name: string;
-    /** Formy odmiany [1, 2–4, 5+]; brak = nieodmienna. */
+    /** Inflected forms [1, 2–4, 5+]; none = doesn't inflect. */
     forms?: [string, string, string];
     noQty: boolean;
-    /** W ilu składnikach przepisów użyta. */
     usedIn?: number;
 }
 
@@ -41,11 +40,9 @@ export interface IAllergen {
     label: string;
 }
 
-/** Pozycja słownika sprzętu. */
 export interface IEquipment {
     id: number;
     name: string;
-    /** W ilu przepisach użyty. */
     usedIn: number;
 }
 
@@ -58,5 +55,4 @@ export interface IDictionaries {
     challengeFormats: IChallengeFormat[];
 }
 
-/** Wartości klasyfikacji przepisu pogrupowane po kodzie osi. */
 export type RecipeTaxonomy = Partial<Record<AxisCode, ITaxonomyValue[]>>;

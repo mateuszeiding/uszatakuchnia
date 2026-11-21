@@ -1,23 +1,21 @@
-/** Pozycja składnika wyzwania — zwykły tekst; required = „Musisz użyć”. */
 export interface IChallengeIngredient {
     name: string;
     required: boolean;
 }
 
-/** Wyzwanie (lista i szczegóły mają ten sam kształt). */
+/** Challenge (the list and the details share one shape). */
 export interface IChallenge {
     id: number;
     title: string;
     formatId: number;
     format: string;
-    /** Akapity rozdzielone pustą linią. */
+    /** Paragraphs separated by a blank line. */
     description: string;
-    /** null = bez limitu (tylko informacja, bez zegara). */
+    /** null = no limit (informational only, no timer). */
     timeLimitMin: number | null;
-    /** 1 rozgrzewka … 5 mistrzowskie. */
+    /** 1 warm-up … 5 masterclass. */
     difficulty: number;
     source: string | null;
-    /** Uwagi „czego nie zawalić” w kolejności autora. */
     cautions: string[];
     ingredients: IChallengeIngredient[];
     createdAt: string;
@@ -31,12 +29,11 @@ export interface IUpsertChallengeRequest {
     timeLimitMin: number | null;
     difficulty: number;
     source: string | null;
-    /** Bez pustych pozycji; brak pola = bez zmian. */
+    /** No empty items; missing field = unchanged. */
     cautions?: string[];
     ingredients: IChallengeIngredient[];
 }
 
-/** Pozycja słownika formatów; usedIn = w ilu wyzwaniach. */
 export interface IChallengeFormat {
     id: number;
     name: string;

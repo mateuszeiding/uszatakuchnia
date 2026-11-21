@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-// Ładowanie strony wyzwania: ten sam układ co ChallengeView (chip formatu, tytuł, metadane, przycisk,
-// akapity; po prawej karta „Składniki”). Na telefonie karta pod opisem, przycisk na całą szerokość.
+// The same layout as ChallengeView.
 defineProps<{ narrow: boolean }>();
 </script>
 

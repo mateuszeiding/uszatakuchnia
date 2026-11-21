@@ -17,17 +17,17 @@ const props = defineProps<{
     recipe: RecipeDto;
     dicts: IDictionaries | undefined;
     urlServings: number | null;
-    /** Surowe ?zamienniki= z adresu (wariant nadawcy linku). */
+    /** Raw ?zamienniki= from the URL (the link sender's variant). */
     urlSubs: string | null;
 }>();
 const emit = defineEmits<{
     servings: [n: number];
-    /** Uzupełnienie adresu o stan z pamięci, gdy link go nie miał (żeby adres dało się dalej wysłać). */
+    /** Fills the URL in with the stored state when the link didn't have it (so the URL can be passed on). */
     sync: [query: Record<string, string>];
 }>();
 
-// Porcje i zamienniki wspólne z przepisem (uk:progress:<id>); adres ma pierwszeństwo (link udostępniony)
-// i — tak jak dotąd porcje — zapisuje się w pamięci urządzenia, więc „‹ Przepis” pokaże ten sam wariant.
+// Servings and substitutes are shared with the recipe (uk:progress:<id>); the URL takes precedence (a shared link)
+// and, like servings, gets saved on the device, so "‹ Przepis" shows the same variant.
 const { progress, setServings } = useCookingProgress(props.recipe.id, props.recipe.servings || 1);
 const missing: Record<string, string> = {};
 if (props.urlServings != null) setServings(props.urlServings);
@@ -49,7 +49,7 @@ const { checked, toggle, clear } = useShoppingChecks(props.recipe.id);
 const ratio = computed(() =>
     props.recipe.servings ? progress.value.servings / props.recipe.servings : 1
 );
-// Wybrany wariant przepisu (zamienniki z uk:progress:<id>.subs): zamiennik zamiast głównego, „pół na pół” = 2 pozycje.
+// Chosen recipe variant (substitutes from uk:progress:<id>.subs): the substitute instead of the main one, "pół na pół" = 2 items.
 const items = computed(() =>
     buildShopping(
         effectiveLines(props.recipe.ingredients, progress.value.subs),
@@ -61,8 +61,8 @@ const isOn = (it: IShopItem) => checked.value.includes(it.id);
 const done = computed(() => items.value.filter(isOn));
 const optional = computed(() => items.value.filter((x) => x.optional));
 
-/** Działy sklepu = typy składników w kolejności słownika; nieznane typy na końcu.
- *  Odhaczone zostają w swoim dziale (16.11) — wydruk je pomija. */
+/** Store aisles = ingredient types in dictionary order; unknown types last.
+ *  Checked items stay in their aisle; the printout skips them. */
 const aisles = computed(() => {
     const todo = items.value.filter((x) => !x.optional);
     const order = (props.dicts?.ingredientTypes ?? []).map((t) => t.code as string);
@@ -76,7 +76,6 @@ const aisles = computed(() => {
         .filter((a) => a.items.length);
 });
 
-// Stopka wydruku
 const skipped = computed(() => {
     const n = done.value.length;
     if (!n) return '';
@@ -188,7 +187,7 @@ const today = new Date().toLocaleDateString('pl-PL');
 .shop__cautions {
     margin-top: 14px;
 }
-/* uwagi zajmują miejsce pod nagłówkiem — podpowiedź bez własnego odstępu */
+/* the notes take the space under the header, so the hint has no gap of its own */
 .shop__cautions + .shop__hint {
     margin-top: 0;
 }
@@ -264,7 +263,7 @@ const today = new Date().toLocaleDateString('pl-PL');
     }
 }
 
-/* wydruk A4: dwie kolumny wg działów, tylko nieodhaczone, stopka z pominiętymi */
+/* A4 print: two columns by aisle, only unchecked items, a footer with the skipped ones */
 @include m.print {
     .shop {
         max-width: none;

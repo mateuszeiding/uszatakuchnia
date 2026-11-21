@@ -5,25 +5,23 @@ import (
 	"uszatakuchnia/dtos"
 )
 
-// Macros — makro na 100 g po kluczu z entities.NutrientKeys; brak klucza = brak danych.
 type Macros map[string]entities.MacroRange
 
-// NutritionIndex — dane potrzebne do wyliczeń: własne makro, drzewko składników i przeliczniki jednostek.
 type NutritionIndex struct {
 	Own          map[uint]Macros
 	Children     map[uint][]uint
 	Parent       map[uint]*uint
-	Conversions  map[uint]map[uint]entities.MacroRange // składnik → jednostka → gramy
+	Conversions  map[uint]map[uint]entities.MacroRange // ingredient → unit → grams
 	Names        map[uint]string
-	NoQtyUnits   map[uint]bool // jednostki „do smaku”
+	NoQtyUnits   map[uint]bool // "do smaku" (to taste) units
 	UnitIDByName map[string]uint
 }
 
-// Jednostki przeliczane bez wierszy w ingredient_unit_conversions. ml / l (gęstość wody) tylko gdy składnik nie ma przelicznika ml ani l.
+// Units converted without rows in ingredient_unit_conversions. ml / l (water density) only when the ingredient has no ml or l conversion.
 var (
 	fixedGrams    = map[string]float64{"g": 1, "kg": 1000}
 	fallbackGrams = map[string]float64{"ml": 1, "l": 1000}
-	// Gdy ml / l nie ma przelicznika (własnego ani odziedziczonego), wyprowadzamy go z drugiej jednostki objętości.
+	// When ml / l has no conversion (own or inherited), we derive it from the other volume unit.
 	volumeSiblings = map[string]struct {
 		unit   string
 		factor float64
@@ -39,14 +37,14 @@ func scaleRange(r entities.MacroRange, f float64) entities.MacroRange {
 	return out
 }
 
-// ResolveMacros — per wartość: własna, a jeśli jej brak, z podskładników (najniższe min, najwyższe max).
+// ResolveMacros: per value, the own one, or if missing, from sub-ingredients (lowest min, highest max).
 func (ix *NutritionIndex) ResolveMacros(id uint) Macros {
 	return ix.resolveMacros(id, map[uint]bool{})
 }
 
 func (ix *NutritionIndex) resolveMacros(id uint, visiting map[uint]bool) Macros {
 	if visiting[id] {
-		return Macros{} // cykl w drzewie — nie powinien wystąpić, walidacja rodzica go blokuje
+		return Macros{} // a cycle in the tree: shouldn't happen, parent validation blocks it
 	}
 	visiting[id] = true
 	defer delete(visiting, id)
@@ -95,7 +93,7 @@ func (ix *NutritionIndex) resolveMacros(id uint, visiting map[uint]bool) Macros 
 	return out
 }
 
-// ResolveConversion — przelicznik jednostki: własny, a jeśli brak, u najbliższego przodka.
+// ResolveConversion: the unit's own conversion, or if missing, the nearest ancestor's.
 func (ix *NutritionIndex) ResolveConversion(id, unitID uint) (entities.MacroRange, bool) {
 	seen := map[uint]bool{}
 	for cur := &id; cur != nil && !seen[*cur]; cur = ix.Parent[*cur] {
@@ -107,7 +105,7 @@ func (ix *NutritionIndex) ResolveConversion(id, unitID uint) (entities.MacroRang
 	return entities.MacroRange{}, false
 }
 
-// GramsPerUnit — ile gramów to jedna jednostka składnika. Pozycja bez jednostki liczona jak „sztuka”.
+// GramsPerUnit: how many grams one unit of an ingredient weighs. A row without a unit counts as "sztuka" (piece).
 func (ix *NutritionIndex) GramsPerUnit(id uint, unitID *uint, unitName string) (entities.MacroRange, bool) {
 	if unitID == nil {
 		sztuka, ok := ix.UnitIDByName["sztuka"]
@@ -135,8 +133,8 @@ func (ix *NutritionIndex) GramsPerUnit(id uint, unitID *uint, unitName string) (
 	return entities.MacroRange{}, false
 }
 
-// FillGramsPerUnit — gramy na 1 jednostkę każdej pozycji przepisu (lista zakupów przelicza przez nie różne jednostki).
-// Te same reguły co w makro: g / kg stałe, ml / l z przelicznika albo jak woda, brak przelicznika → nil. „Do smaku” → nil.
+// FillGramsPerUnit sets grams per 1 unit for every recipe row (the shopping list converts mixed units through them).
+// Same rules as for macros: g / kg fixed, ml / l from a conversion or as water, no conversion → nil. "Do smaku" → nil.
 func FillGramsPerUnit(items []dtos.RecipeIngredientDto, ix *NutritionIndex) {
 	for i := range items {
 		it := &items[i]
@@ -156,19 +154,18 @@ func FillGramsPerUnit(items []dtos.RecipeIngredientDto, ix *NutritionIndex) {
 	}
 }
 
-// NutritionLine — pozycja przepisu do wyliczenia makro.
 type NutritionLine struct {
 	IngredientID uint
 	Qty          Quantity
 	UnitID       *uint
 	UnitName     string
-	NoQty        bool // jednostka „do smaku”
+	NoQty        bool // "do smaku" (to taste) unit
 	Optional     bool
 }
 
-// Compute — makro na porcję jako suma zakresów (min×min, max×max). Pomija opcjonalne, „do smaku” i pozycje bez ilości;
-// pozycje bez makro lub bez przelicznika trafiają do Missing, a wliczone bez części wartości — do Incomplete.
-// Nil, gdy nic nie dało się policzyć.
+// Compute returns per-serving macros as a sum of ranges (min×min, max×max). Skips optional, "to taste" and quantity-less rows;
+// rows without macros or a conversion go to Missing, and rows counted without some values go to Incomplete.
+// Nil when nothing could be computed.
 func (ix *NutritionIndex) Compute(lines []NutritionLine, servings int) *entities.RecipeNutrition {
 	n, _, contributed := ix.accumulate(lines, servings)
 	if !contributed {
@@ -177,10 +174,10 @@ func (ix *NutritionIndex) Compute(lines []NutritionLine, servings int) *entities
 	return n
 }
 
-// LineNutrition — wkład pozycji (albo pary pozycji „pół na pół”) w makro na porcję, w tym samym formacie co Compute.
-// Suma wkładów wszystkich pozycji = Compute (front liczy z nich makro wybranego wariantu).
-// Pozycja bez makro / przelicznika: pusty PerPortion i nazwa w Missing. Nil, gdy pozycja się nie liczy
-// (opcjonalna, „do smaku”, bez ilości).
+// LineNutrition is a row's (or a "half and half" pair's) share of the per-serving macros, in the same format as Compute.
+// The shares of all rows add up to Compute (the frontend computes the chosen variant's macros from them).
+// A row without macros / conversion: empty PerPortion and its name in Missing. Nil when the row doesn't count
+// (optional, to taste, no quantity).
 func (ix *NutritionIndex) LineNutrition(lines []NutritionLine, servings int) *entities.RecipeNutrition {
 	n, counted, _ := ix.accumulate(lines, servings)
 	if !counted {
@@ -189,14 +186,14 @@ func (ix *NutritionIndex) LineNutrition(lines []NutritionLine, servings int) *en
 	return n
 }
 
-// accumulate — wspólne sumowanie dla Compute i LineNutrition. counted: któraś pozycja się liczy (wliczona albo
-// pominięta z braku danych); contributed: któraś pozycja coś dodała.
+// accumulate is the shared summing for Compute and LineNutrition. counted: some row counts (included or
+// skipped for missing data); contributed: some row added something.
 func (ix *NutritionIndex) accumulate(lines []NutritionLine, servings int) (n *entities.RecipeNutrition, counted, contributed bool) {
 	sum := map[string]*entities.SumRange{}
 	missing := []string{}
 	seenMissing := map[string]bool{}
 	incomplete := map[string][]string{}
-	seenIncomplete := map[[2]string]bool{} // [wartość, nazwa]
+	seenIncomplete := map[[2]string]bool{} // [value, name]
 
 	for _, l := range lines {
 		if l.Optional || l.NoQty || l.Qty.Empty {
@@ -243,7 +240,7 @@ func (ix *NutritionIndex) accumulate(lines []NutritionLine, servings int) (n *en
 	return &entities.RecipeNutrition{PerPortion: per, Missing: missing, Incomplete: incomplete}, counted, contributed
 }
 
-// Half — ta sama pozycja z połową ilości („pół na pół”).
+// Half returns the same row with half the quantity ("half and half").
 func (l NutritionLine) Half() NutritionLine {
 	h := l
 	h.Qty.Min /= 2

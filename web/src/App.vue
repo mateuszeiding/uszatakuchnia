@@ -15,7 +15,7 @@ import { skipAdmin } from './shared/utils/analytics';
 // Explicit, so `vite dev` never reports even if process.env.NODE_ENV is not inlined.
 const analyticsMode = import.meta.env.DEV ? 'development' : 'production';
 
-// stopka na stronach publicznych; panel ma własny układ
+// footer on public pages; the admin panel has its own layout
 const route = useRoute();
 const isPublic = computed(() => !route.path.startsWith('/admin'));
 
@@ -25,7 +25,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <!-- pasek „Szkic” nad nawigacją, nie przyklejony (UTopBar jest sticky, więc zostaje u góry) -->
+    <!-- "Szkic" bar above the nav, not sticky (UTopBar is sticky, so it stays on top) -->
     <DraftBar
         v-if="draftBar"
         :recipe-id="draftBar.recipeId"

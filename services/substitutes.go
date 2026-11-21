@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// validateSubstitutes — zamiennik istnieje w bazie, różni się od składnika głównego, bez duplikatów w wierszu.
+// validateSubstitutes: the substitute exists, differs from the main ingredient, no duplicates in the row.
 func validateSubstitutes(tx *gorm.DB, req dtos.UpsertRecipeRequest, add func(field, msg string)) error {
 	ids := []uint{}
 	for _, it := range req.Ingredients {
@@ -51,7 +51,7 @@ func validateSubstitutes(tx *gorm.DB, req dtos.UpsertRecipeRequest, add func(fie
 	return nil
 }
 
-// createSubstitutes zapisuje zamienniki wiersza (wiersz już istnieje; stare usunęła kaskada przy zastąpieniu wierszy).
+// createSubstitutes saves a row's substitutes (the row exists already; the old ones went with the cascade when rows were replaced).
 func createSubstitutes(tx *gorm.DB, recipeID uint, sortOrder int, subs []dtos.UpsertSubstituteRequest) error {
 	for k, s := range subs {
 		row := entities.RecipeIngredientSubstitute{
@@ -64,7 +64,7 @@ func createSubstitutes(tx *gorm.DB, recipeID uint, sortOrder int, subs []dtos.Up
 	return nil
 }
 
-// nutritionLineOf — pozycja przepisu jako linia do wyliczeń makro (wymaga preloadu Unit).
+// nutritionLineOf turns a recipe row into a macro calculation line (needs Unit preloaded).
 func nutritionLineOf(it entities.RecipeIngredient) NutritionLine {
 	raw := ""
 	if it.Quantity != nil {
@@ -82,8 +82,8 @@ func nutritionLineOf(it entities.RecipeIngredient) NutritionLine {
 	return l
 }
 
-// FillLineNutrition — wkład makro każdej pozycji i każdego zamiennika (mieszanka = połowa głównego + połowa
-// zamiennika) oraz gramy na jednostkę i „ma dane makro” dla zamienników. items i e.Ingredients w tej samej kolejności.
+// FillLineNutrition sets the macro share of every row and every substitute (mix = half main + half
+// substitute), plus grams per unit and "has macro data" for substitutes. items and e.Ingredients in the same order.
 func FillLineNutrition(items []dtos.RecipeIngredientDto, e entities.Recipe, ix *NutritionIndex) {
 	for i := range items {
 		if i >= len(e.Ingredients) {
@@ -112,7 +112,7 @@ func FillLineNutrition(items []dtos.RecipeIngredientDto, e entities.Recipe, ix *
 	}
 }
 
-// IngredientUsage — w ilu przepisach użyty każdy składnik (jako składnik albo zamiennik).
+// IngredientUsage: number of recipes using each ingredient (as an ingredient or a substitute).
 func IngredientUsage(tx *gorm.DB) (map[uint]int, error) {
 	var rows []struct {
 		IngredientID uint

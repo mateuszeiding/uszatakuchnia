@@ -1,13 +1,11 @@
 <script lang="ts" setup>
-// Pole liczbowe w tabelach panelu: wyrównane do prawej, jednostka w polu, wartość odziedziczona kursywą (ghost).
 defineProps<{
     id: string;
-    /** Etykieta dla czytnika (np. „Białko, min”) — wizualnie nagłówki wiersza i kolumny. */
+    /** Screen reader label (e.g. "Białko, min"); visually it's the row and column headers. */
     label: string;
     unit: string;
     invalid?: boolean;
     describedby?: string;
-    /** Podpowiedź pokazywana, gdy pole jest puste (wartość odziedziczona). */
     ghost?: string | null;
 }>();
 const model = defineModel<string>({ required: true });

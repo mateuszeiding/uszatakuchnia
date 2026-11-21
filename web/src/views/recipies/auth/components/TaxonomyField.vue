@@ -4,12 +4,10 @@ import { computed } from 'vue';
 import UFieldError from '@/components/form/UFieldError.vue';
 import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Pole jednej osi klasyfikacji: wielokrotny wybór = chipy (aria-pressed), pojedynczy = select.
 const props = defineProps<{
     axis: ITaxonomyAxis;
     hint?: string;
     error?: string;
-    /** Wariant wyróżnionych chipów (np. diety). */
     strong?: boolean;
 }>();
 const selected = defineModel<number[]>({ required: true });

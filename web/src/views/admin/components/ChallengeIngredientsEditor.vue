@@ -6,8 +6,7 @@ import { blankIngredient, type IChallengeIngRow } from '../challengeForm';
 import UFieldError from '@/components/form/UFieldError.vue';
 import { useListDnd } from '@/composables/useListDnd';
 
-// Składniki wyzwania: wiersz = uchwyt (przeciąganie, ↑ ↓), tekst, „Obowiązkowy” (aria-pressed), ✕.
-// Zwykły tekst bez bazy składników; puste wiersze są pomijane przy zapisie, usunięcie wiersza bez pytania.
+// Plain text, not linked to the ingredient database; empty rows are skipped on save, deleting a row doesn't ask.
 defineProps<{ errors: Record<string, string> }>();
 const rows = defineModel<IChallengeIngRow[]>({ required: true });
 

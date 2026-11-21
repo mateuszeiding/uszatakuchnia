@@ -4,13 +4,11 @@ import { computed } from 'vue';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import { type NutrientKey, NUTRIENTS } from '@/shared/utils/nutrition';
 
-// Komunikat nad tabelą makro — zależy od stanu: podskładniki × liczba własnych wartości.
+// Note above the macro table; depends on the state: sub-ingredients × number of own values.
 const props = defineProps<{
     children: IngredientDto[];
-    /** Wartości z własnymi danymi (wypełniony wiersz). */
     own: NutrientKey[];
     name: string;
-    /** Baza linków do podskładników, np. /admin/ingredients. */
     linkBase: string;
 }>();
 
@@ -250,7 +248,7 @@ const state = computed(() => {
     color: var(--ink);
     text-underline-offset: 3px;
 }
-/* przecinki między podskładnikami i kropka na końcu — bez spacji z formatowania szablonu */
+/* commas between sub-ingredients and the final period: no spaces from template formatting */
 .note__child:not(:last-child)::after {
     content: ', ';
 }

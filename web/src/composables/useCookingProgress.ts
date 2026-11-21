@@ -1,29 +1,28 @@
 import { computed, ref, watch } from 'vue';
 
-/** Wybrany zamiennik wiersza: składnik + „pół na pół”. */
 export interface ISubChoice {
     ingredientId: number;
     mix: boolean;
 }
 
 export interface ICookingProgress {
-    /** Odhaczone składniki (sortOrder). */
+    /** Checked ingredients (sortOrder). */
     ing: number[];
-    /** Zrobione kroki (stepNo). */
+    /** Done steps (stepNo). */
     steps: number[];
     servings: number;
-    /** Wybrane zamienniki: sortOrder wiersza → zamiennik. Nieaktualne wpisy pomija substitutes.ts. */
+    /** Chosen substitutes: row sortOrder → substitute. substitutes.ts skips stale entries. */
     subs: Record<number, ISubChoice>;
 }
 
-/** Odhaczenia sprzed „Odznacz wszystko” — do „Cofnij”. */
+/** Checks from before "Odznacz wszystko", for "Cofnij". */
 export interface ICheckSnapshot {
     ing: number[];
     steps: number[];
 }
 
-// Postęp gotowania zapamiętany lokalnie, osobno dla każdego przepisu (klucz uk:progress:<id>).
-// Strona przepisu, tryb gotowania i lista zakupów czytają ten sam stan (porcje, zamienniki).
+// Cooking progress stored locally, per recipe (key uk:progress:<id>).
+// The recipe page, cooking mode and the shopping list read the same state (servings, substitutes).
 export function useCookingProgress(recipeId: number, defaultServings: number) {
     const key = `uk:progress:${recipeId}`;
     const blank = (): ICookingProgress => ({
@@ -53,7 +52,7 @@ export function useCookingProgress(recipeId: number, defaultServings: number) {
             try {
                 localStorage.setItem(key, JSON.stringify(p));
             } catch {
-                /* tryb prywatny / brak miejsca — postęp działa tylko w tej sesji */
+                /* private mode / no storage: progress lasts only for this session */
             }
         },
         { deep: true }
@@ -73,7 +72,7 @@ export function useCookingProgress(recipeId: number, defaultServings: number) {
 
     const setServings = (n: number) => (progress.value.servings = Math.min(20, Math.max(1, n)));
 
-    /** null = składnik główny („w przepisie”). */
+    /** null = the main ingredient ("w przepisie"). */
     const setSub = (sortOrder: number, choice: ISubChoice | null) => {
         const subs = { ...progress.value.subs };
         if (choice) subs[sortOrder] = choice;
@@ -81,16 +80,14 @@ export function useCookingProgress(recipeId: number, defaultServings: number) {
         progress.value.subs = subs;
     };
 
-    /** „Przywróć przepis” — wszystkie wiersze wracają do składników głównych. */
     const clearSubs = () => (progress.value.subs = {});
 
-    /** Coś odhaczone (składnik albo krok) — „Odznacz wszystko” aktywne. */
     const hasChecks = computed(
         () => progress.value.ing.length > 0 || progress.value.steps.length > 0
     );
 
-    // „Odznacz wszystko” (20.11) czyści TYLKO odhaczenia; porcje mają licznik, zamienniki „Przywróć przepis”.
-    // Zwraca kopię do „Cofnij”.
+    // "Odznacz wszystko" clears ONLY the checks; servings have a counter, substitutes have "Przywróć przepis".
+    // Returns a copy for "Cofnij".
     const uncheckAll = (): ICheckSnapshot => {
         const snap = { ing: [...progress.value.ing], steps: [...progress.value.steps] };
         progress.value = { ...progress.value, ing: [], steps: [] };

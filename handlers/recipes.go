@@ -15,11 +15,10 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// RecipeList — GET /api/recipes/list[?admin=true]. admin=true — także szkice, tylko dla właściciela.
 func RecipeList(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 
-	// admin=true — także szkice, tylko dla właściciela; reszta widzi opublikowane
+	// admin=true adds drafts, owner only; everyone else sees published recipes
 	isAdmin := r.URL.Query().Get("admin") == "true"
 	if isAdmin && !resp.IsOwner(r) {
 		resp.Error(w, http.StatusUnauthorized, "unauthorized")
@@ -43,7 +42,7 @@ func RecipeList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Nazwy składników per przepis (do wyszukiwania po składnikach).
+	// Ingredient names per recipe (search by ingredient).
 	var rows []struct {
 		RecipeID uint
 		Name     string
@@ -61,7 +60,7 @@ func RecipeList(w http.ResponseWriter, r *http.Request) {
 		names[r.RecipeID] = append(names[r.RecipeID], r.Name)
 	}
 
-	// Nazwy zamienników per przepis (wyszukiwanie: „pancetta” znajduje przepis z boczkiem).
+	// Substitute names per recipe (search: "pancetta" finds the recipe with bacon).
 	var subRows []struct {
 		RecipeID uint
 		Name     string
@@ -94,7 +93,7 @@ func RecipeList(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, dtos)
 }
 
-// RecipeCreate — POST /api/recipes. Bez statusu = szkic.
+// RecipeCreate: no status = draft.
 func RecipeCreate(w http.ResponseWriter, r *http.Request) {
 	var req dtos.UpsertRecipeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -136,7 +135,6 @@ func RecipeCreate(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusCreated, map[string]any{"id": recipe.ID})
 }
 
-// RecipeGet — GET /api/recipes/{id}. Szkic widzi tylko właściciel; reszta dostaje 404.
 func RecipeGet(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 	id := pathID(r)
@@ -160,7 +158,7 @@ func RecipeGet(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	// Szkic widzi tylko właściciel; reszta dostaje 404, jakby przepisu nie było.
+	// Only the owner sees a draft; everyone else gets 404, as if the recipe didn't exist.
 	owner := resp.IsOwner(r)
 	if entity.ID == 0 || (!owner && entity.Status != entities.StatusPublished) {
 		resp.Error(w, http.StatusNotFound, "recipe not found")
@@ -169,7 +167,7 @@ func RecipeGet(w http.ResponseWriter, r *http.Request) {
 
 	dto := mappers.MapRecipeToDto(entity)
 	if !owner {
-		// link do przepisu-składnika, który jest szkicem, zdradzałby szkic
+		// a link to an ingredient recipe that is a draft would leak the draft
 		for i := range dto.Ingredients {
 			if l := dto.Ingredients[i].LinkedRecipe; l != nil && l.Status != entities.StatusPublished {
 				dto.Ingredients[i].LinkedRecipe = nil
@@ -184,7 +182,7 @@ func RecipeGet(w http.ResponseWriter, r *http.Request) {
 	services.FillGramsPerUnit(dto.Ingredients, ix)
 	services.FillLineNutrition(dto.Ingredients, entity, ix)
 
-	// Kto prowadzi do tego przepisu (modal usuwania): „Przepis · składnik”.
+	// Recipes that link to this one (delete modal): "Recipe · ingredient".
 	dto.LinkedFrom = []dtos.RecipeLinkSourceDto{}
 	if err := conn.Table("recipe_ingredients ri").
 		Select("r.id AS recipe_id, r.name AS recipe_name, i.name AS ingredient_name").
@@ -201,7 +199,7 @@ func RecipeGet(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, dto)
 }
 
-// RecipeUpdate — PUT /api/recipes/{id}. Bez statusu = status bez zmian.
+// RecipeUpdate: no status = status unchanged.
 func RecipeUpdate(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 	id := pathID(r)
@@ -249,7 +247,6 @@ func RecipeUpdate(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, map[string]any{"id": entity.ID})
 }
 
-// RecipeDelete — DELETE /api/recipes/{id}.
 func RecipeDelete(w http.ResponseWriter, r *http.Request) {
 	conn := db.DB()
 	id := pathID(r)

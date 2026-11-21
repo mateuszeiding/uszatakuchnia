@@ -1,6 +1,5 @@
 package dtos
 
-// RecipeEquipmentDto — pozycja sprzętu w przepisie (kolejność sort_order).
 type RecipeEquipmentDto struct {
 	EquipmentID uint    `json:"equipmentId"`
 	Name        string  `json:"name"`
@@ -8,7 +7,6 @@ type RecipeEquipmentDto struct {
 	Optional    bool    `json:"optional"`
 }
 
-// EquipmentDto — pozycja słownika sprzętu; UsedIn = w ilu przepisach.
 type EquipmentDto struct {
 	ID     uint   `json:"id"`
 	Name   string `json:"name"`

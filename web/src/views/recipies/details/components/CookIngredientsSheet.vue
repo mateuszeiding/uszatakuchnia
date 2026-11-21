@@ -15,17 +15,12 @@ import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import { activeSubs, chosenSub, type SubsMap } from '@/shared/utils/substitutes';
 
-// Tryb gotowania → „Sprzęt i składniki” (20.11, prototyp pz-main.jsx → Cook375).
-// ≤ 900 px: arkusz od dołu (top 56 px, uchwyt, nagłówek + ✕ 44 px); desktop: panel z prawej 420 px.
-// Treść: licznik porcji (wspólny ze stroną), „Z zamiennikami: n · Przywróć przepis” tylko z wyborem, sprzęt,
-// grupy składników. Na dole przyklejony „Wróć do kroku N”. Zamykają: ✕, „Wróć…”, tło, Esc, uchwyt w dół (> 80 px).
 const props = defineProps<{
     recipe: RecipeDto;
     dicts: IDictionaries | undefined;
     servings: number;
     checkedIng: number[];
     subs: SubsMap;
-    /** Numer kroku, do którego wraca przycisk na dole. */
     stepNo: number;
 }>();
 const emit = defineEmits<{
@@ -50,7 +45,6 @@ const narrow = useNarrow();
 const root = ref<HTMLElement>();
 const heading = ref<HTMLElement>();
 
-// ─── przeciąganie uchwytu w dół (telefon) ───
 const drag = ref(0);
 let startY: number | null = null;
 function onDragStart(e: PointerEvent) {
@@ -59,7 +53,7 @@ function onDragStart(e: PointerEvent) {
     try {
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     } catch {
-        /* bez przechwycenia — ruch i tak przychodzi, póki palec jest nad uchwytem */
+        /* no pointer capture: moves keep coming while the finger is over the handle */
     }
 }
 function onDragMove(e: PointerEvent) {
@@ -73,7 +67,6 @@ function onDragEnd() {
     drag.value = 0;
 }
 
-// ─── klawiatura: Esc zamyka, Tab zostaje w arkuszu ───
 function trap(e: KeyboardEvent) {
     const list = [
         ...(root.value?.querySelectorAll<HTMLElement>(
@@ -95,7 +88,7 @@ function trap(e: KeyboardEvent) {
     }
 }
 function onKey(e: KeyboardEvent) {
-    // wybór zamiennika ma własną obsługę klawiszy (faza przechwytywania, stopPropagation)
+    // the substitute chooser has its own key handling (capture phase, stopPropagation)
     if (e.key === 'Escape') {
         e.preventDefault();
         emit('close');
@@ -251,7 +244,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
     z-index: calc(var(--z-modal) - 1);
     background: rgba(10, 10, 15, 0.5);
 }
-/* desktop: panel z prawej 420 px */
 .cis {
     position: fixed;
     top: 0;
@@ -362,7 +354,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
     border-radius: var(--r-2xl);
 }
 
-/* telefon: arkusz od dołu (wzór: arkusz zamienników) */
+/* phone: a bottom sheet (modeled on the substitute sheet) */
 @media (max-width: 900px) {
     .cis {
         top: 56px;

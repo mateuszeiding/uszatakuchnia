@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// models — wszystkie encje z tabelami (AutoMigrate i odcisk schematu w schema_state.go).
+// models lists every entity with a table (AutoMigrate and the schema fingerprint in schema_state.go).
 var models = []any{
 	&entities.IngredientType{},
 	&entities.Ingredient{},
@@ -41,7 +41,6 @@ func AutoMigrate(gdb *gorm.DB) error {
 	return gdb.AutoMigrate(models...)
 }
 
-// runMigrations: najpierw AutoMigrate (dodaje kolumny/tabele), potem wersjonowane migracje danych.
 func runMigrations(gdb *gorm.DB) error {
 	if err := AutoMigrate(gdb); err != nil {
 		return err
@@ -54,7 +53,7 @@ func runMigrations(gdb *gorm.DB) error {
 
 var migrateLock sync.Mutex
 
-// devResetTables — wszystkie tabele aplikacji, łącznie z wycofanymi (żeby reset nie zostawiał śmieci).
+// devResetTables lists every app table, retired ones included, so a reset leaves no leftovers.
 var devResetTables = []string{
 	"challenge_ingredients",
 	"challenges",
@@ -62,7 +61,7 @@ var devResetTables = []string{
 	"recipe_equipment",
 	"equipment",
 	"recipe_taxonomy",
-	"recipe_tags", // wycofana: zastąpiona przez recipe_taxonomy
+	"recipe_tags", // retired: replaced by recipe_taxonomy
 	"recipe_steps",
 	"recipe_ingredient_substitutes",
 	"recipe_ingredients",

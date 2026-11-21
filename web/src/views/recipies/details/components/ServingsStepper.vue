@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { useId } from 'vue';
 
-// Licznik porcji (1–20). `compact` — wersja w nagłówku listy zakupów (bez ramki, mniejsze przyciski);
-// `big` — przyciski 44 px (arkusz składników w trybie gotowania).
+// Servings: 1–20.
 defineProps<{ value: number; compact?: boolean; big?: boolean }>();
 const emit = defineEmits<{ set: [n: number] }>();
 

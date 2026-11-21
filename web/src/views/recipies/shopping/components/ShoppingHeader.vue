@@ -5,28 +5,25 @@ import { useRouter } from 'vue-router';
 import ServingsStepper from '@/views/recipies/details/components/ServingsStepper.vue';
 import { servingsLabel } from '@/views/recipies/details/recipeView';
 
-// Nagłówek listy zakupów: powrót, Drukuj (desktop), tytuł, licznik porcji, postęp „n z m”.
-// Na telefonie przyklejony pod paskiem nawigacji.
 const props = defineProps<{
     recipeId: number;
     recipeName: string;
     servings: number;
     done: number;
     total: number;
-    /** Ładowanie: ten sam nagłówek, szkielet w miejscu nazwy przepisu, porcji i licznika. */
     loading?: boolean;
 }>();
 const emit = defineEmits<{ servings: [n: number] }>();
 
 const print = () => window.print();
 
-// „‹ Przepis”: przyszedłeś z przepisu → wstecz w historii (to samo miejsce na stronie, bez nowego wpisu);
-// wszedłeś z linku prosto na listę → przepis przewinięty do składników, w miejsce listy w historii.
+// "‹ Przepis": if you came from the recipe → back in history (same place on the page, no new entry);
+// if you came straight to the list from a link → the recipe scrolled to the ingredients, replacing the list in history.
 const router = useRouter();
 const recipePath = computed(() => `/recipes/${props.recipeId}`);
 const recipeHref = computed(() => router.resolve(recipePath.value).href);
 function back(e: MouseEvent) {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; // nowa karta / okno
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; // new tab / window
     e.preventDefault();
     const prev = (window.history.state as { back?: string | null } | null)?.back;
     if (prev && prev.split(/[?#]/)[0] === recipePath.value) router.back();
@@ -140,7 +137,6 @@ function back(e: MouseEvent) {
 <style lang="scss" scoped>
 @use '@/scss/mixins/media' as m;
 
-/* szkielet nazwy przepisu i licznika (ładowanie) */
 .head__sk-name {
     display: inline-block;
     width: 180px;
@@ -233,7 +229,7 @@ function back(e: MouseEvent) {
     white-space: nowrap;
 }
 
-/* telefon: nagłówek przyklejony pod paskiem nawigacji (57 px), bez Drukuj */
+/* phone: the header sticks below the nav bar (57 px), no Drukuj */
 @media (max-width: 900px) {
     .head {
         position: sticky;

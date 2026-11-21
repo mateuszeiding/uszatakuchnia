@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { useAuth0 } from '@auth0/auth0-vue';
 
-// Stopka stron publicznych (20.11): po lewej „uszatakuchnia.”, po prawej „Zaloguj” — tylko na desktopie
-// (admin pracuje na desktopie). Zalogowany widzi „Wyloguj”. Bez tekstów o koncie i „czyje to”.
+// "Zaloguj" only on desktop: the admin works on desktop.
 const { isAuthenticated, isLoading, loginWithRedirect, logout } = useAuth0();
 
 function onAuth() {
@@ -31,7 +30,6 @@ function onAuth() {
 </template>
 
 <style scoped>
-/* prototyp pz-main.jsx (Footer) */
 .footer {
     margin-top: 72px;
     border-top: 1px solid var(--rule);

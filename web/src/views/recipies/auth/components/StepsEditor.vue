@@ -12,7 +12,7 @@ import { useListDnd } from '@/composables/useListDnd';
 const groups = defineModel<IGroup<IStepItem>[]>('groups', { required: true });
 const dnd = useListDnd(groups);
 
-/** Numer kroku w całym przepisie (ciągła numeracja przez etapy). */
+/** Step number across the whole recipe (continuous numbering through stages). */
 function stepNo(gi: number, ii: number): number {
     let n = 0;
     for (let g = 0; g < gi; g++) n += groups.value[g]!.items.length;
@@ -24,7 +24,6 @@ function togglePrep(s: IStepItem) {
     if (!s.prep) s.prepLead = '';
 }
 
-/** Nowy pusty wiersz wskazówki i fokus w nim. */
 async function addHint(s: IStepItem) {
     s.hints.push('');
     await nextTick();

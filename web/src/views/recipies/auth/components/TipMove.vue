@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-// Stara wskazówka przepisu (recipes.tip) nad krokami: treść + „Przenieś do kroku…”.
-// Wybór dopisuje ją do wskazówek kroku i czyści tip (w bazie po „Zapisz”).
+// Old recipe hint (recipes.tip) above the steps: text + "Przenieś do kroku…".
+// Choosing a step appends it to that step's hints and clears tip (in the database after "Zapisz").
 import { computed } from 'vue';
 
 import { type IRecipeForm, moveTipToStep } from '../recipeForm';

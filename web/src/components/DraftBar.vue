@@ -3,8 +3,8 @@ import UIcon from './UIcon.vue';
 
 import type { DraftBarKind } from '@/composables/useDraftBar';
 
-// Pasek „Szkic” nad nawigacją: widzi go tylko właściciel na stronie szkicu i jego liście zakupów.
-// Nie przyklejony — odjeżdża przy przewijaniu; poniżej strona wygląda jak po publikacji.
+// The "Szkic" bar above the nav: only the owner sees it, on a draft's page and on its shopping list.
+// Not sticky: it scrolls away, and below it the page looks as if it were published.
 defineProps<{ recipeId: number; kind: DraftBarKind }>();
 </script>
 

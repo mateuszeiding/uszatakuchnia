@@ -15,7 +15,7 @@ function runAction() {
     >
         {{ toastMessage }}
     </div>
-    <!-- z akcją („Cofnij”): pełny pasek na dole, klikalny; nie znika pod kursorem ani z fokusem -->
+    <!-- with an action ("Cofnij"): a full bar at the bottom, clickable; doesn't disappear under the cursor or with focus -->
     <div
         v-if="toast?.action"
         class="toast-bar"
@@ -48,7 +48,6 @@ function runAction() {
 </template>
 
 <style scoped>
-/* prototyp pz-main.jsx (Toast): tło odwrotne do motywu, 12 px od krawędzi, nad safe-area */
 .toast-bar {
     position: fixed;
     left: 12px;

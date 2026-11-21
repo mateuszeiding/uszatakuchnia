@@ -21,12 +21,12 @@ import {
 } from '@/shared/utils/substitutes';
 
 const props = defineProps<{
-    /** null = ładowanie: nagłówek i licznik porcji w tym samym miejscu, szkielety wierszy. */
+    /** null = loading. */
     recipe: RecipeDto | null;
     dicts: IDictionaries | undefined;
     servings: number;
     checked: number[];
-    /** Wybrane zamienniki (uk:progress:<id>.subs). */
+    /** Chosen substitutes (uk:progress:<id>.subs). */
     subs: SubsMap;
 }>();
 const emit = defineEmits<{
@@ -42,7 +42,7 @@ const allergenLabel = (code: string) =>
 
 const ratio = computed(() => (props.recipe?.servings ? props.servings / props.recipe.servings : 1));
 const groups = computed(() => ingredientGroups(props.recipe?.ingredients ?? []));
-// Link do listy zakupów niesie porcje i wybrany wariant (zamienniki) — odbiorca widzi to samo co nadawca.
+// The shopping list link carries servings and the chosen variant (substitutes), so the recipient sees what the sender sees.
 const shopLink = computed(() => {
     const zamienniki = subsToParam(props.recipe?.ingredients ?? [], props.subs);
     return {
@@ -57,8 +57,8 @@ function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
 const doneIn = (items: RecipeDto['ingredients']) =>
     items.filter((i) => props.checked.includes(i.sortOrder)).length;
 
-/** Alergen → składniki, z których pochodzi (kolejność listy UE), wg wybranego wariantu. Składnik z kilku grup — raz;
- *  „(opcj.)” tylko, gdy jest opcjonalny we wszystkich wystąpieniach. */
+/** Allergen → the ingredients it comes from (EU list order), per the chosen variant. An ingredient from several groups appears once;
+ *  "(opcj.)" only when it's optional in every occurrence. */
 const allergens = computed(() =>
     (props.dicts?.allergens ?? [])
         .map((a) => {
@@ -75,7 +75,7 @@ const allergens = computed(() =>
         .filter((a) => a.sources.length)
 );
 
-// Desktop: lista przewija się w panelu — gradient na dole tylko, gdy coś jest jeszcze niżej.
+// Desktop: the list scrolls inside the panel; the bottom gradient shows only when there's more below.
 const list = ref<HTMLElement>();
 const more = ref(false);
 const measure = () => {
@@ -266,7 +266,7 @@ onBeforeUnmount(() => ro?.disconnect());
 </template>
 
 <style scoped>
-/* Desktop: panel przyklejony, nie wyższy niż okno; licznik porcji stoi, przewija się sama lista. */
+/* Desktop: sticky panel, no taller than the window; the servings counter stays put, only the list scrolls. */
 .ing-panel {
     position: sticky;
     top: 84px;
@@ -296,7 +296,6 @@ onBeforeUnmount(() => ro?.disconnect());
     letter-spacing: 0;
     color: var(--ink-muted);
 }
-/* tylko gdy wybrano zamiennik: jedna linia pod licznikiem porcji + reset */
 .ing-panel__variant {
     margin-top: -4px;
     display: flex;
@@ -357,7 +356,6 @@ onBeforeUnmount(() => ro?.disconnect());
     background: linear-gradient(to bottom, transparent, var(--bg-alt));
     pointer-events: none;
 }
-/* nagłówek grupy przykleja się u góry przewijanej listy */
 .ing-panel__ghead {
     position: sticky;
     top: 0;
@@ -402,7 +400,7 @@ onBeforeUnmount(() => ro?.disconnect());
         position: static;
         max-height: none;
         padding: 20px;
-        /* powrót z listy zakupów (#skladniki): nagłówek panelu pod paskiem nawigacji */
+        /* coming back from the shopping list (#skladniki): the panel header below the nav bar */
         scroll-margin-top: 72px;
     }
     .ing-panel__list {
@@ -412,7 +410,7 @@ onBeforeUnmount(() => ro?.disconnect());
     .ing-panel__scroll.has-more::after {
         content: none;
     }
-    /* licznik porcji przyklejony pod paskiem nawigacji, nagłówek grupy pod licznikiem (64 + 54 px) */
+    /* servings counter sticks below the nav bar, the group header below the counter (64 + 54 px) */
     .ing-panel__servings {
         position: sticky;
         top: 64px;

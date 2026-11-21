@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-// Okrągły przełącznik „zrobione” na karcie: cel 44 px, kółko 24 px, aria-pressed.
 const props = defineProps<{ on: boolean; title: string }>();
 defineEmits<{ toggle: [] }>();
 </script>

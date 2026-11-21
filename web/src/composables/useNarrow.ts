@@ -1,6 +1,6 @@
 import { onBeforeUnmount, ref } from 'vue';
 
-/** Telefon / wąskie okno (≤ 900 px — ten sam próg co układ strony przepisu). */
+/** Phone / narrow window (≤ 900 px, the same breakpoint as the recipe page layout). */
 export function useNarrow() {
     const mq = window.matchMedia('(max-width: 900px)');
     const narrow = ref(mq.matches);

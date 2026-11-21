@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-// StringList — lista tekstów w kolumnie jsonb (np. wskazówki kroku). nil zapisuje się jako [].
+// StringList is a list of strings in a jsonb column (e.g. step hints). nil is stored as [].
 type StringList []string
 
 func (l StringList) Value() (driver.Value, error) {

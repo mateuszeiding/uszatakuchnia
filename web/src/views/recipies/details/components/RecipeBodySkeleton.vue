@@ -3,8 +3,7 @@ import IngredientsPanel from './IngredientsPanel.vue';
 import RecipeHero from './RecipeHero.vue';
 import StepsList from './StepsList.vue';
 
-// Ładowanie strony przepisu: te same komponenty i ta sama siatka co RecipeBody, w trybie szkieletu
-// (recipe = null). Spinner z „ładowanie przepisu…” leży na szkielecie zdjęcia — nie zajmuje miejsca.
+// The same components and grid as RecipeBody, in skeleton mode (recipe = null).
 </script>
 
 <template>
@@ -30,7 +29,7 @@ import StepsList from './StepsList.vue';
     </div>
 </template>
 
-<!-- siatka skopiowana z RecipeBody.vue — trzymać w zgodzie -->
+<!-- grid copied from RecipeBody.vue: keep them in sync -->
 <style scoped>
 .recipe-grid {
     display: grid;
@@ -69,7 +68,7 @@ import StepsList from './StepsList.vue';
     }
     .recipe-grid__nutri {
         order: 1;
-        margin-top: -16px; /* karta zaraz po składnikach (jak w v1: odstęp 24px) */
+        margin-top: -16px; /* the card right after the ingredients (24 px gap) */
     }
     .recipe-grid__steps {
         order: 2;

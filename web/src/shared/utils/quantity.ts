@@ -1,6 +1,4 @@
-// Ilości składników: parser (liczby, ułamki, zakresy), odmiana jednostek, skalowanie porcji.
-// Logika przeniesiona z prototypu (Claude Design: cr2-ui.jsx, rv2-data.jsx).
-// Ten sam parser jest po stronie API: services/quantity.go.
+// The same parser lives in the API: services/quantity.go.
 
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 
@@ -45,7 +43,7 @@ export function pluralPL(n: number, one: string, few: string, many: string): str
     return m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20) ? few : many;
 }
 
-/** Odmiana jednostki dla ilości (1 ząbek / 3 ząbki / 5 ząbków; ułamki → forma 2–4). */
+/** Unit inflection for a quantity (1 ząbek / 3 ząbki / 5 ząbków; fractions → the 2–4 form). */
 export function unitLabel(
     unit: IUnit | undefined,
     unitName: string | null,
@@ -58,16 +56,15 @@ export function unitLabel(
     return pluralPL(amount, one, few, many);
 }
 
-// ─── Skalowanie ───────────────────────────────────────────────
 export const COUNT = new Set(['sztuka', 'ząbek', 'listek', 'plaster', 'pęczek', 'filet', '']);
 export const SPOON = new Set(['łyżka', 'łyżeczka', 'szklanka', 'szczypta', 'garść']);
-/** Łyżki i łyżeczki od 1 w górę: do połówek (2⅔ → 2½), poniżej 1 jak inne miarki (¼, ⅓, ½, ¾). */
+/** Tablespoons and teaspoons from 1 up: to halves (2⅔ → 2½); below 1 like other measures (¼, ⅓, ½, ¾). */
 const HALVES = new Set(['łyżka', 'łyżeczka']);
 
 /**
- * Jednostka sztukowa (zaokrąglana do całości albo zakresu, w sklepie w górę): znana sztuka (COUNT)
- * albo każda jednostka ze słownika z odmianą, która nie jest miarką (SPOON) — np. „łodyga” dodana
- * w panelu. g / ml / l nie mają odmiany, więc nigdy nie są sztukami.
+ * Count unit (rounded to a whole number or a range, up in the store): a known count unit (COUNT)
+ * or any inflected dictionary unit that isn't a measure (SPOON), e.g. "łodyga" added
+ * in the admin panel. g / ml / l don't inflect, so they're never count units.
  */
 export function isCountUnit(name: string, unit?: IUnit): boolean {
     if (COUNT.has(name)) return true;
@@ -83,29 +80,29 @@ function quarters(v: number): string {
     return frac ? `${whole || ''}${frac}` : String(whole);
 }
 
-/** Łyżki / szklanki / sztuki: tercje (⅓ ⅔), a poza nimi ćwiartki. */
+/** Spoons / cups / pieces: thirds (⅓ ⅔), otherwise quarters. */
 function fraction(v: number): string {
     const whole = Math.floor(v);
     const third = THIRDS[(v - whole).toFixed(2)];
     return third ? `${whole || ''}${third}` : quarters(v);
 }
 
-/** Do połówek: 2⅔ → 2½, 1⅓ → 1½, 1¾ → 2. */
+/** To halves: 2⅔ → 2½, 1⅓ → 1½, 1¾ → 2. */
 function halves(v: number): string {
     const h = Math.round(v * 2) / 2;
     const whole = Math.floor(h);
     return h > whole ? `${whole || ''}½` : String(whole);
 }
 
-/** Ilość do odmiany jednostki — po tym samym zaokrągleniu co liczba na ekranie. */
+/** Quantity for unit inflection, after the same rounding as the displayed number. */
 export function shownAmount(v: number, unit: string): number {
     if (HALVES.has(unit) && v >= 1) return Math.round(v * 2) / 2;
     if (SPOON.has(unit)) return Math.round(v * 4) / 4;
     return v;
 }
 
-/** Liczba do wyświetlenia: ułamki tylko dla łyżek/szklanek i sztuk < 1; g / ml / l zawsze dziesiętnie.
- *  `count` — jednostka sztukowa (isCountUnit); domyślnie znane sztuki z COUNT. */
+/** Number for display: fractions only for spoons/cups and pieces < 1; g / ml / l always decimal.
+ *  `count`: a count unit (isCountUnit); defaults to the known COUNT units. */
 export function fmtNum(v: number, unit: string, count = COUNT.has(unit)): string {
     if (HALVES.has(unit) && v >= 1) return halves(v);
     if (SPOON.has(unit) || (count && v < 1)) return fraction(v);
@@ -116,9 +113,9 @@ export function fmtNum(v: number, unit: string, count = COUNT.has(unit)): string
 }
 
 /**
- * Skaluje ilość o `ratio` i zwraca tekst ilości + odmienioną jednostkę.
- * Jednostki sztukowe zaokrąglane do całości albo zakresu (1,5 cebuli → „1–2 sztuki”).
- * Zawsze formatuje — także przy bazowej liczbie porcji („1/2” → „½”, „1 1/2” → „1½”).
+ * Scales a quantity by `ratio` and returns the quantity text + the inflected unit.
+ * Count units are rounded to a whole number or a range (1.5 onions → "1–2 sztuki").
+ * Always formats, also at the base servings ("1/2" → "½", "1 1/2" → "1½").
  */
 export function scaleQuantity(
     raw: string | null,

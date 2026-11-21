@@ -20,20 +20,19 @@ export const fetchIngredients = (_endpoint: 'list' = 'list') =>
 export const invalidateIngredients = (qc: QueryClient) =>
     qc.invalidateQueries({ queryKey: LIST_KEY });
 
-/** Pełny stan składnika. PUT nadpisuje wszystko — brak nutrition / conversions / parentId = wyczyść. */
+/** Full ingredient state. PUT overwrites everything: missing nutrition / conversions / parentId = clear. */
 export interface IIngredientPayload {
     name: string;
     typeCode: string;
     allergens: string[];
     parentId: number | null;
-    /** Nie dodawaj do listy zakupów (np. woda). */
     skipShopping: boolean;
-    /** Własne makro na 100 g; pominięty klucz = brak własnych danych. */
+    /** Own macros per 100 g; an omitted key = no own data. */
     nutrition: Macros;
     conversions: { unitId: number; gramsMin: number; gramsMax: number | null }[];
 }
 
-/** Nowy składnik — makro, przeliczniki i rodzic opcjonalne (np. szybkie dodanie z formularza przepisu). */
+/** New ingredient: macros, conversions and parent are optional (e.g. quick add from the recipe form). */
 export type INewIngredientPayload = Pick<IIngredientPayload, 'name' | 'typeCode' | 'allergens'> &
     Partial<Pick<IIngredientPayload, 'parentId' | 'nutrition' | 'conversions' | 'skipShopping'>>;
 
@@ -43,6 +42,6 @@ export const createIngredient = (payload: INewIngredientPayload): Promise<Ingred
 export const updateIngredient = (id: number, payload: IIngredientPayload): Promise<IngredientDto> =>
     API.Client.put<IngredientDto>(`ingredients/${id}`, payload);
 
-/** 409 = składnik używany w przepisach (body: { usedIn }). */
+/** 409 = the ingredient is used in recipes (body: { usedIn }). */
 export const deleteIngredient = (id: number) =>
     API.Client.delete<{ deleted: number }>(`ingredients/${id}`);

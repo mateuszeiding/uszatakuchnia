@@ -1,7 +1,5 @@
 import { type Ref, ref } from 'vue';
 
-// Przeciąganie elementów między grupami (HTML5 DnD, mysz) + zmiana kolejności strzałkami ↑ ↓ na uchwycie.
-
 interface IWithId {
     id: number;
 }
@@ -13,7 +11,7 @@ interface IGroupLike<T extends IWithId> {
 type Pos = 'before' | 'after';
 interface IOver {
     gid: number;
-    iid: number | null; // null = koniec grupy
+    iid: number | null; // null = end of the group
     pos: Pos;
 }
 
@@ -49,7 +47,6 @@ export function useListDnd<T extends IWithId>(groups: Ref<IGroupLike<T>[]>) {
         reset();
     }
 
-    /** Atrybuty uchwytu (przycisk z ikoną). */
     const handle = (gid: number, iid: number) => ({
         draggable: true,
         onDragstart: (e: DragEvent) => {
@@ -75,7 +72,6 @@ export function useListDnd<T extends IWithId>(groups: Ref<IGroupLike<T>[]>) {
         },
     });
 
-    /** Atrybuty wiersza (cel upuszczenia). */
     const row = (gid: number, iid: number) => ({
         'data-row': true,
         onDragover: (e: DragEvent) => {
@@ -88,7 +84,6 @@ export function useListDnd<T extends IWithId>(groups: Ref<IGroupLike<T>[]>) {
         onDrop,
     });
 
-    /** Atrybuty pola na końcu grupy (upuszczenie do pustej grupy / na koniec). */
     const groupEnd = (gid: number) => ({
         onDragover: (e: DragEvent) => {
             if (!drag.value) return;

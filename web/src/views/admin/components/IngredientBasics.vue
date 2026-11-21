@@ -5,10 +5,9 @@ import UFieldError from '@/components/form/UFieldError.vue';
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// 01 Podstawowe: nazwa, składnik nadrzędny, typ, alergeny UE, „nie dodawaj do listy zakupów”.
 defineProps<{
     dicts: IDictionaries;
-    /** Dozwoleni rodzice (bez samego składnika i jego potomków). */
+    /** Allowed parents (excluding the ingredient itself and its descendants). */
     parents: IngredientDto[];
     childCount: number;
     errors: Record<string, string>;

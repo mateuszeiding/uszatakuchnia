@@ -23,11 +23,11 @@ func TestValidateCautionsLimit(t *testing.T) {
 		validateCautions(in, func(f, m string) { errs = append(errs, dtos.FieldError{Field: f, Message: m}) })
 		return errs
 	}
-	ok := strings.Repeat("ż", MaxCautionLen) // znaki, nie bajty
+	ok := strings.Repeat("ż", MaxCautionLen) // characters, not bytes
 	if errs := run([]string{ok}); len(errs) != 0 {
 		t.Errorf("220 znaków: %v", errs)
 	}
-	// pusta pozycja nie liczy się do indeksu (formularz też ją pomija)
+	// an empty item doesn't count toward the index (the form skips it too)
 	errs := run([]string{"", "a", ok + "x"})
 	if len(errs) != 1 || errs[0].Field != "cautions[1]" {
 		t.Errorf("221 znaków: %v", errs)

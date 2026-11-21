@@ -28,8 +28,8 @@ const route = useRoute();
 const router = useRouter();
 const qc = useQueryClient();
 
-// Słowniki i przepisy ładowane niezależnie: filtry nie czekają na listę, siatka nie czeka na słowniki.
-// Do załadowania zawsze szkielety (także przy powrocie z przepisu).
+// Dictionaries and recipes load independently: the filters don't wait for the list, the grid doesn't wait for the dictionaries.
+// Skeletons until loaded, always (also when coming back from a recipe).
 const recipes = ref<RecipeBaseDto[]>([]);
 const loading = ref(true);
 const axes = ref<ITaxonomyAxis[]>([]);
@@ -50,7 +50,7 @@ onMounted(() => {
     });
 });
 
-// Stan filtrów → URL (replace: bez zaśmiecania historii), nowe filtry = od pierwszej strony.
+// Filter state → URL (replace, so the history stays clean); new filters = back to the first page.
 watch(
     filters,
     (f) => {
@@ -63,8 +63,8 @@ watch(
 
 const results = computed(() => applyFilters(recipes.value, filters.value, axes.value));
 
-// Ile szkieletów kart: tyle, ile kart było ostatnio na liście (maks. jedna strona) — po załadowaniu
-// siatka ma tę samą wysokość. Pierwsza wizyta: 6.
+// Skeleton card count: as many cards as the list had last time (max one page), so
+// the grid has the same height after loading. First visit: 6.
 const SK_KEY = 'uk:list-skeletons';
 const skeletons = (() => {
     try {
@@ -81,7 +81,7 @@ watch(
         try {
             localStorage.setItem(SK_KEY, String(n));
         } catch {
-            /* brak localStorage — zostaje domyślne */
+            /* no localStorage: the default stays */
         }
     }
 );
@@ -322,7 +322,7 @@ const clear = () => (filters.value = emptyFilters(filters.value.sort));
 }
 .list-aside__scroll {
     overflow-y: auto;
-    /* miejsce na pasek zarezerwowane zawsze — szerokość panelu ta sama z paskiem i bez */
+    /* space for the scrollbar is always reserved: the panel width is the same with and without it */
     scrollbar-gutter: stable;
     padding: 0 8px 16px 0;
 }

@@ -1,6 +1,6 @@
-// Zamienniki składników: wybrany wariant przepisu (decyzje 18.11, prototyp Claude Design zm-main.jsx).
-// Wybór trzymany w uk:progress:<id>.subs (sortOrder → { ingredientId, mix }). Nieaktualny wpis
-// (wiersz albo zamiennik zniknął z przepisu) jest pomijany — przepis wygląda wtedy jak bez wyboru.
+// Ingredient substitutes: the chosen recipe variant.
+// The choice lives in uk:progress:<id>.subs (sortOrder → { ingredientId, mix }). A stale entry
+// (the row or the substitute is gone from the recipe) is skipped; the recipe then looks as if nothing was chosen.
 
 import type { ISubChoice } from '@/composables/useCookingProgress';
 import type {
@@ -11,7 +11,7 @@ import type { IRecipeNutrition, NutrientKey, SumRange } from '@/shared/utils/nut
 
 export type SubsMap = Record<number, ISubChoice>;
 
-/** Wybrany zamiennik wiersza albo null (składnik główny / nieaktualny wpis). */
+/** The row's chosen substitute, or null (main ingredient / stale entry). */
 export function chosenSub(ing: RecipeIngredientDto, subs: SubsMap): IRecipeSubstitute | null {
     const c = subs[ing.sortOrder];
     if (!c) return null;
@@ -20,7 +20,7 @@ export function chosenSub(ing: RecipeIngredientDto, subs: SubsMap): IRecipeSubst
     );
 }
 
-/** Aktualne wybory (sortOrder → zamiennik), bez nieaktualnych wpisów. */
+/** Current choices (sortOrder → substitute), without stale entries. */
 export function activeSubs(
     items: RecipeIngredientDto[],
     subs: SubsMap
@@ -35,22 +35,22 @@ export function activeSubs(
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
-/** Nazwa opcji: składnik główny, zamiennik albo mieszanka „Wołowina + wieprzowina mielona”. */
+/** Option name: the main ingredient, a substitute or a mix "Wołowina + wieprzowina mielona". */
 export function optionName(ing: RecipeIngredientDto, sub: IRecipeSubstitute | null): string {
     if (!sub) return ing.ingredientName;
     return sub.mix ? `${ing.ingredientName} + ${lowerFirst(sub.name)}` : sub.name;
 }
 
-/** Alergeny opcji (mieszanka = główny + zamiennik). */
+/** Option allergens (mix = main + substitute). */
 export function optionAllergens(ing: RecipeIngredientDto, sub: IRecipeSubstitute | null): string[] {
     if (!sub) return ing.allergens;
     return sub.mix ? [...new Set([...ing.allergens, ...sub.allergens])] : sub.allergens;
 }
 
-/** Pozycja w wybranym wariancie; factor 0,5 = połowa ilości (mieszanka). */
+/** Row in the chosen variant; factor 0.5 = half the quantity (mix). */
 export type EffectiveLine = RecipeIngredientDto & { factor?: number };
 
-/** Pozycje przepisu w wybranym wariancie: zamiennik zamiast głównego, mieszanka = dwie pozycje po połowie. */
+/** Recipe rows in the chosen variant: the substitute instead of the main one, a mix = two rows at half each. */
 export function effectiveLines(items: RecipeIngredientDto[], subs: SubsMap): EffectiveLine[] {
     const out: EffectiveLine[] = [];
     for (const ing of items) {
@@ -76,7 +76,7 @@ export function effectiveLines(items: RecipeIngredientDto[], subs: SubsMap): Eff
     return out;
 }
 
-/** Makro na porcję wybranego wariantu: suma wkładów pozycji (jak services.Compute). Bez wyboru = makro z API. */
+/** Per-serving macros of the chosen variant: sum of the row shares (like services.Compute). No choice = macros from the API. */
 export function variantNutrition(
     items: RecipeIngredientDto[],
     subs: SubsMap,
@@ -108,7 +108,7 @@ export function variantNutrition(
     return contributed ? { perPortion: per, missing, incomplete } : null;
 }
 
-/** „wieprzowina mielona zamiast wołowiny” — do zdania w karcie makro. */
+/** "wieprzowina mielona zamiast wołowiny", for the sentence in the macro card. */
 export function swapSummary(items: RecipeIngredientDto[], subs: SubsMap): string {
     const parts: string[] = [];
     for (const [sortOrder, sub] of activeSubs(items, subs)) {
@@ -122,14 +122,14 @@ export function swapSummary(items: RecipeIngredientDto[], subs: SubsMap): string
     return parts.join(', ');
 }
 
-// ─── Zamienniki w adresie listy zakupów (?zamienniki=) ───────────────────────
-// Format: „<sortOrder wiersza>:<ingredientId zamiennika>[m]” po przecinku, „m” = pół na pół,
-// np. ?porcje=6&zamienniki=6:21,8:40m. „brak” = przepis bez zamienników (odbiorca widzi wariant nadawcy,
-// nawet jeśli sam coś wybrał). Przepis bez zamienników nie dostaje parametru.
+// ─── Substitutes in the shopping list URL (?zamienniki=) ───────────────────────
+// Format: "<row sortOrder>:<substitute ingredientId>[m]", comma-separated, "m" = half and half,
+// e.g. ?porcje=6&zamienniki=6:21,8:40m. "brak" = recipe without substitutes (the recipient sees the sender's variant
+// even if they chose something themselves). A recipe without substitutes gets no parameter.
 
 export const SUBS_NONE = 'brak';
 
-/** Wartość parametru dla wybranego wariantu; undefined = przepis nie ma zamienników. */
+/** Parameter value for the chosen variant; undefined = the recipe has no substitutes. */
 export function subsToParam(items: RecipeIngredientDto[], subs: SubsMap): string | undefined {
     if (!items.some((i) => i.substitutes.length)) return undefined;
     const parts = [...activeSubs(items, subs)].map(
@@ -138,8 +138,8 @@ export function subsToParam(items: RecipeIngredientDto[], subs: SubsMap): string
     return parts.length ? parts.join(',') : SUBS_NONE;
 }
 
-/** Wariant z adresu; null = brak parametru albo nic sensownego (zostaje pamięć urządzenia).
- *  Pozycje, których nie ma w przepisie, są pomijane. */
+/** Variant from the URL; null = no parameter or nothing usable (the device's memory stays).
+ *  Rows missing from the recipe are skipped. */
 export function parseSubsParam(
     raw: string | null | undefined,
     items: RecipeIngredientDto[]

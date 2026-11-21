@@ -8,18 +8,18 @@ const (
 type Recipe struct {
 	ID          uint   `gorm:"primaryKey;autoIncrement"`
 	Name        string `gorm:"type:varchar(255);not null;index:ix_recipes_name"`
-	Servings    int    `gorm:"not null;default:0"` // 0 = nieustawione (szkic)
+	Servings    int    `gorm:"not null;default:0"` // 0 = not set (draft)
 	Description *string
 	Tagline     *string `gorm:"type:varchar(500)"`
-	Tip         *string // wskazówka pod krokami
-	// Uwagi „czego nie zawalić” (zakupy, bezpieczeństwo, czas) w kolejności autora; nil zapisuje się jako [].
+	Tip         *string
+	// "Don't mess this up" notes (shopping, safety, timing) in the author's order; nil is stored as [].
 	Cautions StringList `gorm:"type:jsonb;not null;default:'[]'"`
 
-	// Czas w minutach: od–do. TimeMin 0 = nie podano (szkic); TimeMax nil = bez zakresu.
+	// Time in minutes, from–to. TimeMin 0 = not given (draft); TimeMax nil = no range.
 	TimeMin    int `gorm:"not null;default:0"`
 	TimeMax    *int
 	Difficulty *int
-	// Cache makro (services.RecomputeRecipes); nil = brak danych.
+	// Macro cache (services.RecomputeRecipes); nil = no data.
 	Nutrition *RecipeNutrition `gorm:"type:jsonb"`
 
 	Status string `gorm:"type:varchar(16);not null;default:'draft'"`
@@ -31,7 +31,7 @@ type Recipe struct {
 	Equipment   []RecipeEquipment  `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
-// RecipeBase — lekki widok przepisu dla listy. NeedsPrep wyliczane w zapytaniu (EXISTS na krokach prep).
+// RecipeBase is a light recipe view for the list. NeedsPrep is computed in the query (EXISTS on prep steps).
 type RecipeBase struct {
 	ID         uint    `gorm:"primaryKey;autoIncrement"`
 	Name       string  `gorm:"type:varchar(255);not null;index:ix_recipes_name"`

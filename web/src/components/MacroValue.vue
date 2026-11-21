@@ -11,7 +11,7 @@ import {
     type SumRange,
 } from '@/shared/utils/nutrition';
 
-// „20 – 22 g (~21)” — liczby w Geist Mono, średnia przygaszona; czytnik słyszy pełne zdanie.
+// "20 – 22 g (~21)"; screen readers hear a full sentence.
 const props = withDefaults(
     defineProps<{
         value: Range | SumRange | null | undefined;
@@ -77,7 +77,7 @@ const unitLabel = computed(() => props.unit ?? (props.nutrient === 'kcal' ? 'kca
     font-weight: 400;
     color: var(--ink-dim);
 }
-/* zakres i średnia się nie łamią; gdy brak miejsca, „(~33)” schodzi do następnej linii */
+/* the range and the average don't break; when space runs out, "(~33)" wraps to the next line */
 .macro-val__range,
 .macro-val__avg {
     white-space: nowrap;

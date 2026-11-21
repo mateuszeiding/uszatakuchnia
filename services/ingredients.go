@@ -13,8 +13,8 @@ import (
 
 const msgMaxBelowMin = "Max nie może być mniejsze niż min"
 
-// ValidateIngredientRequest — makro, przeliczniki i rodzic składnika selfID (0 = nowy).
-// „Max bez min” nie występuje w JSON-ie (min jest wymagane w parze), pilnuje tego formularz.
+// ValidateIngredientRequest validates macros, conversions and the parent of ingredient selfID (0 = new).
+// "Max without min" can't occur in the JSON (min is required in a pair); the form enforces it.
 func ValidateIngredientRequest(req dtos.IngredientRequest, ix *NutritionIndex, selfID uint) []dtos.FieldError {
 	errs := []dtos.FieldError{}
 	add := func(field, msg string) { errs = append(errs, dtos.FieldError{Field: field, Message: msg}) }
@@ -69,7 +69,7 @@ func validateRange(min float64, max *float64, fMin, fMax string, add func(string
 	}
 }
 
-// isSelfOrDescendant — czy id to root albo leży w jego poddrzewie (idąc w górę od id).
+// isSelfOrDescendant reports whether id is root or lies in its subtree (walking up from id).
 func (ix *NutritionIndex) isSelfOrDescendant(id, root uint) bool {
 	seen := map[uint]bool{}
 	for cur := &id; cur != nil && !seen[*cur]; cur = ix.Parent[*cur] {
@@ -81,8 +81,8 @@ func (ix *NutritionIndex) isSelfOrDescendant(id, root uint) bool {
 	return false
 }
 
-// SaveIngredient zapisuje składnik z requestu (pola, rodzic, makro, alergeny, przeliczniki) i przelicza makro
-// wszystkich przepisów. Wołać w transakcji, po walidacji.
+// SaveIngredient saves the ingredient from the request (fields, parent, macros, allergens, conversions) and
+// recomputes macros of all recipes. Call inside a transaction, after validation.
 func SaveIngredient(tx *gorm.DB, ing *entities.Ingredient, req dtos.IngredientRequest, typeID uint) error {
 	ing.Name = strings.TrimSpace(req.Name)
 	ing.TypeID = typeID
@@ -120,7 +120,6 @@ func SaveIngredient(tx *gorm.DB, ing *entities.Ingredient, req dtos.IngredientRe
 	return RecomputeRecipes(tx)
 }
 
-// FillIngredientNutrition uzupełnia DTO o makro własne, wynikowe i przeliczniki (z dziedziczeniem).
 func FillIngredientNutrition(d *dtos.IngredientDto, ix *NutritionIndex) {
 	d.Nutrition = map[string]entities.MacroRange(ix.Own[d.ID])
 	if d.Nutrition == nil {

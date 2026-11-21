@@ -3,11 +3,10 @@ import { computed, ref } from 'vue';
 
 import UModal from '@/components/UModal.vue';
 
-// Usuwanie używanej wartości słownika = przeniesienie przepisów do innej wartości.
-// Dla osi wymaganej (Typ dania) przeniesienie jest obowiązkowe.
+// Deleting a dictionary value in use = moving its recipes to another value.
+// For a required axis (dish type) moving is mandatory.
 const props = defineProps<{
     label: string;
-    /** Ile przepisów / składników używa wartości. */
     count: number;
     countNoun: string;
     others: { id: number; label: string }[];

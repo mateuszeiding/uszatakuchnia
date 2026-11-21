@@ -3,7 +3,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import type { IngredientDto } from '@/data/dtos/ingredients/IngredientDto';
 
-// Combobox składnika: ↑ ↓ wybór, Enter zatwierdza, Esc zamyka. Ostatnia opcja „Dodaj do bazy”.
 const props = defineProps<{
     id: string;
     name: string;

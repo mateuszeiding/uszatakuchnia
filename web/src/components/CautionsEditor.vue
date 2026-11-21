@@ -10,13 +10,11 @@ import {
     MAX_CAUTION_LEN,
 } from '@/shared/utils/cautions';
 
-// Uwagi w formularzu (przepis „02 Uwagi”, wyzwanie „03 Uwagi”): podpowiedź „uwaga czy wskazówka”,
-// wiersz = uchwyt (przeciąganie, ↑ ↓), pole rosnące z treścią (min. 2 linie, limit 220, licznik od 160), ✕.
-// Usunięcie wiersza bez pytania (nic nie jest zapisane do „Zapisz”), puste wiersze pomijane przy zapisie.
+// Deleting a row doesn't ask: nothing is saved until "Zapisz". Empty rows are skipped on save.
 const props = defineProps<{
-    /** „przepisie” / „wyzwaniu” — w podpowiedzi „czego nie wolno zawalić w całym …”. */
+    /** "przepisie" / "wyzwaniu": completes the hint "czego nie wolno zawalić w całym …". */
     label: string;
-    /** Błędy wierszy pod kluczem caution-<id wiersza> (jak w challengeForm). */
+    /** Row errors keyed caution-<row id> (as in challengeForm). */
     errors?: Record<string, string>;
 }>();
 const rows = defineModel<ICautionRow[]>({ required: true });
@@ -211,7 +209,7 @@ const removeRow = (r: ICautionRow) => rows.value.splice(rows.value.indexOf(r), 1
     display: grid;
     grid-template-columns: 20px minmax(0, 1fr) 30px;
     gap: 8px;
-    /* pole rośnie w dół — uchwyt i ✕ zostają przy pierwszej linii */
+    /* the field grows downward; the handle and ✕ stay by the first line */
     align-items: start;
     padding: 5px 0;
 }
@@ -227,7 +225,6 @@ const removeRow = (r: ICautionRow) => rows.value.splice(rows.value.indexOf(r), 1
     gap: 4px;
     min-width: 0;
 }
-/* min. 2 linie (rows=2), dalej rośnie z treścią */
 .ce__input {
     min-height: 0;
     padding: 9px 10px;

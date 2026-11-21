@@ -9,10 +9,10 @@ import type { IConversion } from '@/data/dtos/ingredients/IngredientDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 import { fmtGrams } from '@/shared/utils/nutrition';
 
-// Ile gramów waży 1 jednostka składnika. g / kg liczone automatycznie, „do smaku” bez przelicznika.
+// g / kg are computed automatically; "do smaku" has no conversion.
 const props = defineProps<{
     units: IUnit[];
-    /** Przeliczniki odziedziczone od składnika nadrzędnego (tylko do odczytu). */
+    /** Conversions inherited from the parent ingredient (read-only). */
     inherited: IConversion[];
     name: string;
     errors: Record<string, string>;

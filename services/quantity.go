@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Quantity — sparsowana ilość składnika. Dla pojedynczej liczby Min == Max.
+// Quantity is a parsed ingredient quantity. Min == Max for a single number.
 type Quantity struct {
 	Empty bool
 	Min   float64
@@ -48,7 +48,7 @@ func parseNumber(s string) (float64, bool) {
 	return 0, false
 }
 
-// ParseQuantity — liczby, ułamki (½, 1/4, 1 1/2, 1,5) i zakresy (2–3). Port parseQty z prototypu (cr2-ui.jsx).
+// ParseQuantity parses numbers, fractions (½, 1/4, 1 1/2, 1,5) and ranges (2–3).
 func ParseQuantity(raw string) (Quantity, bool) {
 	s := strings.TrimSpace(raw)
 	if s == "" {

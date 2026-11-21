@@ -3,8 +3,6 @@ import { computed, useId } from 'vue';
 
 import type { IChallengeIngredient } from '@/data/dtos/challenge/ChallengeDto';
 
-// Karta „Składniki” wyzwania: „Musisz użyć” (kropka --c-tomato) i „Do dyspozycji” / „Możesz też użyć”.
-// Nagłówki jak nagłówek grupy składników przepisu. Od 8 pozycji (desktop) 2 kolumny; linie tylko między pozycjami.
 const props = defineProps<{ ingredients: IChallengeIngredient[]; narrow: boolean }>();
 
 const id = useId();
@@ -77,7 +75,7 @@ const sections = computed(() =>
     font-weight: 500;
     letter-spacing: -0.6px;
 }
-/* jak nagłówek grupy składników przepisu */
+/* like a recipe ingredient group header */
 .ch-ing__head {
     margin: 0 0 2px;
     padding-bottom: 8px;

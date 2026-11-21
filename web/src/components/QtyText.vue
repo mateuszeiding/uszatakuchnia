@@ -1,10 +1,10 @@
 <script lang="ts">
 import { defineComponent, h } from 'vue';
 
-// Ilość do wyświetlenia: cyfry i jednostka zostają w foncie rodzica (Geist Mono), a znak ułamka
-// (½ ¼ ¾ ⅓ ⅔) idzie w Geist sans 1,25em — w Geist Mono glif jest wciśnięty w szerokość jednej cyfry.
-// Czytnik ekranu czyta znak ułamka poprawnie, więc bez aria-label.
-// Render function zamiast szablonu: formatowanie szablonu nie może dokleić spacji wokół ułamka („1 ½”).
+// Displayed quantity: digits and unit stay in the parent's font, but the fraction glyph
+// (½ ¼ ¾ ⅓ ⅔) uses the sans font: in Geist Mono it's squeezed into the width of one digit.
+// Screen readers read the fraction glyph correctly, so no aria-label.
+// Render function instead of a template: template formatting could add spaces around the fraction ("1 ½").
 const FRAC = /([½¼¾⅓⅔])/;
 
 export default defineComponent({

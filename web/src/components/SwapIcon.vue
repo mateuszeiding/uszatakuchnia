@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-// Ikona zamiennika składnika: dwie strzałki ⇄.
 withDefaults(defineProps<{ size?: number }>(), { size: 15 });
 </script>
 

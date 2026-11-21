@@ -16,23 +16,19 @@ import type {
 } from '@/data/dtos/recipe/RecipeIngredientDto';
 import { optionName } from '@/shared/utils/substitutes';
 
-// Wiersz składnika z odhaczaniem (panel przepisu i tryb gotowania).
-// Przekreślenie po odhaczeniu tylko na ilości i nazwie — notatka zostaje czytelna.
-// Ikony (⇄ zamienniki, książka — link do przepisu) to RODZEŃSTWO przycisku (nie w nim): klik w ikonę nie odhacza,
-// Tab trafia osobno. Link do przepisu zawsze otwiera nową kartę (decyzja 20.11) — bieżący przepis zostaje.
-// Wybrany zamiennik: nazwa wiersza = zamiennik, pod nią „zamiast: …” / „pół na pół”.
+// After checking, only the quantity and name are struck through, so the note stays readable.
+// Icons (⇄ substitutes, book = recipe link) are SIBLINGS of the button (not inside it): clicking an icon doesn't check the row,
+// and Tab reaches them separately. The recipe link always opens a new tab, so the current recipe stays.
 const props = defineProps<{
     ing: RecipeIngredientDto;
     amount: { qty: string; unit: string };
-    /** Połowa ilości — opcja „pół na pół” w wyborze zamiennika. */
+    /** Half the quantity: the "pół na pół" option in the substitute chooser. */
     half?: { qty: string; unit: string };
     checked: boolean;
-    /** Wybrany zamiennik (null = składnik główny). */
     sub?: IRecipeSubstitute | null;
     allergenLabel?: (code: string) => string;
-    /** Alergeny przepisu (do „zawiera: …” w wyborze zamiennika). */
+    /** Recipe allergens (for "zawiera: …" in the substitute chooser). */
     recipeAllergens?: string[];
-    /** Większe wiersze (tryb gotowania). */
     roomy?: boolean;
 }>();
 const emit = defineEmits<{ toggle: []; sub: [choice: ISubChoice | null] }>();
@@ -210,7 +206,7 @@ async function close() {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    /* przy pierwszej linii tekstu (nazwa 15 px × 1,4 = 21 px), nie na środku wiersza z notatką */
+    /* at the first text line (name 15 px × 1.4 = 21 px), not centered on a row with a note */
     align-self: start;
     margin-top: 2.5px;
 }
@@ -251,15 +247,15 @@ async function close() {
     text-decoration: line-through;
 }
 
-/* gołe ikony: wyrównane do pierwszej linii nazwy, pole kliknięcia 28 px (telefon 44 px, bez wzrostu wiersza);
-   tło tylko na wewnętrznym kwadracie 28 px */
+/* bare icons: aligned to the first line of the name, 28 px hit area (44 px on a phone, without growing the row);
+   background only on the inner 28 px square */
 .ing-icons {
     display: inline-flex;
 }
 .ing-icon {
     width: 28px;
     height: 28px;
-    /* bez ujemnego marginesu z prawej: panel na desktopie przewija się w środku (poziomy pasek) */
+    /* no negative right margin: on desktop the panel scrolls internally (horizontal scrollbar) */
     margin: 4px 0 0;
     padding: 0;
     border: none;
@@ -306,7 +302,7 @@ async function close() {
     .ing-icons {
         margin-right: -12px;
     }
-    /* tryb gotowania: lista w modalu się przewija — bez wystawania w prawo */
+    /* cooking mode: the list in the modal scrolls, so nothing may stick out on the right */
     .ing-icon--roomy {
         margin-top: 0;
     }

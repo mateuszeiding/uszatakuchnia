@@ -7,14 +7,14 @@ import { mainDish, type RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import { formatTime } from '@/shared/utils/time';
 import ErrorState from '@/views/errors/ErrorState.vue';
 
-// API 404 (nie ma, usunięty albo szkic): „Nie ma takiego przepisu” + do 3 najnowszych opublikowanych (20.11).
+// API 404 (missing, deleted or a draft): "Nie ma takiego przepisu" + up to 3 newest published recipes.
 const qc = useQueryClient();
 const latest = ref<RecipeBaseDto[]>([]);
 onMounted(async () => {
     try {
         latest.value = (await fetchRecipesWithClient(qc, 'list')).slice(0, 3);
     } catch {
-        /* bez listy — sama strona „nie ma” */
+        /* no list: just the "not found" page */
     }
 });
 const sub = (r: RecipeBaseDto) =>
@@ -81,7 +81,6 @@ const sub = (r: RecipeBaseDto) =>
 </template>
 
 <style scoped>
-/* prototyp pz-main.jsx (MiniRow): cały wiersz linkiem, hover jak karty — ramka + tytuł w akcencie, bez ruchu */
 .latest {
     margin-top: 56px;
 }

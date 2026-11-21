@@ -14,7 +14,6 @@ import {
 import type { IChallengeFormat } from '@/data/dtos/challenge/ChallengeDto';
 import { plural } from '@/shared/utils/challenges';
 
-// Klasyfikacja → Formaty wyzwań: dodawanie, zmiana nazwy w wierszu, usuwanie (używany → przeniesienie).
 const props = defineProps<{ items: IChallengeFormat[] }>();
 const emit = defineEmits<{ changed: [] }>();
 

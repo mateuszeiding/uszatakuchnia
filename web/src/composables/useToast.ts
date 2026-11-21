@@ -6,12 +6,12 @@ export interface IToastAction {
 }
 export interface IToast {
     message: string;
-    /** Przycisk w toaście (np. „Cofnij”) — toast jest wtedy klikalny i nie znika pod kursorem / fokusem. */
+    /** Toast button (e.g. "Cofnij"): the toast becomes clickable and doesn't disappear under the cursor / focus. */
     action?: IToastAction;
 }
 
 export const toast = ref<IToast | null>(null);
-/** Sam tekst — dla starego kodu i czytnika ekranu. */
+/** Plain text: for older code and screen readers. */
 export const toastMessage = ref<string | null>(null);
 
 let timer: ReturnType<typeof setTimeout> | undefined;
@@ -31,7 +31,7 @@ export function hideToast() {
     toastMessage.value = null;
 }
 
-/** Krótki komunikat na dole ekranu (role="status"). Z akcją: domyślnie 8 s. */
+/** Short message at the bottom of the screen (role="status"). With an action: 8 s by default. */
 export function showToast(
     message: string,
     opts: { action?: IToastAction; duration?: number } = {}
@@ -41,7 +41,7 @@ export function showToast(
     schedule(opts.duration ?? (opts.action ? 8000 : 2600));
 }
 
-/** Kursor / fokus na toaście z akcją — wstrzymaj odliczanie (nie znika pod ręką). */
+/** Cursor / focus on a toast with an action: pause the countdown (it doesn't vanish under your hand). */
 export function pauseToast() {
     if (!toast.value) return;
     clearTimeout(timer);

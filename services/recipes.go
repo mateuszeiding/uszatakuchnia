@@ -12,9 +12,9 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// ValidateRecipe — szkic wymaga tylko nazwy i poprawnych danych; publikacja wymaga kompletu
-// (nazwa, min. 1 składnik, min. 1 krok, wymagane osie, trudność, porcje).
-// selfID — id edytowanego przepisu (0 przy tworzeniu); składnik nie może linkować do własnego przepisu.
+// ValidateRecipe: a draft needs only a name and valid data; publishing needs everything
+// (name, at least 1 ingredient, at least 1 step, required axes, difficulty, servings, time).
+// selfID is the edited recipe's id (0 on create); an ingredient can't link to its own recipe.
 func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]dtos.FieldError, error) {
 	errs := []dtos.FieldError{}
 	add := func(field, msg string) { errs = append(errs, dtos.FieldError{Field: field, Message: msg}) }
@@ -40,7 +40,7 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 		add("difficulty", "Trudność musi być w zakresie 1–3")
 	}
 
-	// Składniki: ilość parsowalna, jednostka istnieje, "do smaku" bez ilości.
+	// Ingredients: a parsable quantity, an existing unit, "do smaku" without a quantity.
 	units := map[uint]entities.Unit{}
 	var unitRows []entities.Unit
 	if err := tx.Find(&unitRows).Error; err != nil {
@@ -72,7 +72,7 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 		}
 	}
 
-	// Linki do przepisów: nie do siebie, tylko do istniejących.
+	// Recipe links: not to itself, only to existing recipes.
 	linked := []uint{}
 	for _, it := range req.Ingredients {
 		if it.LinkedRecipeId != nil {
@@ -112,7 +112,7 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 		return nil, err
 	}
 
-	// Klasyfikacja: wartości istnieją, osie pojedyncze mają max 1 wartość.
+	// Classification: values exist, single-value axes have at most 1 value.
 	perAxis := map[uint]int{}
 	if len(req.TaxonomyValueIDs) > 0 {
 		var vals []entities.TaxonomyValue
@@ -179,7 +179,6 @@ func uniqueUints(a []uint) []uint {
 	return out
 }
 
-// ApplyRecipeRequest przepisuje pola z requestu na encję (bez zapisu).
 func ApplyRecipeRequest(e *entities.Recipe, req dtos.UpsertRecipeRequest) {
 	e.Name = strings.TrimSpace(req.Name)
 	e.Servings = req.Servings
@@ -195,7 +194,7 @@ func ApplyRecipeRequest(e *entities.Recipe, req dtos.UpsertRecipeRequest) {
 	}
 }
 
-// ReplaceRecipeChildren zastępuje zdjęcie, kroki, składniki i klasyfikację przepisu. Wołać w transakcji.
+// ReplaceRecipeChildren replaces the recipe's photo, steps, ingredients and classification. Call inside a transaction.
 func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequest) error {
 	if req.PhotoUrl != nil {
 		if *req.PhotoUrl == "" {
@@ -263,7 +262,7 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 	return replaceRecipeEquipment(tx, recipeID, req)
 }
 
-// MaxHintLen — najdłuższa wskazówka kroku (znaki, nie bajty).
+// MaxHintLen is the longest step hint (characters, not bytes).
 const MaxHintLen = 300
 
 func validateSteps(req dtos.UpsertRecipeRequest, add func(field, msg string)) {
@@ -280,7 +279,7 @@ func validateSteps(req dtos.UpsertRecipeRequest, add func(field, msg string)) {
 	}
 }
 
-// CleanHints przycina wskazówki i pomija puste. Zawsze zwraca niepustą referencję (zapis jako []).
+// CleanHints trims hints and drops empty ones. Always returns a non-nil slice (stored as []).
 func CleanHints(in []string) []string {
 	out := make([]string, 0, len(in))
 	for _, h := range in {

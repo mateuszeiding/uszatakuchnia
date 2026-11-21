@@ -16,7 +16,6 @@ import type { IChallenge } from '@/data/dtos/challenge/ChallengeDto';
 import { timeLimitText } from '@/shared/utils/challenges';
 import ChallengeDifficulty from '@/views/challenges/components/ChallengeDifficulty.vue';
 
-// Panel → Wyzwania: wyszukiwanie, tabela (tytuł, format, trudność, czas), edycja i usuwanie z potwierdzeniem.
 const qc = useQueryClient();
 const items = ref<IChallenge[]>([]);
 const loading = ref(true);
@@ -49,7 +48,7 @@ async function remove(c: IChallenge) {
         await deleteChallenge(c.id);
         items.value = items.value.filter((x) => x.id !== c.id);
         invalidateChallenges(qc);
-        // liczba użyć formatu w Klasyfikacji
+        // format usage count in Classification
         invalidateDictionaries(qc);
         showToast('Wyzwanie usunięte');
     } catch {
@@ -186,7 +185,6 @@ async function remove(c: IChallenge) {
     height: 40px;
     background: var(--bg-alt);
 }
-/* ładowanie: tabela od razu, wiersze-szkielety w tych samych komórkach, spinner nad tabelą */
 .tbl-wrap {
     position: relative;
 }

@@ -1,6 +1,5 @@
 <template>
-    <!-- Ten sam układ co RecipeCard bez zdjęcia (przepisy nie mają zdjęć — bez kadru), body 16 px / odstęp 10 px,
-         badge typu dania (prawdziwa klasa .badge — ta sama wysokość), tytuł na 2 linie, linia metadanych. -->
+    <!-- The same layout as RecipeCard (the real .badge class keeps the badge height). -->
     <div
         class="skc"
         aria-hidden="true"
@@ -40,12 +39,12 @@
     gap: 10px;
     flex: 1;
 }
-/* jak .r-card__flags (12 px) */
+/* like .r-card__flags (12 px) */
 .skc__flags {
     display: flex;
     font-size: 12px;
 }
-/* kształt i wysokość z .badge, wypełnienie szkieletu w środku, bez kropki koloru */
+/* shape and height from .badge, the skeleton fill inside, no color dot */
 .skc__badge {
     position: relative;
     width: 92px;
@@ -61,7 +60,7 @@
     inset: 0;
     border-radius: var(--r-pill);
 }
-/* jak .r-card__title: 18 px × 1,25, dwie linie zarezerwowane */
+/* like .r-card__title: 18 px × 1.25, two lines reserved */
 .skc__title {
     flex: 1;
     min-height: calc(2 * 18px * 1.25);
@@ -77,7 +76,7 @@
 .skc__line--short {
     width: 54%;
 }
-/* jak .r-card__meta: linia 20 px */
+/* like .r-card__meta: a 20 px line */
 .skc__meta {
     height: 20px;
     display: flex;

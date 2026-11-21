@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-// Szkielet wiersza składnika — siatka, paddingi i wysokość linii jak w IngRow.vue
-// (18 px pole | 92 px ilość | nazwa; 8 px / telefon 11 px; nazwa 15 px × 1,4).
+// Ingredient row skeleton: grid, paddings and line height as in IngRow.vue.
 defineProps<{ wide?: boolean }>();
 </script>
 
@@ -35,7 +34,7 @@ defineProps<{ wide?: boolean }>();
     border-radius: var(--r-sm);
     border: 1.5px solid var(--rule-strong);
 }
-/* wysokość linii jak w IngRow (nazwa 15 px × 1,4 wyrównana do linii bazowej z ilością mono = 23 px) */
+/* line height as in IngRow (name 15 px × 1.4 aligned to the baseline with the mono quantity = 23 px) */
 .sk-ing__cell {
     height: 23px;
     display: flex;

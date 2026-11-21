@@ -11,14 +11,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// UpsertResult — wynik UpsertIngredient: Status HTTP i ciało odpowiedzi.
 type UpsertResult struct {
 	Status int
 	Body   any
 }
 
-// UpsertIngredient — wspólna ścieżka POST (id 0) i PUT /api/ingredients: walidacja, zapis w transakcji,
-// przeliczenie makro przepisów, pełne DTO w odpowiedzi.
+// UpsertIngredient is the shared path of POST (id 0) and PUT /api/ingredients: validation, save in a transaction,
+// recipe macro recompute, full DTO in the response.
 func UpsertIngredient(conn *gorm.DB, id uint, req dtos.IngredientRequest, okStatus int) UpsertResult {
 	fail := func(status int, msg string) UpsertResult { return UpsertResult{status, map[string]any{"error": msg}} }
 

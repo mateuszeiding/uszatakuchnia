@@ -13,19 +13,17 @@ import {
 import type { RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Panel filtrów (sidebar na desktopie, zawartość bottom sheetu na mobile).
-// Fasety (20.11, wariant A): tylko wartości, które ma choć jeden opublikowany przepis; grupa bez wartości
-// znika; przy wartości licznik — ile przepisów byłoby po jej dołożeniu. 0 i niewybrana → disabled,
-// przygaszona, na swoim miejscu. „Bez przygotowania wcześniej” tylko, gdy któryś przepis go wymaga.
-// loading: słowniki albo lista jeszcze się wczytują — szkielety sekcji w tych samych klasach.
+// Facets: only values that at least one published recipe has; a group without values
+// disappears; each value has a counter of how many recipes there would be after adding it. 0 and not selected → disabled,
+// dimmed, in its place. "Bez przygotowania wcześniej" only when some recipe requires prep.
 const props = defineProps<{
     axes: ITaxonomyAxis[];
-    /** Opublikowane przepisy (cała lista, bez filtrów) — źródło faset i liczników. */
+    /** Published recipes (the whole list, unfiltered): the source of facets and counters. */
     recipes: RecipeBaseDto[];
     loading?: boolean;
 }>();
 
-/** Rzędy chipów szkieletu: typ dania, czas, trudność, diety, dwie osie (fasety to zwykle 1–2 rzędy). */
+/** Skeleton chip rows: dish type, time, difficulty, diets, two axes (facets are usually 1–2 rows). */
 const SK_ROWS = [2, 1, 1, 1, 1, 1];
 const f = defineModel<IListFilters>({ required: true });
 
@@ -55,7 +53,7 @@ function options(dim: FacetDim, values: { id: number; label: string; color?: str
     const out: IOption[] = [];
     for (const v of values) {
         const on = isOn(dim, v.id);
-        // wybrana z linku zostaje widoczna, nawet gdy nie ma przepisów — da się ją odznaczyć
+        // a value selected from a link stays visible even without recipes, so it can be unselected
         if (!on && !facetPresent(props.recipes, dim, v.id)) continue;
         out.push({ ...v, on, count: facetCount(props.recipes, f.value, props.axes, dim, v.id) });
     }
@@ -67,7 +65,7 @@ function axisGroup(a: ITaxonomyAxis, kind: IGroup['kind'], hint?: string): IGrou
     return { key: a.code, label: a.label, dim, kind, hint, options: options(dim, a.values) };
 }
 
-// Kolejność jak w prototypie: typ dania, czas, trudność, diety, potem reszta osi.
+// Order: dish type, time, difficulty, diets, then the remaining axes.
 const groups = computed<IGroup[]>(() => {
     const dish = props.axes.find((a) => a.code === 'dish');
     const diet = props.axes.find((a) => a.code === 'diet');
@@ -290,7 +288,6 @@ input:focus-visible + .filters__track {
     flex-wrap: wrap;
     gap: 6px;
 }
-/* licznik przy wartości (prototyp pz-main.jsx, FChip): Geist Mono 12, --ink-muted; wybrana — akcent */
 .filters__count {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -300,7 +297,6 @@ input:focus-visible + .filters__track {
 .chip.is-active .filters__count {
     color: inherit;
 }
-/* 0 i niewybrana: przygaszona, nieaktywna, na swoim miejscu */
 .chip:disabled {
     opacity: 0.55;
     color: var(--ink-faint);
@@ -312,7 +308,7 @@ input:focus-visible + .filters__track {
 .chip:disabled .filters__count {
     color: var(--ink-faint);
 }
-/* szkielet: prawdziwe .chip / .filters__legend (te same wysokości), treść przezroczysta */
+/* skeleton: the real .chip / .filters__legend (same heights), transparent content */
 .fsk__row {
     flex-basis: 100%;
     display: flex;

@@ -1,5 +1,4 @@
-// Makroskładniki: typy z API, zaokrąglenia i formatowanie zakresów („20 – 22 g (~21)”).
-// Logika przeniesiona z prototypu (Claude Design: mk-main.jsx — rnd, fmt, fmtText). Wyliczenia są po stronie API (services/nutrition.go).
+// The calculations happen in the API (services/nutrition.go).
 
 export type NutrientKey = 'kcal' | 'protein' | 'fat' | 'carbs' | 'fiber';
 
@@ -11,22 +10,21 @@ export const NUTRIENTS: { key: NutrientKey; label: string; unit: string }[] = [
     { key: 'fiber', label: 'Błonnik', unit: 'g' },
 ];
 
-/** Wartość składnika (na 100 g) lub gramy jednostki; max null = jedna wartość. */
+/** Ingredient value (per 100 g) or grams per unit; max null = single value. */
 export type Range = { min: number; max: number | null };
-/** Wartość wyliczona dla przepisu. */
 export type SumRange = { min: number; max: number };
 
 export type Macros = Partial<Record<NutrientKey, Range>>;
 
 export interface IRecipeNutrition {
     perPortion: Partial<Record<NutrientKey, SumRange>>;
-    /** Pominięte w całości (brak makro albo przelicznika). */
+    /** Skipped entirely (no macros or no conversion). */
     missing: string[];
-    /** Wliczone, ale bez danej wartości → „bez: tofu naturalne”. Brak w starym cache. */
+    /** Counted, but missing a value → "bez: tofu naturalne". Absent in the old cache. */
     incomplete?: Partial<Record<NutrientKey, string[]>>;
 }
 
-/** '100g' = dane składnika (kcal co 1, g co 0,1) · 'recipe' = wyliczone (kcal co 10 / co 5 poniżej 100, g co 1 / co 0,5 poniżej 10). */
+/** '100g' = ingredient data (kcal step 1, g step 0.1) · 'recipe' = computed (kcal step 10 / 5 below 100, g step 1 / 0.5 below 10). */
 export type RoundMode = '100g' | 'recipe';
 
 export type Formatted =
@@ -54,13 +52,13 @@ export function fmt(
     return { single: false, a, b, m: rnd((val.min + val.max) / 2, key, mode) };
 }
 
-/** Średnia (dla pojedynczej wartości sama wartość) — do „~520 kcal”. */
+/** Average (for a single value, the value itself), for "~520 kcal". */
 export const avg = (f: Formatted) => (f.single ? f.a : f.m);
 
 export const fmtText = (f: Formatted | null, unit: string) =>
     !f ? '—' : f.single ? `${nf(f.a)} ${unit}` : `${nf(f.a)} – ${nf(f.b)} ${unit} (~${nf(f.m)})`;
 
-/** Tekst dla czytnika ekranu: „od 20 do 22 g, średnio około 21”. */
+/** Screen reader text: "od 20 do 22 g, średnio około 21". */
 export const spokenText = (f: Formatted | null, unit: string) =>
     !f
         ? 'brak danych'
@@ -68,7 +66,6 @@ export const spokenText = (f: Formatted | null, unit: string) =>
           ? `${nf(f.a)} ${unit}`
           : `od ${nf(f.a)} do ${nf(f.b)} ${unit}, średnio około ${nf(f.m)}`;
 
-/** Gramy jednostki: „90 – 100 g” albo „10 g” (bez średniej). */
 export function fmtGrams(r: Range): string {
     const f = fmt(r, 'g', '100g');
     if (!f) return '—';
@@ -78,7 +75,7 @@ export function fmtGrams(r: Range): string {
 export const scaleRange = (r: SumRange | undefined, n: number): SumRange | undefined =>
     r && { min: r.min * n, max: r.max * n };
 
-/** Udział białka, tłuszczu i węglowodanów w energii (B×4, T×9, W×4 ze średnich), w %. */
+/** Share of protein, fat and carbs in energy (P×4, F×9, C×4 from the averages), in %. */
 export function energySplit(
     pp: IRecipeNutrition['perPortion']
 ): { protein: number; fat: number; carbs: number } | null {

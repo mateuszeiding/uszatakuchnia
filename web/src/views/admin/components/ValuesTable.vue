@@ -13,8 +13,7 @@ import {
 } from '@/data/api/taxonomy/fetch';
 import type { ITaxonomyAxis, ITaxonomyValue } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Wartości jednej osi: edycja w wierszu (nazwa, kolor), dodawanie, usuwanie z przeniesieniem.
-/** axis null = ładowanie: ta sama tabela z wierszami-szkieletami, wiersz dodawania nieaktywny. */
+/** axis null = loading: the same table with skeleton rows, the add row disabled. */
 const props = defineProps<{ axis: ITaxonomyAxis | null }>();
 const emit = defineEmits<{ changed: [] }>();
 
@@ -331,7 +330,6 @@ tr.is-editing td {
 .swatch.is-active {
     border-color: var(--ink);
 }
-/* szkielet wierszy */
 .sk-cell {
     display: inline-block;
     width: 120px;

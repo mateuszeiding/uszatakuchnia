@@ -1,6 +1,5 @@
 <template>
-    <!-- Ten sam układ co ChallengeCard: badge (prawdziwa klasa .badge-attr — ta sama wysokość),
-         tytuł i opis po 2 linie, stopka z linią; kółko „zrobione” w rogu. -->
+    <!-- The same layout as ChallengeCard (the real .badge-attr class keeps the badge height). -->
     <div
         class="skc"
         aria-hidden="true"
@@ -52,7 +51,7 @@
     inset: 0;
     border-radius: var(--r-pill);
 }
-/* jak .ch-card__title: 18 px × 1,25, dwie linie */
+/* like .ch-card__title: 18 px × 1.25, two lines */
 .skc__title {
     font-size: 18px;
     min-height: calc(2 * 18px * 1.25);
@@ -60,7 +59,7 @@
     flex-direction: column;
     justify-content: space-around;
 }
-/* jak .ch-card__desc: 14 px × 1,5, dwie linie */
+/* like .ch-card__desc: 14 px × 1.5, two lines */
 .skc__desc {
     flex: 1;
     min-height: calc(2 * 14px * 1.5);
@@ -83,7 +82,7 @@
 .skc__line--mid {
     width: 70%;
 }
-/* jak .ch-card__foot: linia, 10 px odstępu, wiersz tekstu 13 px (&nbsp; trzyma wysokość linii) */
+/* like .ch-card__foot: border, 10 px gap, a 13 px text line (&nbsp; keeps the line height) */
 .skc__foot {
     font-size: 13px;
     padding-top: 10px;

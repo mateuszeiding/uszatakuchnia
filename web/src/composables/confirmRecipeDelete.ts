@@ -4,16 +4,15 @@ import { API } from '@/data/api/API';
 import type { RecipeDto, RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
 
 /**
- * Potwierdzenie usunięcia przepisu (formularz i Panel → Przepisy).
- * Jeśli prowadzą do niego składniki innych przepisów — akapit i lista „Przepis · składnik”
- * (linki znikną przez ON DELETE SET NULL, składniki zostaną).
+ * If ingredient rows of other recipes link to it: a paragraph and a "Przepis · składnik" list
+ * (the links go away via ON DELETE SET NULL, the ingredients stay).
  */
 export async function confirmRecipeDelete(r: {
     id: number;
     name: string;
     status: RecipeStatus;
 }): Promise<boolean> {
-    // Świeże dane bez cache — lista linków ma być aktualna w chwili usuwania.
+    // Fresh data without cache: the link list must be current at delete time.
     const raw = await API.Client.get<Pick<RecipeDto, 'linkedFrom'>>(`recipes/${r.id}`);
     const from = raw.linkedFrom ?? [];
     const recipes = new Set(from.map((x) => x.recipeId)).size;

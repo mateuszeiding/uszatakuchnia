@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-// Wiersze wskazówek kroku w formularzu: ikona, pole, ✕ (bez potwierdzenia — nic nie jest zapisane do „Zapisz”).
+// ✕ deletes without confirmation: nothing is saved until "Zapisz".
 import { MAX_HINT_LEN } from '../recipeForm';
 
 import BulbIcon from '@/components/BulbIcon.vue';
@@ -54,7 +54,7 @@ const hints = defineModel<string[]>('hints', { required: true });
     display: grid;
     grid-template-columns: 16px minmax(0, 1fr) 30px;
     gap: 8px;
-    /* pole rośnie w dół — ikona i ✕ zostają przy pierwszej linii */
+    /* the field grows downward; the icon and ✕ stay by the first line */
     align-items: start;
 }
 .hint-row__icon {
@@ -65,7 +65,6 @@ const hints = defineModel<string[]>('hints', { required: true });
 .hint-row .row-icon-btn {
     margin-top: 5px;
 }
-/* jedna linia jak .input (40 px), dalej rośnie z treścią */
 .hint-row__input {
     min-height: 40px;
     font-size: 13px;

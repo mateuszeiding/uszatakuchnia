@@ -6,25 +6,25 @@ import (
 	h "uszatakuchnia/handlers"
 )
 
-// Routes — całe API (+ strony dla botów podglądu na końcu). Nowy endpoint = nowa linijka tutaj (vercel.json kieruje całe /api/* do
-// jednej funkcji, więc nic więcej nie trzeba). Zapis (wszystko poza GET) wymaga właściciela —
-// pilnuje tego resp.Begin w api/index.go, a test w router_test.go sprawdza każdą trasę z tej tabeli.
+// Routes is the whole API (+ link-preview bot pages at the end). A new endpoint = a new line here (vercel.json
+// sends all of /api/* to one function, so nothing else is needed). Writes (anything but GET) require the owner:
+// resp.Begin in api/index.go enforces it, and router_test.go checks every route in this table.
 var Routes = []Route{
-	// Przepisy
-	{http.MethodGet, "/api/recipes/list", h.RecipeList}, // ?admin=true — także szkice (właściciel)
+	// Recipes
+	{http.MethodGet, "/api/recipes/list", h.RecipeList}, // ?admin=true also returns drafts (owner)
 	{http.MethodPost, "/api/recipes", h.RecipeCreate},
-	{http.MethodGet, "/api/recipes/{id}", h.RecipeGet}, // szkic: 404 dla nie-właściciela
+	{http.MethodGet, "/api/recipes/{id}", h.RecipeGet}, // draft: 404 for non-owners
 	{http.MethodPut, "/api/recipes/{id}", h.RecipeUpdate},
 	{http.MethodDelete, "/api/recipes/{id}", h.RecipeDelete},
 
-	// Składniki
+	// Ingredients
 	{http.MethodGet, "/api/ingredients/list", h.IngredientList},
 	{http.MethodPost, "/api/ingredients", h.IngredientCreate},
 	{http.MethodPut, "/api/ingredients/{id}", h.IngredientUpdate},
 	{http.MethodDelete, "/api/ingredients/{id}", h.IngredientDelete},
 	{http.MethodGet, "/api/enums/ingredient", h.IngredientTypes},
 
-	// Słowniki (panel → Klasyfikacja)
+	// Dictionaries (admin → Classification)
 	{http.MethodGet, "/api/taxonomy/list", h.Dictionaries},
 	{http.MethodPost, "/api/taxonomy/values", h.ValueCreate},
 	{http.MethodPut, "/api/taxonomy/values/{id}", h.ValueUpdate},
@@ -39,20 +39,20 @@ var Routes = []Route{
 	{http.MethodPut, "/api/taxonomy/challenge-formats/{id}", h.ChallengeFormatUpdate},
 	{http.MethodDelete, "/api/taxonomy/challenge-formats/{id}", h.ChallengeFormatDelete}, // ?moveTo=
 
-	// Wyzwania
+	// Challenges
 	{http.MethodGet, "/api/challenges/list", h.ChallengeList},
-	{http.MethodGet, "/api/challenges", h.ChallengeList}, // jak dawniej: GET bez id = lista
+	{http.MethodGet, "/api/challenges", h.ChallengeList}, // GET without an id = list
 	{http.MethodPost, "/api/challenges", h.ChallengeCreate},
 	{http.MethodGet, "/api/challenges/{id}", h.ChallengeGet},
 	{http.MethodPut, "/api/challenges/{id}", h.ChallengeUpdate},
 	{http.MethodDelete, "/api/challenges/{id}", h.ChallengeDelete},
 
-	// Zdjęcia
+	// Photos
 	{http.MethodPost, "/api/photos", h.PhotoUpload},
 	{http.MethodGet, "/api/photos/{id}", h.PhotoGet},
 
-	// Strony dla botów podglądu linków (Messenger, WhatsApp…): index.html z meta przepisu.
-	// Jedyne trasy poza /api/ — vercel.json kieruje tu tylko ich user-agenty (test w router_test.go).
+	// Pages for link-preview bots (Messenger, WhatsApp…): index.html with the recipe meta.
+	// The only routes outside /api/; vercel.json sends only their user agents here (tested in router_test.go).
 	{http.MethodGet, "/recipes/{id}", h.RecipeSharePage},
 	{http.MethodGet, "/recipes/{id}/zakupy", h.ShoppingSharePage},
 }

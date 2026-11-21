@@ -22,10 +22,7 @@ import {
 } from '@/shared/utils/challenges';
 import { setTitle } from '@/shared/utils/title';
 
-// Strona wyzwania. Z losowania (?los=) zamiast „← Wszystkie wyzwania” pasek „Wylosowane”.
-// Desktop: treść + karta „Składniki” po prawej (przyklejona); bez składników — jedna kolumna 760 px.
-// Pod metadanymi blok „Uwagi” (przed „Oznacz jako zrobione” i opisem).
-// Telefon: format, tytuł, metadane, uwagi, opis, składniki, „Oznacz jako zrobione” na całą szerokość, źródło.
+// Challenge page. Coming from a random pick (?los=), the "Wylosowane" bar replaces "← Wszystkie wyzwania".
 const props = defineProps<{ id: string }>();
 
 const route = useRoute();
@@ -51,7 +48,6 @@ async function load(id: number) {
         challenge.value = await fetchChallengeWithClient(qc, id);
         setTitle(challenge.value.title);
     } catch (e) {
-        // nieistniejące wyzwanie → lista
         if ((e as { response?: { status?: number } }).response?.status === 404) {
             router.replace('/challenges');
             return;
@@ -67,7 +63,7 @@ watch(
     { immediate: true }
 );
 
-// „Losuj jeszcze raz”: ta sama pula, bez zrobionych i bez otwartego; wynik podmienia wpis w historii.
+// "Losuj jeszcze raz": the same pool, without done ones and the open one; the result replaces the history entry.
 async function rollAgain(includeDone: boolean, sel = los.value ?? []) {
     const current = challenge.value?.id;
     let list: IChallenge[];

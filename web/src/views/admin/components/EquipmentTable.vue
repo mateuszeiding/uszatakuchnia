@@ -9,7 +9,6 @@ import { showToast } from '@/composables/useToast';
 import { createEquipment, deleteEquipment, updateEquipment } from '@/data/api/taxonomy/fetch';
 import type { IEquipment } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Słownik sprzętu: dodawanie, zmiana nazwy w wierszu, usuwanie (używany → zamiana albo usunięcie z przepisów).
 const props = defineProps<{ items: IEquipment[] }>();
 const emit = defineEmits<{ changed: [] }>();
 

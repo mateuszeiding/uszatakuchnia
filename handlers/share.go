@@ -17,17 +17,17 @@ import (
 	"uszatakuchnia/db/entities"
 )
 
-// Podgląd linku w komunikatorach (Messenger, WhatsApp, Slack…). Boty podglądu nie uruchamiają JS,
-// więc meta przepisu muszą przyjść w HTML z serwera. vercel.json kieruje tu TYLKO ich user-agenty
-// (rewrite z `has`); ludzie dostają statyczny index.html bez funkcji.
+// Link previews in messengers (Messenger, WhatsApp, Slack…). Preview bots don't run JS,
+// so the recipe meta tags must come in the server's HTML. vercel.json routes ONLY their user agents
+// here (rewrite with `has`); people get the static index.html without the function.
 //
-// Strona = index.html aplikacji z tego samego wdrożenia (skrypty z hashami pasują do buildu),
-// w którym blok między <!-- meta:start --> a <!-- meta:end --> zastępujemy meta przepisu.
-// Gdy pobranie się nie uda — minimalny HTML z samymi meta (bot i tak nie uruchamia JS).
+// The page = the app's index.html from the same deployment (hashed scripts match the build),
+// with the block between <!-- meta:start --> and <!-- meta:end --> replaced by the recipe meta.
+// If fetching it fails: minimal HTML with just the meta (the bot doesn't run JS anyway).
 
-// ogDefaultImage — obraz podglądu (adres bezwzględny albo ścieżka od korzenia). Pusty = bez og:image.
-// Jeden obraz od designera dla wszystkich stron, dopóki przepisy nie mają zdjęć (web/public/og-image.png,
-// ten sam w web/index.html).
+// ogDefaultImage is the preview image (absolute URL or root path). Empty = no og:image.
+// One designer image for every page until recipes have photos (web/public/og-image.png,
+// the same one as in web/index.html).
 const (
 	ogDefaultImage       = "/og-image.png"
 	ogDefaultImageWidth  = 1200
@@ -42,22 +42,20 @@ const (
 	indexCacheTTL   = 10 * time.Minute
 )
 
-// RecipeSharePage — GET /recipes/{id} (tylko boty podglądu linków).
 func RecipeSharePage(w http.ResponseWriter, r *http.Request) { sharePage(w, r, false) }
 
-// ShoppingSharePage — GET /recipes/{id}/zakupy (tylko boty podglądu linków).
 func ShoppingSharePage(w http.ResponseWriter, r *http.Request) { sharePage(w, r, true) }
 
 type pageMeta struct {
-	Title       string // <title>
+	Title       string
 	OGTitle     string
 	Description string
-	URL         string // og:url; "" = bez
-	Image       string // og:image; "" = bez
-	Type        string // og:type
+	URL         string
+	Image       string
+	Type        string
 }
 
-// shareRecipe — to, czego potrzebują meta (bez kroków i składników).
+// shareRecipe: what the meta tags need (no steps or ingredients).
 type shareRecipe struct {
 	ID          uint
 	Name        string
@@ -69,7 +67,7 @@ type shareRecipe struct {
 	Status      string
 }
 
-// loadShareRecipe — podmieniana w testach (bez bazy).
+// loadShareRecipe is swapped out in tests (no database).
 var loadShareRecipe = func(ctx context.Context, id uint) (*shareRecipe, error) {
 	var rec shareRecipe
 	err := db.DB().WithContext(ctx).Model(&entities.Recipe{}).
@@ -87,26 +85,26 @@ func sharePage(w http.ResponseWriter, r *http.Request, shopping bool) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
 	defer cancel()
-	// szkic, brak przepisu albo błąd bazy → meta ogólne (bez tytułu szkicu), dalej 200
+	// draft, missing recipe or DB error → generic meta (no draft title), still 200
 	if rec, err := loadShareRecipe(ctx, pathID(r)); err == nil && rec.Status == entities.StatusPublished {
 		path := r.URL.Path
 		if shopping && r.URL.RawQuery != "" {
-			path += "?" + r.URL.RawQuery // porcje i zamienniki: każdy wariant listy ma swój podgląd
+			path += "?" + r.URL.RawQuery // servings and substitutes: each list variant gets its own preview
 		}
 		meta = recipeMeta(rec, shopping, servingsParam(r, rec.Servings), origin, path)
 	}
 
 	page := renderPage(indexTemplate(ctx, origin), meta)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	// krótko w CDN: poprawka przepisu w panelu dociera do podglądów w ciągu kilku minut
+	// short CDN cache: a recipe fix in the admin panel reaches previews within minutes
 	w.Header().Set("Cache-Control", "public, max-age=0, s-maxage=300")
 	w.WriteHeader(http.StatusOK)
 	_, _ = io.WriteString(w, page)
 }
 
-// shareOrigin — adres strony do pobrania index.html i og:url. SHARE_ORIGIN (testy lokalne),
-// a na Vercelu domena produkcyjna (zmienna systemowa). Nie bierzemy Host z żądania: index.html
-// jest trzymany w pamięci funkcji, więc obcy Host podmieniłby stronę innym botom.
+// shareOrigin is the site URL used to fetch index.html and for og:url: SHARE_ORIGIN (local tests),
+// or the production domain on Vercel (system variable). We don't use the request Host: index.html
+// is cached in function memory, so a foreign Host would swap the page for other bots.
 func shareOrigin() string {
 	if o := strings.TrimRight(os.Getenv("SHARE_ORIGIN"), "/"); o != "" {
 		return o
@@ -146,8 +144,8 @@ func recipeMeta(rec *shareRecipe, shopping bool, servings int, origin, path stri
 	return m
 }
 
-// recipeDescription — tagline, a bez niego początek opisu (~150 znaków, na granicy słowa);
-// bez obu: „Przepis na 6 porcji · 3–5 h · Uszata Kuchnia”.
+// recipeDescription: the tagline, otherwise the start of the description (~150 chars, cut at a word);
+// without either: "Przepis na 6 porcji · 3–5 h · Uszata Kuchnia".
 func recipeDescription(rec *shareRecipe) string {
 	if rec.Tagline != nil && strings.TrimSpace(*rec.Tagline) != "" {
 		return collapse(*rec.Tagline)
@@ -167,7 +165,7 @@ func recipeDescription(rec *shareRecipe) string {
 	return strings.Join(append(parts, siteName), " · ")
 }
 
-// servingsParam — ?porcje= z linku (1–20, jak na froncie), inaczej porcje przepisu.
+// servingsParam: ?porcje= from the link (1–20, as on the frontend), otherwise the recipe's servings.
 func servingsParam(r *http.Request, def int) int {
 	var n int
 	if _, err := fmt.Sscanf(r.URL.Query().Get("porcje"), "%d", &n); err == nil && n >= 1 && n <= 20 {
@@ -187,12 +185,12 @@ func plural(n int, one, few, many string) string {
 	return many
 }
 
-// „6 porcji” (mianownik, jak licznik porcji na stronie) i „na 6 porcji” (biernik: porcję / porcje / porcji).
+// "6 porcji" (nominative, like the servings counter on the page) and "na 6 porcji" (accusative: porcję / porcje / porcji).
 func servingsNoun(n int) string { return plural(n, "porcja", "porcje", "porcji") }
 func servingsAcc(n int) string  { return plural(n, "porcję", "porcje", "porcji") }
 
-// formatTime — jak web/src/shared/utils/time.ts (formatTime): „40 min”, „20–30 min”, „3–5 h”,
-// „45 min – 1 h 30 min”; "" gdy czasu nie podano.
+// formatTime mirrors web/src/shared/utils/time.ts (formatTime): "40 min", "20–30 min", "3–5 h",
+// "45 min – 1 h 30 min"; "" when no time is given.
 func formatTime(min int, max *int) string {
 	one := func(m int) string {
 		if m < 60 {
@@ -255,7 +253,7 @@ var (
 	indexFetched time.Time
 )
 
-// fetchIndex — podmieniana w testach.
+// fetchIndex is swapped out in tests.
 var fetchIndex = func(ctx context.Context, origin string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, origin+"/index.html", nil)
 	if err != nil {
@@ -276,7 +274,7 @@ var fetchIndex = func(ctx context.Context, origin string) (string, error) {
 	return string(body), nil
 }
 
-// indexTemplate — index.html z pamięci funkcji (10 min), "" = nie udało się pobrać.
+// indexTemplate: index.html cached in function memory (10 min); "" = fetch failed.
 func indexTemplate(ctx context.Context, origin string) string {
 	if origin == "" {
 		return ""
@@ -289,7 +287,7 @@ func indexTemplate(ctx context.Context, origin string) string {
 	if s, err := fetchIndex(ctx, origin); err == nil {
 		indexHTML, indexFetched = s, time.Now()
 	}
-	return indexHTML // przy błędzie: ostatnia dobra kopia albo ""
+	return indexHTML // on error: the last good copy or ""
 }
 
 const (
@@ -324,7 +322,7 @@ func metaBlock(m pageMeta) string {
 	return b.String()
 }
 
-// renderPage — index.html z podmienionym blokiem meta; bez szablonu minimalny dokument.
+// renderPage: index.html with the meta block replaced; without a template, a minimal document.
 func renderPage(tpl string, m pageMeta) string {
 	block := metaBlock(m)
 	if i := strings.Index(tpl, metaStart); i >= 0 {

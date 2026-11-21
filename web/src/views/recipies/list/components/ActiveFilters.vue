@@ -5,7 +5,6 @@ import { DIFFICULTY, emptyFilters, type IListFilters, TIMES } from '../listFilte
 
 import type { ITaxonomyAxis } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Pasek aktywnych filtrów: każdy chip usuwa jeden filtr, „Wyczyść wszystko” — wszystkie.
 const props = defineProps<{ axes: ITaxonomyAxis[] }>();
 const f = defineModel<IListFilters>({ required: true });
 

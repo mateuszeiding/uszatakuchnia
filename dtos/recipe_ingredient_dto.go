@@ -11,43 +11,42 @@ type RecipeIngredientDto struct {
 
 	Quantity *string `json:"quantity,omitempty"`
 	UnitID   *uint   `json:"unitId,omitempty"`
-	Unit     *string `json:"unit,omitempty"` // nazwa jednostki (forma słownikowa); odmiana po stronie frontu
+	Unit     *string `json:"unit,omitempty"` // unit name (dictionary form); the frontend inflects it
 	Note     *string `json:"note,omitempty"`
 	Optional bool    `json:"optional"`
 
-	Allergens []string `json:"allergens"` // kody alergenów składnika (do listy „Alergeny” w przepisie)
+	Allergens []string `json:"allergens"`
 
-	// Dział w sklepie (lista zakupów).
+	// Store aisle (shopping list).
 	IngredientType IngredientTypeRefDto `json:"ingredientType"`
-	// Składnik pomijany na liście zakupów (np. woda).
+	// Skipped on the shopping list (e.g. water).
 	SkipShopping bool `json:"skipShopping"`
-	// Ile gramów to 1 jednostka tej pozycji; nil = nie da się przeliczyć (lista zakupów sumuje różne jednostki przez gramy).
+	// Grams per 1 unit of this row; nil = can't convert (the shopping list adds up mixed units via grams).
 	GramsPerUnit *GramsRangeDto `json:"gramsPerUnit"`
 
-	// Przepis, do którego prowadzi składnik; nil = brak. Szkic też jest zwracany (ze statusem) —
-	// strona publiczna go nie pokazuje, formularz tak.
+	// Drafts are returned too (with their status): the public page hides them, the form shows them.
 	LinkedRecipe *LinkedRecipeDto `json:"linkedRecipe"`
 
-	// Wkład pozycji w makro na porcję (suma wkładów = RecipeDto.nutrition); nil = pozycja się nie liczy
-	// (opcjonalna, „do smaku”, bez ilości). Front liczy z wkładów makro wybranego wariantu.
+	// This row's share of the per-serving macros (shares add up to RecipeDto.nutrition); nil = the row doesn't count
+	// (optional, to taste, no quantity). The frontend computes the chosen variant's macros from these shares.
 	Nutrition *entities.RecipeNutrition `json:"nutrition"`
-	// Zamienniki w kolejności; [] = brak.
+	// Substitutes in order; [] = none.
 	Substitutes []RecipeSubstituteDto `json:"substitutes"`
 }
 
-// RecipeSubstituteDto — zamiennik pozycji z danymi do alergenów, listy zakupów i makro (bez kolejnego zapytania).
+// RecipeSubstituteDto is a row's substitute with data for allergens, the shopping list and macros (no extra request).
 type RecipeSubstituteDto struct {
 	IngredientID   uint                 `json:"ingredientId"`
 	Name           string               `json:"name"`
-	Mix            bool                 `json:"mix"` // „pół na pół” ze składnikiem głównym
+	Mix            bool                 `json:"mix"` // "half and half" with the main ingredient
 	Allergens      []string             `json:"allergens"`
 	IngredientType IngredientTypeRefDto `json:"ingredientType"`
 	SkipShopping   bool                 `json:"skipShopping"`
-	// Gramy na 1 jednostkę pozycji dla zamiennika; nil = nie da się przeliczyć.
+	// Grams per 1 unit of the row for the substitute; nil = can't convert.
 	GramsPerUnit *GramsRangeDto `json:"gramsPerUnit"`
-	// Składnik ma jakiekolwiek dane makro (inaczej „bez danych o wartościach odżywczych”).
+	// The ingredient has any macro data (otherwise "no nutrition data").
 	HasNutrition bool `json:"hasNutrition"`
-	// Wkład wariantu w makro na porcję (mieszanka = połowa głównego + połowa zamiennika); nil = pozycja się nie liczy.
+	// The variant's share of the per-serving macros (mix = half main + half substitute); nil = the row doesn't count.
 	Nutrition *entities.RecipeNutrition `json:"nutrition"`
 }
 
@@ -55,7 +54,7 @@ type LinkedRecipeDto struct {
 	ID     uint    `json:"id"`
 	Title  string  `json:"title"`
 	Status string  `json:"status"`
-	Image  *string `json:"image"` // adres zdjęcia przepisu (miniatura); nil = brak zdjęcia
+	Image  *string `json:"image"`
 }
 
 type IngredientTypeRefDto struct {
@@ -63,7 +62,6 @@ type IngredientTypeRefDto struct {
 	Label string `json:"label"`
 }
 
-// GramsRangeDto — gramy na jednostkę; Max = Min dla pojedynczej wartości.
 type GramsRangeDto struct {
 	Min float64 `json:"min"`
 	Max float64 `json:"max"`

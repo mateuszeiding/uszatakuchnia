@@ -62,7 +62,7 @@ func initDB() error {
 
 	inst = db
 
-	// Migracje tylko, gdy schemat w bazie jest starszy niż kod (odcisk w schema_state).
+	// Migrate only when the database schema is older than the code (fingerprint in schema_state).
 	if err := ensureSchema(context.Background(), inst); err != nil {
 		return fmt.Errorf("schema: %w", err)
 	}

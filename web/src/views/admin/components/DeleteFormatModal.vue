@@ -5,7 +5,7 @@ import UModal from '@/components/UModal.vue';
 import type { IChallengeFormat } from '@/data/dtos/challenge/ChallengeDto';
 import { plural } from '@/shared/utils/challenges';
 
-// Usunięcie używanego formatu: format jest wymagany w wyzwaniu, więc wyzwania trzeba przenieść do innego.
+// Deleting a format in use: a challenge requires a format, so its challenges must move to another one.
 const props = defineProps<{ item: IChallengeFormat; others: IChallengeFormat[] }>();
 const emit = defineEmits<{ confirm: [moveTo: number]; close: [] }>();
 

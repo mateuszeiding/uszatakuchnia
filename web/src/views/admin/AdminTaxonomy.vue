@@ -13,7 +13,6 @@ import { invalidateRecipes } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient, invalidateDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 
-// Klasyfikacja: osie (Typ dania, Baza, Kuchnia, Diety, Praktyczne, …) + Jednostki + Sprzęt + Formaty wyzwań.
 const qc = useQueryClient();
 const dicts = ref<IDictionaries>();
 const tab = ref<string>('dish');
@@ -31,9 +30,9 @@ async function load() {
     dicts.value = await fetchDictionariesWithClient(qc);
 }
 async function reload() {
-    // etykiety / kolory / przeniesione wartości są też na kartach listy przepisów (cache 60 s)
+    // labels / colors / moved values also show on recipe list cards (60 s cache)
     invalidateRecipes(qc);
-    // nazwy formatów są też na kartach wyzwań
+    // format names also show on challenge cards
     invalidateChallenges(qc);
     await invalidateDictionaries(qc);
     await load();
@@ -51,7 +50,6 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
 
 <template>
     <h1 class="admin-title">Klasyfikacja</h1>
-    <!-- ładowanie: zakładki, opis i tabela w tych samych miejscach (szkielety), spinner nad tabelą -->
     <template v-if="!dicts">
         <div
             class="tabs tax-tabs"
@@ -160,7 +158,7 @@ const axis = computed(() => dicts.value?.axes.find((a) => a.code === tab.value))
 .tax-tabs {
     overflow-x: auto;
 }
-/* 8 zakładek (z „Formaty wyzwań”) nie mieści się przy ~1120 px: etykiety w jednej linii, pasek się przewija */
+/* 8 tabs (with "Formaty wyzwań") don't fit at ~1120 px: labels stay on one line and the bar scrolls */
 .tax-tabs .tab {
     white-space: nowrap;
 }

@@ -1,12 +1,11 @@
-// Wyszukiwarka listy przepisów: bez polskich znaków i akcentów, z prostą odmianą słów (bez słownika).
-// 1) obie strony znormalizowane: małe litery, bez diakrytyków (ł → l, ù → u) — „bulki” znajduje „Bułki”;
-//    zapytanie Z polskimi znakami porównujemy dosłownie (tylko małe litery): „mąka” nie łapie „makaronu”;
-// 2) całe zapytanie zawarte w tekście → trafienie (jak dotąd, tylko po normalizacji);
-// 3) inaczej każde słowo zapytania musi pasować do jakiegoś słowa tekstu: zawiera się w nim albo
-//    (słowo ≥ 4 znaki) ma z nim wspólny początek ≥ max(4, długość − 2, 70% długości) —
-//    „bulka” → „bułki”, „tymianek” → „tymiankiem”, ale „cukier” ≠ „cukinia”.
+// Recipe list search: ignores Polish characters and accents, with simple word inflection (no dictionary).
+// 1) both sides normalized: lowercase, no diacritics (ł → l, ù → u), so "bulki" finds "Bułki";
+//    a query WITH Polish characters is compared literally (lowercase only): "mąka" doesn't match "makaron";
+// 2) the whole query contained in the text → match (after normalization);
+// 3) otherwise every query word must match some word of the text: be contained in it, or
+//    (word ≥ 4 chars) share a prefix ≥ max(4, length − 2, 70% of length) with it:
+//    "bulka" → "bułki", "tymianek" → "tymiankiem", but "cukier" ≠ "cukinia".
 
-/** Małe litery bez diakrytyków. */
 export function normalize(s: string): string {
     return s.toLowerCase().replace(/ł/g, 'l').normalize('NFD').replace(/\p{M}/gu, '');
 }
@@ -25,11 +24,11 @@ function wordMatches(q: string, w: string): boolean {
     return commonPrefix(q, w) >= Math.max(4, q.length - 2, Math.ceil(q.length * 0.7));
 }
 
-/** Zapytanie przygotowane raz na całą listę. */
+/** Query prepared once for the whole list. */
 export interface ISearchQuery {
     text: string;
     words: string[];
-    /** Zapytanie bez znaków diakrytycznych → porównujemy bez nich po obu stronach. */
+    /** Query without diacritics → compare without them on both sides. */
     fold: boolean;
 }
 
@@ -43,7 +42,6 @@ export function prepareQuery(raw: string): ISearchQuery | null {
     return text ? { text, words: words(text), fold } : null;
 }
 
-/** Czy tekst (nazwa przepisu, kuchnia, składnik) pasuje do zapytania. */
 export function matches(q: ISearchQuery, target: string): boolean {
     const t = q.fold ? normalize(target) : lower(target);
     if (t.includes(q.text)) return true;

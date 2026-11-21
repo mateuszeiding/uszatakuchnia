@@ -6,9 +6,9 @@ import NumInput from './NumInput.vue';
 import MacroValue from '@/components/MacroValue.vue';
 import { type Macros, nf, type NutrientKey, NUTRIENTS, rnd } from '@/shared/utils/nutrition';
 
-// Makro na 100 g: 5 wierszy × min / max. Pusty wiersz pokazuje wartości odziedziczone (kursywą).
+// An empty row shows the inherited values.
 const props = defineProps<{
-    /** Wartości z podskładników, gdy składnik ma dzieci; null = bez dziedziczenia. */
+    /** Values from sub-ingredients when the ingredient has children; null = no inheritance. */
     inherited: Macros | null;
     errors: Record<string, string>;
 }>();

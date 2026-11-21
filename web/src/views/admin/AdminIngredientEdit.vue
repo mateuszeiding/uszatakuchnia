@@ -36,7 +36,6 @@ import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import { LOADING_DICTIONARIES } from '@/data/dtos/taxonomy/loadingDictionaries';
 import { NUTRIENTS } from '@/shared/utils/nutrition';
 
-// Edycja składnika jako osobna strona: podstawowe, makro na 100 g (z dziedziczeniem), przeliczniki jednostek.
 const props = defineProps<{ id?: string }>();
 const LIST = '/admin/ingredients';
 
@@ -57,7 +56,7 @@ let leaving = false;
 const ingredientId = computed(() => (props.id ? Number(props.id) : null));
 const current = computed(() => all.value.find((i) => i.id === ingredientId.value));
 
-// Przejście między składnikami (okruszki, baner) to ta sama trasa — wczytaj ponownie przy zmianie id.
+// Moving between ingredients (breadcrumbs, banner) stays on the same route, so reload when the id changes.
 async function load() {
     loading.value = true;
     [all.value, dicts.value] = await Promise.all([
@@ -113,7 +112,7 @@ async function save() {
         if (ingredientId.value != null) await updateIngredient(ingredientId.value, payload);
         else await createIngredient(payload);
         await invalidateIngredients(qc);
-        // makro składnika zmienia kcal na kartach listy przepisów (cache 60 s)
+        // ingredient macros change the kcal on recipe list cards (60 s cache)
         invalidateRecipes(qc);
         showToast(ingredientId.value != null ? 'Składnik zapisany' : 'Składnik dodany');
         leaving = true;
@@ -145,7 +144,6 @@ function cancel() {
     router.push(LIST);
 }
 
-// ─── Ostrzeżenie przy wyjściu ─────────────────────────────────
 const onBeforeUnload = (e: BeforeUnloadEvent) => {
     if (!dirty.value) return;
     e.preventDefault();
@@ -195,8 +193,6 @@ onBeforeRouteUpdate(guard);
         Nie ma takiego składnika.
         <RouterLink :to="LIST">Wróć do listy</RouterLink>
     </p>
-    <!-- ładowanie: ten sam formularz (sekcje 01–03, pola, tabela makro, 14 alergenów) nieaktywny,
-         z pustymi polami — układ jak po załadowaniu; spinner nad formularzem, poza układem -->
     <form
         v-else-if="dicts || loading"
         class="edit"
@@ -347,7 +343,6 @@ onBeforeRouteUpdate(guard);
     justify-content: center;
     pointer-events: none;
 }
-/* ładowanie: chipy alergenów bez etykiet (sam kształt) */
 .edit.is-loading :deep(.chip) {
     color: transparent;
 }

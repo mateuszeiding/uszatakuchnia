@@ -11,7 +11,7 @@ import type {
 export const CHALLENGES_KEY = ['challenges/list'];
 const STALE = 60 * 1000;
 
-/** Wszystkie wyzwania, najnowsze na górze (losowanie i liczniki liczone w przeglądarce). */
+/** All challenges, newest first (the random pick and counters are computed in the browser). */
 export const fetchChallengesWithClient = (qc: QueryClient) =>
     qc.fetchQuery({
         queryKey: CHALLENGES_KEY,
@@ -19,7 +19,7 @@ export const fetchChallengesWithClient = (qc: QueryClient) =>
         staleTime: STALE,
     });
 
-/** Wyzwanie po id. Z listy w pamięci, jeśli już jest (bez szkieletu po kliknięciu karty). */
+/** Challenge by id. From the in-memory list if it's there (no skeleton after clicking a card). */
 export const fetchChallengeWithClient = (qc: QueryClient, id: number) =>
     qc.fetchQuery({
         queryKey: ['challenges/', id],
@@ -30,7 +30,6 @@ export const fetchChallengeWithClient = (qc: QueryClient, id: number) =>
         staleTime: STALE,
     });
 
-/** Po zapisie / usunięciu: świeża lista i szczegóły. */
 export const invalidateChallenges = (qc: QueryClient) =>
     qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith('challenges/') });
 
@@ -43,15 +42,13 @@ export const updateChallenge = (id: number, body: IUpsertChallengeRequest) =>
 export const deleteChallenge = (id: number) =>
     API.Client.delete<{ deleted: number }>(`challenges/${id}`);
 
-// ─── Formaty (Panel → Klasyfikacja → Formaty wyzwań; lista jest w słownikach) ───
-
 export const createChallengeFormat = (name: string) =>
     API.Client.post<IChallengeFormat>('taxonomy/challenge-formats', { name });
 
 export const updateChallengeFormat = (id: number, name: string) =>
     API.Client.put<IChallengeFormat>(`taxonomy/challenge-formats/${id}`, { name });
 
-/** Używany format: moveTo = format, do którego przechodzą wyzwania (format jest wymagany). */
+/** Format in use: moveTo = the format its challenges move to (a format is required). */
 export const deleteChallengeFormat = (id: number, moveTo?: number) =>
     API.Client.delete<{ deleted: number; moved: number }>(
         `taxonomy/challenge-formats/${id}${moveTo ? `?moveTo=${moveTo}` : ''}`

@@ -1,11 +1,11 @@
-// v-autosize: textarea rośnie (i maleje) razem z treścią. Minimum daje `rows` / min-height z DS.
+// v-autosize: the textarea grows (and shrinks) with its content. The minimum comes from `rows` / min-height in the DS.
 import type { Directive } from 'vue';
 
 type El = HTMLTextAreaElement & { _autosize?: { ro: ResizeObserver; onInput: () => void } };
 
 function fit(el: HTMLTextAreaElement) {
     if (!el.isConnected) return;
-    // „auto” na chwilę zwija pole — zachowujemy przewinięcie strony, żeby nie skakała.
+    // Setting "auto" briefly collapses the field, so we keep the page scroll position to avoid a jump.
     const y = window.scrollY;
     el.style.height = 'auto';
     const border = el.offsetHeight - el.clientHeight;
@@ -18,7 +18,7 @@ export const vAutosize: Directive<El> = {
         el.classList.add('textarea--auto');
         const onInput = () => fit(el);
         let width = el.clientWidth;
-        // Zmiana szerokości (okno, panel) zmienia łamanie linii.
+        // A width change (window, panel) changes line wrapping.
         const ro = new ResizeObserver(() => {
             if (el.clientWidth === width) return;
             width = el.clientWidth;
@@ -29,7 +29,7 @@ export const vAutosize: Directive<El> = {
         el._autosize = { ro, onInput };
         fit(el);
     },
-    // Wartość ustawiona z kodu (wczytanie przepisu, przeniesienie wskazówki).
+    // Value set from code (recipe load, moving a hint).
     updated(el) {
         fit(el);
     },

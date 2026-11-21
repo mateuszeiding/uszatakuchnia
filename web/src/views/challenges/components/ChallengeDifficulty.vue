@@ -2,8 +2,7 @@
 import FlameIcon from '@/components/FlameIcon.vue';
 import { DIFFICULTIES, levelName } from '@/shared/utils/challenges';
 
-// Trudność wyzwania 1–5: płomienie (wypełnione --c-tomato, puste obrysem --rule-strong) + podpis słowny.
-// Ikony są aria-hidden; czytnik dostaje „trudność 3 z 5”. Bez podpisu (tabela w panelu) — sam tekst dla czytnika.
+// Icons are aria-hidden; screen readers get "trudność 3 z 5". Without the label (admin table): screen reader text only.
 withDefaults(defineProps<{ level: number; size?: number; label?: boolean; compact?: boolean }>(), {
     size: 16,
     label: true,

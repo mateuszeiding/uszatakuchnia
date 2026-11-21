@@ -13,15 +13,12 @@ import (
 	"uszatakuchnia/services"
 )
 
-// ─── Wyzwania ─────────────────
+// ─── Challenges ─────────────────
 //
-//	GET    /api/challenges/list   lista, najnowsze na górze (też GET /api/challenges)
-//	GET    /api/challenges/{id}   szczegóły (404, gdy nie ma)
-//	POST   /api/challenges        nowe wyzwanie (od razu publiczne)
-//	PUT    /api/challenges/{id}   zapis
-//	DELETE /api/challenges/{id}
+//	GET    /api/challenges/list   newest first (also GET /api/challenges)
+//	GET    /api/challenges/{id}   404 when missing
+//	POST   /api/challenges        public right away (no draft)
 
-// ChallengeList — GET /api/challenges/list.
 func ChallengeList(w http.ResponseWriter, r *http.Request) {
 	list, err := services.LoadChallenges(db.DB())
 	if err != nil {
@@ -35,7 +32,6 @@ func ChallengeList(w http.ResponseWriter, r *http.Request) {
 	resp.JSON(w, http.StatusOK, out)
 }
 
-// ChallengeGet — GET /api/challenges/{id}.
 func ChallengeGet(w http.ResponseWriter, r *http.Request) {
 	c, err := services.LoadChallenge(db.DB(), pathID(r))
 	switch {
@@ -48,10 +44,8 @@ func ChallengeGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ChallengeCreate — POST /api/challenges.
 func ChallengeCreate(w http.ResponseWriter, r *http.Request) { saveChallenge(w, r, 0) }
 
-// ChallengeUpdate — PUT /api/challenges/{id}.
 func ChallengeUpdate(w http.ResponseWriter, r *http.Request) { saveChallenge(w, r, pathID(r)) }
 
 func saveChallenge(w http.ResponseWriter, r *http.Request, id uint) {
@@ -92,7 +86,6 @@ func saveChallenge(w http.ResponseWriter, r *http.Request, id uint) {
 	resp.JSON(w, status, mappers.MapChallengeToDto(c))
 }
 
-// ChallengeDelete — DELETE /api/challenges/{id}.
 func ChallengeDelete(w http.ResponseWriter, r *http.Request) {
 	id := pathID(r)
 	err := services.DeleteChallenge(db.DB(), id)
@@ -106,16 +99,14 @@ func ChallengeDelete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ─── Formaty wyzwań (panel → Klasyfikacja; lista z liczbą użyć jest w GET /api/taxonomy/list) ───
+// ─── Challenge formats (admin → Classification; the list with usage counts is in GET /api/taxonomy/list) ───
 //
 //	POST   /api/taxonomy/challenge-formats                  {name}
 //	PUT    /api/taxonomy/challenge-formats/{id}             {name}
-//	DELETE /api/taxonomy/challenge-formats/{id}?moveTo=<id>  używany: wyzwania przechodzą do moveTo
+//	DELETE /api/taxonomy/challenge-formats/{id}?moveTo=<id>  in use: its challenges move to moveTo
 
-// ChallengeFormatCreate — POST /api/taxonomy/challenge-formats.
 func ChallengeFormatCreate(w http.ResponseWriter, r *http.Request) { saveChallengeFormat(w, r, 0) }
 
-// ChallengeFormatUpdate — PUT /api/taxonomy/challenge-formats/{id}.
 func ChallengeFormatUpdate(w http.ResponseWriter, r *http.Request) {
 	saveChallengeFormat(w, r, pathID(r))
 }
@@ -145,7 +136,6 @@ func saveChallengeFormat(w http.ResponseWriter, r *http.Request, id uint) {
 	}
 }
 
-// ChallengeFormatDelete — DELETE /api/taxonomy/challenge-formats/{id}?moveTo=<id>.
 func ChallengeFormatDelete(w http.ResponseWriter, r *http.Request) {
 	id := pathID(r)
 	moveTo, _ := strconv.ParseUint(r.URL.Query().Get("moveTo"), 10, 64)

@@ -30,8 +30,6 @@ import {
 import { fetchDictionariesWithClient, invalidateDictionaries } from '@/data/api/taxonomy/fetch';
 import type { IChallenge, IChallengeFormat } from '@/data/dtos/challenge/ChallengeDto';
 
-// Edycja wyzwania jako strona: 01 Podstawowe, 02 Zadanie, 03 Uwagi (opcjonalne), 04 Składniki (opcjonalne).
-// Ostrzeżenie przy wyjściu z niezapisanymi zmianami (Anuluj, nawigacja, zamknięcie karty).
 const props = defineProps<{ id?: string }>();
 const LIST = '/admin/challenges';
 
@@ -76,7 +74,7 @@ watch(challengeId, load, { immediate: true });
 const dirty = computed(() => !loading.value && snapshot(form.value) !== saved.value);
 
 async function afterChange() {
-    // liczby użyć formatów (Klasyfikacja) i lista publiczna
+    // format usage counts (Classification) and the public list
     await Promise.all([invalidateChallenges(qc), invalidateDictionaries(qc)]);
 }
 
@@ -137,7 +135,6 @@ async function remove() {
     }
 }
 
-// ─── Ostrzeżenie przy wyjściu ─────────────────────────────────
 const onBeforeUnload = (e: BeforeUnloadEvent) => {
     if (!dirty.value) return;
     e.preventDefault();
@@ -183,7 +180,6 @@ onBeforeRouteUpdate(guard);
         Nie ma takiego wyzwania.
         <RouterLink :to="LIST">Wróć do listy</RouterLink>
     </p>
-    <!-- ładowanie: ten sam formularz nieaktywny, z pustymi polami; spinner nad nim, poza układem -->
     <form
         v-else
         class="edit"

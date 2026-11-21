@@ -30,7 +30,7 @@ const kcal = computed(() => {
         :to="{ name: 'recipe-details', params: { id: recipe.id } }"
         class="r-card"
     >
-        <!-- bez zdjęcia — bez kadru (20.11: żadnego zastępczego obrazka) -->
+        <!-- no photo → no frame (no placeholder image) -->
         <div
             v-if="recipe.photoUrl"
             class="r-card__photo"
@@ -130,7 +130,7 @@ const kcal = computed(() => {
     text-decoration: none;
     transition: border-color var(--dur-fast) var(--ease);
 }
-/* hover nie przesuwa karty — translateY rozmywał tekst przy skalowaniu ekranu Windows */
+/* hover doesn't move the card: translateY blurred the text with Windows display scaling */
 @media (hover: hover) {
     .r-card:hover {
         border-color: var(--rule-strong);
@@ -146,19 +146,18 @@ const kcal = computed(() => {
     color: var(--accent);
 }
 .r-card__photo {
-    /* kwadrat bez linii pod spodem (linia dochodzi) — ten sam wymiar w szkielecie */
+    /* a square without an extra line below; the same size in the skeleton */
     box-sizing: content-box;
     aspect-ratio: 1 / 1;
     position: relative;
     border-bottom: 1px solid var(--rule);
 }
 .r-card__photo img {
-    display: block; /* inline img dokładał linię tekstu — zdjęcie było o 1 px wyższe niż 1:1 */
+    display: block; /* an inline img added a text line, so the photo was 1 px taller than 1:1 */
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-/* „wymaga przygotowania” w treści karty (dawniej na kadrze) */
 .r-card__prep {
     display: inline-flex;
     align-items: center;
@@ -192,7 +191,7 @@ const kcal = computed(() => {
     text-wrap: balance;
     transition: color var(--dur-fast) var(--ease);
     flex: 1;
-    /* dwie linie zarezerwowane — karta ma tę samą wysokość co szkielet i sąsiednie karty */
+    /* two lines reserved: the card has the same height as the skeleton and its neighbors */
     min-height: calc(2 * 1.25em);
 }
 .r-card__hits {
@@ -207,7 +206,7 @@ const kcal = computed(() => {
 }
 .r-card__meta {
     font-size: 13px;
-    line-height: 20px; /* stała — mono w kcal nie podnosi linii; tyle samo w szkielecie */
+    line-height: 20px; /* fixed: the mono font in kcal doesn't raise the line; the skeleton uses the same */
     color: var(--ink-muted);
 }
 .r-card__kcal {
