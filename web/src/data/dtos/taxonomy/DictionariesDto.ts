@@ -11,6 +11,8 @@ export interface ITaxonomyValue {
     label: string;
     /** Color token key, e.g. "coral" → var(--c-coral). */
     color?: string;
+    /** Dish-type icon key, e.g. "zupa" (DISH_ICONS); missing = no icon. */
+    icon?: string;
     /** Number of recipes with this value (dictionaries only). */
     recipeCount?: number;
 }

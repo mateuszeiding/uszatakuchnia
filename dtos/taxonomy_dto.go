@@ -4,6 +4,8 @@ type TaxonomyValueDto struct {
 	ID    uint    `json:"id"`
 	Label string  `json:"label"`
 	Color *string `json:"color,omitempty"`
+	// Dish-type icon key, e.g. "zupa"; omitted = no icon (the card frame shows only the color).
+	Icon *string `json:"icon,omitempty"`
 	// Number of recipes with this value; only in the dictionaries (GET /api/taxonomy/list).
 	RecipeCount *int `json:"recipeCount,omitempty"`
 }

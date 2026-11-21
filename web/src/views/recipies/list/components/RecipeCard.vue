@@ -3,17 +3,18 @@ import { computed } from 'vue';
 
 import { DIFFICULTY } from '../listFilters';
 
+import DishTypeIcon from '@/components/DishTypeIcon.vue';
 import { cuisineOf, mainDish, type RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
+import { dishIconOf } from '@/shared/dishIcons';
 import { avg, fmt, nf } from '@/shared/utils/nutrition';
-import { recipeHue } from '@/shared/utils/recipeHue';
 import { formatTime } from '@/shared/utils/time';
 
 const props = defineProps<{ recipe: RecipeBaseDto; hits?: string[] | null }>();
 
-// read by the placeholder frame through v-bind() in <style>
-const hue = computed(() => recipeHue(props.recipe.id));
-
+// the first dish type drives both the badge and the placeholder frame (color + icon)
 const dish = computed(() => mainDish(props.recipe));
+const catClass = computed(() => (dish.value?.color ? `cat-${dish.value.color}` : null));
+const icon = computed(() => dishIconOf(dish.value));
 const cuisine = computed(() => cuisineOf(props.recipe)?.label);
 const meta = computed(() =>
     [
@@ -34,10 +35,12 @@ const kcal = computed(() => {
         :to="{ name: 'recipe-details', params: { id: recipe.id } }"
         class="r-card"
     >
-        <!-- the 1:1 frame is always there (even rows in a mixed grid); without a photo:
-             a gradient in the recipe's hue + a plate. Decorative — "needs prep" is repeated in the body for screen readers. -->
+        <!-- the 1:1 frame is always there (even rows in a mixed grid); without a photo: the dish type's
+             icon on a tint of its color (no icon for the type: the tint alone). Decorative — "needs prep"
+             is repeated in the body for screen readers. -->
         <div
             class="r-card__photo"
+            :class="catClass"
             aria-hidden="true"
         >
             <img
@@ -46,9 +49,10 @@ const kcal = computed(() => {
                 alt=""
                 loading="lazy"
             />
-            <span
-                v-else
-                class="r-card__plate"
+            <DishTypeIcon
+                v-else-if="icon"
+                class="r-card__icon"
+                :icon="icon"
             />
             <span
                 v-if="recipe.needsPrep"
@@ -85,7 +89,7 @@ const kcal = computed(() => {
                 <span
                     v-if="dish"
                     class="badge"
-                    :class="dish.color ? `cat-${dish.color}` : null"
+                    :class="catClass"
                 >
                     {{ dish.label }}
                 </span>
@@ -161,13 +165,8 @@ const kcal = computed(() => {
     color: var(--accent);
 }
 .r-card__photo {
-    /* placeholder colors in the recipe's hue (h = id * 47 % 360); dark overrides below */
-    --h: v-bind(hue);
-    --thumb-from: hsl(var(--h) 35% 90%);
-    --thumb-to: hsl(calc(var(--h) + 20) 45% 74%);
-    --plate: rgba(255, 255, 255, 0.8);
-    --plate-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    --plate-dot: hsl(var(--h) 60% 62%);
+    /* the first dish type's color (.cat-* sets --cat); without a type: neutral */
+    --frame-c: var(--cat, var(--ink-muted));
     --prep-pill: rgba(255, 248, 230, 0.95);
 
     /* a square without an extra line below; the same size in the skeleton */
@@ -175,49 +174,36 @@ const kcal = computed(() => {
     aspect-ratio: 1 / 1;
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, var(--thumb-from), var(--thumb-to));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--frame-c) 12%, #fff);
+    color: var(--frame-c);
     border-bottom: 1px solid var(--rule);
 }
-/* dark: dimmed (lightness 19–36 %), no bright spot; the same two selectors as the theme tokens.
-   No :global() here: it would drop ".r-card__photo" and set the variables on <html>. */
+/* dark: 14 % of the (lighter, dark-theme) token on the card background; the same two selectors as the
+   theme tokens. No :global() here: it would drop ".r-card__photo" and set the variables on <html>. */
 [data-theme='dark'] .r-card__photo {
-    --thumb-from: hsl(var(--h) 22% 19%);
-    --thumb-to: hsl(calc(var(--h) + 20) 28% 27%);
-    --plate: rgba(248, 248, 255, 0.07);
-    --plate-shadow: none;
-    --plate-dot: hsl(var(--h) 30% 36%);
     --prep-pill: rgba(42, 34, 19, 0.95);
+    background: color-mix(in srgb, var(--frame-c) 14%, var(--bg-alt));
 }
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']):not([data-theme='dark']) .r-card__photo {
-        --thumb-from: hsl(var(--h) 22% 19%);
-        --thumb-to: hsl(calc(var(--h) + 20) 28% 27%);
-        --plate: rgba(248, 248, 255, 0.07);
-        --plate-shadow: none;
-        --plate-dot: hsl(var(--h) 30% 36%);
         --prep-pill: rgba(42, 34, 19, 0.95);
+        background: color-mix(in srgb, var(--frame-c) 14%, var(--bg-alt));
     }
 }
 .r-card__photo img {
+    position: absolute; /* the photo covers the whole frame */
+    inset: 0;
     display: block; /* an inline img added a text line, so the photo was 1 px taller than 1:1 */
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-/* the plate: a 52 % circle with a 28 % circle in the middle */
-.r-card__plate {
-    position: absolute;
-    inset: 24%;
-    border-radius: 50%;
-    background: var(--plate);
-    box-shadow: var(--plate-shadow);
-}
-.r-card__plate::after {
-    content: '';
-    position: absolute;
-    inset: calc(100% * 12 / 52); /* (52 % - 28 %) / 2 of the frame, relative to the plate */
-    border-radius: 50%;
-    background: var(--plate-dot);
+.r-card__icon {
+    width: 40%;
+    height: 40%;
 }
 .r-card__prep {
     position: absolute;

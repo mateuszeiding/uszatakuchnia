@@ -44,6 +44,7 @@ var All = []Migration{
 	challenges,
 	cautions,
 	recipeIngredientKey,
+	taxonomyValueIcons,
 }
 
 // Run wykonuje migracje, których nie ma jeszcze w schema_migrations.

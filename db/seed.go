@@ -49,6 +49,7 @@ func seedIngredientTypes(tx *gorm.DB) error {
 type taxonomyValueSeed struct {
 	Label string
 	Color string
+	Icon  string
 }
 
 type taxonomyAxisSeed struct {
@@ -69,15 +70,15 @@ func seedTaxonomy(tx *gorm.DB) error {
 		{
 			Axis: entities.TaxonomyAxis{Code: "dish", Label: "Typ dania", Multi: true, Required: true, HasColor: true, FilterMode: "or", SortOrder: 1},
 			Values: []taxonomyValueSeed{
-				{"śniadanie", "coral"},
-				{"zupa", "tomato"},
-				{"danie główne", "terracotta"},
-				{"sałatka", "lime"},
-				{"przekąska", "plum"},
-				{"deser", "pink"},
-				{"pieczywo i wypieki", "brown"},
-				{"sos / dodatek", "mustard"},
-				{"napój", "teal"},
+				{"śniadanie", "coral", "sniadanie"},
+				{"zupa", "tomato", "zupa"},
+				{"danie główne", "terracotta", "glowne"},
+				{"sałatka", "lime", "salatka"},
+				{"przekąska", "plum", "przekaska"},
+				{"deser", "pink", "deser"},
+				{"pieczywo i wypieki", "brown", "wypiek"},
+				{"sos / dodatek", "mustard", "sos"},
+				{"napój", "teal", "napoj"},
 			},
 		},
 		{
@@ -108,6 +109,10 @@ func seedTaxonomy(tx *gorm.DB) error {
 			if v.Color != "" {
 				c := v.Color
 				val.Color = &c
+			}
+			if v.Icon != "" {
+				ic := v.Icon
+				val.Icon = &ic
 			}
 			if err := tx.Clauses(clause.OnConflict{
 				Columns:   []clause.Column{{Name: "axis_id"}, {Name: "label"}},
