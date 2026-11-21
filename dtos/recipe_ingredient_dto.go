@@ -3,8 +3,10 @@ package dtos
 import "uszatakuchnia/db/entities"
 
 type RecipeIngredientDto struct {
-	SortOrder int     `json:"sortOrder"`
-	Section   *string `json:"section,omitempty"`
+	SortOrder int `json:"sortOrder"`
+	// Stable row key; steps refer to the row with {{ing:<key>}}.
+	Key     string  `json:"key"`
+	Section *string `json:"section,omitempty"`
 
 	IngredientID   uint   `json:"ingredientId"`
 	IngredientName string `json:"ingredientName"`

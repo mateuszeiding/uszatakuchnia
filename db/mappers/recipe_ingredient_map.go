@@ -12,6 +12,7 @@ func MapRecipeIngredientToDto(e entities.RecipeIngredient) dtos.RecipeIngredient
 	}
 	return dtos.RecipeIngredientDto{
 		SortOrder:      e.SortOrder,
+		Key:            e.Key,
 		Section:        e.Section,
 		IngredientID:   e.IngredientID,
 		IngredientName: e.Ingredient.Name,

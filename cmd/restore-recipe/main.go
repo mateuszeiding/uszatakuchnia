@@ -106,6 +106,11 @@ func main() {
 		must(insertRows(src, tx, t, rows))
 		fmt.Printf("  %-30s %d\n", t, len(rows))
 
+		// a backup from before migration 0011 has no row keys; give them the ones 0011 gives
+		if t == "recipe_ingredients" {
+			must(tx.Exec(`UPDATE recipe_ingredients SET "key" = 'i' || sort_order WHERE recipe_id = ? AND "key" = ''`, *id).Error)
+		}
+
 		if t == "recipe_photos" {
 			for _, r := range rows {
 				must(copyPhoto(src, tx, r))
