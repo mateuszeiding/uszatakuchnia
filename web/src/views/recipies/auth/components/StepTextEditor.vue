@@ -434,9 +434,9 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function onInput() {
-    // an edit moves or removes the word a pending "Pojęcie…" would mark (a saved Range follows the DOM)
-    if (termPick.value) termPick.value = null;
-    sel.value = null;
+    // an edit can move or remove the word a pending "Pojęcie…" would mark (a saved Range follows the DOM)
+    // or the mark an open menu points at
+    cancelTermUi();
     sync();
     updateAt();
 }

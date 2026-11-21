@@ -4,7 +4,8 @@ Przepisy w `content/recipes/*.json` dają się odtworzyć na każdej bazie: skł
 
 ## Kiedy to ma znaczenie
 
-- **`go run ./cmd/restore-recipe` z kopii tej samej bazy — bezpieczne.** Postgres nie używa id drugi raz, więc id wskazuje to samo pojęcie albo żadne. Brakujące pojęcie strona pokazuje jako samo słowo, a publikacja jest zablokowana do poprawki.
+- **`go run ./cmd/restore-recipe` z kopii tej samej bazy, której nie cofano — bezpieczne.** Postgres nie używa id drugi raz, więc id wskazuje to samo pojęcie albo żadne. Brakujące pojęcie strona pokazuje jako samo słowo, a publikacja jest zablokowana do poprawki.
+- **Po cofnięciu bazy** (przywrócenie starszego stanu w Neonie albo z kopii) licznik id też się cofa: nowe pojęcie może dostać id, do którego odwołuje się przepis z późniejszej kopii. `restore-recipe` kopiuje treść kroków bez zmian i nie sprawdza słowniczka, więc przed odtworzeniem takiego przepisu przemapuj id po nazwie — tak jak niżej dla innej bazy.
 - **Wprowadzanie pliku z `content/` na inną bazę** (nowa baza, świeży Neon, lokalna baza testowa) — **ryzykowne bez mapowania.** Pod tym samym id może tam być inne pojęcie i czytelnik zobaczy cudze wyjaśnienie, a walidacja tego nie złapie.
 
 ## Format kopii pojęć
@@ -23,4 +24,4 @@ Pojęcia założone przy okazji przepisu Claude zapisuje w `content/glossary/<da
 2. **Przemapuj id w przepisie po nazwie.** Zbuduj mapę `stare id` → `nowe id` (para: `id` z pliku i id pojęcia o tej samej nazwie na nowej bazie). W każdym kroku i każdej wskazówce zamień `{{term:<stare>|…}}` na `{{term:<nowe>|…}}`; słowa po `|` nie zmieniaj.
 3. **Dopiero wtedy wyślij przepis** (`POST /api/recipes`, jak w CLAUDE.md → „Zapis przez API z sesji Claude Code”).
 
-Odwołanie do id, którego nie ma w mapie, zostaw. API zapisze szkic, ale publikację zablokuje, a strona pokaże samo słowo.
+Każde odwołanie musi trafić do pojęcia z mapy. Odwołania do id, którego nie ma w mapie, **nie zostawiaj** — na nowej bazie pod tym id może być inne pojęcie i przepis opublikuje się z cudzym wyjaśnieniem. Usuń wtedy znacznik i zostaw samo słowo: `{{term:<id>|słowo}}` → `słowo`.
