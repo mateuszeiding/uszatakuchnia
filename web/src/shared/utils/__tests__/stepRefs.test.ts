@@ -118,7 +118,13 @@ describe('resolveRef', () => {
         expect(show(steps[0]!)).toBe('Dodaj połowę masła  25 g.');
         expect(show(steps[1]!)).toBe('Dodaj resztę masła  25 g.');
     });
-    it('"reszta" with nothing left shows nothing (not a rounded-up 1/4)', () => {
+    it('parts of spoons: quarters and halves decimal, thirds as a fraction (no glyphs)', () => {
+        expect(show('{{ing:se|1/4}}')).toBe(' 0,25 łyżki (opcjonalnie)');
+        expect(show('{{ing:se|3/4}}')).toBe(' 0,75 łyżki (opcjonalnie)');
+        expect(show('{{ing:se|1/2}}')).toBe(' 0,5 łyżki (opcjonalnie)');
+        expect(show('{{ing:se|1/3}}')).toBe(' 1/3 łyżki (opcjonalnie)');
+    });
+    it('"reszta" with nothing left shows nothing (not a rounded-up 0,25)', () => {
         const full = ['{{ing:se|1/2}}', '{{ing:se|1/2}}', '{{ing:se|rest}}'];
         expect(
             resolveRef({ kind: 'ing', key: 'se', part: 'rest' }, ctx({ steps: full }))
