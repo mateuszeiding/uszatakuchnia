@@ -10,7 +10,7 @@ import StepTextEditor from './StepTextEditor.vue';
 
 import { confirmAction } from '@/composables/useConfirm';
 import { useListDnd } from '@/composables/useListDnd';
-import { type IRefContext, stepRefs, visibleLength } from '@/shared/utils/stepRefs';
+import { type IRefContext, type ITerm, stepRefs, visibleLength } from '@/shared/utils/stepRefs';
 
 const groups = defineModel<IGroup<IStepItem>[]>('groups', { required: true });
 const props = defineProps<{
@@ -22,7 +22,12 @@ const props = defineProps<{
     broken: boolean[];
     /** Rows whose fractions add up to more than the whole. */
     overused: Set<string>;
+    /** The glossary (marking terms in steps and hints). */
+    terms: ITerm[];
+    /** Per step: marks a term that isn't in the glossary. */
+    missingTerms: boolean[];
 }>();
+const emit = defineEmits<{ 'term-created': [term: ITerm] }>();
 const dnd = useListDnd(groups);
 
 const len = (s: IStepItem) => visibleLength(s.text, props.refCtx);
@@ -138,10 +143,12 @@ async function removeGroup(g: IGroup<IStepItem>) {
                     <StepTextEditor
                         v-model="s.text"
                         :rows="rows"
+                        :terms="terms"
                         :label="`Krok ${stepNo(gi, ii)}`"
                         :describedby="`step-msg-${s.id}`"
                         :warn="len(s) > STEP_LIMIT"
-                        :broken="broken[stepNo(gi, ii) - 1]"
+                        :broken="broken[stepNo(gi, ii) - 1] || missingTerms[stepNo(gi, ii) - 1]"
+                        @term-created="emit('term-created', $event)"
                         :placeholder="
                             stepNo(gi, ii) === 1 ? 'Rozgrzej piekarnik do 200°C…' : 'Następny krok…'
                         "
@@ -151,13 +158,21 @@ async function removeGroup(g: IGroup<IStepItem>) {
                             :id="`step-msg-${s.id}`"
                             class="step-row__msg"
                             :class="{
-                                'is-broken': broken[stepNo(gi, ii) - 1],
-                                'is-warn': !broken[stepNo(gi, ii) - 1] && len(s) > STEP_LIMIT,
+                                'is-broken':
+                                    broken[stepNo(gi, ii) - 1] || missingTerms[stepNo(gi, ii) - 1],
+                                'is-warn':
+                                    !broken[stepNo(gi, ii) - 1] &&
+                                    !missingTerms[stepNo(gi, ii) - 1] &&
+                                    len(s) > STEP_LIMIT,
                             }"
                         >
                             <template v-if="broken[stepNo(gi, ii) - 1]">
                                 Składnik z odwołania został usunięty. Wybierz inny albo usuń
                                 odwołanie — do tego czasu nie da się opublikować.
+                            </template>
+                            <template v-else-if="missingTerms[stepNo(gi, ii) - 1]">
+                                Oznaczonego pojęcia nie ma już w słowniczku. Wybierz inne albo usuń
+                                oznaczenie — do tego czasu nie da się opublikować.
                             </template>
                             <template v-else-if="len(s) > STEP_LIMIT">
                                 Za długi do trybu gotowania — na telefonie nie zmieści się bez
@@ -166,7 +181,7 @@ async function removeGroup(g: IGroup<IStepItem>) {
                             <template v-else>
                                 Wpisz
                                 <code>@</code>
-                                , żeby wstawić ilość składnika.
+                                , żeby wstawić ilość. Zaznacz słowo, żeby oznaczyć pojęcie.
                             </template>
                         </span>
                         <span
@@ -188,6 +203,8 @@ async function removeGroup(g: IGroup<IStepItem>) {
                         v-model:hints="s.hints"
                         :step-id="s.id"
                         :step-no="stepNo(gi, ii)"
+                        :terms="terms"
+                        @term-created="emit('term-created', $event)"
                     />
                     <div class="step-row__prep">
                         <button

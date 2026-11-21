@@ -179,6 +179,10 @@ func RecipeGet(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	if dto.Terms, err = services.RecipeTerms(conn, entity.Steps); err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	services.FillGramsPerUnit(dto.Ingredients, ix)
 	services.FillLineNutrition(dto.Ingredients, entity, ix)
 

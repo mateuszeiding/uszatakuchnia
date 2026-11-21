@@ -176,6 +176,7 @@ const doneCount = computed(
                             </p>
                             <StepHints
                                 :hints="s.hints"
+                                :refs="refs"
                                 :done="done.includes(s.stepNo)"
                             />
                         </div>

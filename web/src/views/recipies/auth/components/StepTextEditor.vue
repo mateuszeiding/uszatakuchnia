@@ -1,25 +1,48 @@
 <script lang="ts" setup>
-import { computed, nextTick, onMounted, ref, useId, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 
 import { chipLabel, fold, type IRefRow } from '../stepRefsForm';
 
 import IngRefMenu from './IngRefMenu.vue';
 import IngRefPicker from './IngRefPicker.vue';
+import NewTermModal from './NewTermModal.vue';
+import TermMarkMenu from './TermMarkMenu.vue';
+import TermPicker from './TermPicker.vue';
 
-import { parseStep, type RefPart, refToken } from '@/shared/utils/stepRefs';
+import BookIcon from '@/components/BookIcon.vue';
+import { type ITerm, parseStep, type RefPart, refToken, termToken } from '@/shared/utils/stepRefs';
 
-// Step text field with ingredient refs as atomic labels. A contenteditable of our own (the project has no
-// editor library): the model stays the stored text ({{ing:<key>|part}}), the DOM is text nodes + one
-// non-editable span per ref. The DOM is rebuilt only when the text changes from outside, so typing keeps the caret.
+// Step (or hint) text field with ingredient refs and glossary terms as atomic elements. A contenteditable of our
+// own (the project has no editor library): the model stays the stored text ({{ing:<key>|part}}, {{term:<id>|word}}),
+// the DOM is text nodes + one non-editable span per ref. The DOM is rebuilt only when the text changes from
+// outside, so typing keeps the caret. A marked word is atomic too: to fix a typo in it, remove the mark first.
 const model = defineModel<string>({ required: true });
-const props = defineProps<{
-    rows: IRefRow[];
-    label: string;
-    placeholder: string;
-    describedby?: string;
-    warn?: boolean;
-    broken?: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        rows: IRefRow[];
+        terms: ITerm[];
+        label: string;
+        placeholder: string;
+        describedby?: string;
+        warn?: boolean;
+        broken?: boolean;
+        /** Hints: no "@" (quantities live in the step text only), terms only. */
+        ingRefs?: boolean;
+        /** Smaller field (hints). */
+        compact?: boolean;
+        /** id of the editable field (focused from outside, e.g. after "+ wskazówka"). */
+        fieldId?: string;
+    }>(),
+    {
+        describedby: undefined,
+        warn: false,
+        broken: false,
+        ingRefs: true,
+        compact: false,
+        fieldId: undefined,
+    }
+);
+const emit = defineEmits<{ 'term-created': [term: ITerm] }>();
 
 const field = ref<HTMLElement>();
 const wrap = ref<HTMLElement>();
@@ -59,6 +82,35 @@ function chip(key: string, part: RefPart | null): HTMLElement {
     return el;
 }
 
+// ── glossary marks ──
+const termById = computed(() => new Map(props.terms.map((t) => [t.id, t])));
+const isMark = (n: Node | null | undefined): n is HTMLElement =>
+    n instanceof HTMLElement && n.classList.contains('term-mark');
+const markWord = (el: HTMLElement) => el.dataset.word ?? '';
+
+function paintMark(el: HTMLElement) {
+    const t = termById.value.get(Number(el.dataset.id));
+    el.classList.toggle('is-missing', !t);
+    el.textContent = markWord(el);
+    el.title = t ? t.name : 'Pojęcia nie ma w słowniczku';
+    el.setAttribute(
+        'aria-label',
+        `${markWord(el)}: ${t ? `pojęcie „${t.name}”` : 'pojęcia nie ma w słowniczku'} — zmień albo usuń`
+    );
+}
+
+function mark(id: number, word: string): HTMLElement {
+    const el = document.createElement('span');
+    el.className = 'term-mark';
+    el.contentEditable = 'false';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.dataset.id = String(id);
+    el.dataset.word = word;
+    paintMark(el);
+    return el;
+}
+
 function render(text: string) {
     if (!field.value) return;
     field.value.replaceChildren(
@@ -67,7 +119,9 @@ function render(text: string) {
                 ? document.createTextNode(s)
                 : s.kind === 'ing'
                   ? chip(s.key, s.part)
-                  : document.createTextNode(s.raw)
+                  : s.kind === 'term'
+                    ? mark(s.id, s.word)
+                    : document.createTextNode(s.raw)
         )
     );
 }
@@ -78,6 +132,7 @@ function serialize(node: Node): string {
         if (n.nodeType === Node.TEXT_NODE)
             out += (n.nodeValue ?? '').replace(/\u00a0/g, ' ').replace(/\u200b/g, '');
         else if (isChip(n)) out += refToken(n.dataset.key ?? '', chipPart(n));
+        else if (isMark(n)) out += termToken(Number(n.dataset.id), markWord(n));
         else if (n instanceof HTMLBRElement) out += i === node.childNodes.length - 1 ? '' : '\n';
         else out += serialize(n);
     });
@@ -94,7 +149,12 @@ watch(model, (v) => {
     if (v !== emitted) render(v);
 });
 watch(byKey, () => field.value?.querySelectorAll<HTMLElement>('.ref-chip').forEach(paint));
-onMounted(() => render(model.value));
+watch(termById, () => field.value?.querySelectorAll<HTMLElement>('.term-mark').forEach(paintMark));
+onMounted(() => {
+    render(model.value);
+    document.addEventListener('selectionchange', onDocSelection);
+});
+onBeforeUnmount(() => document.removeEventListener('selectionchange', onDocSelection));
 
 // ── "@" picker ──
 interface IAt {
@@ -137,7 +197,7 @@ function findAt(): IAt | null {
 }
 
 function updateAt() {
-    const found = findAt();
+    const found = props.ingRefs ? findAt() : null;
     const same = (x: { node: Text; start: number } | null) =>
         !!found && !!x && x.node === found.node && x.start === found.start;
     if (!same(dismissed)) dismissed = null;
@@ -252,6 +312,8 @@ function openMenu(el: HTMLElement) {
 function onClick(e: MouseEvent) {
     const el = (e.target as HTMLElement).closest('.ref-chip');
     if (isChip(el)) openMenu(el);
+    const m = (e.target as HTMLElement).closest('.term-mark');
+    if (isMark(m)) openTermMenu(m);
 }
 function closeMenu(refocus = true) {
     const el = menu.value;
@@ -288,7 +350,8 @@ function menuRemove() {
 }
 
 // ── keyboard / clipboard ──
-function siblingChip(dir: 'before' | 'after'): HTMLElement | null {
+/** The atomic element (ref or marked word) right before / after the caret. */
+function siblingAtom(dir: 'before' | 'after'): HTMLElement | null {
     const sel = getSelection();
     if (!sel?.rangeCount || !sel.isCollapsed) return null;
     const { startContainer: n, startOffset: off } = sel.getRangeAt(0);
@@ -300,7 +363,7 @@ function siblingChip(dir: 'before' | 'after'): HTMLElement | null {
         if (dir === 'before' && empty(v.slice(0, off))) node = n.previousSibling;
         if (dir === 'after' && empty(v.slice(off))) node = n.nextSibling;
     } else node = n.childNodes[dir === 'before' ? off - 1 : off] ?? null;
-    return isChip(node) ? node : null;
+    return isChip(node) || isMark(node) ? node : null;
 }
 
 function removeChip(el: HTMLElement) {
@@ -319,6 +382,24 @@ function removeChip(el: HTMLElement) {
 
 function onKeydown(e: KeyboardEvent) {
     const target = e.target as HTMLElement;
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        const s = readSel();
+        sel.value = s;
+        if (s?.ok) openTermPick();
+        else if (s) placeBar(s.range);
+        return;
+    }
+    if (isMark(target)) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openTermMenu(target);
+        } else if (e.key === 'Backspace' || e.key === 'Delete') {
+            e.preventDefault();
+            unwrapMark(target, e.key === 'Backspace');
+        }
+        return;
+    }
     if (isChip(target)) {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -338,8 +419,12 @@ function onKeydown(e: KeyboardEvent) {
         return;
     }
     if (e.key === 'Backspace' || e.key === 'Delete') {
-        const el = siblingChip(e.key === 'Backspace' ? 'before' : 'after');
-        if (el) {
+        const el = siblingAtom(e.key === 'Backspace' ? 'before' : 'after');
+        if (el?.classList.contains('term-mark')) {
+            // the first Backspace only removes the mark: the author's word stays
+            e.preventDefault();
+            unwrapMark(el, e.key === 'Backspace');
+        } else if (el) {
             e.preventDefault();
             el.remove();
             sync();
@@ -348,6 +433,7 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function onInput() {
+    sel.value = null;
     sync();
     updateAt();
 }
@@ -357,7 +443,7 @@ function onPaste(e: ClipboardEvent) {
     const text = (e.clipboardData?.getData('text/plain') ?? '').replace(/\r?\n/g, ' ');
     document.execCommand('insertText', false, text);
     // pasted refs ({{ing:…}} copied from another step) become labels; the caret goes back after the paste
-    if (/\{\{ing:/.test(text)) {
+    if (/\{\{(ing|term):/.test(text)) {
         const at = caretOffset();
         sync();
         // not model.value: it returns the parent's prop until the parent re-renders
@@ -387,7 +473,9 @@ function setCaretOffset(offset: number) {
             ? (n.nodeValue ?? '').length
             : isChip(n)
               ? refToken(n.dataset.key ?? '', chipPart(n)).length
-              : 0;
+              : isMark(n)
+                ? termToken(Number(n.dataset.id), markWord(n)).length
+                : 0;
         if (text && left <= len) {
             r.setStart(n, left);
             break;
@@ -416,9 +504,198 @@ function onCopy(e: ClipboardEvent, cut = false) {
 function onBlur(e: FocusEvent) {
     if (wrap.value?.contains(e.relatedTarget as Node)) return;
     at.value = null;
+    sel.value = null;
 }
-function onSelection() {
+function onSelection(e?: Event) {
     if (at.value) updateAt();
+    // Tab / Shift move focus to the "Pojęcie…" bar: keep it
+    if (e instanceof KeyboardEvent && (e.key === 'Tab' || e.key === 'Shift')) return;
+    if (!termPick.value && !termMenu.value && !newTerm.value) {
+        sel.value = readSel();
+        if (sel.value) placeBar(sel.value.range);
+    }
+}
+
+// ── marking a selected word as a term ──
+interface ISel {
+    range: Range;
+    word: string;
+    ok: boolean;
+    why: string;
+}
+/** The "Pojęcie…" bar over a selection (or why the selection can't be marked). */
+const sel = ref<ISel | null>(null);
+const barPos = ref({ top: 0, left: 0 });
+
+function readSel(): ISel | null {
+    const s = getSelection();
+    if (!s?.rangeCount || s.isCollapsed || !field.value) return null;
+    const r = s.getRangeAt(0).cloneRange();
+    if (!field.value.contains(r.commonAncestorContainer)) return null;
+    const n = r.startContainer;
+    const one = n === r.endContainer && n.nodeType === Node.TEXT_NODE;
+    if (one) {
+        // a double-click selects the word with the space after it
+        const v = n.nodeValue ?? '';
+        let a = r.startOffset;
+        let b = r.endOffset;
+        while (a < b && /[\s\u200b]/.test(v[a]!)) a++;
+        while (b > a && /[\s\u200b]/.test(v[b - 1]!)) b--;
+        r.setStart(n, a);
+        r.setEnd(n, b);
+    }
+    const word = r.toString();
+    if (one && !word) return null;
+    const why = !one
+        ? 'Zaznacz samo słowo — bez ilości i bez innego pojęcia.'
+        : /[{}|]/.test(word)
+          ? 'Zaznaczenie nie może zawierać znaków { } |.'
+          : [...word].length > 60
+            ? 'Zaznacz najwyżej 60 znaków.'
+            : '';
+    return { range: r, word, ok: !why, why };
+}
+
+// the selection left the field (a click elsewhere, typing in another field): the bar goes away
+function onDocSelection() {
+    if (!sel.value) return;
+    const s = getSelection();
+    if (
+        !s?.rangeCount ||
+        s.isCollapsed ||
+        !field.value?.contains(s.getRangeAt(0).commonAncestorContainer)
+    )
+        sel.value = null;
+}
+
+function placeBar(r: Range) {
+    const rect = r.getBoundingClientRect();
+    const box = wrap.value!.getBoundingClientRect();
+    barPos.value = {
+        top: rect.top - box.top - 40,
+        left: Math.max(0, Math.min(rect.left - box.left, box.width - 220)),
+    };
+}
+
+interface ITermPick {
+    word: string;
+    /** New mark: the selection to wrap. */
+    range?: Range;
+    /** "Zmień pojęcie" on an existing mark. */
+    el?: HTMLElement;
+    current: number | null;
+}
+const termPick = ref<ITermPick | null>(null);
+const newTerm = ref<ITermPick | null>(null);
+const termMenu = ref<HTMLElement | null>(null);
+const termMenuTerm = computed(() =>
+    termMenu.value ? (termById.value.get(Number(termMenu.value.dataset.id)) ?? null) : null
+);
+
+function openTermPick() {
+    const s = sel.value;
+    if (!s?.ok) return;
+    closePicker();
+    menu.value = null;
+    termPick.value = { word: s.word, range: s.range, current: null };
+    place(s.range.getBoundingClientRect());
+    sel.value = null;
+}
+
+function caretAtEnd(node: Text, end: boolean) {
+    const r = document.createRange();
+    r.setStart(node, end ? (node.nodeValue?.length ?? 0) : 0);
+    r.collapse(true);
+    getSelection()?.removeAllRanges();
+    getSelection()?.addRange(r);
+}
+
+function applyTerm(p: ITermPick, id: number) {
+    let el = p.el;
+    if (el) {
+        el.dataset.id = String(id);
+        paintMark(el);
+    } else if (p.range) {
+        p.range.deleteContents();
+        el = mark(id, p.word);
+        p.range.insertNode(el);
+    }
+    field.value?.focus();
+    if (el) caretAfter(el);
+    sync();
+}
+
+function pickTerm(id: number) {
+    const p = termPick.value!;
+    termPick.value = null;
+    applyTerm(p, id);
+}
+
+function closeTermPick() {
+    const p = termPick.value;
+    termPick.value = null;
+    field.value?.focus();
+    if (p?.el?.isConnected) caretAfter(p.el);
+    else if (p?.range) {
+        getSelection()?.removeAllRanges();
+        getSelection()?.addRange(p.range);
+    }
+}
+
+function createTerm(name: string) {
+    newTerm.value = { ...termPick.value!, word: termPick.value!.word };
+    newName.value = name;
+    termPick.value = null;
+}
+const newName = ref('');
+
+function termCreated(t: ITerm) {
+    const p = newTerm.value!;
+    newTerm.value = null;
+    emit('term-created', t);
+    applyTerm(p, t.id);
+}
+function newTermClosed() {
+    const p = newTerm.value;
+    newTerm.value = null;
+    field.value?.focus();
+    if (p?.range) {
+        getSelection()?.removeAllRanges();
+        getSelection()?.addRange(p.range);
+    }
+}
+
+function openTermMenu(el: HTMLElement) {
+    closePicker();
+    menu.value = null;
+    termPick.value = null;
+    sel.value = null;
+    termMenu.value = el;
+    place(el.getBoundingClientRect());
+}
+function closeTermMenu(refocus = true) {
+    const el = termMenu.value;
+    termMenu.value = null;
+    if (refocus && el?.isConnected) {
+        field.value?.focus();
+        caretAfter(el);
+    }
+}
+function termMenuChange() {
+    const el = termMenu.value!;
+    termMenu.value = null;
+    termPick.value = { word: markWord(el), el, current: Number(el.dataset.id) };
+    place(el.getBoundingClientRect());
+}
+
+/** Removes the mark, the word stays as plain text; the caret goes to its end (Backspace) or start (Delete). */
+function unwrapMark(el: HTMLElement, caretEnd = true) {
+    const t = document.createTextNode(markWord(el));
+    el.replaceWith(t);
+    termMenu.value = null;
+    field.value?.focus();
+    caretAtEnd(t, caretEnd);
+    sync();
 }
 </script>
 
@@ -428,9 +705,10 @@ function onSelection() {
         class="step-editor"
     >
         <div
+            :id="fieldId"
             ref="field"
             class="textarea step-editor__field"
-            :class="{ 'is-warn': warn, 'is-broken': broken }"
+            :class="{ 'is-warn': warn, 'is-broken': broken, 'is-compact': compact }"
             contenteditable="true"
             role="textbox"
             aria-multiline="true"
@@ -455,10 +733,70 @@ function onSelection() {
         <span
             v-if="!model.trim()"
             class="step-editor__ph"
+            :class="{ 'is-compact': compact }"
             aria-hidden="true"
         >
             {{ placeholder }}
         </span>
+        <div
+            v-if="sel && !termPick && !termMenu && !newTerm && !pickerOpen && !menu"
+            class="term-bar"
+            :style="{ top: `${barPos.top}px`, left: `${barPos.left}px` }"
+        >
+            <button
+                v-if="sel.ok"
+                type="button"
+                class="term-bar__btn"
+                title="Oznacz pojęcie (Ctrl+Shift+L)"
+                aria-keyshortcuts="Control+Shift+L"
+                @mousedown.prevent
+                @click="openTermPick"
+            >
+                <BookIcon :size="13" />
+                Pojęcie…
+            </button>
+            <span
+                v-else
+                class="term-bar__why"
+            >
+                {{ sel.why }}
+            </span>
+        </div>
+        <div
+            v-if="termPick"
+            class="step-editor__pop"
+            :style="{ top: `${pos.top}px`, left: `${pos.left}px` }"
+            @focusout="!wrap?.contains($event.relatedTarget as Node) && (termPick = null)"
+        >
+            <TermPicker
+                :terms="terms"
+                :word="termPick.word"
+                :current="termPick.current"
+                @pick="pickTerm"
+                @create="createTerm"
+                @close="closeTermPick"
+            />
+        </div>
+        <div
+            v-if="termMenu"
+            class="step-editor__pop"
+            :style="{ top: `${pos.top}px`, left: `${pos.left}px` }"
+            @focusout="!wrap?.contains($event.relatedTarget as Node) && closeTermMenu(false)"
+        >
+            <TermMarkMenu
+                :term="termMenuTerm"
+                :word="termMenu.dataset.word ?? ''"
+                @change="termMenuChange"
+                @remove="unwrapMark(termMenu!)"
+                @close="closeTermMenu()"
+            />
+        </div>
+        <NewTermModal
+            v-if="newTerm"
+            :word="newName"
+            @created="termCreated"
+            @close="newTermClosed"
+        />
         <div
             v-if="pickerOpen"
             class="step-editor__pop"
@@ -546,6 +884,57 @@ function onSelection() {
 .step-editor__field :deep(.ref-chip svg) {
     display: inline; /* the base reset makes svg a block */
     vertical-align: -0.1em;
+}
+.step-editor__field.is-compact,
+.step-editor__ph.is-compact {
+    min-height: 40px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.step-editor__ph.is-compact {
+    top: 10px;
+}
+.step-editor__field :deep(.term-mark) {
+    display: inline;
+    cursor: pointer;
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.22em;
+    border-radius: 3px;
+    user-select: all;
+}
+.step-editor__field :deep(.term-mark.is-missing) {
+    text-decoration-color: var(--danger);
+    color: var(--danger);
+}
+.term-bar {
+    position: absolute;
+    z-index: 21;
+    display: flex;
+    padding: 3px;
+    border-radius: var(--r-lg);
+    background: var(--ink);
+    box-shadow: 0 6px 18px rgba(10, 10, 15, 0.25);
+}
+.term-bar__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: var(--r-md);
+    background: color-mix(in srgb, var(--bg) 14%, transparent);
+    color: var(--bg);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.term-bar__why {
+    padding: 5px 10px;
+    font-size: 12.5px;
+    color: var(--bg);
 }
 .step-editor__pop {
     position: absolute;

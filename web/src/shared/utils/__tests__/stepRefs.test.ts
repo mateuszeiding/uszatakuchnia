@@ -5,6 +5,9 @@ import {
     parseStep,
     refText,
     resolveRef,
+    termPlainText,
+    termRefs,
+    termToken,
     usedFraction,
     viewSegments,
     visibleLength,
@@ -165,5 +168,43 @@ describe('viewSegments', () => {
         expect(text('Dopraw solą {{ing:sl}} i pieprzem.')).toBe('Dopraw solą  i pieprzem.');
         expect(text('Dodaj solą {{ing:sl}}')).toBe('Dodaj solą');
         expect(text('Dodaj masło {{ing:ms}}.')).toBe('Dodaj masło [50 g].');
+    });
+});
+
+describe('glossary terms', () => {
+    const terms = [
+        { id: 5, name: 'deglasowanie', explanation: 'Wlanie płynu na gorącą patelnię.' },
+    ];
+    it('parses a term ref: the id and the author word', () => {
+        expect(parseStep('Potem {{term:5|deglasuj}} winem.')).toEqual([
+            'Potem ',
+            { kind: 'term', id: 5, word: 'deglasuj' },
+            ' winem.',
+        ]);
+        // not an id, no word, "|" in the word: not a term
+        expect(
+            parseStep('{{term:x|a}}{{term:5|}}{{term:5|a|b}}').map(
+                (s) => typeof s !== 'string' && s.kind
+            )
+        ).toEqual(['other', 'other', 'other']);
+    });
+    it('shows a known term as a term next to a quantity, a missing one as the bare word', () => {
+        const segs = viewSegments(
+            '{{term:5|Deglasuj}} winem {{ing:jc}} i {{term:9|zeszklij}}.',
+            ctx({ terms })
+        );
+        expect(segs[0]).toEqual({ kind: 'term', term: terms[0], word: 'Deglasuj' });
+        expect(segs.filter((s) => typeof s === 'string').join('')).toContain('zeszklij');
+        expect(segs.some((s) => typeof s !== 'string' && 'qty' in s)).toBe(true);
+    });
+    it('counts a term as its word', () => {
+        expect(visibleLength('{{term:5|Deglasuj}} winem.', ctx({ terms }))).toBe(
+            'Deglasuj winem.'.length
+        );
+        expect(termPlainText('Cebula ma się {{term:12|zeszklić}}.')).toBe(
+            'Cebula ma się zeszklić.'
+        );
+        expect(termRefs('{{term:5|a}} {{ing:jc}} {{term:7|b}}').map((r) => r.id)).toEqual([5, 7]);
+        expect(termToken(5, 'deglasuj')).toBe('{{term:5|deglasuj}}');
     });
 });

@@ -5,10 +5,16 @@ import StepHints from './StepHints.vue';
 
 import BulbIcon from '@/components/BulbIcon.vue';
 import { pluralPL } from '@/shared/utils/quantity';
+import type { IRefContext } from '@/shared/utils/stepRefs';
 
 // Hints in cooking mode. When they don't fit next to the step text, they collapse into one button;
 // the parent keeps "open" for the rest of the session, so the reader taps it once.
-const props = defineProps<{ hints: string[]; collapsible: boolean; open: boolean }>();
+const props = defineProps<{
+    hints: string[];
+    refs: IRefContext;
+    collapsible: boolean;
+    open: boolean;
+}>();
 const emit = defineEmits<{ toggle: [] }>();
 
 const id = useId();
@@ -53,6 +59,7 @@ const label = computed(
         >
             <StepHints
                 :hints="hints"
+                :refs="refs"
                 size="lg"
             />
         </div>

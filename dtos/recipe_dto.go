@@ -25,6 +25,8 @@ type RecipeDto struct {
 	Steps       []RecipeStepDto           `json:"steps"`
 	Ingredients []RecipeIngredientDto     `json:"ingredients"`
 	Equipment   []RecipeEquipmentDto      `json:"equipment"`
+	// Glossary terms marked in the steps and hints (missing ones skipped: the page shows the bare word).
+	Terms []GlossaryTermDto `json:"terms"`
 	// Ingredient rows of other recipes that link to this one (content of the delete modal).
 	LinkedFrom []RecipeLinkSourceDto `json:"linkedFrom"`
 }

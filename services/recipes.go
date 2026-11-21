@@ -106,7 +106,11 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 	}
 	validateSteps(req, add)
 	validateIngredientKeys(req, add)
-	validateStepRefs(req, publish, add)
+	terms, err := knownTerms(tx, req)
+	if err != nil {
+		return nil, err
+	}
+	validateStepRefs(req, publish, terms, add)
 	if err := validateSubstitutes(tx, req, add); err != nil {
 		return nil, err
 	}
@@ -265,7 +269,7 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 	return replaceRecipeEquipment(tx, recipeID, req)
 }
 
-// MaxHintLen is the longest step hint (characters, not bytes).
+// MaxHintLen is the longest step hint (characters as the reader sees them: a glossary ref counts as its word).
 const MaxHintLen = 300
 
 func validateSteps(req dtos.UpsertRecipeRequest, add func(field, msg string)) {
@@ -274,7 +278,7 @@ func validateSteps(req dtos.UpsertRecipeRequest, add func(field, msg string)) {
 			add(fmt.Sprintf("steps[%d].prepLead", i), "„Ile wcześniej” dotyczy tylko kroku przygotowania")
 		}
 		for _, h := range CleanHints(s.Hints) {
-			if utf8.RuneCountInString(h) > MaxHintLen {
+			if utf8.RuneCountInString(VisibleTermText(h)) > MaxHintLen {
 				add("steps", fmt.Sprintf("Krok %d: wskazówka może mieć najwyżej %d znaków", i+1, MaxHintLen))
 				break
 			}

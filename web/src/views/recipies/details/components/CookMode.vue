@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 
 import { useCookFit } from '../cookFit';
 import { leadText } from '../recipeView';
@@ -12,6 +12,7 @@ import CookNav from './CookNav.vue';
 
 import StepText from '@/components/StepText.vue';
 import type { ISubChoice } from '@/composables/useCookingProgress';
+import { COOK_TERMS } from '@/composables/useTermExplain';
 import { useWakeLock } from '@/composables/useWakeLock';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
@@ -52,6 +53,8 @@ const showIng = ref(false);
 /** The reader opened collapsed hints once: they stay open until the mode closes. */
 const hintsOpen = ref(false);
 useWakeLock();
+// terms in the step open the big sheet with "Zamknij"
+provide(COOK_TERMS, true);
 const root = ref<HTMLElement>();
 const stage = ref<HTMLElement>();
 const bar = ref<InstanceType<typeof CookBar>>();
@@ -214,6 +217,7 @@ onBeforeUnmount(() => {
                             </p>
                             <CookHints
                                 :hints="step.hints"
+                                :refs="refs"
                                 :collapsible="collapsible"
                                 :open="hintsOpen"
                                 @toggle="hintsOpen = !hintsOpen"

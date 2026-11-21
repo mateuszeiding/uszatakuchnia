@@ -33,6 +33,8 @@ var models = []any{
 	&entities.Challenge{},
 	&entities.ChallengeIngredient{},
 
+	&entities.GlossaryTerm{},
+
 	&entities.Image{},
 	&entities.Photo{},
 }
@@ -55,6 +57,7 @@ var migrateLock sync.Mutex
 
 // devResetTables lists every app table, retired ones included, so a reset leaves no leftovers.
 var devResetTables = []string{
+	"glossary_terms",
 	"challenge_ingredients",
 	"challenges",
 	"challenge_formats",
