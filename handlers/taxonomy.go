@@ -144,7 +144,8 @@ type optionalIcon struct {
 }
 
 func (o *optionalIcon) UnmarshalJSON(b []byte) error {
-	o.Set = true
+	// a repeated "icon" member replaces the earlier one, null and "" included
+	o.Set, o.Value = true, nil
 	var s *string
 	if err := json.Unmarshal(b, &s); err != nil {
 		return err

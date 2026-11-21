@@ -17,6 +17,10 @@ func TestValueRequestIcon(t *testing.T) {
 		{`{"label":"zupa","icon":""}`, true, "", true},
 		{`{"label":"zupa","icon":"zupa"}`, true, "zupa", true},
 		{`{"label":"zupa","icon":"pizza"}`, true, "pizza", false},
+		// a repeated member: the last one wins, also when it clears the icon
+		{`{"label":"zupa","icon":"zupa","icon":null}`, true, "", true},
+		{`{"label":"zupa","icon":"zupa","icon":""}`, true, "", true},
+		{`{"label":"zupa","icon":"zupa","icon":"deser"}`, true, "deser", true},
 	}
 	for _, c := range cases {
 		var req valueRequest
