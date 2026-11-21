@@ -4,6 +4,8 @@ import { computed, useId } from 'vue';
 export interface ICautionPrep {
     lead: string | null;
     step: number;
+    /** An optional step: "Jeśli chcesz: przygotuj…"; it doesn't make the recipe need prep. */
+    optional?: boolean;
 }
 
 const props = withDefaults(
@@ -87,7 +89,10 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
                 </span>
                 <!-- the period after the link comes from CSS (::after), so no space before it -->
                 <span class="cautions__text cautions__text--prep">
-                    Przygotuj {{ p.lead ?? 'wcześniej' }}:
+                    <template v-if="p.optional">
+                        Jeśli chcesz: przygotuj {{ p.lead ?? 'wcześniej' }}:
+                    </template>
+                    <template v-else>Przygotuj {{ p.lead ?? 'wcześniej' }}:</template>
                     <button
                         type="button"
                         class="cautions__step"
@@ -95,6 +100,11 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
                     >
                         krok {{ p.step }}
                     </button>
+                    <em
+                        v-if="p.optional"
+                        class="cautions__opt"
+                        v-text="' (opcjonalnie)'"
+                    />
                 </span>
             </li>
             <li
@@ -170,6 +180,19 @@ const visible = computed(() => props.items.length > 0 || prepRows.value.length >
     overflow-wrap: anywhere;
 }
 .cautions__text--prep::after {
+    content: '.';
+}
+/* the space before it is a no-break one in the text (the markup loses whitespace between elements),
+   so "krok 3 (opcjonalnie)" wraps as one */
+.cautions__opt {
+    font-weight: 400;
+    color: var(--ink-muted);
+}
+/* the period goes after "(opcjonalnie)", not after the space that follows it in the markup */
+.cautions__text--prep:has(.cautions__opt)::after {
+    content: none;
+}
+.cautions__opt::after {
     content: '.';
 }
 .cautions__step {

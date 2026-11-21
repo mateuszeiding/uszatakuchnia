@@ -47,6 +47,13 @@ var Routes = []Route{
 	{http.MethodPut, "/api/challenges/{id}", h.ChallengeUpdate},
 	{http.MethodDelete, "/api/challenges/{id}", h.ChallengeDelete},
 
+	// Glossary (terms marked in steps and hints)
+	{http.MethodGet, "/api/glossary", h.GlossaryList},
+	{http.MethodPost, "/api/glossary", h.GlossaryCreate},
+	{http.MethodPut, "/api/glossary/{id}", h.GlossaryUpdate},
+	{http.MethodGet, "/api/glossary/{id}/usage", h.GlossaryUsage}, // owner
+	{http.MethodDelete, "/api/glossary/{id}", h.GlossaryDelete}, // ?replaceWith= | ?removeMarks=true
+
 	// Photos
 	{http.MethodPost, "/api/photos", h.PhotoUpload},
 	{http.MethodGet, "/api/photos/{id}", h.PhotoGet},

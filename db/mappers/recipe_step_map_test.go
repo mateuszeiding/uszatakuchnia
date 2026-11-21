@@ -38,3 +38,16 @@ func TestMapCautionsNilIsEmpty(t *testing.T) {
 		}
 	}
 }
+
+func TestNeedsPrepIgnoresOptionalSteps(t *testing.T) {
+	opt := MapRecipeToDto(entities.Recipe{Steps: []entities.RecipeStep{{StepNo: 1, Prep: true, Optional: true}}})
+	if opt.NeedsPrep {
+		t.Error("an optional prep step alone must not make the recipe need prep")
+	}
+	req := MapRecipeToDto(entities.Recipe{Steps: []entities.RecipeStep{
+		{StepNo: 1, Prep: true, Optional: true}, {StepNo: 2, Prep: true},
+	}})
+	if !req.NeedsPrep || !req.Steps[0].Optional || req.Steps[1].Optional {
+		t.Errorf("needsPrep=%v steps=%+v", req.NeedsPrep, req.Steps)
+	}
+}

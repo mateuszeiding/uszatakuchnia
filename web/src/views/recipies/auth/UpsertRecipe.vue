@@ -19,6 +19,7 @@ import {
     fromRecipe,
     type IIngItem,
     type IRecipeForm,
+    missingTermSteps,
     newForm,
     PREP_LEADS,
     toRequest,
@@ -33,6 +34,7 @@ import USpinner from '@/components/USpinner.vue';
 import { confirmRecipeDelete } from '@/composables/confirmRecipeDelete';
 import { confirmAction } from '@/composables/useConfirm';
 import { showToast } from '@/composables/useToast';
+import { fetchGlossary } from '@/data/api/glossary/fetch';
 import { fetchIngredientsWithClient, invalidateIngredients } from '@/data/api/ingredients/fetch';
 import {
     createRecipe,
@@ -51,6 +53,7 @@ import {
 } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries, IEquipment } from '@/data/dtos/taxonomy/DictionariesDto';
 import { LOADING_DICTIONARIES } from '@/data/dtos/taxonomy/loadingDictionaries';
+import type { ITerm } from '@/shared/utils/stepRefs';
 
 const props = defineProps<{ id?: string | number }>();
 const router = useRouter();
@@ -74,6 +77,24 @@ const ingredients = ref<IngredientDto[]>([]);
 /** All recipes (drafts too), for picking a link in ingredients. */
 const recipes = ref<RecipeBaseDto[]>([]);
 const addIng = ref<{ name: string; item: IIngItem } | null>(null);
+/** The glossary, for marking terms in steps and hints; undefined while it loads or when loading failed
+ *  (marks then aren't checked here — the API still checks them on save). */
+const glossary = ref<ITerm[]>();
+/** Terms added from this form; kept when the glossary response arrives later than they were created. */
+const createdTerms = ref<ITerm[]>([]);
+const knownTerms = computed(() => glossary.value ?? createdTerms.value);
+function loadGlossary() {
+    fetchGlossary()
+        .then((g) => {
+            const ids = new Set(g.map((t) => t.id));
+            glossary.value = [...g, ...createdTerms.value.filter((t) => !ids.has(t.id))];
+        })
+        .catch(() =>
+            showToast('Nie udało się wczytać słowniczka.', {
+                action: { label: 'Spróbuj ponownie', run: loadGlossary },
+            })
+        );
+}
 let leaving = false;
 
 const dirty = computed(() => JSON.stringify(form.value) !== saved.value);
@@ -86,6 +107,8 @@ onMounted(async () => {
     ]);
     dicts.value = d;
     ingredients.value = ings;
+    // not awaited with the rest: the form works without it, only marking terms waits
+    loadGlossary();
     recipes.value = list;
     if (recipeId.value) {
         const r = await fetchRecipesWithClient(qc, recipeId.value);
@@ -96,13 +119,20 @@ onMounted(async () => {
     loading.value = false;
 });
 
-const validation = computed(() => validate(form.value, dicts.value));
+const validation = computed(() => validate(form.value, dicts.value, glossary.value));
 
 // Ingredient refs in steps: rows to pick, the length counter, removed rows and fractions over the whole.
 const units = computed(() => dicts.value?.units ?? []);
 const stepRefRows = computed(() => refRows(form.value, units.value));
 const stepRefCtx = computed(() => formRefContext(form.value, units.value));
 const stepsBroken = computed(() => brokenSteps(form.value));
+const stepsMissingTerms = computed(() =>
+    glossary.value ? missingTermSteps(form.value, glossary.value) : []
+);
+function addTerm(t: ITerm) {
+    createdTerms.value = [...createdTerms.value, t];
+    if (glossary.value) glossary.value = [...glossary.value, t];
+}
 const stepsOverused = computed(() => overusedKeys(form.value));
 const stepTexts = computed(() => form.value.stepGroups.flatMap((g) => g.items.map((s) => s.text)));
 const errors = computed<FormErrors>(() => {
@@ -483,6 +513,9 @@ const prepSummary = computed(() => {
                         :ref-ctx="stepRefCtx"
                         :broken="stepsBroken"
                         :overused="stepsOverused"
+                        :terms="knownTerms"
+                        :missing-terms="stepsMissingTerms"
+                        @term-created="addTerm"
                     />
                 </FormSection>
             </div>

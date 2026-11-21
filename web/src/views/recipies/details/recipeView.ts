@@ -67,6 +67,13 @@ export const servingsLabel = (n: number) =>
           ? 'porcje'
           : 'porcji';
 
+/** "Prepare ahead" rows for the Uwagi block: mandatory steps first, then the optional ones ("Jeśli chcesz: …"). */
+export const prepRows = (steps: RecipeStepDto[]) =>
+    steps
+        .filter((s) => s.prep)
+        .map((s) => ({ lead: leadText(s), step: s.stepNo, optional: s.optional }))
+        .sort((a, b) => Number(a.optional) - Number(b.optional));
+
 /** "12 h" → "12 h wcześniej"; "dzień wcześniej" stays as is. */
 export const leadText = (s: Pick<RecipeStepDto, 'prepLead'>) =>
     s.prepLead ? (s.prepLead.endsWith('wcześniej') ? s.prepLead : `${s.prepLead} wcześniej`) : null;

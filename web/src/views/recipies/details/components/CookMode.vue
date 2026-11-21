@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 
 import { useCookFit } from '../cookFit';
-import { leadText } from '../recipeView';
+import { leadText, prepRows } from '../recipeView';
 
 import CookBar from './CookBar.vue';
 import CookBefore from './CookBefore.vue';
@@ -12,9 +12,11 @@ import CookNav from './CookNav.vue';
 
 import StepText from '@/components/StepText.vue';
 import type { ISubChoice } from '@/composables/useCookingProgress';
+import { COOK_TERMS } from '@/composables/useTermExplain';
 import { useWakeLock } from '@/composables/useWakeLock';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { resumeIndex } from '@/shared/utils/progress';
 import type { IRefContext } from '@/shared/utils/stepRefs';
 import type { SubsMap } from '@/shared/utils/substitutes';
 
@@ -38,20 +40,19 @@ const emit = defineEmits<{
 }>();
 
 const steps = computed(() => props.recipe.steps);
-const prep = computed(() =>
-    steps.value.filter((s) => s.prep).map((s) => ({ lead: leadText(s), step: s.stepNo }))
-);
+const prep = computed(() => prepRows(steps.value));
 const hasBefore = computed(() => props.recipe.cautions.length > 0 || prep.value.length > 0);
 
-// -1 = "Zanim zaczniesz". Resuming (some steps checked) skips it and opens the first unchecked step.
-const firstOpen = steps.value.findIndex((s) => !props.done.includes(s.stepNo));
-const resuming = props.done.length > 0;
-const i = ref(resuming ? Math.max(0, firstOpen) : hasBefore.value ? -1 : 0);
+// -1 = "Zanim zaczniesz". Resuming (some steps checked) skips it and opens the step after the last checked one.
+const resumeAt = resumeIndex(steps.value, props.done);
+const i = ref(resumeAt >= 0 ? resumeAt : hasBefore.value ? -1 : 0);
 
 const showIng = ref(false);
 /** The reader opened collapsed hints once: they stay open until the mode closes. */
 const hintsOpen = ref(false);
 useWakeLock();
+// terms in the step open the big sheet with "Zamknij"
+provide(COOK_TERMS, true);
 const root = ref<HTMLElement>();
 const stage = ref<HTMLElement>();
 const bar = ref<InstanceType<typeof CookBar>>();
@@ -94,6 +95,11 @@ function next() {
         return;
     }
     emit('set-step', step.value.stepNo, true);
+    if (last.value) emit('close');
+    else i.value++;
+}
+/** An optional step: on without checking it ("Pomiń"); on the last step, "Pomiń i zakończ". */
+function skip() {
     if (last.value) emit('close');
     else i.value++;
 }
@@ -198,10 +204,23 @@ onBeforeUnmount(() => {
                                 {{ step.section }}
                             </div>
                             <div
-                                v-if="step.prep"
-                                class="cook__prep"
+                                v-if="step.optional || step.prep"
+                                class="cook__labels"
                             >
-                                Przygotuj wcześniej{{ step.prepLead ? ` · ${leadText(step)}` : '' }}
+                                <em
+                                    v-if="step.optional"
+                                    class="cook__opt"
+                                >
+                                    (opcjonalnie)
+                                </em>
+                                <span
+                                    v-if="step.prep"
+                                    class="cook__prep"
+                                >
+                                    Przygotuj wcześniej{{
+                                        step.prepLead ? ` · ${leadText(step)}` : ''
+                                    }}
+                                </span>
                             </div>
                             <p
                                 class="cook__text"
@@ -214,6 +233,7 @@ onBeforeUnmount(() => {
                             </p>
                             <CookHints
                                 :hints="step.hints"
+                                :refs="refs"
                                 :collapsible="collapsible"
                                 :open="hintsOpen"
                                 @toggle="hintsOpen = !hintsOpen"
@@ -254,8 +274,10 @@ onBeforeUnmount(() => {
                 :start="!step"
                 :can-back="i > 0 || (i === 0 && hasBefore)"
                 :last="last"
+                :optional="!!step?.optional"
                 @back="prev"
                 @next="next"
+                @skip="skip"
             />
         </div>
 
@@ -307,11 +329,21 @@ onBeforeUnmount(() => {
     font-weight: 600;
     margin-bottom: 12px;
 }
+.cook__labels {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    margin-bottom: 10px;
+}
+.cook__opt {
+    font-size: 17px;
+    color: var(--ink-muted);
+}
 .cook__prep {
     font-size: 14px;
     font-weight: 600;
     color: var(--prep);
-    margin-bottom: 10px;
 }
 .cook__text {
     font-size: 26px;

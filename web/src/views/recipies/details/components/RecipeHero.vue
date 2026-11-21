@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 
-import { DIFFICULTY, leadText } from '../recipeView';
+import { DIFFICULTY, prepRows } from '../recipeView';
 
 import UsefulRecipes from './UsefulRecipes.vue';
 
@@ -26,11 +26,7 @@ const cuisine = computed(() => props.recipe?.taxonomy.cuisine?.[0]?.label);
 const diets = computed(() => props.recipe?.taxonomy.diet ?? []);
 const practical = computed(() => props.recipe?.taxonomy.practical ?? []);
 // "prepare ahead" steps: the first items of the Uwagi block
-const prep = computed(() =>
-    (props.recipe?.steps ?? [])
-        .filter((s) => s.prep)
-        .map((s) => ({ lead: leadText(s), step: s.stepNo }))
-);
+const prep = computed(() => prepRows(props.recipe?.steps ?? []));
 const kcal = computed(() => {
     const n = props.nutrition !== undefined ? props.nutrition : props.recipe?.nutrition;
     const f = fmt(n?.perPortion.kcal, 'kcal', 'recipe');

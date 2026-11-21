@@ -1,7 +1,8 @@
-// Ingredient refs inside step text: {{ing:<rowKey>}}, {{ing:<rowKey>|1/2}}, {{ing:<rowKey>|rest}}.
-// The grammar is generic ({{<kind>:<id>|<arg>}}) so a glossary ref ({{term:…}}) can come later; the API
-// (services/steprefs.go) rejects kinds it doesn't know, so here an unknown kind just renders nothing.
-// A ref only shows the quantity — the shopping list, macros and allergens don't read it.
+// Refs inside step text (and, for terms, hints): {{<kind>:<id>|<arg>}}.
+// - ingredient quantity: {{ing:<rowKey>}}, {{ing:<rowKey>|1/2}}, {{ing:<rowKey>|rest}} — shows the quantity only;
+//   the shopping list, macros and allergens don't read it,
+// - glossary term: {{term:<id>|<word>}} — wraps the author's word, adds nothing.
+// The API (services/steprefs.go) rejects kinds it doesn't know, so here an unknown kind just renders nothing.
 
 import type { RecipeIngredientDto } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
@@ -36,11 +37,23 @@ export interface IIngRef {
     key: string;
     part: RefPart | null;
 }
+export interface ITermRef {
+    kind: 'term';
+    id: number;
+    /** The author's word, as written ("deglasuj"). */
+    word: string;
+}
 export interface IOtherRef {
     kind: 'other';
     raw: string;
 }
-export type StepSeg = string | IIngRef | IOtherRef;
+export type StepSeg = string | IIngRef | ITermRef | IOtherRef;
+
+export interface ITerm {
+    id: number;
+    name: string;
+    explanation: string;
+}
 
 const REF_RE = /\{\{([^{}:|]*):([^{}|]*)(?:\|([^{}]*))?\}\}/g;
 
@@ -54,6 +67,13 @@ export function parseStep(text: string): StepSeg[] {
         const [raw, kind, key, arg] = m;
         if (kind === 'ing' && key && (!arg || isPart(arg)))
             out.push({ kind: 'ing', key, part: (arg as RefPart | undefined) ?? null });
+        else if (
+            kind === 'term' &&
+            /^[1-9]\d*$/.test(key ?? '') &&
+            arg?.trim() &&
+            !arg.includes('|')
+        )
+            out.push({ kind: 'term', id: Number(key), word: arg });
         else out.push({ kind: 'other', raw });
         last = m.index + raw.length;
     }
@@ -64,6 +84,25 @@ export function parseStep(text: string): StepSeg[] {
 export function refToken(key: string, part: RefPart | null): string {
     return part ? `{{ing:${key}|${part}}}` : `{{ing:${key}}}`;
 }
+
+export const termToken = (id: number, word: string) => `{{term:${id}|${word}}}`;
+
+/** Text with marked terms as their bare word (hint length: a mark doesn't count; the API counts the same way). */
+export const termPlainText = (text: string): string =>
+    parseStep(text)
+        .map((s) =>
+            typeof s === 'string'
+                ? s
+                : s.kind === 'term'
+                  ? s.word
+                  : s.kind === 'ing'
+                    ? refToken(s.key, s.part)
+                    : s.raw
+        )
+        .join('');
+
+export const termRefs = (text: string): ITermRef[] =>
+    parseStep(text).filter((s): s is ITermRef => typeof s !== 'string' && s.kind === 'term');
 
 export const stepRefs = (text: string): IIngRef[] =>
     parseStep(text).filter((s): s is IIngRef => typeof s !== 'string' && s.kind === 'ing');
@@ -76,6 +115,15 @@ export interface IRefContext {
     /** Chosen servings / recipe servings. */
     ratio: number;
     subs: SubsMap;
+    /** Glossary terms marked in the recipe (the API sends only those); a missing one renders as the bare word. */
+    terms?: ITerm[];
+}
+
+/** A marked word whose term exists. */
+export interface ITermView {
+    kind: 'term';
+    term: ITerm;
+    word: string;
 }
 
 export interface IRefView {
@@ -164,8 +212,8 @@ export function refText(v: IRefView | null): string {
  * What a step shows: text and resolved refs. A ref that shows nothing ("sól do smaku") takes the author's
  * space before it along, so "Dopraw solą {{ing:x}}." reads "Dopraw solą.", not "Dopraw solą .".
  */
-export function viewSegments(text: string, ctx: IRefContext): (string | IRefView)[] {
-    const out: (string | IRefView)[] = [];
+export function viewSegments(text: string, ctx: IRefContext): (string | IRefView | ITermView)[] {
+    const out: (string | IRefView | ITermView)[] = [];
     /** Index of the text before a ref that showed nothing. */
     let before = -1;
     const trimBefore = () => {
@@ -177,6 +225,12 @@ export function viewSegments(text: string, ctx: IRefContext): (string | IRefView
             if (before >= 0 && /^[,.;:!?)]/.test(seg)) trimBefore();
             before = -1;
             out.push(seg);
+            continue;
+        }
+        if (seg.kind === 'term') {
+            before = -1;
+            const term = ctx.terms?.find((t) => t.id === seg.id);
+            out.push(term ? { kind: 'term', term, word: seg.word } : seg.word);
             continue;
         }
         const v = seg.kind === 'ing' ? resolveRef(seg, ctx) : null;
@@ -192,7 +246,7 @@ export function viewSegments(text: string, ctx: IRefContext): (string | IRefView
 /** Step length as the reader sees it: refs replaced by their text, whitespace collapsed like in HTML. */
 export function visibleLength(text: string, ctx: IRefContext): number {
     const s = viewSegments(text, ctx)
-        .map((seg) => (typeof seg === 'string' ? seg : refText(seg)))
+        .map((seg) => (typeof seg === 'string' ? seg : 'term' in seg ? seg.word : refText(seg)))
         .join('')
         .replace(/\s+/g, ' ')
         .trim();

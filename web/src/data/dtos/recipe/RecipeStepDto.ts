@@ -5,6 +5,8 @@ export class RecipeStepDto {
     /** Step to do ahead (marinade, soaking). */
     prep: boolean = false;
     prepLead: string | null = null;
+    /** The cook may skip it: progress and "needs prep" count only the other steps. */
+    optional: boolean = false;
     hints: string[] = [];
 
     constructor(obj: Partial<RecipeStepDto>) {

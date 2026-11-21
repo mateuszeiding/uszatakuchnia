@@ -1,15 +1,23 @@
 <script lang="ts" setup>
 // ✕ deletes without confirmation: nothing is saved until "Zapisz".
+// A hint uses the step's editor without "@": it can mark glossary terms, but has no quantities.
 import { MAX_HINT_LEN } from '../recipeForm';
 import { HINT_LIMIT, HINTS_LIMIT } from '../stepRefsForm';
 
-import BulbIcon from '@/components/BulbIcon.vue';
+import StepTextEditor from './StepTextEditor.vue';
 
-defineProps<{ stepId: number; stepNo: number }>();
+import BulbIcon from '@/components/BulbIcon.vue';
+import { type ITerm, termPlainText } from '@/shared/utils/stepRefs';
+
+defineProps<{ stepId: number; stepNo: number; terms: ITerm[] }>();
+const emit = defineEmits<{ 'term-created': [term: ITerm] }>();
 const hints = defineModel<string[]>('hints', { required: true });
 
-// Cooking mode: a warning only, saving and publishing stay possible.
-const tooLong = (hi: number) => [...(hints.value[hi] ?? '').trim()].length > HINT_LIMIT;
+// Length as the reader sees it: a marked term counts as its word.
+const len = (hi: number) => [...termPlainText(hints.value[hi] ?? '').trim()].length;
+// Over MAX_HINT_LEN the API refuses to save; over HINT_LIMIT / HINTS_LIMIT it's a cooking-mode warning only.
+const tooLongToSave = (hi: number) => len(hi) > MAX_HINT_LEN;
+const tooLong = (hi: number) => len(hi) > HINT_LIMIT;
 const tooMany = (hi: number) => hi >= HINTS_LIMIT;
 const warnAt = (hi: number) => tooLong(hi) || tooMany(hi);
 </script>
@@ -22,29 +30,30 @@ const warnAt = (hi: number) => tooLong(hi) || tooMany(hi);
     >
         <span class="hint-row__icon"><BulbIcon /></span>
         <div class="hint-row__field">
-            <label
-                :for="`hint-${stepId}-${hi}`"
-                class="sr-only"
-            >
-                Krok {{ stepNo }}, wskazówka {{ hi + 1 }}
-            </label>
-            <textarea
-                :id="`hint-${stepId}-${hi}`"
-                v-model="hints[hi]"
-                v-autosize
-                class="textarea hint-row__input"
-                :class="{ 'is-warn': warnAt(hi) }"
-                rows="1"
-                :maxlength="MAX_HINT_LEN"
-                :aria-describedby="warnAt(hi) ? `hint-warn-${stepId}-${hi}` : undefined"
+            <StepTextEditor
+                :field-id="`hint-${stepId}-${hi}`"
+                v-model="hints[hi]!"
+                :rows="[]"
+                :terms="terms"
+                :ing-refs="false"
+                compact
+                :label="`Krok ${stepNo}, wskazówka ${hi + 1}`"
+                :warn="warnAt(hi)"
+                :broken="tooLongToSave(hi)"
+                :describedby="warnAt(hi) ? `hint-warn-${stepId}-${hi}` : undefined"
                 placeholder="np. Jeśli ciasto się klei, odstaw je na 10 minut"
+                @term-created="emit('term-created', $event)"
             />
             <p
                 v-if="warnAt(hi)"
                 :id="`hint-warn-${stepId}-${hi}`"
                 class="hint-row__warn"
+                :class="{ 'is-error': tooLongToSave(hi) }"
             >
-                <template v-if="tooLong(hi)">
+                <template v-if="tooLongToSave(hi)">
+                    Wskazówka może mieć najwyżej {{ MAX_HINT_LEN }} znaków (teraz {{ len(hi) }}).
+                </template>
+                <template v-else-if="tooLong(hi)">
                     Za długa do trybu gotowania — na telefonie nie zmieści się bez przewijania.
                     Skróć ją do ok. {{ HINT_LIMIT }} znaków.
                 </template>
@@ -99,18 +108,13 @@ const warnAt = (hi: number) => tooLong(hi) || tooMany(hi);
     flex-direction: column;
     gap: 4px;
 }
-.hint-row__input.is-warn {
-    border-color: var(--prep-line);
-}
 .hint-row__warn {
     margin: 0;
     font-size: 12px;
     line-height: 1.45;
     color: var(--prep);
 }
-.hint-row__input {
-    min-height: 40px;
-    font-size: 13px;
-    line-height: 18px;
+.hint-row__warn.is-error {
+    color: var(--danger);
 }
 </style>

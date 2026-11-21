@@ -5,6 +5,7 @@ import { RouterView, useRoute } from 'vue-router';
 
 import './scss/_!import.scss';
 import DraftBar from './components/DraftBar.vue';
+import TermExplainHost from './components/TermExplainHost.vue';
 import UConfirmHost from './components/UConfirmHost.vue';
 import UFooter from './components/UFooter.vue';
 import UToastHost from './components/UToastHost.vue';
@@ -36,6 +37,7 @@ onMounted(() => {
         <RouterView />
     </main>
     <UFooter v-if="isPublic" />
+    <TermExplainHost />
     <UConfirmHost />
     <UToastHost />
     <Analytics

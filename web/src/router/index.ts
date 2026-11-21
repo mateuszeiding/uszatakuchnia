@@ -6,6 +6,7 @@ import { isOwner } from '@/auth/createAuth';
 import { setTitle } from '@/shared/utils/title';
 import AdminChallengeEdit from '@/views/admin/AdminChallengeEdit.vue';
 import AdminChallenges from '@/views/admin/AdminChallenges.vue';
+import AdminGlossary from '@/views/admin/AdminGlossary.vue';
 import AdminIngredientEdit from '@/views/admin/AdminIngredientEdit.vue';
 import AdminIngredients from '@/views/admin/AdminIngredients.vue';
 import AdminLayout from '@/views/admin/AdminLayout.vue';
@@ -97,6 +98,7 @@ const router = createRouter({
                 { path: 'challenges', component: AdminChallenges },
                 { path: 'challenges/new', component: AdminChallengeEdit },
                 { path: 'challenges/:id(\\d+)', component: AdminChallengeEdit, props: true },
+                { path: 'glossary', component: AdminGlossary },
                 { path: 'taxonomy', component: AdminTaxonomy },
                 // old URLs
                 { path: 'settings', redirect: '/admin/taxonomy' },

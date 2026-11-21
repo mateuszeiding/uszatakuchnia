@@ -1,19 +1,24 @@
 <script lang="ts" setup>
 // "Dalej" takes 3/4 of the width and 72 px of height, so it can be hit with a knuckle. No swipe and no
 // "tap anywhere": a stray touch would check off a step, and scrolling a long step would look like the gesture.
-defineProps<{
-    /** The "Zanim zaczniesz" screen: one "Zaczynam" button that checks nothing. */
-    start: boolean;
-    canBack: boolean;
-    last: boolean;
-}>();
-const emit = defineEmits<{ back: []; next: [] }>();
+// An optional step gets three buttons: "←" · "Pomiń" (on without checking) · "Zrobione →" (checks).
+withDefaults(
+    defineProps<{
+        /** The "Zanim zaczniesz" screen: one "Zaczynam" button that checks nothing. */
+        start: boolean;
+        canBack: boolean;
+        last: boolean;
+        optional?: boolean;
+    }>(),
+    { optional: false }
+);
+const emit = defineEmits<{ back: []; next: []; skip: [] }>();
 </script>
 
 <template>
     <div
         class="cook-nav"
-        :class="{ 'cook-nav--start': start }"
+        :class="{ 'cook-nav--start': start, 'cook-nav--opt': optional && !start }"
     >
         <button
             v-if="!start"
@@ -24,6 +29,14 @@ const emit = defineEmits<{ back: []; next: [] }>();
             @click="emit('back')"
         >
             ←
+        </button>
+        <button
+            v-if="optional && !start"
+            type="button"
+            class="cook-nav__btn cook-nav__skip"
+            @click="emit('skip')"
+        >
+            {{ last ? 'Pomiń i zakończ' : 'Pomiń' }}
         </button>
         <button
             type="button"
@@ -49,6 +62,7 @@ const emit = defineEmits<{ back: []; next: [] }>();
                     />
                 </svg>
             </template>
+            <template v-else-if="optional">Zrobione →</template>
             <template v-else>Dalej →</template>
         </button>
     </div>
@@ -84,6 +98,25 @@ const emit = defineEmits<{ back: []; next: [] }>();
 .cook-nav__back:disabled {
     opacity: 0.4;
     cursor: default;
+}
+.cook-nav__skip {
+    flex: 1.4;
+    background: var(--bg-alt);
+    color: var(--ink);
+    border: 1px solid var(--rule-strong);
+}
+.cook-nav--opt {
+    gap: 8px;
+}
+.cook-nav--opt .cook-nav__btn {
+    font-size: 19px;
+    padding: 0 6px;
+}
+.cook-nav--opt .cook-nav__back {
+    flex: 0.8;
+}
+.cook-nav--opt .cook-nav__next {
+    flex: 1.8;
 }
 .cook-nav__next {
     flex: 3;

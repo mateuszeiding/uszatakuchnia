@@ -58,6 +58,7 @@ const refCtx = computed<IRefContext>(() => ({
     units: props.dicts?.units ?? [],
     ratio: props.recipe.servings ? progress.value.servings / props.recipe.servings : 1,
     subs: progress.value.subs,
+    terms: props.recipe.terms,
 }));
 const swapNote = computed(() =>
     subsActive.value ? swapSummary(props.recipe.ingredients, progress.value.subs) : ''
