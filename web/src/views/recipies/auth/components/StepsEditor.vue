@@ -74,6 +74,9 @@ async function removeGroup(g: IGroup<IStepItem>) {
 <template>
     <div class="steps-editor">
         <p class="steps-editor__limit">
+            Krok do pominięcia oznacz jako „Opcjonalny” zamiast pisać „jeśli chcesz…” w treści.
+        </p>
+        <p class="steps-editor__limit">
             Krok w trybie gotowania mieści się na telefonie do ok. {{ STEP_LIMIT }} znaków (ilości
             liczą się tak, jak je widać) i z najwyżej 3 krótkimi wskazówkami.
         </p>
@@ -213,6 +216,15 @@ async function removeGroup(g: IGroup<IStepItem>) {
                             @click="addHint(s)"
                         >
                             + wskazówka
+                        </button>
+                        <button
+                            type="button"
+                            class="opt-toggle"
+                            :class="{ 'is-active': s.optional }"
+                            :aria-pressed="s.optional"
+                            @click="s.optional = !s.optional"
+                        >
+                            {{ s.optional ? '✓ ' : '' }}Opcjonalny
                         </button>
                         <button
                             type="button"
@@ -389,6 +401,23 @@ async function removeGroup(g: IGroup<IStepItem>) {
 }
 .hint-add {
     margin-right: 8px;
+}
+.opt-toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: var(--r-pill);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--ink-muted);
+    background: transparent;
+    border: 1px solid var(--rule);
+}
+.opt-toggle.is-active {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: var(--accent);
 }
 .prep-toggle {
     display: inline-flex;

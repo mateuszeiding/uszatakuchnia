@@ -52,6 +52,7 @@ export interface IStepItem {
     text: string;
     prep: boolean;
     prepLead: string;
+    optional: boolean;
     /** Hints below the step text; empty ones are skipped on save. */
     hints: string[];
 }
@@ -116,6 +117,7 @@ export const blankStep = (): IStepItem => ({
     text: '',
     prep: false,
     prepLead: '',
+    optional: false,
     hints: [],
 });
 
@@ -201,6 +203,7 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
             text: s.text,
             prep: s.prep,
             prepLead: s.prepLead ?? '',
+            optional: s.optional ?? false,
             hints: [...(s.hints ?? [])],
         })
     );
@@ -256,6 +259,7 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
                     text: s.text.trim(),
                     prep: s.prep,
                     prepLead: s.prep ? orNull(s.prepLead) : null,
+                    optional: s.optional,
                     hints: s.hints.map((h) => h.trim()).filter(Boolean),
                 }))
         ),

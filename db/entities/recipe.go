@@ -31,7 +31,8 @@ type Recipe struct {
 	Equipment   []RecipeEquipment  `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
-// RecipeBase is a light recipe view for the list. NeedsPrep is computed in the query (EXISTS on prep steps).
+// RecipeBase is a light recipe view for the list. NeedsPrep is computed in the query (EXISTS on prep steps
+// that aren't optional).
 type RecipeBase struct {
 	ID         uint    `gorm:"primaryKey;autoIncrement"`
 	Name       string  `gorm:"type:varchar(255);not null;index:ix_recipes_name"`

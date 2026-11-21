@@ -84,6 +84,7 @@ type UpsertStepRequest struct {
 	Text     string   `json:"text"`
 	Prep     bool     `json:"prep"`
 	PrepLead *string  `json:"prepLead"`
+	Optional bool     `json:"optional"`
 	Hints    []string `json:"hints"`
 }
 

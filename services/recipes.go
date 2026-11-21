@@ -228,7 +228,8 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 		}
 		step := entities.RecipeStep{
 			RecipeID: recipeID, StepNo: i + 1, Section: s.Section, Text: s.Text, Prep: s.Prep, PrepLead: lead,
-			Hints: CleanHints(s.Hints),
+			Optional: s.Optional,
+			Hints:    CleanHints(s.Hints),
 		}
 		if err := tx.Create(&step).Error; err != nil {
 			return err

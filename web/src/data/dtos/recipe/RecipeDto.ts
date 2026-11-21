@@ -114,6 +114,7 @@ export interface IUpsertRecipeRequest {
         text: string;
         prep: boolean;
         prepLead?: string | null;
+        optional: boolean;
         hints: string[];
     }[];
     ingredients: {

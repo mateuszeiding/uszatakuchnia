@@ -136,3 +136,27 @@ describe('zamienniki w formularzu', () => {
         ]);
     });
 });
+
+describe('kroki opcjonalne w formularzu', () => {
+    it('fromRecipe → toRequest zachowuje „opcjonalny”; nowy krok jest obowiązkowy', () => {
+        const r = new RecipeDto({
+            name: 'x',
+            steps: [
+                { stepNo: 1, section: null, text: 'a', prep: false, prepLead: null, hints: [] },
+                {
+                    stepNo: 2,
+                    section: null,
+                    text: 'b',
+                    prep: true,
+                    prepLead: '12 h',
+                    optional: true,
+                    hints: [],
+                },
+            ],
+        } as unknown as Partial<RecipeDto>);
+        const f = fromRecipe(r);
+        expect(f.stepGroups[0]!.items.map((s) => s.optional)).toEqual([false, true]);
+        expect(toRequest(f, 'draft').steps.map((s) => s.optional)).toEqual([false, true]);
+        expect(blankStep().optional).toBe(false);
+    });
+});

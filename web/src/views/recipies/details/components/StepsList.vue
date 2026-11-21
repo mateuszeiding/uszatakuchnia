@@ -8,6 +8,7 @@ import StepHints from './StepHints.vue';
 import BulbIcon from '@/components/BulbIcon.vue';
 import StepText from '@/components/StepText.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
+import { stepProgress } from '@/shared/utils/progress';
 import type { IRefContext } from '@/shared/utils/stepRefs';
 
 const props = defineProps<{
@@ -21,11 +22,12 @@ const props = defineProps<{
 const emit = defineEmits<{ toggle: [stepNo: number]; cook: []; reset: [] }>();
 
 const sections = computed(() => bySection(props.recipe?.steps ?? []));
-const total = computed(() => props.recipe?.steps.length ?? 0);
+// "N z M": mandatory steps only, so the recipe is done without the optional ones
+const progress = computed(() => stepProgress(props.recipe?.steps ?? [], props.done));
+const total = computed(() => progress.value.total);
+const hasSteps = computed(() => (props.recipe?.steps.length ?? 0) > 0);
 const oldTip = computed(() => props.recipe?.tip?.trim() ?? '');
-const doneCount = computed(
-    () => (props.recipe?.steps ?? []).filter((s) => props.done.includes(s.stepNo)).length
-);
+const doneCount = computed(() => progress.value.done);
 </script>
 
 <template>
@@ -56,7 +58,7 @@ const doneCount = computed(
                         {{ doneCount }} z {{ total }}
                     </span>
                     <button
-                        v-if="total || !recipe"
+                        v-if="hasSteps || !recipe"
                         type="button"
                         class="btn btn--accent"
                         @click="emit('cook')"
@@ -133,14 +135,18 @@ const doneCount = computed(
                         :id="`step-${s.stepNo}`"
                         :key="s.stepNo"
                         class="step"
-                        :class="{ 'is-done': done.includes(s.stepNo), 'is-prep': s.prep }"
+                        :class="{
+                            'is-done': done.includes(s.stepNo),
+                            'is-prep': s.prep,
+                            'is-optional': s.optional,
+                        }"
                     >
                         <button
                             type="button"
                             role="checkbox"
                             class="step__check"
                             :aria-checked="done.includes(s.stepNo)"
-                            :aria-label="`Krok ${s.stepNo}: oznacz jako zrobiony`"
+                            :aria-label="`Krok ${s.stepNo}${s.optional ? ' (opcjonalny)' : ''}: oznacz jako zrobiony`"
                             @click="emit('toggle', s.stepNo)"
                         >
                             <svg
@@ -162,10 +168,21 @@ const doneCount = computed(
                         </button>
                         <div class="step__body">
                             <div
-                                v-if="s.prep"
-                                class="step__prep"
+                                v-if="s.prep || s.optional"
+                                class="step__labels"
                             >
-                                Przygotuj wcześniej{{ s.prepLead ? ` · ${leadText(s)}` : '' }}
+                                <em
+                                    v-if="s.optional"
+                                    class="step__opt"
+                                >
+                                    (opcjonalnie)
+                                </em>
+                                <span
+                                    v-if="s.prep"
+                                    class="step__prep"
+                                >
+                                    Przygotuj wcześniej{{ s.prepLead ? ` · ${leadText(s)}` : '' }}
+                                </span>
                             </div>
                             <p class="step__text">
                                 <StepText
@@ -187,7 +204,7 @@ const doneCount = computed(
 
         <!-- "Odznacz wszystko" at the end of the steps: no confirmation, "Cofnij" in the toast -->
         <div
-            v-if="recipe && total"
+            v-if="recipe && hasSteps"
             class="uncheck"
         >
             <button
@@ -332,6 +349,10 @@ const doneCount = computed(
     align-items: center;
     justify-content: center;
 }
+/* optional: dashed number square (checked looks as usual) */
+.step.is-optional:not(.is-done) .step__check {
+    border-style: dashed;
+}
 .step.is-done .step__check {
     background: var(--accent);
     border-color: var(--accent);
@@ -339,11 +360,21 @@ const doneCount = computed(
 .step__body {
     padding-top: 4px;
 }
+.step__labels {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    margin-bottom: 6px;
+}
+.step__opt {
+    font-size: 13px;
+    color: var(--ink-muted);
+}
 .step__prep {
     font-size: 12px;
     font-weight: 600;
     color: var(--prep);
-    margin-bottom: 6px;
 }
 .step__text {
     font-size: 17px;
