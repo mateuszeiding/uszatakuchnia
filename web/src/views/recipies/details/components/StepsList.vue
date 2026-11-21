@@ -6,11 +6,15 @@ import { bySection, leadText } from '../recipeView';
 import StepHints from './StepHints.vue';
 
 import BulbIcon from '@/components/BulbIcon.vue';
+import StepText from '@/components/StepText.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
+import type { IRefContext } from '@/shared/utils/stepRefs';
 
 const props = defineProps<{
     /** null = loading. */
     recipe: RecipeDto | null;
+    /** Quantities in step text; missing while loading. */
+    refs?: IRefContext;
     done: number[];
     canReset: boolean;
 }>();
@@ -163,7 +167,13 @@ const doneCount = computed(
                             >
                                 Przygotuj wcześniej{{ s.prepLead ? ` · ${leadText(s)}` : '' }}
                             </div>
-                            <p class="step__text">{{ s.text }}</p>
+                            <p class="step__text">
+                                <StepText
+                                    v-if="refs"
+                                    :text="s.text"
+                                    :ctx="refs"
+                                />
+                            </p>
                             <StepHints
                                 :hints="s.hints"
                                 :done="done.includes(s.stepNo)"

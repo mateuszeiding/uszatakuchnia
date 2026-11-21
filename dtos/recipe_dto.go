@@ -86,7 +86,10 @@ type UpsertStepRequest struct {
 }
 
 type UpsertIngredientRequest struct {
-	SortOrder    int     `json:"sortOrder"`
+	SortOrder int `json:"sortOrder"`
+	// Stable row key ([a-z0-9-], up to 32); empty = the server picks one. Keep it on a round trip, or the
+	// step refs {{ing:<key>}} to this row break.
+	Key          string  `json:"key"`
 	Section      *string `json:"section"`
 	IngredientId uint    `json:"ingredientId"`
 	Quantity     *string `json:"quantity"`

@@ -105,6 +105,8 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 		validateCautions(*req.Cautions, add)
 	}
 	validateSteps(req, add)
+	validateIngredientKeys(req, add)
+	validateStepRefs(req, publish, add)
 	if err := validateSubstitutes(tx, req, add); err != nil {
 		return nil, err
 	}
@@ -232,6 +234,7 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 	if err := tx.Where("recipe_id = ?", recipeID).Delete(&entities.RecipeIngredient{}).Error; err != nil {
 		return err
 	}
+	keys := ingredientKeys(req.Ingredients)
 	for i, it := range req.Ingredients {
 		var qty *string
 		if it.Quantity != nil && strings.TrimSpace(*it.Quantity) != "" {
@@ -239,7 +242,7 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 			qty = &v
 		}
 		item := entities.RecipeIngredient{
-			RecipeID: recipeID, SortOrder: i + 1, Section: it.Section,
+			RecipeID: recipeID, SortOrder: i + 1, Key: keys[i], Section: it.Section,
 			IngredientID: it.IngredientId, Quantity: qty, UnitID: it.UnitId, Note: it.Note,
 			Optional: it.Optional, LinkedRecipeID: it.LinkedRecipeId,
 		}

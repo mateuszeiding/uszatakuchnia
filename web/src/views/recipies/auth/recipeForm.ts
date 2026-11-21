@@ -5,10 +5,18 @@ import type { ILinkedRecipe } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IDictionaries, IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 import { cautionRows, cautionTexts, type ICautionRow } from '@/shared/utils/cautions';
 import { parseQty } from '@/shared/utils/quantity';
+import { stepRefs } from '@/shared/utils/stepRefs';
 import { defaultTimeUnit, fromMinutes, type TimeUnit, toMinutes } from '@/shared/utils/time';
 
 let seq = 0;
 export const uid = () => ++seq;
+
+const KEY_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
+/** Random ingredient row key; steps refer to the row by it ({{ing:<key>}}), so it never changes after creation. */
+export function newRowKey(): string {
+    const b = crypto.getRandomValues(new Uint8Array(8));
+    return Array.from(b, (x) => KEY_ALPHABET[x % KEY_ALPHABET.length]).join('');
+}
 
 /** Longest step hint (as in the API). */
 export const MAX_HINT_LEN = 300;
@@ -17,6 +25,8 @@ export const PREP_LEADS = ['30 min', '1 h', '2 h', '4 h', '12 h', 'dzień wcześ
 
 export interface IIngItem {
     id: number;
+    /** Stable row key (see newRowKey). */
+    key: string;
     ingredientId: number;
     /** Text in the autosuggest field; ingredientId > 0 only after picking from the database. */
     name: string;
@@ -82,6 +92,7 @@ export interface IRecipeForm {
 
 export const blankIng = (): IIngItem => ({
     id: uid(),
+    key: newRowKey(),
     ingredientId: 0,
     name: '',
     qty: '',
@@ -161,6 +172,7 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
         (i) => i.section,
         (i): IIngItem => ({
             id: uid(),
+            key: i.key || newRowKey(),
             ingredientId: i.ingredientId,
             name: i.ingredientName,
             qty: i.quantity ?? '',
@@ -252,6 +264,7 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
                 .filter((i) => i.ingredientId > 0)
                 .map((i) => ({
                     sortOrder: ++sortOrder,
+                    key: i.key,
                     section: orNull(g.label),
                     ingredientId: i.ingredientId,
                     quantity: orNull(i.qty),
@@ -370,8 +383,26 @@ export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IVal
     const longAt = steps.findIndex((s) => s.hints.some((h) => [...h.trim()].length > MAX_HINT_LEN));
     if (longAt >= 0)
         errors.steps = `Krok ${longAt + 1}: wskazówka może mieć najwyżej ${MAX_HINT_LEN} znaków.`;
+    // A ref to a removed row only blocks publishing; a draft can be saved and fixed later (as in the API).
+    const brokenAt = brokenSteps(f).findIndex(Boolean);
+    if (brokenAt >= 0)
+        errors.steps = `Krok ${brokenAt + 1}: składnik z odwołania został usunięty — wybierz inny albo usuń odwołanie.`;
 
     return { errors, rows };
+}
+
+/** Keys of rows that are saved (picked from the database); a ref to anything else is broken. */
+export const savedKeys = (f: IRecipeForm) =>
+    new Set(
+        f.ingGroups.flatMap((g) => g.items.filter((i) => i.ingredientId > 0).map((i) => i.key))
+    );
+
+/** Per step (editor numbering): does it refer to a row that isn't in the recipe? */
+export function brokenSteps(f: IRecipeForm): boolean[] {
+    const keys = savedKeys(f);
+    return f.stepGroups
+        .flatMap((g) => g.items)
+        .map((s) => stepRefs(s.text).some((r) => !keys.has(r.key)));
 }
 
 /** Order of fields to scroll to on error (form element ids). */

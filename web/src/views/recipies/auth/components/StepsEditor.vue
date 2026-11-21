@@ -2,15 +2,35 @@
 import { nextTick } from 'vue';
 
 import { blankStep, type IGroup, type IStepItem, PREP_LEADS, uid } from '../recipeForm';
+import { COUNT_FROM, type IRefRow, STEP_LIMIT } from '../stepRefsForm';
 
 import GroupShell from './GroupShell.vue';
 import StepHintsEditor from './StepHintsEditor.vue';
+import StepTextEditor from './StepTextEditor.vue';
 
 import { confirmAction } from '@/composables/useConfirm';
 import { useListDnd } from '@/composables/useListDnd';
+import { type IRefContext, stepRefs, visibleLength } from '@/shared/utils/stepRefs';
 
 const groups = defineModel<IGroup<IStepItem>[]>('groups', { required: true });
+const props = defineProps<{
+    /** Ingredient rows a ref can point to. */
+    rows: IRefRow[];
+    /** For the length counter: refs counted as shown at the default servings. */
+    refCtx: IRefContext;
+    /** Per step (continuous numbering): refers to a removed row. */
+    broken: boolean[];
+    /** Rows whose fractions add up to more than the whole. */
+    overused: Set<string>;
+}>();
 const dnd = useListDnd(groups);
+
+const len = (s: IStepItem) => visibleLength(s.text, props.refCtx);
+const overusedIn = (s: IStepItem) =>
+    [...new Set(stepRefs(s.text).map((r) => r.key))]
+        .filter((k) => props.overused.has(k))
+        .map((k) => props.rows.find((r) => r.key === k)?.name)
+        .filter(Boolean);
 
 /** Step number across the whole recipe (continuous numbering through stages). */
 function stepNo(gi: number, ii: number): number {
@@ -48,6 +68,10 @@ async function removeGroup(g: IGroup<IStepItem>) {
 
 <template>
     <div class="steps-editor">
+        <p class="steps-editor__limit">
+            Krok w trybie gotowania mieści się na telefonie do ok. {{ STEP_LIMIT }} znaków (ilości
+            liczą się tak, jak je widać) i z najwyżej 3 krótkimi wskazówkami.
+        </p>
         <GroupShell
             v-for="(g, gi) in groups"
             :key="g.id"
@@ -111,16 +135,55 @@ async function removeGroup(g: IGroup<IStepItem>) {
                     {{ stepNo(gi, ii) }}
                 </div>
                 <div class="step-row__body">
-                    <textarea
+                    <StepTextEditor
                         v-model="s.text"
-                        class="textarea step-row__text"
-                        v-autosize
-                        rows="2"
-                        :aria-label="`Krok ${stepNo(gi, ii)}`"
+                        :rows="rows"
+                        :label="`Krok ${stepNo(gi, ii)}`"
+                        :describedby="`step-msg-${s.id}`"
+                        :warn="len(s) > STEP_LIMIT"
+                        :broken="broken[stepNo(gi, ii) - 1]"
                         :placeholder="
                             stepNo(gi, ii) === 1 ? 'Rozgrzej piekarnik do 200°C…' : 'Następny krok…'
                         "
                     />
+                    <div class="step-row__meta">
+                        <span
+                            :id="`step-msg-${s.id}`"
+                            class="step-row__msg"
+                            :class="{
+                                'is-broken': broken[stepNo(gi, ii) - 1],
+                                'is-warn': !broken[stepNo(gi, ii) - 1] && len(s) > STEP_LIMIT,
+                            }"
+                        >
+                            <template v-if="broken[stepNo(gi, ii) - 1]">
+                                Składnik z odwołania został usunięty. Wybierz inny albo usuń
+                                odwołanie — do tego czasu nie da się opublikować.
+                            </template>
+                            <template v-else-if="len(s) > STEP_LIMIT">
+                                Za długi do trybu gotowania — na telefonie nie zmieści się bez
+                                przewijania. Podziel krok na dwa albo przenieś rady do wskazówek.
+                            </template>
+                            <template v-else>
+                                Wpisz
+                                <code>@</code>
+                                , żeby wstawić ilość składnika.
+                            </template>
+                        </span>
+                        <span
+                            v-if="len(s) >= COUNT_FROM"
+                            class="step-row__count"
+                            :class="{ 'is-over': len(s) > STEP_LIMIT }"
+                        >
+                            {{ len(s) }} / {{ STEP_LIMIT }}
+                        </span>
+                    </div>
+                    <p
+                        v-if="overusedIn(s).length"
+                        class="step-row__msg is-warn"
+                    >
+                        Części składnika „{{ overusedIn(s).join('”, „') }}” w krokach dają więcej
+                        niż całość albo nie zostawiają nic na „resztę”.
+                    </p>
                     <StepHintsEditor
                         v-model:hints="s.hints"
                         :step-id="s.id"
@@ -264,8 +327,42 @@ async function removeGroup(g: IGroup<IStepItem>) {
     flex-direction: column;
     gap: 8px;
 }
-.step-row__text {
-    font-size: 15px;
+.steps-editor__limit {
+    margin: -6px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-muted);
+}
+.step-row__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+.step-row__msg {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--ink-muted);
+}
+.step-row__msg code {
+    font-family: var(--font-mono);
+}
+.step-row__msg.is-warn {
+    color: var(--prep);
+}
+.step-row__msg.is-broken {
+    color: var(--danger);
+}
+.step-row__count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+    white-space: nowrap;
+}
+.step-row__count.is-over {
+    color: var(--prep);
+    font-weight: 600;
 }
 .step-row__prep {
     display: flex;

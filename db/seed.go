@@ -461,6 +461,7 @@ func SeedOneRecipe(tx *gorm.DB, seed RecipeSeed) (uint, error) {
 		item := entities.RecipeIngredient{
 			RecipeID:     r.ID,
 			SortOrder:    i + 1,
+			Key:          fmt.Sprintf("i%d", i+1),
 			Section:      it.Section,
 			IngredientID: ingID,
 			Quantity:     qty,

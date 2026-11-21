@@ -25,6 +25,8 @@ export interface IRecipeSubstitute {
 
 export class RecipeIngredientDto {
     sortOrder: number = 0;
+    /** Stable row key; steps refer to the row with {{ing:<key>}}. */
+    key: string = '';
     section: string | null = null;
 
     ingredientId: number = 0;

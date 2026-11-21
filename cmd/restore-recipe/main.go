@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -105,6 +106,12 @@ func main() {
 		rows := sourceRows(src, t, "recipe_id", *id)
 		must(insertRows(src, tx, t, rows))
 		fmt.Printf("  %-30s %d\n", t, len(rows))
+
+		// a backup from before migration 0011 has no row keys; give them the ones 0011 gives
+		// (a target without the column, i.e. before 0011, has nothing to fill)
+		if t == "recipe_ingredients" && slices.Contains(columns(tx, t), "key") {
+			must(tx.Exec(`UPDATE recipe_ingredients SET "key" = 'i' || sort_order WHERE recipe_id = ? AND "key" = ''`, *id).Error)
+		}
 
 		if t == "recipe_photos" {
 			for _, r := range rows {

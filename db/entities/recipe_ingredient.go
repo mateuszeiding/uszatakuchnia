@@ -6,6 +6,11 @@ type RecipeIngredient struct {
 
 	Section *string `gorm:"type:varchar(64)"`
 
+	// Stable row key within the recipe: step text refers to the row by it ({{ing:<key>}}), and sort_order
+	// changes whenever rows are reordered. The unique index (recipe_id, key) lives in migration 0011, because
+	// AutoMigrate would try to build it over the empty defaults of existing rows.
+	Key string `gorm:"type:varchar(32);not null;default:''"`
+
 	IngredientID uint       `gorm:"not null;index:ix_recing_ingredient"`
 	Ingredient   Ingredient `gorm:"foreignKey:IngredientID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 

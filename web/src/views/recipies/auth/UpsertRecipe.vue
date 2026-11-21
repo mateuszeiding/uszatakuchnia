@@ -13,6 +13,7 @@ import TaxonomyField from './components/TaxonomyField.vue';
 import TimeField from './components/TimeField.vue';
 import TipMove from './components/TipMove.vue';
 import {
+    brokenSteps,
     ERROR_ORDER,
     type FormErrors,
     fromRecipe,
@@ -23,6 +24,7 @@ import {
     toRequest,
     validate,
 } from './recipeForm';
+import { formRefContext, overusedKeys, refRows } from './stepRefsForm';
 
 import CautionsEditor from '@/components/CautionsEditor.vue';
 import UFieldError from '@/components/form/UFieldError.vue';
@@ -95,6 +97,14 @@ onMounted(async () => {
 });
 
 const validation = computed(() => validate(form.value, dicts.value));
+
+// Ingredient refs in steps: rows to pick, the length counter, removed rows and fractions over the whole.
+const units = computed(() => dicts.value?.units ?? []);
+const stepRefRows = computed(() => refRows(form.value, units.value));
+const stepRefCtx = computed(() => formRefContext(form.value, units.value));
+const stepsBroken = computed(() => brokenSteps(form.value));
+const stepsOverused = computed(() => overusedKeys(form.value));
+const stepTexts = computed(() => form.value.stepGroups.flatMap((g) => g.items.map((s) => s.text)));
 const errors = computed<FormErrors>(() => {
     if (showErrors.value === 'full') return validation.value.errors;
     if (showErrors.value === 'draft' && validation.value.errors.name)
@@ -438,6 +448,7 @@ const prepSummary = computed(() => {
                         :row-errors="rowErrors"
                         :recipes="recipes"
                         :current-id="recipeId"
+                        :step-texts="stepTexts"
                         @add-new="(name, item) => (addIng = { name, item })"
                     />
                 </FormSection>
@@ -466,7 +477,13 @@ const prepSummary = computed(() => {
                     :error="errors.steps"
                 >
                     <TipMove v-model:form="form" />
-                    <StepsEditor v-model:groups="form.stepGroups" />
+                    <StepsEditor
+                        v-model:groups="form.stepGroups"
+                        :rows="stepRefRows"
+                        :ref-ctx="stepRefCtx"
+                        :broken="stepsBroken"
+                        :overused="stepsOverused"
+                    />
                 </FormSection>
             </div>
 
