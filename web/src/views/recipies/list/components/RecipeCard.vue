@@ -5,9 +5,13 @@ import { DIFFICULTY } from '../listFilters';
 
 import { cuisineOf, mainDish, type RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import { avg, fmt, nf } from '@/shared/utils/nutrition';
+import { recipeHue } from '@/shared/utils/recipeHue';
 import { formatTime } from '@/shared/utils/time';
 
 const props = defineProps<{ recipe: RecipeBaseDto; hits?: string[] | null }>();
+
+// read by the placeholder frame through v-bind() in <style>
+const hue = computed(() => recipeHue(props.recipe.id));
 
 const dish = computed(() => mainDish(props.recipe));
 const cuisine = computed(() => cuisineOf(props.recipe)?.label);
@@ -30,16 +34,48 @@ const kcal = computed(() => {
         :to="{ name: 'recipe-details', params: { id: recipe.id } }"
         class="r-card"
     >
-        <!-- no photo → no frame (no placeholder image) -->
+        <!-- the 1:1 frame is always there (even rows in a mixed grid); without a photo:
+             a gradient in the recipe's hue + a plate. Decorative — "needs prep" is repeated in the body for screen readers. -->
         <div
-            v-if="recipe.photoUrl"
             class="r-card__photo"
+            aria-hidden="true"
         >
             <img
+                v-if="recipe.photoUrl"
                 :src="recipe.photoUrl"
                 alt=""
                 loading="lazy"
             />
+            <span
+                v-else
+                class="r-card__plate"
+            />
+            <span
+                v-if="recipe.needsPrep"
+                class="r-card__prep"
+            >
+                <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                >
+                    <circle
+                        cx="6"
+                        cy="6"
+                        r="4.8"
+                        stroke="currentColor"
+                        stroke-width="1.3"
+                    />
+                    <path
+                        d="M6 3.5v2.7l1.7 1"
+                        stroke="currentColor"
+                        stroke-width="1.3"
+                        stroke-linecap="round"
+                    />
+                </svg>
+                wymaga przygotowania
+            </span>
         </div>
         <div class="r-card__body">
             <div
@@ -88,29 +124,8 @@ const kcal = computed(() => {
             </div>
             <span
                 v-if="recipe.needsPrep"
-                class="r-card__prep"
+                class="sr-only"
             >
-                <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    aria-hidden="true"
-                >
-                    <circle
-                        cx="6"
-                        cy="6"
-                        r="4.8"
-                        stroke="currentColor"
-                        stroke-width="1.3"
-                    />
-                    <path
-                        d="M6 3.5v2.7l1.7 1"
-                        stroke="currentColor"
-                        stroke-width="1.3"
-                        stroke-linecap="round"
-                    />
-                </svg>
                 wymaga przygotowania
             </span>
         </div>
@@ -146,11 +161,42 @@ const kcal = computed(() => {
     color: var(--accent);
 }
 .r-card__photo {
+    /* placeholder colors in the recipe's hue (h = id * 47 % 360); dark overrides below */
+    --h: v-bind(hue);
+    --thumb-from: hsl(var(--h) 35% 90%);
+    --thumb-to: hsl(calc(var(--h) + 20) 45% 74%);
+    --plate: rgba(255, 255, 255, 0.8);
+    --plate-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    --plate-dot: hsl(var(--h) 60% 62%);
+    --prep-pill: rgba(255, 248, 230, 0.95);
+
     /* a square without an extra line below; the same size in the skeleton */
     box-sizing: content-box;
     aspect-ratio: 1 / 1;
     position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--thumb-from), var(--thumb-to));
     border-bottom: 1px solid var(--rule);
+}
+/* dark: dimmed (lightness 19–36 %), no bright spot; the same two selectors as the theme tokens.
+   No :global() here: it would drop ".r-card__photo" and set the variables on <html>. */
+[data-theme='dark'] .r-card__photo {
+    --thumb-from: hsl(var(--h) 22% 19%);
+    --thumb-to: hsl(calc(var(--h) + 20) 28% 27%);
+    --plate: rgba(248, 248, 255, 0.07);
+    --plate-shadow: none;
+    --plate-dot: hsl(var(--h) 30% 36%);
+    --prep-pill: rgba(42, 34, 19, 0.95);
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']):not([data-theme='dark']) .r-card__photo {
+        --thumb-from: hsl(var(--h) 22% 19%);
+        --thumb-to: hsl(calc(var(--h) + 20) 28% 27%);
+        --plate: rgba(248, 248, 255, 0.07);
+        --plate-shadow: none;
+        --plate-dot: hsl(var(--h) 30% 36%);
+        --prep-pill: rgba(42, 34, 19, 0.95);
+    }
 }
 .r-card__photo img {
     display: block; /* an inline img added a text line, so the photo was 1 px taller than 1:1 */
@@ -158,13 +204,34 @@ const kcal = computed(() => {
     height: 100%;
     object-fit: cover;
 }
+/* the plate: a 52 % circle with a 28 % circle in the middle */
+.r-card__plate {
+    position: absolute;
+    inset: 24%;
+    border-radius: 50%;
+    background: var(--plate);
+    box-shadow: var(--plate-shadow);
+}
+.r-card__plate::after {
+    content: '';
+    position: absolute;
+    inset: calc(100% * 12 / 52); /* (52 % - 28 %) / 2 of the frame, relative to the plate */
+    border-radius: 50%;
+    background: var(--plate-dot);
+}
 .r-card__prep {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: var(--r-pill);
+    background: var(--prep-pill);
+    color: var(--prep);
     font-size: 12px;
     font-weight: 600;
-    color: var(--prep);
 }
 .r-card__body {
     padding: 16px;
