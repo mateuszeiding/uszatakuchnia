@@ -60,7 +60,7 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 		}
 		q, ok := ParseQuantity(qty)
 		if !ok {
-			add(f+".quantity", "Niepoprawna ilość (np. 2, ½, 1,5, 2–3)")
+			add(f+".quantity", "Niepoprawna ilość (np. 2, 1,5, 1/4, 2–3)")
 		}
 		if it.UnitId != nil {
 			u, found := units[*it.UnitId]

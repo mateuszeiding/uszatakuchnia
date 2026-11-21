@@ -18,14 +18,14 @@ export const PART_VALUE: Record<Exclude<RefPart, 'rest'>, number> = {
     '3/4': 3 / 4,
 };
 
-/** Parts in picker order, with the glyph shown in the form. */
+/** Parts in picker order, with the label shown in the form (plain digits, no ½-style glyphs). */
 export const PARTS: { part: RefPart | null; label: string }[] = [
     { part: null, label: 'całość' },
-    { part: '1/2', label: '½' },
-    { part: '1/3', label: '⅓' },
-    { part: '1/4', label: '¼' },
-    { part: '2/3', label: '⅔' },
-    { part: '3/4', label: '¾' },
+    { part: '1/2', label: '1/2' },
+    { part: '1/3', label: '1/3' },
+    { part: '1/4', label: '1/4' },
+    { part: '2/3', label: '2/3' },
+    { part: '3/4', label: '3/4' },
     { part: 'rest', label: 'reszta' },
 ];
 
@@ -79,7 +79,7 @@ export interface IRefContext {
 }
 
 export interface IRefView {
-    /** Quantity with unit, e.g. "350 g", "½ + ½ łyżki". */
+    /** Quantity with unit, e.g. "350 g", "0,5 + 0,5 łyżki". */
     qty: string;
     /** Substitute shown instead of the main ingredient: "wieprzowina mielona" / "wołowina + wieprzowina". */
     lead: string | null;
@@ -120,7 +120,7 @@ export function resolveRef(ref: IIngRef, ctx: IRefContext): IRefView | null {
     const part = partValue(ref, ctx.steps);
     const whole = scaleQuantity(ing.quantity, ing.unit, unit, ctx.ratio);
     // nothing left for "reszta" (the fractions already add up to the whole): the formatter would round 0 up
-    // to ¼, so show nothing; the form warns about it
+    // to 1/4, so show nothing; the form warns about it
     if (!whole.qty || part <= 1e-9) return null;
     const amount = scaleQuantity(ing.quantity, ing.unit, unit, ctx.ratio * part);
 

@@ -361,7 +361,7 @@ export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IVal
         if (!filled) continue;
         if (!it.ingredientId) rows[it.id] = 'Wybierz składnik z listy albo dodaj go do bazy.';
         else if (!unitById.get(it.unitId ?? -1)?.noQty && !parseQty(it.qty).ok)
-            rows[it.id] = 'Nieznany format. Wpisz np. 2, 1,5, ½, 1/4 albo 2–3.';
+            rows[it.id] = 'Nieznany format. Wpisz np. 2, 1,5, 1/4 albo 2–3.';
     }
     const rowErrCount = Object.keys(rows).length;
     if (!items.some((i) => i.ingredientId > 0))

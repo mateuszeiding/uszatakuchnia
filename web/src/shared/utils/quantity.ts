@@ -58,7 +58,7 @@ export function unitLabel(
 
 export const COUNT = new Set(['sztuka', 'ząbek', 'listek', 'plaster', 'pęczek', 'filet', '']);
 export const SPOON = new Set(['łyżka', 'łyżeczka', 'szklanka', 'szczypta', 'garść']);
-/** Tablespoons and teaspoons from 1 up: to halves (2⅔ → 2½); below 1 like other measures (¼, ⅓, ½, ¾). */
+/** Tablespoons and teaspoons from 1 up: to halves (2 2/3 → 2,5); below 1 like other measures (1/4, 1/3, 0,5, 3/4). */
 const HALVES = new Set(['łyżka', 'łyżeczka']);
 
 /**
@@ -70,34 +70,44 @@ export function isCountUnit(name: string, unit?: IUnit): boolean {
     if (COUNT.has(name)) return true;
     return !!unit?.forms?.length && !SPOON.has(name);
 }
-const QUARTERS: Record<string, string> = { '0.25': '¼', '0.5': '½', '0.75': '¾' };
-const THIRDS: Record<string, string> = { '0.33': '⅓', '0.67': '⅔' };
+// Display never uses the glyphs ½ ¼ ¾ ⅓ ⅔ (hard to read): halves are decimal ('0,5', '1,5'),
+// thirds and quarters plain digits with the whole part apart ('1/3', '1 1/4', '2 2/3').
+const QUARTERS: Record<string, string> = { '0.25': '1/4', '0.75': '3/4' };
+const THIRDS: Record<string, string> = { '0.33': '1/3', '0.67': '2/3' };
+
+/** Whole part and fraction text → '1/4' / '1 1/4'; a half → '0,5' / '1,5'. */
+function mixed(whole: number, frac: string): string {
+    if (frac === '1/2') return `${whole},5`;
+    return whole ? `${whole} ${frac}` : frac;
+}
 
 function quarters(v: number): string {
     const q = Math.max(0.25, Math.round(v * 4) / 4);
     const whole = Math.floor(q);
-    const frac = QUARTERS[(q - whole).toFixed(2).replace(/0$/, '')];
-    return frac ? `${whole || ''}${frac}` : String(whole);
+    const rest = q - whole;
+    if (rest === 0.5) return mixed(whole, '1/2');
+    const frac = QUARTERS[rest.toFixed(2)];
+    return frac ? mixed(whole, frac) : String(whole);
 }
 
-/** Spoons / cups / pieces: thirds (⅓ ⅔), otherwise quarters. */
+/** Spoons / cups / pieces: thirds (1/3, 2/3), otherwise quarters. */
 function fraction(v: number): string {
     const whole = Math.floor(v);
     const third = THIRDS[(v - whole).toFixed(2)];
-    return third ? `${whole || ''}${third}` : quarters(v);
+    return third ? mixed(whole, third) : quarters(v);
 }
 
-/** To halves: 2⅔ → 2½, 1⅓ → 1½, 1¾ → 2. */
+/** To halves: 2 2/3 → 2,5, 1 1/3 → 1,5, 1 3/4 → 2. */
 function halves(v: number): string {
     const h = Math.round(v * 2) / 2;
     const whole = Math.floor(h);
-    return h > whole ? `${whole || ''}½` : String(whole);
+    return h > whole ? mixed(whole, '1/2') : String(whole);
 }
 
 /** Quantity for unit inflection, after the same rounding as the displayed number. */
 export function shownAmount(v: number, unit: string): number {
     if (HALVES.has(unit) && v >= 1) return Math.round(v * 2) / 2;
-    if (SPOON.has(unit)) return Math.round(v * 4) / 4;
+    if (SPOON.has(unit)) return Math.max(0.25, Math.round(v * 4) / 4);
     return v;
 }
 
@@ -115,7 +125,7 @@ export function fmtNum(v: number, unit: string, count = COUNT.has(unit)): string
 /**
  * Scales a quantity by `ratio` and returns the quantity text + the inflected unit.
  * Count units are rounded to a whole number or a range (1.5 onions → "1–2 sztuki").
- * Always formats, also at the base servings ("1/2" → "½", "1 1/2" → "1½").
+ * Always formats, also at the base servings ("½" → "0,5", "1¼" → "1 1/4").
  */
 export function scaleQuantity(
     raw: string | null,
