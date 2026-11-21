@@ -11,6 +11,7 @@ import (
 	"uszatakuchnia/dtos"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const (
@@ -116,19 +117,34 @@ func TermRecipes(tx *gorm.DB, id uint) ([]dtos.GlossaryUsageDto, error) {
 // DeleteGlossaryTerm deletes a term. If recipes mark it: replaceWith (≠ 0) points the marks at another term,
 // removeMarks leaves the words as plain text. Returns the number of recipes rewritten.
 func DeleteGlossaryTerm(tx *gorm.DB, id, replaceWith uint, removeMarks bool) (int, error) {
-	var t entities.GlossaryTerm
-	if err := tx.First(&t, id).Error; err != nil {
-		return 0, ErrTermNotFound
+	if replaceWith == id {
+		return 0, ErrTermReplace
 	}
-	if replaceWith != 0 {
-		var target entities.GlossaryTerm
-		if replaceWith == id || tx.First(&target, replaceWith).Error != nil {
-			return 0, ErrTermReplace
-		}
-	}
+	forUpdate := clause.Locking{Strength: "UPDATE"}
 	recipes := 0
 	err := tx.Transaction(func(tx *gorm.DB) error {
-		steps, err := stepsWithTerms(tx, id)
+		// Both terms stay locked until commit: a concurrent delete of the replacement waits, so the rewritten
+		// marks never point at a term that's gone. Locked in id order, so two crossing deletes can't deadlock.
+		ids := []uint{id}
+		if replaceWith != 0 {
+			ids = append(ids, replaceWith)
+		}
+		var locked []entities.GlossaryTerm
+		if err := tx.Clauses(forUpdate).Where("id IN ?", ids).Order("id").Find(&locked).Error; err != nil {
+			return err
+		}
+		found := map[uint]bool{}
+		for _, t := range locked {
+			found[t.ID] = true
+		}
+		if !found[id] {
+			return ErrTermNotFound
+		}
+		if replaceWith != 0 && !found[replaceWith] {
+			return ErrTermReplace
+		}
+		// the steps are locked too: two deletes touching one step can't overwrite each other's rewrite
+		steps, err := stepsWithTerms(tx.Clauses(forUpdate), id)
 		if err != nil {
 			return err
 		}

@@ -15,13 +15,17 @@ const emit = defineEmits<{
 const mode = ref<'remove' | 'replace'>('remove');
 const target = ref<number | ''>('');
 const usage = ref<ITermUsage[] | null>(null);
-onMounted(async () => {
+/** The recipe list didn't load: keep the known count instead of showing "0 recipes". */
+const usageFailed = ref(false);
+async function loadUsage() {
+    usageFailed.value = false;
     try {
         usage.value = await fetchTermUsage(props.term.id);
     } catch {
-        usage.value = [];
+        usageFailed.value = true;
     }
-});
+}
+onMounted(loadUsage);
 
 const n = computed(() => usage.value?.length ?? props.term.usedIn ?? 0);
 const names = computed(() =>
@@ -45,6 +49,19 @@ function confirm() {
         <p class="modal__text">
             Pojęcie jest oznaczone w {{ n }} {{ n === 1 ? 'przepisie' : 'przepisach'
             }}{{ names ? `: ${names}` : '' }}.
+        </p>
+        <p
+            v-if="usageFailed"
+            class="modal__text del-term__err"
+        >
+            Nie udało się wczytać listy przepisów.
+            <button
+                type="button"
+                class="del-term__retry"
+                @click="loadUsage"
+            >
+                Spróbuj ponownie
+            </button>
         </p>
         <div
             class="del-term"
@@ -149,6 +166,19 @@ function confirm() {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    cursor: pointer;
+}
+.del-term__err {
+    color: var(--danger);
+}
+.del-term__retry {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: underline;
     cursor: pointer;
 }
 .del-term__hint {

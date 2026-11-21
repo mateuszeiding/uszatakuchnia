@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 
 import BookIcon from '@/components/BookIcon.vue';
 import type { ITerm } from '@/shared/utils/stepRefs';
@@ -9,7 +9,8 @@ const props = defineProps<{ term: ITerm | null; word: string }>();
 const emit = defineEmits<{ change: []; remove: []; close: [] }>();
 
 const root = ref<HTMLElement>();
-const editHref = props.term ? `/admin/glossary?edit=${props.term.id}` : '';
+// the same menu is reused when another mark is clicked, so the link follows the prop
+const editHref = computed(() => (props.term ? `/admin/glossary?edit=${props.term.id}` : ''));
 onMounted(async () => {
     await nextTick();
     root.value?.querySelector<HTMLElement>('button, a')?.focus();

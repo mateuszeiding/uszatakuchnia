@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { AxiosError } from 'axios';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
@@ -69,12 +70,26 @@ async function doDelete(t: IGlossaryTerm, opts: { replaceWith?: number; removeMa
     removing.value = null;
     try {
         await deleteTerm(t.id, opts);
-        terms.value = terms.value.filter((x) => x.id !== t.id);
-        // replaced: the other term is now used in these recipes too; the count comes from the server
-        if (opts.replaceWith) terms.value = (await fetchGlossary()).sort(byName);
+    } catch (e) {
+        const res = (e as AxiosError<{ usedIn?: number }>).response;
+        if (res?.status === 409) {
+            // a recipe marked it after the list loaded: ask what to do with the marks
+            t.usedIn = res.data?.usedIn || 1;
+            removing.value = t;
+        } else showToast('Nie udało się usunąć pojęcia');
+        return;
+    }
+    terms.value = terms.value.filter((x) => x.id !== t.id);
+    if (!opts.replaceWith) {
+        showToast('Pojęcie usunięte');
+        return;
+    }
+    // replaced: the other term is now used in these recipes too; the count comes from the server
+    try {
+        terms.value = (await fetchGlossary()).sort(byName);
         showToast('Pojęcie usunięte');
     } catch {
-        showToast('Nie udało się usunąć pojęcia');
+        showToast('Pojęcie usunięte. Liczby użyć odświeżą się po przeładowaniu strony.');
     }
 }
 </script>

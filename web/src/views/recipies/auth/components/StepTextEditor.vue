@@ -113,6 +113,7 @@ function mark(id: number, word: string): HTMLElement {
 
 function render(text: string) {
     if (!field.value) return;
+    cancelTermUi();
     field.value.replaceChildren(
         ...parseStep(text).map((s) =>
             typeof s === 'string'
@@ -433,6 +434,8 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 function onInput() {
+    // an edit moves or removes the word a pending "Pojęcie…" would mark (a saved Range follows the DOM)
+    if (termPick.value) termPick.value = null;
     sel.value = null;
     sync();
     updateAt();
@@ -686,6 +689,13 @@ function termMenuChange() {
     termMenu.value = null;
     termPick.value = { word: markWord(el), el, current: Number(el.dataset.id) };
     place(el.getBoundingClientRect());
+}
+
+/** The text was replaced from outside: a pending pick or an open menu would act on nodes that are gone. */
+function cancelTermUi() {
+    termPick.value = null;
+    termMenu.value = null;
+    sel.value = null;
 }
 
 /** Removes the mark, the word stays as plain text; the caret goes to its end (Backspace) or start (Delete). */

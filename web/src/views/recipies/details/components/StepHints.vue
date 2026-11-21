@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import BulbIcon from '@/components/BulbIcon.vue';
 import StepText from '@/components/StepText.vue';
-import type { IRefContext } from '@/shared/utils/stepRefs';
+import { type IRefContext, termPlainText } from '@/shared/utils/stepRefs';
 
 // Hints may mark glossary terms ({{term:…}}); refs gives the terms. Without it (loading) the text shows as is.
 withDefaults(
@@ -29,6 +29,7 @@ withDefaults(
                     :text="h"
                     :ctx="refs"
                 />
+                <template v-else>{{ termPlainText(h) }}</template>
             </span>
         </li>
     </ul>
