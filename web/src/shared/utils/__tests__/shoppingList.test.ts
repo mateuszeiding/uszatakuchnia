@@ -119,7 +119,7 @@ describe('buildShopping / sumText', () => {
             line('Ciasto', 7, 'sól', '1/2', 'łyżeczka'),
             line('Zaczyn', 2, 'mleko', '100', 'ml'),
         ];
-        expect(sumText(item(lines, 1, 7).sum)).toBe('½ łyżeczki');
+        expect(sumText(item(lines, 1, 7).sum)).toBe('0,5 łyżeczki');
         expect(sumText(item(lines, 2, 7).sum)).toBe('1 łyżeczka');
         expect(sumText(item(lines, 1.5, 2).sum)).toBe('150 ml');
     });
@@ -178,7 +178,7 @@ describe('kolejność jednostek', () => {
             units,
             1
         )[0]!;
-        expect(sumText(it.sum)).toBe('¾ szklanki + 100 ml');
+        expect(sumText(it.sum)).toBe('3/4 szklanki + 100 ml');
     });
 });
 
@@ -251,6 +251,8 @@ describe('jednostki z panelu i łyżki (przegląd 18.11, #12)', () => {
             )
         ).toBe('4 łyżki');
         expect(sumText(item([line('Baza', 1, 'oliwa', '2', 'łyżka')], 2.4).sum)).toBe('5 łyżek');
-        expect(sumText(item([line('Baza', 1, 'oliwa', '2', 'łyżka')], 8 / 6).sum)).toBe('2½ łyżki');
+        expect(sumText(item([line('Baza', 1, 'oliwa', '2', 'łyżka')], 8 / 6).sum)).toBe(
+            '2,5 łyżki'
+        );
     });
 });

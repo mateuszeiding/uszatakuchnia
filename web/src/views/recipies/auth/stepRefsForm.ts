@@ -88,7 +88,7 @@ export function overusedKeys(f: IRecipeForm): Set<string> {
     return out;
 }
 
-/** Label of a ref in the field: "@mąka pszenna · Zaczyn", with a part "@½ · masło · Ciasto". No quantity (it depends on servings). */
+/** Label of a ref in the field: "@mąka pszenna · Zaczyn", with a part "@1/2 · masło · Ciasto". No quantity (it depends on servings). */
 export function chipLabel(row: IRefRow, part: RefPart | null): string {
     return `@${part ? `${partLabel(part)} · ` : ''}${row.name}${row.group ? ` · ${row.group}` : ''}`;
 }

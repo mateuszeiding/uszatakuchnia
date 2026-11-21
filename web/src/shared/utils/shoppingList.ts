@@ -53,7 +53,7 @@ const GPU: Record<string, number> = { g: 1, kg: 1000 };
 const isCount = (unit: string, def?: IUnit) => isCountUnit(unit, def);
 const noQty = (p: { unitDef: IUnit | undefined }) => !!p.unitDef?.noQty;
 
-/** Number for the list: pieces are rounded up in the store (you can't buy 2½ eggs). */
+/** Number for the list: pieces are rounded up in the store (you can't buy 2,5 eggs). */
 function fmtN(v: number, unit: string, shop: boolean, def?: IUnit): string {
     const count = isCount(unit, def);
     if (shop && count) return String(Math.ceil(v - 0.001));

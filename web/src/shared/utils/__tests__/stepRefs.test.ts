@@ -113,12 +113,12 @@ describe('resolveRef', () => {
         expect(show('{{ing:ma}}')).toBe(' 1–2 sztuki');
         expect(show('{{ing:mc}}', ctx({ ratio: 2 }))).toBe(' 700 g · ciasto');
     });
-    it('½ and "reszta" = whole minus the fractions used in other steps', () => {
+    it('1/2 and "reszta" = whole minus the fractions used in other steps', () => {
         expect(usedFraction('ms', steps)).toBe(0.5);
         expect(show(steps[0]!)).toBe('Dodaj połowę masła  25 g.');
         expect(show(steps[1]!)).toBe('Dodaj resztę masła  25 g.');
     });
-    it('"reszta" with nothing left shows nothing (not a rounded-up ¼)', () => {
+    it('"reszta" with nothing left shows nothing (not a rounded-up 1/4)', () => {
         const full = ['{{ing:se|1/2}}', '{{ing:se|1/2}}', '{{ing:se|rest}}'];
         expect(
             resolveRef({ kind: 'ing', key: 'se', part: 'rest' }, ctx({ steps: full }))
@@ -136,7 +136,7 @@ describe('resolveRef', () => {
     });
     it('title: name, group, part of the whole', () => {
         expect(resolveRef({ kind: 'ing', key: 'ms', part: '1/2' }, ctx())?.title).toBe(
-            'Masło · Ciasto · ½ z 50 g'
+            'Masło · Ciasto · 1/2 z 50 g'
         );
     });
 });

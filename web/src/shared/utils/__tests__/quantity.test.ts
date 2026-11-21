@@ -25,24 +25,42 @@ const show = (raw: string, u: IUnit, ratio = 1) => {
 };
 
 describe('scaleQuantity — ułamki', () => {
-    it('znaki ułamków dla łyżek i szklanek', () => {
-        expect(show('½', U.lyzeczka)).toBe('½ łyżeczki');
-        expect(show('1,5', U.szklanka)).toBe('1½ szklanki');
-        expect(show('3/4', U.szklanka)).toBe('¾ szklanki');
-        expect(show('1/3', U.szklanka)).toBe('⅓ szklanki');
-        expect(show('2/3', U.szklanka)).toBe('⅔ szklanki');
+    it('połówki dziesiętnie, tercje i ćwiartki cyframi (bez znaków ½ ⅓ ¼)', () => {
+        expect(show('½', U.lyzeczka)).toBe('0,5 łyżeczki');
+        expect(show('1,5', U.szklanka)).toBe('1,5 szklanki');
+        expect(show('3/4', U.szklanka)).toBe('3/4 szklanki');
+        expect(show('1/3', U.szklanka)).toBe('1/3 szklanki');
+        expect(show('2/3', U.szklanka)).toBe('2/3 szklanki');
     });
 
     it('„1/2” i „1 1/2” formatowane także przy bazowej liczbie porcji', () => {
-        expect(show('1/2', U.lyzeczka)).toBe('½ łyżeczki');
-        expect(show('1 1/2', U.szklanka)).toBe('1½ szklanki');
-        expect(show('1/2', U.sztuka)).toBe('½ sztuki');
+        expect(show('1/2', U.lyzeczka)).toBe('0,5 łyżeczki');
+        expect(show('1 1/2', U.szklanka)).toBe('1,5 szklanki');
+        expect(show('1/2', U.sztuka)).toBe('0,5 sztuki');
+    });
+
+    it('część całkowita oddzielona spacją od ułamka', () => {
+        expect(show('1 1/4', U.szklanka)).toBe('1 1/4 szklanki');
+        expect(show('1¼', U.szklanka)).toBe('1 1/4 szklanki');
+        expect(show('2 3/4', U.szklanka)).toBe('2 3/4 szklanki');
+        expect(show('2½', U.szklanka)).toBe('2,5 szklanki');
+    });
+
+    it('zakresy z ułamkami', () => {
+        expect(show('1/4–1/2', U.lyzeczka)).toBe('1/4–0,5 łyżeczki');
+        expect(show('⅓–⅔', U.szklanka)).toBe('1/3–2/3 szklanki');
+    });
+
+    it('nigdy nie pokazuje znaków ½ ⅓ ¼ ⅔ ¾', () => {
+        const units = [U.lyzeczka, U.szklanka, U.sztuka, U.l, U.g];
+        for (const u of units)
+            for (let k = 1; k <= 48; k++) expect(show('1', u, k / 12)).not.toMatch(/[½⅓¼⅔¾⅛⅜⅝⅞⅕]/);
     });
 
     it('tercje po przeskalowaniu', () => {
-        expect(show('1', U.szklanka, 1 / 3)).toBe('⅓ szklanki');
-        expect(show('1', U.szklanka, 4 / 3)).toBe('1⅓ szklanki');
-        expect(show('1', U.szklanka, 2 / 3)).toBe('⅔ szklanki');
+        expect(show('1', U.szklanka, 1 / 3)).toBe('1/3 szklanki');
+        expect(show('1', U.szklanka, 4 / 3)).toBe('1 1/3 szklanki');
+        expect(show('1', U.szklanka, 2 / 3)).toBe('2/3 szklanki');
     });
 
     it('gramy, mililitry i litry bez ułamków', () => {
@@ -92,25 +110,25 @@ describe('przegląd 18.11, #12', () => {
         expect(show('2', lodyga, 8 / 6)).toBe('2–3 łodygi');
         expect(show('2', lodyga)).toBe('2 łodygi');
         expect(show('3', lodyga, 0.5)).toBe('1–2 łodygi');
-        expect(show('1', lodyga, 0.5)).toBe('½ łodygi');
+        expect(show('1', lodyga, 0.5)).toBe('0,5 łodygi');
     });
 
     it('łyżki i łyżeczki od 1 w górę do połówek', () => {
-        expect(show('2', lyzka, 8 / 6)).toBe('2½ łyżki');
-        expect(show('1', lyzka, 8 / 6)).toBe('1½ łyżki');
+        expect(show('2', lyzka, 8 / 6)).toBe('2,5 łyżki');
+        expect(show('1', lyzka, 8 / 6)).toBe('1,5 łyżki');
         expect(show('1', U.lyzeczka, 1.75)).toBe('2 łyżeczki');
         expect(show('2', lyzka, 2.4)).toBe('5 łyżek');
-        expect(show('1,5', lyzka)).toBe('1½ łyżki');
+        expect(show('1,5', lyzka)).toBe('1,5 łyżki');
     });
 
     it('poniżej 1 łyżki bez zmian: ćwiartki i tercje', () => {
-        expect(show('1/4', U.lyzeczka)).toBe('¼ łyżeczki');
-        expect(show('1', lyzka, 2 / 3)).toBe('⅔ łyżki');
+        expect(show('1/4', U.lyzeczka)).toBe('1/4 łyżeczki');
+        expect(show('1', lyzka, 2 / 3)).toBe('2/3 łyżki');
     });
 
     it('szklanka i garść dalej z tercjami; g bez zmian', () => {
-        expect(show('2', U.szklanka, 4 / 3)).toBe('2⅔ szklanki');
-        expect(show('2', garsc, 4 / 3)).toBe('2⅔ garście');
+        expect(show('2', U.szklanka, 4 / 3)).toBe('2 2/3 szklanki');
+        expect(show('2', garsc, 4 / 3)).toBe('2 2/3 garście');
         expect(show('500', U.g, 8 / 6)).toBe('665 g');
     });
 });
