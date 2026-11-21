@@ -16,6 +16,7 @@ import { showToast } from '@/composables/useToast';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
 import { uncheckedText } from '@/shared/utils/progress';
+import type { IRefContext } from '@/shared/utils/stepRefs';
 import { activeSubs, swapSummary, variantNutrition } from '@/shared/utils/substitutes';
 
 const props = defineProps<{ recipe: RecipeDto; dicts: IDictionaries | undefined }>();
@@ -50,6 +51,14 @@ const subsActive = computed(
 const nutrition = computed(() =>
     variantNutrition(props.recipe.ingredients, progress.value.subs, props.recipe.nutrition)
 );
+// Quantities in step text follow the same servings and substitutes as the ingredient list.
+const refCtx = computed<IRefContext>(() => ({
+    ingredients: props.recipe.ingredients,
+    steps: props.recipe.steps.map((s) => s.text),
+    units: props.dicts?.units ?? [],
+    ratio: props.recipe.servings ? progress.value.servings / props.recipe.servings : 1,
+    subs: progress.value.subs,
+}));
 const swapNote = computed(() =>
     subsActive.value ? swapSummary(props.recipe.ingredients, progress.value.subs) : ''
 );
@@ -91,6 +100,7 @@ const swapNote = computed(() =>
             <StepsList
                 class="recipe-grid__steps"
                 :recipe="recipe"
+                :refs="refCtx"
                 :done="progress.steps"
                 :can-reset="hasChecks"
                 @toggle="toggle('steps', $event)"
@@ -110,6 +120,7 @@ const swapNote = computed(() =>
     <CookMode
         v-if="cooking && recipe.steps.length"
         :recipe="recipe"
+        :refs="refCtx"
         :dicts="dicts"
         :servings="progress.servings"
         :done="progress.steps"

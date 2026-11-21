@@ -109,6 +109,9 @@
   --prep-line: rgba(217, 164, 65, 0.55);
   /* "Szkic" bar above the nav (draft preview) */
   --bar-bg:    #FBF3E2;
+  /* ingredient quantity inside step text (ing-ref) */
+  --ref-bg:    #EDE8FB;
+  --ref-ink:   #3B2A99;
 
   --c-blue:       #3F70A8;  /* fish */
   --c-terracotta: #B85A2E;  /* meat */
@@ -153,6 +156,7 @@
   --info:    #6B98D0; --info-soft:    rgba(107, 152, 208, 0.18);
   --prep: #E8B95A; --prep-soft: rgba(232, 185, 90, 0.12); --prep-line: rgba(232, 185, 90, 0.45);
   --bar-bg: #2A2213;
+  --ref-bg: rgba(157, 143, 232, 0.20); --ref-ink: #D9D2FF;
 
   --c-blue:       #6B98D0; --c-terracotta: #D87A50; --c-sage: #9DB373; --c-forest: #5E9A6A;
   --c-mustard:    #E8B95A; --c-wheat:      #D4B088; --c-tomato: #E55D4D; --c-lime: #C5D45A;
@@ -177,6 +181,7 @@
     --info:    #6B98D0; --info-soft:    rgba(107, 152, 208, 0.18);
     --prep: #E8B95A; --prep-soft: rgba(232, 185, 90, 0.12); --prep-line: rgba(232, 185, 90, 0.45);
     --bar-bg: #2A2213;
+    --ref-bg: rgba(157, 143, 232, 0.20); --ref-ink: #D9D2FF;
     --c-blue: #6B98D0; --c-terracotta: #D87A50; --c-sage: #9DB373; --c-forest: #5E9A6A;
     --c-mustard: #E8B95A; --c-wheat: #D4B088; --c-tomato: #E55D4D; --c-lime: #C5D45A;
     --c-brown: #A57050; --c-pink: #E892B0; --c-coral: #F0AC7A; --c-plum: #B07090;
