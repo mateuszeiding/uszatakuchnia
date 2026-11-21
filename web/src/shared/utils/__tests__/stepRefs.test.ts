@@ -118,6 +118,12 @@ describe('resolveRef', () => {
         expect(show(steps[0]!)).toBe('Dodaj połowę masła  25 g.');
         expect(show(steps[1]!)).toBe('Dodaj resztę masła  25 g.');
     });
+    it('"reszta" with nothing left shows nothing (not a rounded-up ¼)', () => {
+        const full = ['{{ing:se|1/2}}', '{{ing:se|1/2}}', '{{ing:se|rest}}'];
+        expect(
+            resolveRef({ kind: 'ing', key: 'se', part: 'rest' }, ctx({ steps: full }))
+        ).toBeNull();
+    });
     it('optional row and a row without a quantity', () => {
         expect(show('Posyp sezamem {{ing:se}}.')).toBe('Posyp sezamem  1 łyżka (opcjonalnie).');
         expect(resolveRef({ kind: 'ing', key: 'sl', part: null }, ctx())).toBeNull();

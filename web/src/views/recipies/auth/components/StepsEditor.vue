@@ -181,8 +181,8 @@ async function removeGroup(g: IGroup<IStepItem>) {
                         v-if="overusedIn(s).length"
                         class="step-row__msg is-warn"
                     >
-                        Części składnika „{{ overusedIn(s).join('”, „') }}” w krokach dają razem
-                        więcej niż całość.
+                        Części składnika „{{ overusedIn(s).join('”, „') }}” w krokach dają więcej
+                        niż całość albo nie zostawiają nic na „resztę”.
                     </p>
                     <StepHintsEditor
                         v-model:hints="s.hints"

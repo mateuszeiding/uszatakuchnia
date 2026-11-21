@@ -53,6 +53,10 @@ export default defineComponent({
 .ing-ref__part {
     white-space: nowrap;
 }
+/* a long group name ("do przygotowania nadzienia") may wrap; the quantity never does */
+.ing-ref__part.ing-ref__group {
+    white-space: normal;
+}
 /* the base reset makes svg a block */
 .ing-ref__swap {
     display: inline;

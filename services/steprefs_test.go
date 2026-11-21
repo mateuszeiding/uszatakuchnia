@@ -50,8 +50,8 @@ func TestValidateStepRefs(t *testing.T) {
 	}
 
 	bad := req
-	bad.Steps = []dtos.UpsertStepRequest{{Text: "{{ingr:maka}} {{ing:maka|5/8}} {{ing:}}"}}
-	if errs := collect(func(add func(f, m string)) { validateStepRefs(bad, false, add) }); len(errs) != 3 {
+	bad.Steps = []dtos.UpsertStepRequest{{Text: "{{ingr:maka}} {{ing:maka|5/8}} {{ing:}} {{ing:Mąka}}"}}
+	if errs := collect(func(add func(f, m string)) { validateStepRefs(bad, false, add) }); len(errs) != 4 {
 		t.Errorf("malformed refs are errors also in a draft: %#v", errs)
 	}
 }

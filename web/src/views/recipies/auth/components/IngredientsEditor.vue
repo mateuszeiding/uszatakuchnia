@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { nextTick, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 
 import {
     blankIng,
@@ -89,19 +89,21 @@ interface IRemoved {
     groupId: number;
     group: string | null;
     index: number;
-    steps: number[];
 }
 const removed = ref<IRemoved | null>(null);
+
+/** Steps (editor numbering) that refer to a row, from the current steps (they may move or lose the ref). */
+const stepsUsing = (key: string) =>
+    props.stepTexts.flatMap((t, i) => (stepRefs(t).some((r) => r.key === key) ? [i + 1] : []));
+/** The notice lasts while some step still refers to the removed row. */
+const removedSteps = computed(() => (removed.value ? stepsUsing(removed.value.item.key) : []));
 
 function removeItem(g: IGroup<IIngItem>, it: IIngItem) {
     const index = g.items.indexOf(it);
     g.items.splice(index, 1);
-    const steps = props.stepTexts.flatMap((t, i) =>
-        stepRefs(t).some((r) => r.key === it.key) ? [i + 1] : []
-    );
     removed.value =
-        steps.length && it.ingredientId
-            ? { item: it, groupId: g.id, group: g.label.trim() || null, index, steps }
+        it.ingredientId && stepsUsing(it.key).length
+            ? { item: it, groupId: g.id, group: g.label.trim() || null, index }
             : null;
 }
 function undoRemove() {
@@ -433,12 +435,12 @@ const subLabel = (s: ISubItem) => (s.mix ? `pół na pół z: ${s.name}` : s.nam
                 </div>
             </div>
             <RemovedIngNotice
-                v-if="removed?.groupId === g.id"
+                v-if="removed?.groupId === g.id && removedSteps.length"
                 :name="removed.item.name"
                 :group="removed.group"
                 :qty="removed.item.qty"
                 :unit="unitOf(removed.item)?.name ?? ''"
-                :steps="removed.steps"
+                :steps="removedSteps"
                 @undo="undoRemove"
             />
             <template #footer>

@@ -40,12 +40,19 @@ function paint(el: HTMLElement) {
     el.classList.toggle('is-broken', !row);
     if (row) el.textContent = chipLabel(row, chipPart(el));
     else el.innerHTML = `${WARN_SVG} brak składnika`;
+    el.setAttribute(
+        'aria-label',
+        `${row ? chipLabel(row, chipPart(el)).slice(1) : 'brak składnika'}: zmień albo usuń`
+    );
 }
 
 function chip(key: string, part: RefPart | null): HTMLElement {
     const el = document.createElement('span');
     el.className = 'ref-chip';
     el.contentEditable = 'false';
+    // a keyboard target: Enter / Space opens the same menu as a click, Backspace / Delete removes it
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
     el.dataset.key = key;
     if (part) el.dataset.part = part;
     paint(el);
@@ -177,6 +184,8 @@ function pick(key: string) {
     if (changing.value) {
         const el = changing.value;
         el.dataset.key = key;
+        if (part.value) el.dataset.part = part.value;
+        else delete el.dataset.part;
         paint(el);
         closePicker();
         field.value?.focus();
@@ -207,7 +216,6 @@ function pickerKey(e: KeyboardEvent) {
         e.preventDefault();
         if (n) active.value = (active.value + (e.key === 'ArrowDown' ? 1 : n - 1)) % n;
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-        if (changing.value) return;
         e.preventDefault();
         const parts: (RefPart | null)[] = [null, '1/2', '1/3', '1/4', '2/3', '3/4', 'rest'];
         const i = parts.indexOf(part.value);
@@ -236,12 +244,14 @@ const menuRow = computed(() =>
     menu.value ? (byKey.value.get(menu.value.dataset.key ?? '') ?? null) : null
 );
 
-function onClick(e: MouseEvent) {
-    const el = (e.target as HTMLElement).closest('.ref-chip');
-    if (!isChip(el)) return;
+function openMenu(el: HTMLElement) {
     closePicker();
     menu.value = el;
     place(el.getBoundingClientRect());
+}
+function onClick(e: MouseEvent) {
+    const el = (e.target as HTMLElement).closest('.ref-chip');
+    if (isChip(el)) openMenu(el);
 }
 function closeMenu(refocus = true) {
     const el = menu.value;
@@ -255,6 +265,7 @@ async function menuChange() {
     const el = menu.value!;
     menu.value = null;
     changing.value = el;
+    part.value = chipPart(el);
     active.value = Math.max(
         0,
         props.rows.findIndex((r) => r.key === el.dataset.key)
@@ -272,8 +283,28 @@ function menuPart(p: RefPart | null) {
 }
 function menuRemove() {
     const el = menu.value!;
-    const prev = el.previousSibling;
     menu.value = null;
+    removeChip(el);
+}
+
+// ── keyboard / clipboard ──
+function siblingChip(dir: 'before' | 'after'): HTMLElement | null {
+    const sel = getSelection();
+    if (!sel?.rangeCount || !sel.isCollapsed) return null;
+    const { startContainer: n, startOffset: off } = sel.getRangeAt(0);
+    let node: Node | null = null;
+    if (n.nodeType === Node.TEXT_NODE) {
+        // the zero-width caret holder counts as nothing
+        const v = n.nodeValue ?? '';
+        const empty = (s: string) => !s.replace(/\u200b/g, '');
+        if (dir === 'before' && empty(v.slice(0, off))) node = n.previousSibling;
+        if (dir === 'after' && empty(v.slice(off))) node = n.nextSibling;
+    } else node = n.childNodes[dir === 'before' ? off - 1 : off] ?? null;
+    return isChip(node) ? node : null;
+}
+
+function removeChip(el: HTMLElement) {
+    const prev = el.previousSibling;
     el.remove();
     sync();
     field.value?.focus();
@@ -286,23 +317,18 @@ function menuRemove() {
     }
 }
 
-// ── keyboard / clipboard ──
-function siblingChip(dir: 'before' | 'after'): HTMLElement | null {
-    const sel = getSelection();
-    if (!sel?.rangeCount || !sel.isCollapsed) return null;
-    const { startContainer: n, startOffset: off } = sel.getRangeAt(0);
-    let node: Node | null = null;
-    if (n.nodeType === Node.TEXT_NODE) {
-        // the zero-width caret holder counts as nothing
-        const v = n.nodeValue ?? '';
-        const empty = (s: string) => !s.replace(/​/g, '');
-        if (dir === 'before' && empty(v.slice(0, off))) node = n.previousSibling;
-        if (dir === 'after' && empty(v.slice(off))) node = n.nextSibling;
-    } else node = n.childNodes[dir === 'before' ? off - 1 : off] ?? null;
-    return isChip(node) ? node : null;
-}
-
 function onKeydown(e: KeyboardEvent) {
+    const target = e.target as HTMLElement;
+    if (isChip(target)) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openMenu(target);
+        } else if (e.key === 'Backspace' || e.key === 'Delete') {
+            e.preventDefault();
+            removeChip(target);
+        }
+        return;
+    }
     if (pickerOpen.value && !changing.value) {
         pickerKey(e);
         if (e.defaultPrevented) return;
@@ -330,11 +356,48 @@ function onPaste(e: ClipboardEvent) {
     e.preventDefault();
     const text = (e.clipboardData?.getData('text/plain') ?? '').replace(/\r?\n/g, ' ');
     document.execCommand('insertText', false, text);
-    // pasted refs ({{ing:…}} copied from another step) become labels
+    // pasted refs ({{ing:…}} copied from another step) become labels; the caret goes back after the paste
     if (/\{\{ing:/.test(text)) {
+        const at = caretOffset();
         sync();
-        render(model.value);
+        // not model.value: it returns the parent's prop until the parent re-renders
+        render(emitted ?? '');
+        if (at != null) setCaretOffset(at);
     }
+}
+
+/** Caret position as an offset in the stored text (a ref counts as its {{…}} token). */
+function caretOffset(): number | null {
+    const sel = getSelection();
+    if (!field.value || !sel?.rangeCount) return null;
+    const r = document.createRange();
+    r.setStart(field.value, 0);
+    r.setEnd(sel.getRangeAt(0).endContainer, sel.getRangeAt(0).endOffset);
+    const box = document.createElement('div');
+    box.append(r.cloneContents());
+    return serialize(box).length;
+}
+
+function setCaretOffset(offset: number) {
+    let left = offset;
+    const r = document.createRange();
+    for (const n of [...(field.value?.childNodes ?? [])]) {
+        const text = n.nodeType === Node.TEXT_NODE;
+        const len = text
+            ? (n.nodeValue ?? '').length
+            : isChip(n)
+              ? refToken(n.dataset.key ?? '', chipPart(n)).length
+              : 0;
+        if (text && left <= len) {
+            r.setStart(n, left);
+            break;
+        }
+        left -= len;
+        r.setStartAfter(n);
+    }
+    r.collapse(true);
+    getSelection()?.removeAllRanges();
+    getSelection()?.addRange(r);
 }
 
 function onCopy(e: ClipboardEvent, cut = false) {

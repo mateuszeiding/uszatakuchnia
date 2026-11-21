@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 
 import { type IRefRow } from '../stepRefsForm';
 
@@ -34,6 +34,18 @@ const groups = computed(() => {
 });
 const activeRow = computed(() => props.rows[props.active]);
 const optId = (i: number) => `${props.listId}-o${i}`;
+
+// focus stays in the step field, so the browser doesn't scroll the list to the active option by itself
+const list = ref<HTMLElement>();
+watch(
+    () => [props.active, props.rows],
+    async () => {
+        await nextTick();
+        list.value
+            ?.querySelector<HTMLElement>(`#${CSS.escape(optId(props.active))}`)
+            ?.scrollIntoView({ block: 'nearest' });
+    }
+);
 defineExpose({ optId });
 </script>
 
@@ -48,6 +60,7 @@ defineExpose({ optId });
         <ul
             v-if="rows.length"
             :id="listId"
+            ref="list"
             class="ref-pop__list"
             role="listbox"
             aria-label="Składniki"

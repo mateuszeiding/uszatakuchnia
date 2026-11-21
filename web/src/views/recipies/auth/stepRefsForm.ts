@@ -75,12 +75,16 @@ export function formRefContext(f: IRecipeForm, units: IUnit[]): IRefContext {
     };
 }
 
-/** Rows whose fractions across steps add up to more than the whole. */
+/** Rows whose fractions add up to more than the whole, or to the whole while "reszta" still refers to them. */
 export function overusedKeys(f: IRecipeForm): Set<string> {
     const texts = f.stepGroups.flatMap((g) => g.items.map((s) => s.text));
+    const refs = texts.flatMap((t) => stepRefs(t));
     const out = new Set<string>();
-    for (const t of texts)
-        for (const r of stepRefs(t)) if (usedFraction(r.key, texts) > 1 + 1e-9) out.add(r.key);
+    for (const r of refs) {
+        const used = usedFraction(r.key, texts);
+        const rest = refs.some((x) => x.key === r.key && x.part === 'rest');
+        if (used > 1 + 1e-9 || (rest && used >= 1 - 1e-9)) out.add(r.key);
+    }
     return out;
 }
 

@@ -65,6 +65,9 @@ func validateStepRefs(req dtos.UpsertRecipeRequest, publish bool, add func(field
 				add(f, fmt.Sprintf("Krok %d: nieznany znacznik „{{%s:…}}”", i+1, r.Kind))
 			case r.ID == "":
 				add(f, fmt.Sprintf("Krok %d: odwołanie bez składnika", i+1))
+			case !rowKeyRe.MatchString(r.ID):
+				// no row can have such a key, so it's a typo, not a removed row
+				add(f, fmt.Sprintf("Krok %d: nieprawidłowy klucz wiersza „%s” (małe litery, cyfry i „-”, najwyżej 32 znaki)", i+1, r.ID))
 			case r.Arg != "" && !RefParts[r.Arg]:
 				add(f, fmt.Sprintf("Krok %d: nieznana część „%s” (1/2, 1/3, 1/4, 2/3, 3/4, rest)", i+1, r.Arg))
 			case publish && !keys[r.ID]:

@@ -119,7 +119,9 @@ export function resolveRef(ref: IIngRef, ctx: IRefContext): IRefView | null {
     const unit = ctx.units.find((u) => u.id === ing.unitId);
     const part = partValue(ref, ctx.steps);
     const whole = scaleQuantity(ing.quantity, ing.unit, unit, ctx.ratio);
-    if (!whole.qty) return null;
+    // nothing left for "reszta" (the fractions already add up to the whole): the formatter would round 0 up
+    // to ¼, so show nothing; the form warns about it
+    if (!whole.qty || part <= 1e-9) return null;
     const amount = scaleQuantity(ing.quantity, ing.unit, unit, ctx.ratio * part);
 
     const sub = chosenSub(ing, ctx.subs);

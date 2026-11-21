@@ -9,8 +9,9 @@ defineProps<{ stepId: number; stepNo: number }>();
 const hints = defineModel<string[]>('hints', { required: true });
 
 // Cooking mode: a warning only, saving and publishing stay possible.
-const tooLong = (h: string) => [...h.trim()].length > HINT_LIMIT;
-const warnAt = (hi: number) => tooLong(hints.value[hi] ?? '') || hi >= HINTS_LIMIT;
+const tooLong = (hi: number) => [...(hints.value[hi] ?? '').trim()].length > HINT_LIMIT;
+const tooMany = (hi: number) => hi >= HINTS_LIMIT;
+const warnAt = (hi: number) => tooLong(hi) || tooMany(hi);
 </script>
 
 <template>
@@ -21,6 +22,12 @@ const warnAt = (hi: number) => tooLong(hints.value[hi] ?? '') || hi >= HINTS_LIM
     >
         <span class="hint-row__icon"><BulbIcon /></span>
         <div class="hint-row__field">
+            <label
+                :for="`hint-${stepId}-${hi}`"
+                class="sr-only"
+            >
+                Krok {{ stepNo }}, wskazówka {{ hi + 1 }}
+            </label>
             <textarea
                 :id="`hint-${stepId}-${hi}`"
                 v-model="hints[hi]"
@@ -29,7 +36,6 @@ const warnAt = (hi: number) => tooLong(hints.value[hi] ?? '') || hi >= HINTS_LIM
                 :class="{ 'is-warn': warnAt(hi) }"
                 rows="1"
                 :maxlength="MAX_HINT_LEN"
-                :aria-label="`Krok ${stepNo}, wskazówka ${hi + 1}`"
                 :aria-describedby="warnAt(hi) ? `hint-warn-${stepId}-${hi}` : undefined"
                 placeholder="np. Jeśli ciasto się klei, odstaw je na 10 minut"
             />
@@ -38,8 +44,14 @@ const warnAt = (hi: number) => tooLong(hints.value[hi] ?? '') || hi >= HINTS_LIM
                 :id="`hint-warn-${stepId}-${hi}`"
                 class="hint-row__warn"
             >
-                Za długi do trybu gotowania — na telefonie nie zmieści się bez przewijania. Podziel
-                krok na dwa albo przenieś rady do wskazówek.
+                <template v-if="tooLong(hi)">
+                    Za długa do trybu gotowania — na telefonie nie zmieści się bez przewijania.
+                    Skróć ją do ok. {{ HINT_LIMIT }} znaków.
+                </template>
+                <template v-else>
+                    W trybie gotowania mieszczą się najwyżej {{ HINTS_LIMIT }} wskazówki — połącz je
+                    albo usuń którąś.
+                </template>
             </p>
         </div>
         <button

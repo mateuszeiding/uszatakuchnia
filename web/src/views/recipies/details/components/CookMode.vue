@@ -68,6 +68,14 @@ watch(i, async () => {
     await nextTick();
     void fit();
 });
+// a different substitute or servings change the text of the same step, so fit it again
+watch(
+    () => props.refs,
+    async () => {
+        await nextTick();
+        void fit();
+    }
+);
 watch(hintsOpen, async () => {
     await nextTick();
     updateMore();
