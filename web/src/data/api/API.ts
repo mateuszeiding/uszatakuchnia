@@ -1,10 +1,10 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-import { accessToken } from '@/auth/createAuth';
+import { accessToken, isOwner } from '@/auth/createAuth';
 import { reauthenticate } from '@/auth/reauthenticate';
 import { showToast } from '@/composables/useToast';
 
-type RetriableConfig = InternalAxiosRequestConfig & { _reauth?: boolean };
+type RetriableConfig = InternalAxiosRequestConfig & { _reauth?: boolean; _ownerNoToken?: boolean };
 
 const http = axios.create({
     baseURL: `${import.meta.env.DEV ? 'http://localhost:3000' : ''}/api`,
@@ -14,14 +14,19 @@ const http = axios.create({
 http.interceptors.request.use(async (config) => {
     const token = await accessToken();
     if (token) config.headers.Authorization = `Bearer ${token}`;
+    // The owner still looks logged in (id token cached) but the refresh token is gone, so the
+    // request goes out anonymously. A draft read then gets 404 rather than 401.
+    else if (isOwner.value) (config as RetriableConfig)._ownerNoToken = true;
     return config;
 });
 
 // 401 = session expired: log in via a popup and retry the request (the form stays on the page).
+// A 404 sent without the owner's token may be a draft, so it gets the same recovery.
 http.interceptors.response.use(undefined, async (error: AxiosError) => {
     const config = error.config as RetriableConfig | undefined;
     const status = error.response?.status;
-    if (status === 401 && config && !config._reauth) {
+    const sessionLost = status === 401 || (status === 404 && config?._ownerNoToken);
+    if (sessionLost && config && !config._reauth) {
         config._reauth = true;
         if (await reauthenticate()) return http.request(config);
     } else if (status === 403) {

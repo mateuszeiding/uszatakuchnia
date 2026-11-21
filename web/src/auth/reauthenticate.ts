@@ -18,7 +18,7 @@ export function reauthenticate(): Promise<boolean> {
 async function ask(): Promise<boolean> {
     const ok = await confirmAction({
         title: 'Sesja wygasła',
-        body: 'Zaloguj się ponownie, żeby zapisać. Wpisana treść zostaje na stronie.',
+        body: 'Zaloguj się ponownie, żeby kontynuować. Wpisana treść zostaje na stronie.',
         note: 'Logowanie otworzy się w nowym okienku.',
         confirmLabel: 'Zaloguj się',
     });
