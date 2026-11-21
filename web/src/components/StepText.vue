@@ -53,7 +53,9 @@ export default defineComponent({
 .ing-ref__part {
     white-space: nowrap;
 }
+/* the base reset makes svg a block */
 .ing-ref__swap {
+    display: inline;
     width: 0.9em;
     height: 0.9em;
     vertical-align: -0.1em;
