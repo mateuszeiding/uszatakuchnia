@@ -5,7 +5,7 @@ import type { ILinkedRecipe } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IDictionaries, IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
 import { cautionRows, cautionTexts, type ICautionRow } from '@/shared/utils/cautions';
 import { parseQty } from '@/shared/utils/quantity';
-import { stepRefs } from '@/shared/utils/stepRefs';
+import { type ITerm, stepRefs, termPlainText, termRefs } from '@/shared/utils/stepRefs';
 import { defaultTimeUnit, fromMinutes, type TimeUnit, toMinutes } from '@/shared/utils/time';
 
 let seq = 0;
@@ -52,6 +52,7 @@ export interface IStepItem {
     text: string;
     prep: boolean;
     prepLead: string;
+    optional: boolean;
     /** Hints below the step text; empty ones are skipped on save. */
     hints: string[];
 }
@@ -116,6 +117,7 @@ export const blankStep = (): IStepItem => ({
     text: '',
     prep: false,
     prepLead: '',
+    optional: false,
     hints: [],
 });
 
@@ -201,6 +203,7 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
             text: s.text,
             prep: s.prep,
             prepLead: s.prepLead ?? '',
+            optional: s.optional ?? false,
             hints: [...(s.hints ?? [])],
         })
     );
@@ -256,6 +259,7 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
                     text: s.text.trim(),
                     prep: s.prep,
                     prepLead: s.prep ? orNull(s.prepLead) : null,
+                    optional: s.optional,
                     hints: s.hints.map((h) => h.trim()).filter(Boolean),
                 }))
         ),
@@ -334,7 +338,12 @@ export interface IValidation {
     rows: Record<number, string>;
 }
 
-export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IValidation {
+/** terms: the glossary; undefined while it loads (then marks aren't checked). */
+export function validate(
+    f: IRecipeForm,
+    dicts: IDictionaries | undefined,
+    terms?: ITerm[]
+): IValidation {
     const errors: FormErrors = {};
     const rows: Record<number, string> = {};
     const unitById = new Map<number, IUnit>((dicts?.units ?? []).map((u) => [u.id, u]));
@@ -380,10 +389,15 @@ export function validate(f: IRecipeForm, dicts: IDictionaries | undefined): IVal
     const steps = f.stepGroups.flatMap((g) => g.items);
     if (!steps.some((s) => s.text.trim())) errors.steps = 'Dodaj co najmniej jeden krok.';
     // Number as in the editor (continuous row numbering).
-    const longAt = steps.findIndex((s) => s.hints.some((h) => [...h.trim()].length > MAX_HINT_LEN));
+    const longAt = steps.findIndex((s) =>
+        s.hints.some((h) => [...termPlainText(h).trim()].length > MAX_HINT_LEN)
+    );
     if (longAt >= 0)
         errors.steps = `Krok ${longAt + 1}: wskazówka może mieć najwyżej ${MAX_HINT_LEN} znaków.`;
     // A ref to a removed row only blocks publishing; a draft can be saved and fixed later (as in the API).
+    const missingAt = terms ? missingTermSteps(f, terms).findIndex(Boolean) : -1;
+    if (missingAt >= 0)
+        errors.steps = `Krok ${missingAt + 1}: oznaczonego pojęcia nie ma w słowniczku — wybierz inne albo usuń oznaczenie.`;
     const brokenAt = brokenSteps(f).findIndex(Boolean);
     if (brokenAt >= 0)
         errors.steps = `Krok ${brokenAt + 1}: składnik z odwołania został usunięty — wybierz inny albo usuń odwołanie.`;
@@ -403,6 +417,14 @@ export function brokenSteps(f: IRecipeForm): boolean[] {
     return f.stepGroups
         .flatMap((g) => g.items)
         .map((s) => stepRefs(s.text).some((r) => !keys.has(r.key)));
+}
+
+/** Per step (editor numbering): does the text or a hint mark a term that isn't in the glossary? */
+export function missingTermSteps(f: IRecipeForm, terms: ITerm[]): boolean[] {
+    const ids = new Set(terms.map((t) => t.id));
+    return f.stepGroups
+        .flatMap((g) => g.items)
+        .map((s) => [s.text, ...s.hints].some((t) => termRefs(t).some((r) => !ids.has(r.id))));
 }
 
 /** Order of fields to scroll to on error (form element ids). */

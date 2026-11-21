@@ -24,7 +24,7 @@ func recipeAllergens(items []entities.RecipeIngredient) []string {
 
 func recipeNeedsPrep(steps []entities.RecipeStep) bool {
 	for _, s := range steps {
-		if s.Prep {
+		if s.Prep && !s.Optional {
 			return true
 		}
 	}

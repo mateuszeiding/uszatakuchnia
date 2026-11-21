@@ -2,9 +2,11 @@
 import { defineComponent, h, type PropType, type VNodeChild } from 'vue';
 
 import SwapIcon from '@/components/SwapIcon.vue';
+import TermMark from '@/components/TermMark.vue';
 import { type IRefContext, viewSegments } from '@/shared/utils/stepRefs';
 
-// Step text with ingredient quantities. The author writes the word ("dodaj mąkę"), the ref adds the quantity
+// Step (or hint) text with ingredient quantities and glossary terms. Terms are buttons (TermMark) that open the
+// explanation. The author writes the word ("dodaj mąkę"), the ref adds the quantity
 // after it — a plain inline label, deliberately without hover or click (it must not compete with checking off
 // the step). A render function, so no template whitespace ends up inside the label. The label wraps only at
 // its " · " separators (a long "1 sztuka · do posmarowania" in 26 px is wider than a phone), never inside a part.
@@ -18,6 +20,7 @@ export default defineComponent({
         return () =>
             viewSegments(props.text, props.ctx).flatMap((v): VNodeChild[] => {
                 if (typeof v === 'string') return [v];
+                if ('term' in v) return [h(TermMark, { term: v.term, word: v.word })];
                 const part = (c: VNodeChild[], cls = '') =>
                     h('span', { class: `ing-ref__part ${cls}`.trim() }, c);
                 const label = h('span', { class: 'ing-ref', title: v.title }, [

@@ -38,4 +38,8 @@ func TestValidateHintTooLong(t *testing.T) {
 	if errs := run("   " + strings.Repeat("a", 300) + "   "); len(errs) != 0 {
 		t.Errorf("spacje wokół nie liczą się: %v", errs)
 	}
+	// a glossary ref counts as its word: 290 + "deglasuj" (8) = 298 visible
+	if errs := run(strings.Repeat("a", 290) + "{{term:12|deglasuj}}"); len(errs) != 0 {
+		t.Errorf("pojęcie liczy się jako słowo: %v", errs)
+	}
 }

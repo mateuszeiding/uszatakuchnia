@@ -44,6 +44,7 @@ var All = []Migration{
 	challenges,
 	cautions,
 	recipeIngredientKey,
+	glossaryTerms,
 	taxonomyValueIcons,
 }
 

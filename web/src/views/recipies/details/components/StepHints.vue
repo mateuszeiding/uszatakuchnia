@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 import BulbIcon from '@/components/BulbIcon.vue';
+import StepText from '@/components/StepText.vue';
+import { type IRefContext, termPlainText } from '@/shared/utils/stepRefs';
 
-withDefaults(defineProps<{ hints: string[]; done?: boolean; size?: 'md' | 'lg' }>(), {
-    done: false,
-    size: 'md',
-});
+// Hints may mark glossary terms ({{term:…}}); refs gives the terms. Without it (loading) the text shows as is.
+withDefaults(
+    defineProps<{ hints: string[]; refs?: IRefContext; done?: boolean; size?: 'md' | 'lg' }>(),
+    { refs: undefined, done: false, size: 'md' }
+);
 </script>
 
 <template>
@@ -20,7 +23,14 @@ withDefaults(defineProps<{ hints: string[]; done?: boolean; size?: 'md' | 'lg' }
             class="hints__row"
         >
             <span class="hints__icon"><BulbIcon :size="size === 'lg' ? 18 : 15" /></span>
-            <span class="hints__text">{{ h }}</span>
+            <span class="hints__text">
+                <StepText
+                    v-if="refs"
+                    :text="h"
+                    :ctx="refs"
+                />
+                <template v-else>{{ termPlainText(h) }}</template>
+            </span>
         </li>
     </ul>
 </template>

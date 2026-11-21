@@ -25,10 +25,11 @@ const show = (raw: string, u: IUnit, ratio = 1) => {
 };
 
 describe('scaleQuantity — ułamki', () => {
-    it('połówki dziesiętnie, tercje i ćwiartki cyframi (bez znaków ½ ⅓ ¼)', () => {
+    it('połówki i ćwiartki dziesiętnie, tercje cyframi (bez znaków ½ ⅓ ¼)', () => {
         expect(show('½', U.lyzeczka)).toBe('0,5 łyżeczki');
         expect(show('1,5', U.szklanka)).toBe('1,5 szklanki');
-        expect(show('3/4', U.szklanka)).toBe('3/4 szklanki');
+        expect(show('3/4', U.szklanka)).toBe('0,75 szklanki');
+        expect(show('¼', U.szklanka)).toBe('0,25 szklanki');
         expect(show('1/3', U.szklanka)).toBe('1/3 szklanki');
         expect(show('2/3', U.szklanka)).toBe('2/3 szklanki');
     });
@@ -39,15 +40,16 @@ describe('scaleQuantity — ułamki', () => {
         expect(show('1/2', U.sztuka)).toBe('0,5 sztuki');
     });
 
-    it('część całkowita oddzielona spacją od ułamka', () => {
-        expect(show('1 1/4', U.szklanka)).toBe('1 1/4 szklanki');
-        expect(show('1¼', U.szklanka)).toBe('1 1/4 szklanki');
-        expect(show('2 3/4', U.szklanka)).toBe('2 3/4 szklanki');
+    it('ćwiartki z częścią całkowitą dziesiętnie, tercje oddzielone spacją', () => {
+        expect(show('1 1/4', U.szklanka)).toBe('1,25 szklanki');
+        expect(show('1¼', U.szklanka)).toBe('1,25 szklanki');
+        expect(show('1 1/3', U.szklanka)).toBe('1 1/3 szklanki');
+        expect(show('2 3/4', U.szklanka)).toBe('2,75 szklanki');
         expect(show('2½', U.szklanka)).toBe('2,5 szklanki');
     });
 
     it('zakresy z ułamkami', () => {
-        expect(show('1/4–1/2', U.lyzeczka)).toBe('1/4–0,5 łyżeczki');
+        expect(show('1/4–1/2', U.lyzeczka)).toBe('0,25–0,5 łyżeczki');
         expect(show('⅓–⅔', U.szklanka)).toBe('1/3–2/3 szklanki');
     });
 
@@ -121,8 +123,8 @@ describe('przegląd 18.11, #12', () => {
         expect(show('1,5', lyzka)).toBe('1,5 łyżki');
     });
 
-    it('poniżej 1 łyżki bez zmian: ćwiartki i tercje', () => {
-        expect(show('1/4', U.lyzeczka)).toBe('1/4 łyżeczki');
+    it('poniżej 1 łyżki: ćwiartki dziesiętnie, tercje ułamkiem', () => {
+        expect(show('1/4', U.lyzeczka)).toBe('0,25 łyżeczki');
         expect(show('1', lyzka, 2 / 3)).toBe('2/3 łyżki');
     });
 

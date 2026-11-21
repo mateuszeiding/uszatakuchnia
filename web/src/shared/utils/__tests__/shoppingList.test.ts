@@ -178,7 +178,7 @@ describe('kolejność jednostek', () => {
             units,
             1
         )[0]!;
-        expect(sumText(it.sum)).toBe('3/4 szklanki + 100 ml');
+        expect(sumText(it.sum)).toBe('0,75 szklanki + 100 ml');
     });
 });
 

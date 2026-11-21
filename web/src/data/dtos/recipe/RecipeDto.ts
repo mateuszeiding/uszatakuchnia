@@ -4,6 +4,7 @@ import { RecipeStepDto } from './RecipeStepDto';
 import { API } from '@/data/api/API';
 import type { ITaxonomyValue, RecipeTaxonomy } from '@/data/dtos/taxonomy/DictionariesDto';
 import type { IRecipeNutrition, SumRange } from '@/shared/utils/nutrition';
+import type { ITerm } from '@/shared/utils/stepRefs';
 
 type BackendRecipePhoto = { url: string } | null;
 
@@ -74,6 +75,8 @@ export class RecipeDto extends RecipeBaseDto {
     steps: RecipeStepDto[] = [];
     ingredients: RecipeIngredientDto[] = [];
     equipment: IRecipeEquipment[] = [];
+    /** Glossary terms marked in the steps and hints. */
+    terms: ITerm[] = [];
     /** Ingredient rows of other recipes that link to this one (delete modal). */
     linkedFrom: { recipeId: number; recipeName: string; ingredientName: string }[] = [];
 
@@ -87,6 +90,7 @@ export class RecipeDto extends RecipeBaseDto {
         this.ingredients = (obj.ingredients ?? []).map((i) => new RecipeIngredientDto(i));
         this.linkedFrom = obj.linkedFrom ?? [];
         this.equipment = obj.equipment ?? [];
+        this.terms = obj.terms ?? [];
     }
 }
 
@@ -110,6 +114,7 @@ export interface IUpsertRecipeRequest {
         text: string;
         prep: boolean;
         prepLead?: string | null;
+        optional: boolean;
         hints: string[];
     }[];
     ingredients: {
