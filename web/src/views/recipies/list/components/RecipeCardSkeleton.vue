@@ -1,9 +1,10 @@
 <template>
-    <!-- The same layout as RecipeCard (the real .badge class keeps the badge height). -->
+    <!-- The same layout as RecipeCard: the 1:1 frame with a line (the real .badge class keeps the badge height). -->
     <div
         class="skc"
         aria-hidden="true"
     >
+        <div class="skc__photo"><div class="sk skc__img" /></div>
         <div class="skc__body">
             <div class="skc__flags">
                 <span class="badge skc__badge">
@@ -31,6 +32,17 @@
     border: 1px solid var(--rule);
     border-radius: var(--r-lg);
     overflow: hidden;
+}
+/* like .r-card__photo: a 1:1 box with a line, the fill inside */
+.skc__photo {
+    box-sizing: content-box;
+    aspect-ratio: 1 / 1;
+    border-bottom: 1px solid var(--rule);
+}
+.skc__img {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
 }
 .skc__body {
     padding: 16px;
