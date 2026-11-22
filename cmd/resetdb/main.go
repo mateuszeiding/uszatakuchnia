@@ -10,9 +10,6 @@ import (
 	"os"
 
 	"uszatakuchnia/db"
-
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -21,7 +18,7 @@ func main() {
 		log.Fatal("DB_DATABASE_URL is not set")
 	}
 
-	conn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	conn, err := db.Open(dsn, nil)
 	if err != nil {
 		log.Fatalf("connect: %v", err)
 	}

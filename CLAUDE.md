@@ -65,6 +65,7 @@ Design przygotowuje Claude Design w artefakcie powyżej, pliki pod `project/`: `
 - Vercel buduje tylko `main` (`ignoreCommand` w `vercel.json`, fail-closed: build tylko gdy `VERCEL_GIT_COMMIT_REF` = `main`; pusty albo inny ref — także wdrożenie z CLI bez gita — jest pomijany): gałęzie i PR-y nie dostają wdrożeń podglądowych, bo podgląd łączyłby się z produkcyjną bazą i odpalał na niej migracje z niezatwierdzonego kodu. Włączenie podglądów = najpierw osobna baza dla Preview (gałąź Neon w `DB_DATABASE_URL`).
 - Router to zwykły `http.Handler` — poza Vercelem wystarczy `http.ListenAndServe(addr, http.HandlerFunc(api.Handler))`.
 - Encje DB: `db/entities/`, mappery: `db/mappers/`, DTOs: `dtos/`.
+- Połączenie z bazą tylko przez `db.Open` (API i `cmd/*`; test pilnuje): pgx w trybie `exec`, bez cache'u przygotowanych zapytań (pooler Neona). Skutek: `Value()` typu zapisywanego do `jsonb` zwraca `string`, nie `[]byte` (`[]byte` idzie jako `bytea`).
 - GORM AutoMigrate — nie piszesz ręcznych migracji SQL.
 
 ## Zmiany schematu bazy danych

@@ -34,8 +34,11 @@ type RecipeNutrition struct {
 	Incomplete map[string][]string `json:"incomplete"`
 }
 
+// Value returns a string, not []byte: pgx sends a []byte parameter as bytea, which a
+// jsonb column rejects (see db.Open).
 func (n RecipeNutrition) Value() (driver.Value, error) {
-	return json.Marshal(n)
+	b, err := json.Marshal(n)
+	return string(b), err
 }
 
 func (n *RecipeNutrition) Scan(src any) error {

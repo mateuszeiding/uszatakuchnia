@@ -27,7 +27,8 @@ import (
 	"strconv"
 	"strings"
 
-	"gorm.io/driver/postgres"
+	"uszatakuchnia/db"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -132,11 +133,11 @@ func main() {
 
 func open(dsn string) *gorm.DB {
 	// Quiet logger: SQL with data (e.g. photo bytes) doesn't hit the screen.
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	conn, err := db.Open(dsn, &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		log.Fatalf("połączenie z %s: %v", hostOf(dsn), err)
 	}
-	return db
+	return conn
 }
 
 func hostOf(dsn string) string {
