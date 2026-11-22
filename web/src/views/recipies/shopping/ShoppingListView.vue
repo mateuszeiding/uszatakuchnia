@@ -11,6 +11,7 @@ import { fetchRecipesWithClient } from '@/data/api/recipe/fetch';
 import { fetchDictionariesWithClient } from '@/data/api/taxonomy/fetch';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { type SizeChoice, sizeToQuery } from '@/shared/utils/portion';
 import { setTitle } from '@/shared/utils/title';
 
 const props = defineProps<{ id: string | number }>();
@@ -68,6 +69,11 @@ const urlSubs = computed(() => {
 });
 
 const onServings = (n: number) => router.replace({ query: { ...route.query, porcje: String(n) } });
+// the size replaces its own params only (a form link drops ?sztuki=, and the other way round)
+const onSize = (s: SizeChoice | null) => {
+    const { sztuki: _n, rozmiar: _d, forma: _f, ...rest } = route.query;
+    router.replace({ query: { ...rest, ...sizeToQuery(s) } });
+};
 const onSync = (q: Record<string, string>) => router.replace({ query: { ...route.query, ...q } });
 </script>
 
@@ -91,7 +97,9 @@ const onSync = (q: Record<string, string>) => router.replace({ query: { ...route
             :dicts="dicts"
             :url-servings="urlServings"
             :url-subs="urlSubs"
+            :query="route.query"
             @servings="onServings"
+            @size="onSize"
             @sync="onSync"
         />
     </div>

@@ -1,5 +1,7 @@
 import { computed, ref, watch } from 'vue';
 
+import type { SizeChoice } from '@/shared/utils/portion';
+
 export interface ISubChoice {
     ingredientId: number;
     mix: boolean;
@@ -11,6 +13,8 @@ export interface ICookingProgress {
     /** Done steps (stepNo). */
     steps: number[];
     servings: number;
+    /** Pieces in a size or the reader's form; missing = as in the recipe. portion.ts resolveSize drops stale ones. */
+    size?: SizeChoice | null;
     /** Chosen substitutes: row sortOrder → substitute. substitutes.ts skips stale entries. */
     subs: Record<number, ISubChoice>;
 }
@@ -71,6 +75,8 @@ export function useCookingProgress(recipeId: number, defaultServings: number) {
     };
 
     const setServings = (n: number) => (progress.value.servings = Math.min(20, Math.max(1, n)));
+    /** null = back to the recipe's size. */
+    const setSize = (s: SizeChoice | null) => (progress.value.size = s);
 
     /** null = the main ingredient ("w przepisie"). */
     const setSub = (sortOrder: number, choice: ISubChoice | null) => {
@@ -101,6 +107,7 @@ export function useCookingProgress(recipeId: number, defaultServings: number) {
         toggle,
         setStep,
         setServings,
+        setSize,
         setSub,
         clearSubs,
         hasChecks,

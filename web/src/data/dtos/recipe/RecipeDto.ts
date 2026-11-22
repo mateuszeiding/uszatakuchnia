@@ -4,6 +4,7 @@ import { RecipeStepDto } from './RecipeStepDto';
 import { API } from '@/data/api/API';
 import type { ITaxonomyValue, RecipeTaxonomy } from '@/data/dtos/taxonomy/DictionariesDto';
 import type { IRecipeNutrition, SumRange } from '@/shared/utils/nutrition';
+import type { IFormDto, IPieceSize, IPortion, PortionMode } from '@/shared/utils/portion';
 import type { ITerm } from '@/shared/utils/stepRefs';
 
 type BackendRecipePhoto = { url: string } | null;
@@ -31,7 +32,11 @@ export class RecipeBaseDto {
     photoUrl: string | null = null;
     /** URL stored in the database (e.g. /api/photos/1), sent back on save. */
     photoPath: string | null = null;
+    /** Per serving / base-size piece / piece of the form (whole form without pieces). */
     kcal: SumRange | null = null;
+    servings: number = 0;
+    /** What one serving is (pieces in sizes, a baking form); null from an older API = servings. */
+    portion: IPortion | null = null;
     /** Ingredient names (list: search by ingredient). */
     ingredientNames: string[] = [];
     /** Substitute names (list search: "pancetta" finds the recipe with bacon). */
@@ -102,6 +107,13 @@ export interface IUpsertRecipeRequest {
     tip?: string | null;
     /** Notes without empty items; missing field = unchanged. */
     cautions?: string[];
+    /** Fields of every mode (switching modes loses nothing); missing = unchanged. */
+    portion?: {
+        mode: PortionMode;
+        pieceUnitId: number | null;
+        sizes: IPieceSize[];
+        form: IFormDto | null;
+    };
     timeMin: number;
     timeMax?: number | null;
     difficulty?: number | null;
