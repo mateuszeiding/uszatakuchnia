@@ -1,0 +1,136 @@
+{
+  "name": "Ciasto na pizzę New York Style (krótka fermentacja)",
+  "servings": 2,
+  "timeMin": 270,
+  "timeMax": null,
+  "difficulty": 2,
+  "status": "draft",
+  "cautions": [
+    "Woda ma być ciepła, nie gorąca. Od ok. 50°C drożdże zaczynają ginąć i ciasto nie wyrośnie.",
+    "Odważ drożdże dokładnie. Jest ich mało, bo ciasto rośnie 4 godziny. Z większą ilością przerośnie i opadnie."
+  ],
+  "taxonomy": {
+    "cuisine": [
+      "amerykańska"
+    ],
+    "diet": [
+      "wegetariańskie",
+      "wegańskie"
+    ],
+    "dish": [
+      "pieczywo i wypieki"
+    ]
+  },
+  "ingredients": [
+    {
+      "key": "z4b7xhnv",
+      "ingredient": "Mąka pszenna typ 550",
+      "quantity": "300",
+      "unit": "g"
+    },
+    {
+      "key": "3ukls5ii",
+      "ingredient": "Woda",
+      "quantity": "180",
+      "unit": "g",
+      "note": "ciepła (30-40°C)"
+    },
+    {
+      "key": "lp5dx1p4",
+      "ingredient": "Oliwa z oliwek",
+      "quantity": "12",
+      "unit": "g"
+    },
+    {
+      "key": "ujh61j2u",
+      "ingredient": "Sól",
+      "quantity": "7,5",
+      "unit": "g"
+    },
+    {
+      "key": "db4f0cwn",
+      "ingredient": "Cukier biały",
+      "quantity": "3",
+      "unit": "g"
+    },
+    {
+      "key": "591b0zvz",
+      "ingredient": "Drożdże suche",
+      "quantity": "1,2",
+      "unit": "g",
+      "note": "instant"
+    },
+    {
+      "key": "oliwa-miska",
+      "ingredient": "Oliwa z oliwek",
+      "quantity": "1",
+      "unit": "łyżeczka",
+      "note": "do natłuszczenia miski"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Waga kuchenna"
+    },
+    {
+      "name": "Robot planetarny",
+      "spec": "z hakiem",
+      "optional": true
+    },
+    {
+      "name": "Termometr kuchenny",
+      "spec": "do wody",
+      "optional": true
+    },
+    {
+      "name": "Skrobak do ciasta",
+      "optional": true
+    }
+  ],
+  "steps": [
+    {
+      "section": "Wyrabianie",
+      "text": "Do misy robota wsyp mąkę {{ing:z4b7xhnv}}, sól {{ing:ujh61j2u}}, cukier {{ing:db4f0cwn}} i drożdże {{ing:591b0zvz}}. Wlej ciepłą wodę {{ing:3ukls5ii}} i oliwę {{ing:lp5dx1p4}}.",
+      "hints": [
+        "Zamiast instant mogą być świeże drożdże: weź ich trzy razy więcej.",
+        "Łyżeczka drożdży instant waży ok. 3 g. Przy tak małej ilości łatwiej odmierzyć część łyżeczki niż ważyć.",
+        "Zamiast oliwy może być olej roślinny albo shortening."
+      ]
+    },
+    {
+      "section": "Wyrabianie",
+      "text": "Wyrabiaj hakiem na średnich obrotach przez ok. 2 minuty, tylko do połączenia składników. Ciasto będzie jeszcze szorstkie i nierówne."
+    },
+    {
+      "section": "Wyrabianie",
+      "text": "Zbierz ręką ciasto ze ścianek misy i dociśnij do reszty. Zostaw w misie na 15 minut bez przykrycia. Mąka w tym czasie wchłonie wodę i zacznie się tworzyć gluten, więc potem wyrabianie pójdzie szybciej."
+    },
+    {
+      "section": "Wyrabianie",
+      "text": "Wyrabiaj hakiem na średnich obrotach przez kilka minut, aż ciasto będzie gładkie, sprężyste i zacznie odchodzić od haka i ścianek misy.",
+      "hints": [
+        "Ciasto jest gotowe, gdy cienko rozciągnięte prześwituje, zamiast się rwać.",
+        "Ręcznie też się da, tylko wyrabianie potrwa dłużej."
+      ]
+    },
+    {
+      "section": "Wyrabianie",
+      "text": "Przełóż ciasto na blat i uformuj z niego gładką, napiętą kulę."
+    },
+    {
+      "section": "Wyrastanie",
+      "text": "Wysmaruj miskę oliwą {{ing:oliwa-miska}}, włóż do niej kulę, przykryj i zostaw na ok. 2 godziny w temperaturze pokojowej.",
+      "hints": [
+        "W chłodnej kuchni ciasto rośnie wolniej. Daj mu więcej czasu, aż wyraźnie urośnie."
+      ]
+    },
+    {
+      "section": "Wyrastanie",
+      "text": "Podziel ciasto na kawałki po ok. 255 g i z każdego uformuj ciasną, gładką kulkę. Przykryj i zostaw na kolejne 2 godziny w temperaturze pokojowej. Potem ciasto jest gotowe do rozciągania.",
+      "hints": [
+        "Na inny rozmiar pizzy: 25 cm — 180–200 g, 35 cm — 330–360 g, 40 cm — 410–440 g, 45 cm — 500–540 g ciasta na placek.",
+        "Kulki odstaw z odstępem na natłuszczonej desce albo każdą w osobnym pojemniku, bo urosną też wszerz."
+      ]
+    }
+  ]
+}
