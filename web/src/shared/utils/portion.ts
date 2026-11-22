@@ -108,10 +108,12 @@ export function resolveSize(r: IPortionRecipe, stored: unknown): SizeChoice | nu
     if (!def) return null;
     const s = stored as Partial<PieceChoice & { shape: string; a: number; b: number }> | null;
     if (isPieces(def)) {
+        // a stored form (the recipe used to be a form recipe) must not lend its diameter to the pieces
+        const p = s && typeof s === 'object' && !('shape' in s) ? s : null;
         const n =
-            s && Number.isInteger(s.n) && s.n! >= 1 && s.n! <= MAX_PIECES ? (s.n as number) : def.n;
+            p && Number.isInteger(p.n) && p.n! >= 1 && p.n! <= MAX_PIECES ? (p.n as number) : def.n;
         const d =
-            s && portionOf(r).sizes.some((x) => x.diameterCm === s.d) ? (s.d as number) : def.d;
+            p && portionOf(r).sizes.some((x) => x.diameterCm === p.d) ? (p.d as number) : def.d;
         return { n, d };
     }
     if (s?.shape === 'round' && cmOk(s.d)) return { shape: 'round', d: s.d };

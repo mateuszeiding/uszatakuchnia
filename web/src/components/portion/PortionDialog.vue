@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 
 // Sheet from the bottom (phone) or a popover under its button (desktop); Esc, ✕ and the backdrop close it.
 // Teleported, so the sticky ingredients panel doesn't clip it. Same behaviour as SubstituteChooser.
@@ -20,6 +20,14 @@ function place() {
     if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
     pos.value = { left, top };
 }
+// widening the window turns the sheet into a popover after the resize handler ran: place it again then
+watch(
+    () => props.sheet,
+    async () => {
+        await nextTick();
+        place();
+    }
+);
 
 const focusables = () => [
     ...(root.value?.querySelectorAll<HTMLElement>(
@@ -154,6 +162,8 @@ onBeforeUnmount(() => {
     position: fixed;
     width: 380px;
     max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
     border-radius: var(--r-xl);
     padding: 16px;
     box-shadow: 0 12px 32px rgba(10, 10, 15, 0.18);
@@ -208,5 +218,12 @@ onBeforeUnmount(() => {
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
+}
+/* teleported to body, so the printed shopping list doesn't hide it with its header */
+@media print {
+    .pdlg,
+    .pdlg-scrim {
+        display: none;
+    }
 }
 </style>

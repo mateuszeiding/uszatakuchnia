@@ -95,6 +95,8 @@ describe('resolveSize', () => {
         expect(resolveSize(pizza, { n: 99, d: 25 })).toEqual({ n: 2, d: 25 });
         expect(resolveSize(pizza, undefined)).toEqual({ n: 2, d: 30 });
         expect(resolveSize(pizza, { shape: 'round', d: 26 })).toEqual({ n: 2, d: 30 });
+        // a stored form with a diameter the author offers still falls back (it isn't a piece choice)
+        expect(resolveSize(pizza, { shape: 'round', d: 25 })).toEqual({ n: 2, d: 30 });
     });
 
     it('forma spoza 10–60 cm albo innego rodzaju → forma z przepisu', () => {

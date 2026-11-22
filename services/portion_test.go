@@ -112,8 +112,11 @@ func TestNutritionDivisor(t *testing.T) {
 		{entities.Recipe{Servings: 4}, 4},
 		{entities.Recipe{Servings: 4, PortionMode: entities.PortionServings}, 4},
 		{entities.Recipe{Servings: 2, PortionMode: entities.PortionSized}, 2},
-		{entities.Recipe{Servings: 6, PortionMode: entities.PortionForm, FormPieces: ipt(12)}, 12},
-		{entities.Recipe{Servings: 6, PortionMode: entities.PortionForm}, 1},
+		{entities.Recipe{Servings: 6, PortionMode: entities.PortionForm, FormShape: sp(entities.FormRound), FormDCm: ipt(24), FormPieces: ipt(12)}, 12},
+		{entities.Recipe{Servings: 6, PortionMode: entities.PortionForm, FormShape: sp(entities.FormRect), FormACm: ipt(25), FormBCm: ipt(35)}, 1},
+		// a draft without a complete form counts per serving, as the page falls back to servings
+		{entities.Recipe{Servings: 4, PortionMode: entities.PortionForm, FormPieces: ipt(12)}, 4},
+		{entities.Recipe{Servings: 4, PortionMode: entities.PortionForm, FormShape: sp(entities.FormRect), FormACm: ipt(25)}, 4},
 	}
 	for _, c := range cases {
 		if got := c.r.NutritionDivisor(); got != c.want {

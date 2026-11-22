@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -99,13 +100,13 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var moveTo *uint
+	var target entities.Unit
 	if s := r.URL.Query().Get("moveTo"); s != "" {
 		n, err := strconv.ParseUint(s, 10, 64)
 		if err != nil || uint(n) == unit.ID {
 			resp.Error(w, http.StatusBadRequest, "invalid moveTo")
 			return
 		}
-		var target entities.Unit
 		if err := conn.First(&target, n).Error; err != nil {
 			resp.Error(w, http.StatusBadRequest, "unknown moveTo unit")
 			return
@@ -116,6 +117,13 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 	var used, usedAsPiece int64
 	conn.Model(&entities.RecipeIngredient{}).Where("unit_id = ?", unit.ID).Count(&used)
 	conn.Model(&entities.Recipe{}).Where("piece_unit_id = ?", unit.ID).Count(&usedAsPiece)
+
+	// a piece unit must inflect (placek / placki / placków): moving it to "g" would leave recipes that fail validation
+	if usedAsPiece > 0 && moveTo != nil && !services.IsPieceUnit(target) {
+		resp.Error(w, http.StatusBadRequest,
+			fmt.Sprintf("„%s” jest nazwą sztuki w przepisach — przenieś ją na jednostkę z odmianą (np. placek / placki / placków)", unit.Name))
+		return
+	}
 
 	if err := conn.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&entities.RecipeIngredient{}).Where("unit_id = ?", unit.ID).

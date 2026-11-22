@@ -69,7 +69,7 @@ func RecomputeRecipes(tx *gorm.DB, recipeIDs ...uint) error {
 		return err
 	}
 
-	q := tx.Model(&entities.Recipe{}).Select("id", "servings", "portion_mode", "form_pieces").
+	q := tx.Model(&entities.Recipe{}).Select("id", "servings", "portion_mode", "form_shape", "form_d_cm", "form_a_cm", "form_b_cm", "form_pieces").
 		Preload("Ingredients", func(db *gorm.DB) *gorm.DB { return db.Order("sort_order") }).
 		Preload("Ingredients.Unit")
 	if len(recipeIDs) > 0 {

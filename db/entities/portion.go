@@ -34,12 +34,26 @@ func (RecipePieceSize) TableName() string { return "recipe_piece_sizes" }
 
 // NutritionDivisor is what the whole-recipe macros are divided by for recipes.nutrition.perPortion:
 // one serving, one piece of the base size, or one piece of the form (the whole form without pieces).
+// A form recipe without a complete form (a draft) counts per serving, as the page shows it (portion.ts effectiveMode).
 func (r Recipe) NutritionDivisor() int {
-	if r.PortionMode == PortionForm {
+	if r.PortionMode == PortionForm && r.formComplete() {
 		if r.FormPieces != nil && *r.FormPieces > 0 {
 			return *r.FormPieces
 		}
 		return 1
 	}
 	return r.Servings
+}
+
+func (r Recipe) formComplete() bool {
+	if r.FormShape == nil {
+		return false
+	}
+	switch *r.FormShape {
+	case FormRound:
+		return r.FormDCm != nil
+	case FormRect:
+		return r.FormACm != nil && r.FormBCm != nil
+	}
+	return false
 }
