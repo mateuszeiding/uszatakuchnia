@@ -24,6 +24,17 @@ type Recipe struct {
 
 	Status string `gorm:"type:varchar(16);not null;default:'draft'"`
 
+	// Portion (portion.go). Fields of every mode are kept whatever the mode, so switching back is lossless.
+	PortionMode string `gorm:"type:varchar(16);not null;default:'servings'"`
+	PieceUnitID *uint
+	PieceUnit   *Unit             `gorm:"foreignKey:PieceUnitID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	PieceSizes  []RecipePieceSize `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	FormShape   *string           `gorm:"type:varchar(8)"`
+	FormDCm     *int
+	FormACm     *int
+	FormBCm     *int
+	FormPieces  *int
+
 	Photo       *RecipePhoto       `gorm:"foreignKey:RecipeID;references:ID"`
 	Steps       []RecipeStep       `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Ingredients []RecipeIngredient `gorm:"foreignKey:RecipeID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
@@ -40,11 +51,22 @@ type RecipeBase struct {
 	TimeMin    int
 	TimeMax    *int
 	Difficulty *int
-	Status     string           `gorm:"type:varchar(16);not null"`
-	NeedsPrep  bool             `gorm:"->;-:migration"`
-	Nutrition  *RecipeNutrition `gorm:"->;-:migration"`
-	Photo      *RecipePhoto     `gorm:"foreignKey:RecipeID;references:ID"`
-	Taxonomy   []RecipeTaxonomy `gorm:"foreignKey:RecipeID;references:ID"`
+	Status     string `gorm:"type:varchar(16);not null"`
+	// Portion, for the size in the card meta line and whether kcal is per piece.
+	Servings    int
+	PortionMode string
+	PieceUnitID *uint
+	PieceUnit   *Unit             `gorm:"foreignKey:PieceUnitID;references:ID"`
+	PieceSizes  []RecipePieceSize `gorm:"foreignKey:RecipeID;references:ID"`
+	FormShape   *string
+	FormDCm     *int
+	FormACm     *int
+	FormBCm     *int
+	FormPieces  *int
+	NeedsPrep   bool             `gorm:"->;-:migration"`
+	Nutrition   *RecipeNutrition `gorm:"->;-:migration"`
+	Photo       *RecipePhoto     `gorm:"foreignKey:RecipeID;references:ID"`
+	Taxonomy    []RecipeTaxonomy `gorm:"foreignKey:RecipeID;references:ID"`
 }
 
 func (Recipe) TableName() string     { return "recipes" }

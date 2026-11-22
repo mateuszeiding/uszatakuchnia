@@ -85,8 +85,11 @@ func Dictionaries(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if err := conn.Model(&entities.RecipeIngredient{}).Select("unit_id AS id, COUNT(*) AS n").
-		Where("unit_id IS NOT NULL").Group("unit_id").Scan(&unitCounts).Error; err != nil {
+	// a recipe's piece unit ("placek") counts as a use too, so deleting it asks where to move it
+	if err := conn.Raw(`SELECT id, COUNT(*) AS n FROM (
+			SELECT unit_id AS id FROM recipe_ingredients WHERE unit_id IS NOT NULL
+			UNION ALL SELECT piece_unit_id FROM recipes WHERE piece_unit_id IS NOT NULL
+		) u GROUP BY id`).Scan(&unitCounts).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -97,6 +100,16 @@ func Dictionaries(w http.ResponseWriter, r *http.Request) {
 	byUnit := map[uint]int{}
 	for _, c := range unitCounts {
 		byUnit[c.ID] = c.N
+	}
+	var pieceCounts []count
+	if err := conn.Model(&entities.Recipe{}).Select("piece_unit_id AS id, COUNT(*) AS n").
+		Where("piece_unit_id IS NOT NULL").Group("piece_unit_id").Scan(&pieceCounts).Error; err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	byPiece := map[uint]int{}
+	for _, c := range pieceCounts {
+		byPiece[c.ID] = c.N
 	}
 
 	axesDto := mappers.MapTaxonomyAxesToDto(axes, values)
@@ -109,6 +122,7 @@ func Dictionaries(w http.ResponseWriter, r *http.Request) {
 	unitsDto := mappers.MapUnitArrayToDto(units)
 	for i := range unitsDto {
 		unitsDto[i].UsedIn = byUnit[unitsDto[i].ID]
+		unitsDto[i].UsedAsPiece = byPiece[unitsDto[i].ID]
 	}
 
 	resp.JSON(w, http.StatusOK, dtos.DictionariesDto{

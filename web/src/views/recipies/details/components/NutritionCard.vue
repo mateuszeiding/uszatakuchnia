@@ -12,18 +12,95 @@ import {
     NUTRIENTS,
     scaleRange,
 } from '@/shared/utils/nutrition';
+import {
+    effectiveMode,
+    formShort,
+    type IPortionRecipe,
+    isForm,
+    isPieces,
+    pieceCount,
+    pieceForms,
+    pieceMacroFactor,
+    pieceNoun,
+    portionOf,
+    type SizeChoice,
+} from '@/shared/utils/portion';
 
 // Per-serving macros (computed in the API; with chosen substitutes, the sum of the variant's shares).
 // The servings counter changes only "Całe danie".
+// Sized / form: "per piece" of the chosen size (perPortion × pieceMacroFactor), the whole = per piece × pieces;
+// a form without pieces shows only the whole form.
 const props = defineProps<{
     nutrition: IRecipeNutrition;
     servings: number;
+    recipe?: IPortionRecipe;
+    size?: SizeChoice | null;
     /** "wieprzowina mielona zamiast: wołowina" when substitutes are chosen; '' = the recipe as is. */
     swapNote?: string;
 }>();
 const emit = defineEmits<{ restore: [] }>();
 
-const pp = computed(() => props.nutrition.perPortion);
+const mode = computed(() => (props.recipe ? effectiveMode(props.recipe) : 'servings'));
+const factor = computed(() =>
+    props.recipe ? pieceMacroFactor(props.recipe, props.size ?? null) : 1
+);
+const pp = computed(() => {
+    const k = factor.value;
+    if (k === 1) return props.nutrition.perPortion;
+    const out: IRecipeNutrition['perPortion'] = {};
+    for (const [key, r] of Object.entries(props.nutrition.perPortion))
+        out[key as keyof typeof out] = scaleRange(r, k);
+    return out;
+});
+/** How many "per" units make the whole: servings, pieces, or the form's pieces. */
+const wholeN = computed(() =>
+    mode.value === 'servings' || !props.recipe
+        ? props.servings
+        : pieceCount(props.recipe, props.size ?? null)
+);
+const labels = computed(() => {
+    const r = props.recipe;
+    const s = props.size ?? null;
+    if (r && mode.value === 'sized' && isPieces(s)) {
+        const one = pieceForms(r)[0];
+        return {
+            per: `Na ${one} ${s.d} cm`,
+            peek: `kcal/${one}`,
+            whole: 'Całość',
+            count: `${s.n} ${pieceNoun(r, s.n)}`,
+            note: `Rozmiar zmienia wartości na ${one}, liczba sztuk — sumę.`,
+            showWhole: true,
+        };
+    }
+    if (r && mode.value === 'form' && isForm(s)) {
+        const pieces = portionOf(r).form?.pieces;
+        return pieces
+            ? {
+                  per: `Na kawałek (1/${pieces} formy)`,
+                  peek: 'kcal/kawałek',
+                  whole: 'Cała forma',
+                  count: formShort(s),
+                  note: 'Wielkość formy zmienia wartości na kawałek i sumę.',
+                  showWhole: true,
+              }
+            : {
+                  per: `Cała forma (${formShort(s)})`,
+                  peek: 'kcal/forma',
+                  whole: '',
+                  count: '',
+                  note: 'Wielkość formy zmienia wartości dla całej formy.',
+                  showWhole: false,
+              };
+    }
+    return {
+        per: 'Na porcję',
+        peek: 'kcal/porcja',
+        whole: 'Całe danie',
+        count: `${props.servings} ${portionsLabel.value}`,
+        note: 'Liczba porcji zmienia tylko sumę dla całego dania.',
+        showWhole: true,
+    };
+});
 const incomplete = computed(() => props.nutrition.incomplete ?? {});
 const hasIncomplete = computed(() => Object.values(incomplete.value).some((v) => v?.length));
 const kcal = computed(() => fmt(pp.value.kcal, 'kcal', 'recipe'));
@@ -86,7 +163,7 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
                         class="nutri__peek"
                     >
                         <span class="nutri__peek-num">~{{ kcalAvg }}</span>
-                        kcal/porcja
+                        {{ labels.peek }}
                     </span>
                     <svg
                         class="nutri__chev"
@@ -124,7 +201,7 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
             <div class="nutri__cols">
                 <div class="nutri__col">
                     <div v-if="kcal">
-                        <div class="nutri__label">Na porcję</div>
+                        <div class="nutri__label">{{ labels.per }}</div>
                         <div class="nutri__kcal">
                             <span class="sr-only">około {{ kcalAvg }}</span>
                             <span
@@ -204,11 +281,14 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
                         </ul>
                     </figure>
 
-                    <div class="nutri__dish">
+                    <div
+                        v-if="labels.showWhole"
+                        class="nutri__dish"
+                    >
                         <div class="nutri__dish-head">
-                            <span class="nutri__label">Całe danie</span>
+                            <span class="nutri__label">{{ labels.whole }}</span>
                             <span class="nutri__dish-count">
-                                {{ servings }} {{ portionsLabel }}
+                                {{ labels.count }}
                             </span>
                         </div>
                         <dl class="nutri__dish-rows">
@@ -219,7 +299,7 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
                                 <dt>{{ n.label }}</dt>
                                 <dd>
                                     <MacroValue
-                                        :value="scaleRange(pp[n.key], servings)"
+                                        :value="scaleRange(pp[n.key], wholeN)"
                                         :nutrient="n.key"
                                         mode="recipe"
                                         size="sm"
@@ -268,7 +348,7 @@ onBeforeUnmount(() => mq.removeEventListener('change', onMq));
             </p>
             <p class="nutri__note">
                 Wartości orientacyjne, wyliczone ze składników. Produkty różnych marek się różnią —
-                stąd zakres. Liczba porcji zmienia tylko sumę dla całego dania.
+                stąd zakres. {{ labels.note }}
             </p>
         </div>
     </section>

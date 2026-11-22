@@ -2,6 +2,16 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
+import PortionControl from '@/components/portion/PortionControl.vue';
+import PortionStickyBar from '@/components/portion/PortionStickyBar.vue';
+import RescaledNote from '@/components/portion/RescaledNote.vue';
+import { useNarrow } from '@/composables/useNarrow';
+import {
+    type IPortionRecipe,
+    isForm,
+    type PortionMode,
+    type SizeChoice,
+} from '@/shared/utils/portion';
 import ServingsStepper from '@/views/recipies/details/components/ServingsStepper.vue';
 import { servingsLabel } from '@/views/recipies/details/recipeView';
 
@@ -12,8 +22,20 @@ const props = defineProps<{
     done: number;
     total: number;
     loading?: boolean;
+    /** Sized / form recipes: the same size control as on the recipe page instead of the counter. */
+    portion?: {
+        recipe: IPortionRecipe;
+        mode: PortionMode;
+        size: SizeChoice | null;
+        scale: number;
+        changed: boolean;
+        label: string;
+    };
 }>();
-const emit = defineEmits<{ servings: [n: number] }>();
+const emit = defineEmits<{ servings: [n: number]; size: [s: SizeChoice | null] }>();
+
+const narrow = useNarrow();
+const sized = computed(() => !!props.portion && props.portion.mode !== 'servings');
 
 const print = () => window.print();
 
@@ -91,7 +113,8 @@ function back(e: MouseEvent) {
                         />
                         {{ recipeName }}
                         <span class="head__print-only">
-                            · {{ servings }} {{ servingsLabel(servings) }}
+                            ·
+                            {{ sized ? portion!.label : `${servings} ${servingsLabel(servings)}` }}
                         </span>
                     </p>
                 </div>
@@ -102,10 +125,37 @@ function back(e: MouseEvent) {
                     uszatakuchnia.
                 </span>
                 <ServingsStepper
+                    v-if="!sized"
                     class="head__servings"
                     compact
                     :value="servings"
                     @set="emit('servings', $event)"
+                />
+            </div>
+            <div
+                v-if="sized && portion"
+                class="head__portion"
+            >
+                <PortionStickyBar
+                    v-if="narrow"
+                    plain
+                    :recipe="portion.recipe"
+                    :size="portion.size"
+                    :scale="portion.scale"
+                    @size="emit('size', $event)"
+                />
+                <PortionControl
+                    v-else
+                    :recipe="portion.recipe"
+                    :size="portion.size"
+                    @size="emit('size', $event)"
+                />
+                <RescaledNote
+                    v-if="portion.changed"
+                    :text="portion.label"
+                    :scale="portion.scale"
+                    :form="isForm(portion.size)"
+                    @restore="emit('size', null)"
                 />
             </div>
             <div class="head__progress">
@@ -205,6 +255,11 @@ function back(e: MouseEvent) {
 .head__print-only {
     display: none;
 }
+.head__portion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 .head__progress {
     display: flex;
     align-items: center;
@@ -261,6 +316,7 @@ function back(e: MouseEvent) {
     }
     .head__bar,
     .head__servings,
+    .head__portion,
     .head__progress {
         display: none;
     }

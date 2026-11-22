@@ -1,5 +1,13 @@
 // A draft needs only a name; publishing needs everything (name, ingredient, step, required axes, difficulty, servings, time).
 
+import {
+    type IPortionForm,
+    newPortion,
+    portionError,
+    portionFromRecipe,
+    portionToRequest,
+} from './portionForm';
+
 import type { IUpsertRecipeRequest, RecipeDto, RecipeStatus } from '@/data/dtos/recipe/RecipeDto';
 import type { ILinkedRecipe } from '@/data/dtos/recipe/RecipeIngredientDto';
 import type { IDictionaries, IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
@@ -84,6 +92,8 @@ export interface IRecipeForm {
     timeMax: string;
     timeUnit: TimeUnit;
     servings: string;
+    /** "Czym jest porcja": mode + the fields of every mode (portionForm.ts). */
+    portion: IPortionForm;
     ingGroups: IGroup<IIngItem>[];
     stepGroups: IGroup<IStepItem>[];
     equipment: IEquipItem[];
@@ -132,6 +142,7 @@ export const newForm = (): IRecipeForm => ({
     timeMax: '',
     timeUnit: 'min',
     servings: '4',
+    portion: newPortion(),
     ingGroups: [{ id: uid(), label: '', items: [blankIng()] }],
     stepGroups: [{ id: uid(), label: '', items: [blankStep()] }],
     equipment: [],
@@ -216,6 +227,7 @@ export function fromRecipe(r: RecipeDto): IRecipeForm {
         difficulty: r.difficulty,
         ...timeFields(r.timeMin, r.timeMax),
         servings: r.servings ? String(r.servings) : '',
+        portion: portionFromRecipe(r),
         ingGroups: ingGroups.length ? ingGroups : newForm().ingGroups,
         stepGroups: stepGroups.length ? stepGroups : newForm().stepGroups,
         equipment: r.equipment.map((e) => ({
@@ -244,6 +256,7 @@ export function toRequest(f: IRecipeForm, status: RecipeStatus): IUpsertRecipeRe
         tip: orNull(f.tip),
         cautions: cautionTexts(f.cautions),
         servings: toInt(f.servings) ?? 0,
+        portion: portionToRequest(f.portion),
         timeMin: toMinutes(f.time, f.timeUnit),
         timeMax: f.timeMax.trim() ? toMinutes(f.timeMax, f.timeUnit) || null : null,
         difficulty: f.difficulty,
@@ -325,6 +338,7 @@ export type FormErrors = Partial<
         | 'difficulty'
         | 'time'
         | 'servings'
+        | 'portion'
         | 'equipment'
         | `taxonomy.${string}`,
         string
@@ -357,7 +371,11 @@ export function validate(
         }
     }
     if (!f.difficulty) errors.difficulty = 'Wybierz trudność.';
-    if (!toInt(f.servings)) errors.servings = 'Podaj liczbę porcji.';
+    // servings count: in the side card for servings recipes, as "W przepisie: n ×" for pieces; a form needs none
+    if (f.portion.mode === 'servings' && !toInt(f.servings))
+        errors.servings = 'Podaj liczbę porcji.';
+    const portionErr = portionError(f.portion, !!toInt(f.servings));
+    if (portionErr) errors.portion = portionErr;
     const tMin = toMinutes(f.time, f.timeUnit);
     const tMax = f.timeMax.trim() ? toMinutes(f.timeMax, f.timeUnit) : null;
     if (!tMin) errors.time = 'Podaj czas (np. 40 albo 2,5).';
@@ -430,6 +448,7 @@ export function missingTermSteps(f: IRecipeForm, terms: ITerm[]): boolean[] {
 /** Order of fields to scroll to on error (form element ids). */
 export const ERROR_ORDER: [keyof FormErrors | string, string][] = [
     ['name', 'f-name'],
+    ['portion', 'f-portion'],
     ['ingredients', 'f-ingredients'],
     ['equipment', 'f-equipment'],
     ['steps', 'f-steps'],

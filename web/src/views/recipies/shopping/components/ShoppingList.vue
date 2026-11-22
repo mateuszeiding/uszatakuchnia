@@ -6,9 +6,11 @@ import ShoppingRow from './ShoppingRow.vue';
 
 import CautionsBlock from '@/components/CautionsBlock.vue';
 import { useCookingProgress } from '@/composables/useCookingProgress';
+import { usePortion } from '@/composables/usePortion';
 import { useShoppingChecks } from '@/composables/useShoppingChecks';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import { parseSizeQuery, type SizeChoice, sizeToQuery } from '@/shared/utils/portion';
 import { pluralPL } from '@/shared/utils/quantity';
 import { buildShopping, type IShopItem } from '@/shared/utils/shoppingList';
 import { effectiveLines, parseSubsParam, subsToParam } from '@/shared/utils/substitutes';
@@ -17,21 +19,36 @@ const props = defineProps<{
     recipe: RecipeDto;
     dicts: IDictionaries | undefined;
     urlServings: number | null;
+    /** The whole query: ?sztuki=&rozmiar= / ?forma= are parsed here (the recipe decides which apply). */
+    query: Record<string, unknown>;
     /** Raw ?zamienniki= from the URL (the link sender's variant). */
     urlSubs: string | null;
 }>();
 const emit = defineEmits<{
     servings: [n: number];
+    size: [s: SizeChoice | null];
     /** Fills the URL in with the stored state when the link didn't have it (so the URL can be passed on). */
     sync: [query: Record<string, string>];
 }>();
 
 // Servings and substitutes are shared with the recipe (uk:progress:<id>); the URL takes precedence (a shared link)
 // and, like servings, gets saved on the device, so "‹ Przepis" shows the same variant.
-const { progress, setServings } = useCookingProgress(props.recipe.id, props.recipe.servings || 1);
+const { progress, setServings, setSize } = useCookingProgress(
+    props.recipe.id,
+    props.recipe.servings || 1
+);
+const portion = usePortion(() => props.recipe, progress);
 const missing: Record<string, string> = {};
-if (props.urlServings != null) setServings(props.urlServings);
-else missing.porcje = String(progress.value.servings);
+if (portion.mode.value === 'servings') {
+    if (props.urlServings != null) setServings(props.urlServings);
+    else missing.porcje = String(progress.value.servings);
+} else {
+    const fromUrl = parseSizeQuery(props.recipe, props.query);
+    if (fromUrl) setSize(fromUrl);
+    // also when the link's size fell back (e.g. a diameter the author removed): the URL shows what's on screen
+    const shown = sizeToQuery(portion.size.value);
+    for (const [k, v] of Object.entries(shown)) if (props.query[k] !== v) missing[k] = v;
+}
 const urlSubs = parseSubsParam(props.urlSubs, props.recipe.ingredients);
 if (urlSubs) progress.value.subs = urlSubs;
 else {
@@ -43,12 +60,22 @@ const changeServings = (n: number) => {
     setServings(n);
     emit('servings', progress.value.servings);
 };
+const changeSize = (s: SizeChoice | null) => {
+    setSize(s);
+    emit('size', portion.size.value);
+};
+const headerPortion = computed(() => ({
+    recipe: props.recipe,
+    mode: portion.mode.value,
+    size: portion.size.value,
+    scale: portion.scale.value,
+    changed: portion.changed.value,
+    label: portion.label.value,
+}));
 
 const { checked, toggle, clear } = useShoppingChecks(props.recipe.id);
 
-const ratio = computed(() =>
-    props.recipe.servings ? progress.value.servings / props.recipe.servings : 1
-);
+const ratio = computed(() => portion.scale.value);
 // Chosen recipe variant (substitutes from uk:progress:<id>.subs): the substitute instead of the main one, "pół na pół" = 2 items.
 const items = computed(() =>
     buildShopping(
@@ -91,9 +118,11 @@ const today = new Date().toLocaleDateString('pl-PL');
         :recipe-id="recipe.id"
         :recipe-name="recipe.name"
         :servings="progress.servings"
+        :portion="headerPortion"
         :done="done.length"
         :total="items.length"
         @servings="changeServings"
+        @size="changeSize"
     />
     <div class="shop">
         <CautionsBlock

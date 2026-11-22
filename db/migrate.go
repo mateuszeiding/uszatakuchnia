@@ -25,6 +25,7 @@ var models = []any{
 	&entities.RecipeIngredientSubstitute{},
 	&entities.RecipePhoto{},
 	&entities.RecipeTaxonomy{},
+	&entities.RecipePieceSize{},
 
 	&entities.Equipment{},
 	&entities.RecipeEquipment{},
@@ -68,6 +69,7 @@ var devResetTables = []string{
 	"recipe_steps",
 	"recipe_ingredient_substitutes",
 	"recipe_ingredients",
+	"recipe_piece_sizes",
 	"recipe_photos",
 	"images",
 	"photos",

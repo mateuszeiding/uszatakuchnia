@@ -7,6 +7,16 @@ import DishTypeIcon from '@/components/DishTypeIcon.vue';
 import { cuisineOf, mainDish, type RecipeBaseDto } from '@/data/dtos/recipe/RecipeDto';
 import { dishIconOf } from '@/shared/dishIcons';
 import { avg, fmt, nf } from '@/shared/utils/nutrition';
+import {
+    defaultSize,
+    effectiveMode,
+    formShort,
+    isForm,
+    isPieces,
+    pieceForms,
+    portionOf,
+    sizeLabel,
+} from '@/shared/utils/portion';
 import { formatTime } from '@/shared/utils/time';
 
 const props = defineProps<{ recipe: RecipeBaseDto; hits?: string[] | null }>();
@@ -16,15 +26,32 @@ const dish = computed(() => mainDish(props.recipe));
 const catClass = computed(() => (dish.value?.color ? `cat-${dish.value.color}` : null));
 const icon = computed(() => dishIconOf(dish.value));
 const cuisine = computed(() => cuisineOf(props.recipe)?.label);
+const mode = computed(() => effectiveMode(props.recipe));
+// sized / form: the recipe's size after the difficulty ("2 placki 30 cm", "Ø 24 cm")
+const size = computed(() => {
+    const s = defaultSize(props.recipe);
+    if (isPieces(s)) return sizeLabel(props.recipe, s);
+    return isForm(s) ? formShort(s) : null;
+});
 const meta = computed(() =>
     [
         formatTime(props.recipe.timeMin, props.recipe.timeMax),
         props.recipe.difficulty ? DIFFICULTY[props.recipe.difficulty] : null,
+        size.value,
     ]
         .filter(Boolean)
         .join(' · ')
 );
+const kcalFor = computed(() =>
+    mode.value === 'sized'
+        ? `na ${pieceForms(props.recipe)[0]}`
+        : mode.value === 'form'
+          ? 'na kawałek'
+          : 'na porcję'
+);
+// kcal per serving / piece / piece of the form; a form without pieces has no per-piece value
 const kcal = computed(() => {
+    if (mode.value === 'form' && !portionOf(props.recipe).form?.pieces) return null;
     const f = fmt(props.recipe.kcal, 'kcal', 'recipe');
     return f ? `~${nf(avg(f))} kcal` : null;
 });
@@ -123,7 +150,7 @@ const kcal = computed(() => {
                     v-if="kcal"
                     class="sr-only"
                 >
-                    na porcję, orientacyjnie
+                    {{ kcalFor }}, orientacyjnie
                 </span>
             </div>
             <span

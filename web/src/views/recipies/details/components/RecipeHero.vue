@@ -8,7 +8,18 @@ import UsefulRecipes from './UsefulRecipes.vue';
 import CautionsBlock from '@/components/CautionsBlock.vue';
 import USpinner from '@/components/USpinner.vue';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
-import { avg, fmt, type IRecipeNutrition, nf } from '@/shared/utils/nutrition';
+import { avg, fmt, type IRecipeNutrition, nf, scaleRange } from '@/shared/utils/nutrition';
+import {
+    effectiveMode,
+    formShort,
+    isForm,
+    isPieces,
+    pieceForms,
+    pieceMacroFactor,
+    piecesLabel,
+    portionOf,
+    type SizeChoice,
+} from '@/shared/utils/portion';
 import { formatTime } from '@/shared/utils/time';
 
 // recipe null = loading: skeletons in place of the content.
@@ -17,6 +28,8 @@ import { formatTime } from '@/shared/utils/time';
 const props = defineProps<{
     recipe: RecipeDto | null;
     servings: number;
+    /** Pieces in a size / the reader's form; missing = servings mode. */
+    size?: SizeChoice | null;
     /** Macros of the chosen variant (substitutes); none = the recipe's macros. */
     nutrition?: IRecipeNutrition | null;
 }>();
@@ -27,10 +40,25 @@ const diets = computed(() => props.recipe?.taxonomy.diet ?? []);
 const practical = computed(() => props.recipe?.taxonomy.practical ?? []);
 // "prepare ahead" steps: the first items of the Uwagi block
 const prep = computed(() => prepRows(props.recipe?.steps ?? []));
+const mode = computed(() => (props.recipe ? effectiveMode(props.recipe) : 'servings'));
 const kcal = computed(() => {
     const n = props.nutrition !== undefined ? props.nutrition : props.recipe?.nutrition;
-    const f = fmt(n?.perPortion.kcal, 'kcal', 'recipe');
+    if (!props.recipe) return null;
+    // per piece of the chosen size / form; a form without pieces has no "per piece"
+    if (mode.value === 'form' && !portionOf(props.recipe).form?.pieces) return null;
+    const k = pieceMacroFactor(props.recipe, props.size ?? null);
+    const f = fmt(scaleRange(n?.perPortion.kcal, k), 'kcal', 'recipe');
     return f ? nf(avg(f)) : null;
+});
+/** "Porcje: 4" / "Placki: 2 × 30 cm" / "Forma: Ø 24 cm" and the kcal label to match. */
+const portionMeta = computed(() => {
+    const r = props.recipe;
+    const s = props.size ?? null;
+    if (r && mode.value === 'sized' && isPieces(s))
+        return { dt: piecesLabel(r), dd: `${s.n} × ${s.d} cm`, kcal: `Kcal / ${pieceForms(r)[0]}` };
+    if (r && mode.value === 'form' && isForm(s))
+        return { dt: 'Forma', dd: formShort(s), kcal: 'Kcal / kawałek' };
+    return { dt: 'Porcje', dd: String(props.servings), kcal: 'Kcal / porcja' };
 });
 
 function scrollToStep(no: number) {
@@ -149,11 +177,11 @@ function scrollToStep(no: number) {
                     </dd>
                 </div>
                 <div>
-                    <dt>Porcje</dt>
-                    <dd>{{ servings }}</dd>
+                    <dt>{{ portionMeta.dt }}</dt>
+                    <dd>{{ portionMeta.dd }}</dd>
                 </div>
                 <div v-if="kcal">
-                    <dt>Kcal / porcja</dt>
+                    <dt>{{ portionMeta.kcal }}</dt>
                     <dd>
                         <a
                             href="#makro"

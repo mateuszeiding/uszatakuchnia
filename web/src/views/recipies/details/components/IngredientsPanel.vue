@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import { ingredientGroups, scaledAmount } from '../recipeView';
 
@@ -8,10 +8,23 @@ import IngRow from './IngRow.vue';
 import IngRowSkeleton from './IngRowSkeleton.vue';
 import ServingsStepper from './ServingsStepper.vue';
 
+import PortionControl from '@/components/portion/PortionControl.vue';
+import PortionStickyBar from '@/components/portion/PortionStickyBar.vue';
+import RescaledNote from '@/components/portion/RescaledNote.vue';
 import SwapIcon from '@/components/SwapIcon.vue';
 import type { ISubChoice } from '@/composables/useCookingProgress';
+import { useNarrow } from '@/composables/useNarrow';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import {
+    defaultSize,
+    effectiveMode,
+    isForm,
+    sameSize,
+    type SizeChoice,
+    sizeLabel,
+    sizeToQuery,
+} from '@/shared/utils/portion';
 import {
     activeSubs,
     chosenSub,
@@ -25,6 +38,10 @@ const props = defineProps<{
     recipe: RecipeDto | null;
     dicts: IDictionaries | undefined;
     servings: number;
+    /** Pieces in a size / the reader's form (usePortion); null in servings mode. */
+    size?: SizeChoice | null;
+    /** portionScale for the chosen servings or size; missing = 1 (skeleton). */
+    scale?: number;
     checked: number[];
     /** Chosen substitutes (uk:progress:<id>.subs). */
     subs: SubsMap;
@@ -32,6 +49,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     toggle: [sortOrder: number];
     servings: [n: number];
+    /** null = back to the recipe's size. */
+    size: [s: SizeChoice | null];
     sub: [sortOrder: number, choice: ISubChoice | null];
     'clear-subs': [];
 }>();
@@ -40,16 +59,49 @@ const activeCount = computed(() => activeSubs(props.recipe?.ingredients ?? [], p
 const allergenLabel = (code: string) =>
     props.dicts?.allergens.find((a) => a.code === code)?.label ?? code;
 
-const ratio = computed(() => (props.recipe?.servings ? props.servings / props.recipe.servings : 1));
+const ratio = computed(() => props.scale ?? 1);
+const mode = computed(() => (props.recipe ? effectiveMode(props.recipe) : 'servings'));
+const changed = computed(
+    () =>
+        !!props.recipe &&
+        mode.value !== 'servings' &&
+        !sameSize(props.size ?? null, defaultSize(props.recipe))
+);
 const groups = computed(() => ingredientGroups(props.recipe?.ingredients ?? []));
-// The shopping list link carries servings and the chosen variant (substitutes), so the recipient sees what the sender sees.
+// The shopping list link carries servings (or the size) and the chosen variant (substitutes), so the recipient
+// sees what the sender sees.
 const shopLink = computed(() => {
     const zamienniki = subsToParam(props.recipe?.ingredients ?? [], props.subs);
+    const portion =
+        mode.value === 'servings'
+            ? { porcje: String(props.servings) }
+            : sizeToQuery(props.size ?? null);
     return {
         path: `/recipes/${props.recipe?.id ?? 0}/zakupy`,
-        query: { porcje: String(props.servings), ...(zamienniki ? { zamienniki } : {}) },
+        query: { ...portion, ...(zamienniki ? { zamienniki } : {}) },
     };
 });
+
+// Phone: once the size control scrolls under the nav bar, the short bar sticks over the list.
+const narrow = useNarrow();
+const ctl = ref<HTMLElement>();
+const stuck = ref(false);
+let io: IntersectionObserver | undefined;
+watch(
+    [ctl, narrow],
+    ([el, n]) => {
+        io?.disconnect();
+        stuck.value = false;
+        if (!el || !n) return;
+        io = new IntersectionObserver(
+            ([e]) => (stuck.value = !!e && !e.isIntersecting && e.boundingClientRect.top < 64),
+            { rootMargin: '-64px 0px 0px 0px' }
+        );
+        io.observe(el);
+    },
+    { flush: 'post' }
+);
+onBeforeUnmount(() => io?.disconnect());
 
 function amount(ing: RecipeDto['ingredients'][number], factor = 1) {
     return scaledAmount(ing, props.dicts?.units ?? [], ratio.value * factor);
@@ -95,6 +147,7 @@ onBeforeUnmount(() => ro?.disconnect());
     <section
         id="skladniki"
         class="ing-panel"
+        :class="{ 'ing-panel--bar': mode !== 'servings' }"
         aria-labelledby="h-ing"
         :aria-busy="!recipe"
         :inert="!recipe"
@@ -145,10 +198,43 @@ onBeforeUnmount(() => ro?.disconnect());
             </RouterLink>
         </div>
         <ServingsStepper
+            v-if="mode === 'servings'"
             class="ing-panel__servings"
             :value="servings"
             @set="emit('servings', $event)"
         />
+        <div
+            v-else-if="recipe"
+            ref="ctl"
+        >
+            <PortionControl
+                :recipe="recipe"
+                :size="size ?? null"
+                :big="narrow"
+                @size="emit('size', $event)"
+            />
+        </div>
+        <RescaledNote
+            v-if="changed && recipe"
+            :text="sizeLabel(recipe, size ?? null)"
+            :scale="ratio"
+            :form="isForm(size)"
+            @restore="emit('size', null)"
+        />
+        <div
+            v-if="narrow && recipe && mode !== 'servings'"
+            class="ing-panel__bar"
+            :class="{ 'is-stuck': stuck }"
+            :aria-hidden="!stuck || undefined"
+            :inert="!stuck || undefined"
+        >
+            <PortionStickyBar
+                :recipe="recipe"
+                :size="size ?? null"
+                :scale="ratio"
+                @size="emit('size', $event)"
+            />
+        </div>
         <div
             v-if="activeCount"
             class="ing-panel__variant"
@@ -418,6 +504,21 @@ onBeforeUnmount(() => ro?.disconnect());
     }
     .ing-panel__ghead {
         top: 118px;
+    }
+    /* sized / form: the short bar (8 + 44 + 8 + 1 px) sticks instead of the counter; it takes no room in the
+       flow (negative margin = its height + the panel gap) and shows only once the full control is gone */
+    .ing-panel__bar {
+        position: sticky;
+        top: 64px;
+        z-index: 2;
+        margin: 0 -20px -77px;
+        visibility: hidden;
+    }
+    .ing-panel__bar.is-stuck {
+        visibility: visible;
+    }
+    .ing-panel--bar .ing-panel__ghead {
+        top: 125px;
     }
     .ing-panel__shop--top {
         display: none;

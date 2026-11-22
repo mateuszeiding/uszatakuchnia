@@ -12,6 +12,7 @@ import RecipeHero from './RecipeHero.vue';
 import StepsList from './StepsList.vue';
 
 import { useCookingProgress } from '@/composables/useCookingProgress';
+import { usePortion } from '@/composables/usePortion';
 import { showToast } from '@/composables/useToast';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
@@ -26,12 +27,15 @@ const {
     toggle,
     setStep,
     setServings,
+    setSize,
     setSub,
     clearSubs,
     hasChecks,
     uncheckAll,
     restoreChecks,
 } = useCookingProgress(props.recipe.id, props.recipe.servings || 1);
+// One scale for the list, step quantities, cooking mode and macros: servings or the chosen size.
+const { size, scale } = usePortion(() => props.recipe, progress);
 
 // "Odznacz wszystko": no confirmation, with "Cofnij" in the toast for 8 s.
 function onUncheckAll() {
@@ -56,7 +60,7 @@ const refCtx = computed<IRefContext>(() => ({
     ingredients: props.recipe.ingredients,
     steps: props.recipe.steps.map((s) => s.text),
     units: props.dicts?.units ?? [],
-    ratio: props.recipe.servings ? progress.value.servings / props.recipe.servings : 1,
+    ratio: scale.value,
     subs: progress.value.subs,
     terms: props.recipe.terms,
 }));
@@ -70,6 +74,7 @@ const swapNote = computed(() =>
         :recipe="recipe"
         :nutrition="nutrition"
         :servings="progress.servings"
+        :size="size"
     />
     <div class="recipe-grid">
         <div class="recipe-grid__side">
@@ -84,10 +89,13 @@ const swapNote = computed(() =>
                 :recipe="recipe"
                 :dicts="dicts"
                 :servings="progress.servings"
+                :size="size"
+                :scale="scale"
                 :checked="progress.ing"
                 :subs="progress.subs"
                 @toggle="toggle('ing', $event)"
                 @servings="setServings"
+                @size="setSize"
                 @sub="setSub"
                 @clear-subs="clearSubs"
             />
@@ -113,6 +121,8 @@ const swapNote = computed(() =>
                 class="recipe-grid__nutri"
                 :nutrition="nutrition"
                 :servings="progress.servings"
+                :recipe="recipe"
+                :size="size"
                 :swap-note="swapNote"
                 @restore="clearSubs"
             />
@@ -124,6 +134,8 @@ const swapNote = computed(() =>
         :refs="refCtx"
         :dicts="dicts"
         :servings="progress.servings"
+        :portion-size="size"
+        :scale="scale"
         :done="progress.steps"
         :checked-ing="progress.ing"
         :subs="progress.subs"
@@ -132,6 +144,7 @@ const swapNote = computed(() =>
         @toggle-ing="toggle('ing', $event)"
         @sub="setSub"
         @servings="setServings"
+        @size="setSize"
         @clear-subs="clearSubs"
     />
 </template>

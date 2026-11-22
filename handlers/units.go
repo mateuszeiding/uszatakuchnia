@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -99,13 +100,13 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var moveTo *uint
+	var target entities.Unit
 	if s := r.URL.Query().Get("moveTo"); s != "" {
 		n, err := strconv.ParseUint(s, 10, 64)
 		if err != nil || uint(n) == unit.ID {
 			resp.Error(w, http.StatusBadRequest, "invalid moveTo")
 			return
 		}
-		var target entities.Unit
 		if err := conn.First(&target, n).Error; err != nil {
 			resp.Error(w, http.StatusBadRequest, "unknown moveTo unit")
 			return
@@ -113,12 +114,29 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 		moveTo = &target.ID
 	}
 
-	var used int64
+	var used, usedAsPiece int64
 	conn.Model(&entities.RecipeIngredient{}).Where("unit_id = ?", unit.ID).Count(&used)
+	conn.Model(&entities.Recipe{}).Where("piece_unit_id = ?", unit.ID).Count(&usedAsPiece)
+
+	// A piece unit needs a replacement that inflects (placek / placki / placków): without one, or with "g",
+	// published "sized" recipes would be left failing validation on their next save (owner's decision 22.11).
+	if usedAsPiece > 0 && moveTo == nil {
+		resp.Error(w, http.StatusBadRequest, "Jednostka jest nazwą sztuki w przepisach — wybierz, na co ją przenieść.")
+		return
+	}
+	if usedAsPiece > 0 && !services.IsPieceUnit(target) {
+		resp.Error(w, http.StatusBadRequest,
+			fmt.Sprintf("„%s” jest nazwą sztuki w przepisach — przenieś ją na jednostkę z odmianą (np. placek / placki / placków)", unit.Name))
+		return
+	}
 
 	if err := conn.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&entities.RecipeIngredient{}).Where("unit_id = ?", unit.ID).
 			Update("unit_id", moveTo).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&entities.Recipe{}).Where("piece_unit_id = ?", unit.ID).
+			Update("piece_unit_id", moveTo).Error; err != nil {
 			return err
 		}
 		return tx.Delete(&entities.Unit{}, unit.ID).Error
@@ -126,7 +144,7 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	resp.JSON(w, http.StatusOK, map[string]any{"deleted": unit.ID, "moved": used})
+	resp.JSON(w, http.StatusOK, map[string]any{"deleted": unit.ID, "moved": used + usedAsPiece})
 }
 
 // ─── Equipment (admin → Classification → Equipment) ─────────────────

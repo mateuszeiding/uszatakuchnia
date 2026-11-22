@@ -16,6 +16,7 @@ import { COOK_TERMS } from '@/composables/useTermExplain';
 import { useWakeLock } from '@/composables/useWakeLock';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import type { SizeChoice } from '@/shared/utils/portion';
 import { resumeIndex } from '@/shared/utils/progress';
 import type { IRefContext } from '@/shared/utils/stepRefs';
 import type { SubsMap } from '@/shared/utils/substitutes';
@@ -25,6 +26,9 @@ const props = defineProps<{
     refs: IRefContext;
     dicts: IDictionaries | undefined;
     servings: number;
+    /** Pieces in a size / the reader's form (named apart from the text size of useCookFit). */
+    portionSize: SizeChoice | null;
+    scale: number;
     done: number[];
     checkedIng: number[];
     /** Chosen substitutes, shared with the recipe page. */
@@ -36,6 +40,7 @@ const emit = defineEmits<{
     'toggle-ing': [sortOrder: number];
     sub: [sortOrder: number, choice: ISubChoice | null];
     servings: [n: number];
+    size: [s: SizeChoice | null];
     'clear-subs': [];
 }>();
 
@@ -286,6 +291,8 @@ onBeforeUnmount(() => {
             :recipe="recipe"
             :dicts="dicts"
             :servings="servings"
+            :size="portionSize"
+            :scale="scale"
             :checked-ing="checkedIng"
             :subs="subs"
             :step-no="i + 1"
@@ -293,6 +300,7 @@ onBeforeUnmount(() => {
             @toggle-ing="emit('toggle-ing', $event)"
             @sub="(so, c) => emit('sub', so, c)"
             @servings="emit('servings', $event)"
+            @size="emit('size', $event)"
             @clear-subs="emit('clear-subs')"
         />
     </Teleport>

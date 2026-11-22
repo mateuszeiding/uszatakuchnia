@@ -8,17 +8,29 @@ import IngGroupHeader from './IngGroupHeader.vue';
 import IngRow from './IngRow.vue';
 import ServingsStepper from './ServingsStepper.vue';
 
+import PortionControl from '@/components/portion/PortionControl.vue';
+import RescaledNote from '@/components/portion/RescaledNote.vue';
 import SwapIcon from '@/components/SwapIcon.vue';
 import type { ISubChoice } from '@/composables/useCookingProgress';
 import { useNarrow } from '@/composables/useNarrow';
 import type { RecipeDto } from '@/data/dtos/recipe/RecipeDto';
 import type { IDictionaries } from '@/data/dtos/taxonomy/DictionariesDto';
+import {
+    defaultSize,
+    effectiveMode,
+    isForm,
+    sameSize,
+    type SizeChoice,
+    sizeLabel,
+} from '@/shared/utils/portion';
 import { activeSubs, chosenSub, type SubsMap } from '@/shared/utils/substitutes';
 
 const props = defineProps<{
     recipe: RecipeDto;
     dicts: IDictionaries | undefined;
     servings: number;
+    size: SizeChoice | null;
+    scale: number;
     checkedIng: number[];
     subs: SubsMap;
     /** 0 = the "Zanim zaczniesz" screen. */
@@ -29,12 +41,17 @@ const emit = defineEmits<{
     'toggle-ing': [sortOrder: number];
     sub: [sortOrder: number, choice: ISubChoice | null];
     servings: [n: number];
+    size: [s: SizeChoice | null];
     'clear-subs': [];
 }>();
 
 const title = computed(() => (props.recipe.equipment.length ? 'Sprzęt i składniki' : 'Składniki'));
 const groups = computed(() => ingredientGroups(props.recipe.ingredients));
-const ratio = computed(() => (props.recipe.servings ? props.servings / props.recipe.servings : 1));
+const ratio = computed(() => props.scale);
+const mode = computed(() => effectiveMode(props.recipe));
+const changed = computed(
+    () => mode.value !== 'servings' && !sameSize(props.size, defaultSize(props.recipe))
+);
 const hasLinks = computed(() => props.recipe.ingredients.some((x) => publicLink(x)));
 const subsCount = computed(() => activeSubs(props.recipe.ingredients, props.subs).size);
 const allergenLabel = (code: string) =>
@@ -165,10 +182,26 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKey));
 
             <div class="cis__body">
                 <ServingsStepper
+                    v-if="mode === 'servings'"
                     :value="servings"
                     big
                     @set="emit('servings', $event)"
                 />
+                <template v-else>
+                    <PortionControl
+                        :recipe="recipe"
+                        :size="size"
+                        :big="narrow"
+                        @size="emit('size', $event)"
+                    />
+                    <RescaledNote
+                        v-if="changed"
+                        :text="sizeLabel(recipe, size)"
+                        :scale="scale"
+                        :form="isForm(size)"
+                        @restore="emit('size', null)"
+                    />
+                </template>
                 <div
                     v-if="subsCount"
                     class="cis__variant"
