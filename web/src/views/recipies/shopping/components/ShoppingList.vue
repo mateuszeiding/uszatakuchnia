@@ -45,7 +45,9 @@ if (portion.mode.value === 'servings') {
 } else {
     const fromUrl = parseSizeQuery(props.recipe, props.query);
     if (fromUrl) setSize(fromUrl);
-    else Object.assign(missing, sizeToQuery(portion.size.value));
+    // also when the link's size fell back (e.g. a diameter the author removed): the URL shows what's on screen
+    const shown = sizeToQuery(portion.size.value);
+    for (const [k, v] of Object.entries(shown)) if (props.query[k] !== v) missing[k] = v;
 }
 const urlSubs = parseSubsParam(props.urlSubs, props.recipe.ingredients);
 if (urlSubs) progress.value.subs = urlSubs;
