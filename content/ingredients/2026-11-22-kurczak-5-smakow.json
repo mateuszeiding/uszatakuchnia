@@ -1,0 +1,220 @@
+[
+  {
+    "name": "Pierś z kurczaka",
+    "parent": "Kurczak",
+    "typeCode": "MEAT",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 100, "max": 120 },
+      "protein": { "min": 21, "max": 23.5 },
+      "fat": { "min": 1.2, "max": 2.6 },
+      "carbs": { "min": 0, "max": null },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": []
+  },
+  {
+    "name": "Skrobia ziemniaczana",
+    "typeCode": "OTHER",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 330, "max": 355 },
+      "protein": { "min": 0, "max": 0.6 },
+      "fat": { "min": 0, "max": 0.1 },
+      "carbs": { "min": 82, "max": 88 },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "łyżka", "gramsMin": 10, "gramsMax": 12 },
+      { "unit": "łyżeczka", "gramsMin": 3, "gramsMax": 4 }
+    ]
+  },
+  {
+    "name": "Chili mielone",
+    "typeCode": "SPICE",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 280, "max": 320 },
+      "protein": { "min": 12, "max": 13.5 },
+      "fat": { "min": 14, "max": 17 },
+      "carbs": { "min": 50, "max": 57 },
+      "fiber": { "min": 27, "max": 35 }
+    },
+    "conversions": [
+      { "unit": "szczypta", "gramsMin": 0.3, "gramsMax": 0.5 },
+      { "unit": "łyżeczka", "gramsMin": 2.5, "gramsMax": 3 }
+    ]
+  },
+  {
+    "name": "Przyprawa 5 smaków",
+    "typeCode": "SPICE",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 280, "max": 350 },
+      "protein": { "min": 8, "max": 12 },
+      "fat": { "min": 5, "max": 15 },
+      "carbs": { "min": 50, "max": 70 },
+      "fiber": { "min": 20, "max": 35 }
+    },
+    "conversions": [
+      { "unit": "łyżeczka", "gramsMin": 2, "gramsMax": 2.5 },
+      { "unit": "łyżka", "gramsMin": 6, "gramsMax": 7 }
+    ]
+  },
+  {
+    "name": "Olej roślinny",
+    "typeCode": "FAT",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 884, "max": null },
+      "protein": { "min": 0, "max": null },
+      "fat": { "min": 100, "max": null },
+      "carbs": { "min": 0, "max": null },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "ml", "gramsMin": 0.92, "gramsMax": null },
+      { "unit": "łyżka", "gramsMin": 13, "gramsMax": 14 },
+      { "unit": "łyżeczka", "gramsMin": 4, "gramsMax": 5 }
+    ]
+  },
+  {
+    "name": "Imbir",
+    "typeCode": "VEGETABLE",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 80, "max": null },
+      "protein": { "min": 1.8, "max": null },
+      "fat": { "min": 0.75, "max": null },
+      "carbs": { "min": 17.8, "max": null },
+      "fiber": { "min": 2, "max": null }
+    },
+    "conversions": [
+      { "unit": "łyżka", "gramsMin": 6, "gramsMax": 8 },
+      { "unit": "łyżeczka", "gramsMin": 2, "gramsMax": 3 }
+    ]
+  },
+  {
+    "name": "Dymka",
+    "typeCode": "VEGETABLE",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 32, "max": null },
+      "protein": { "min": 1.8, "max": null },
+      "fat": { "min": 0.2, "max": null },
+      "carbs": { "min": 7.3, "max": null },
+      "fiber": { "min": 2.6, "max": null }
+    },
+    "conversions": [{ "unit": "sztuka", "gramsMin": 15, "gramsMax": 30 }]
+  },
+  {
+    "name": "Pędy bambusa (z puszki)",
+    "typeCode": "VEGETABLE",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 19, "max": null },
+      "protein": { "min": 1.7, "max": null },
+      "fat": { "min": 0.4, "max": null },
+      "carbs": { "min": 3.2, "max": null },
+      "fiber": { "min": 1.4, "max": null }
+    },
+    "conversions": []
+  },
+  {
+    "name": "Boczniaki",
+    "typeCode": "VEGETABLE",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 33, "max": null },
+      "protein": { "min": 3.3, "max": null },
+      "fat": { "min": 0.4, "max": null },
+      "carbs": { "min": 6.1, "max": null },
+      "fiber": { "min": 2.3, "max": null }
+    },
+    "conversions": []
+  },
+  {
+    "name": "Sos sojowy",
+    "typeCode": "OTHER",
+    "allergens": ["soy", "gluten"],
+    "nutrition": {
+      "kcal": { "min": 53, "max": 60 },
+      "protein": { "min": 6, "max": 10 },
+      "fat": { "min": 0.1, "max": 0.6 },
+      "carbs": { "min": 5, "max": 8 },
+      "fiber": { "min": 0.5, "max": 0.8 }
+    },
+    "conversions": [
+      { "unit": "ml", "gramsMin": 1.17, "gramsMax": null },
+      { "unit": "łyżka", "gramsMin": 17, "gramsMax": 18 },
+      { "unit": "łyżeczka", "gramsMin": 6, "gramsMax": null }
+    ]
+  },
+  {
+    "name": "Ocet ryżowy",
+    "typeCode": "OTHER",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 0, "max": 20 },
+      "protein": { "min": 0, "max": null },
+      "fat": { "min": 0, "max": null },
+      "carbs": { "min": 0, "max": 5 },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "ml", "gramsMin": 1.01, "gramsMax": null },
+      { "unit": "łyżka", "gramsMin": 15, "gramsMax": null },
+      { "unit": "łyżeczka", "gramsMin": 5, "gramsMax": null }
+    ]
+  },
+  {
+    "name": "Cukier brązowy",
+    "typeCode": "OTHER",
+    "allergens": [],
+    "nutrition": {
+      "kcal": { "min": 377, "max": 390 },
+      "protein": { "min": 0, "max": 0.1 },
+      "fat": { "min": 0, "max": null },
+      "carbs": { "min": 97, "max": 98 },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "łyżka", "gramsMin": 12, "gramsMax": 15 },
+      { "unit": "łyżeczka", "gramsMin": 4, "gramsMax": 5 }
+    ]
+  },
+  {
+    "name": "Sos rybny",
+    "typeCode": "OTHER",
+    "allergens": ["fish"],
+    "nutrition": {
+      "kcal": { "min": 35, "max": null },
+      "protein": { "min": 5, "max": null },
+      "fat": { "min": 0, "max": null },
+      "carbs": { "min": 3.6, "max": null },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "ml", "gramsMin": 1.2, "gramsMax": null },
+      { "unit": "łyżka", "gramsMin": 18, "gramsMax": null },
+      { "unit": "łyżeczka", "gramsMin": 6, "gramsMax": null }
+    ]
+  },
+  {
+    "name": "Olej sezamowy",
+    "typeCode": "FAT",
+    "allergens": ["sesame"],
+    "nutrition": {
+      "kcal": { "min": 884, "max": null },
+      "protein": { "min": 0, "max": null },
+      "fat": { "min": 100, "max": null },
+      "carbs": { "min": 0, "max": null },
+      "fiber": { "min": 0, "max": null }
+    },
+    "conversions": [
+      { "unit": "ml", "gramsMin": 0.92, "gramsMax": null },
+      { "unit": "łyżka", "gramsMin": 13, "gramsMax": 14 },
+      { "unit": "łyżeczka", "gramsMin": 4, "gramsMax": 5 }
+    ]
+  }
+]

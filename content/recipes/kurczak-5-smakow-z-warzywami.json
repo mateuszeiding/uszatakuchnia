@@ -1,0 +1,273 @@
+{
+  "name": "Kurczak 5 smaków z warzywami",
+  "servings": 3,
+  "timeMin": 35,
+  "timeMax": 45,
+  "difficulty": 2,
+  "status": "draft",
+  "cautions": [
+    "Zanim zaczniesz smażyć, pokrój wszystko i wymieszaj sos. Smażenie trwa kilka minut i w trakcie nie ma czasu na krojenie."
+  ],
+  "taxonomy": {
+    "dish": [
+      "danie główne"
+    ],
+    "base": [
+      "drób",
+      "warzywa"
+    ],
+    "cuisine": [
+      "azjatycka"
+    ],
+    "diet": [
+      "wysokobiałkowe",
+      "bez laktozy"
+    ],
+    "practical": [
+      "1 patelnia"
+    ]
+  },
+  "ingredients": [
+    {
+      "key": "kurczak",
+      "section": "Kurczak",
+      "ingredient": "Pierś z kurczaka",
+      "quantity": "600",
+      "unit": "g"
+    },
+    {
+      "key": "skrobia",
+      "section": "Kurczak",
+      "ingredient": "Skrobia ziemniaczana",
+      "quantity": "3",
+      "unit": "łyżka"
+    },
+    {
+      "key": "sol",
+      "section": "Kurczak",
+      "ingredient": "Sól",
+      "quantity": "0.5",
+      "unit": "łyżeczka"
+    },
+    {
+      "key": "chili-mielone",
+      "section": "Kurczak",
+      "ingredient": "Chili mielone",
+      "quantity": "1",
+      "unit": "szczypta"
+    },
+    {
+      "key": "5-smakow-kurczak",
+      "section": "Kurczak",
+      "ingredient": "Przyprawa 5 smaków",
+      "quantity": "0.5",
+      "unit": "łyżeczka"
+    },
+    {
+      "key": "olej-kurczak",
+      "section": "Kurczak",
+      "ingredient": "Olej roślinny",
+      "quantity": "2",
+      "unit": "łyżka"
+    },
+    {
+      "key": "marchew",
+      "section": "Warzywa",
+      "ingredient": "Marchew",
+      "quantity": "1",
+      "unit": "sztuka"
+    },
+    {
+      "key": "papryka",
+      "section": "Warzywa",
+      "ingredient": "Papryka czerwona",
+      "quantity": "0.5",
+      "unit": "sztuka"
+    },
+    {
+      "key": "czosnek",
+      "section": "Warzywa",
+      "ingredient": "Czosnek",
+      "quantity": "3",
+      "unit": "ząbek"
+    },
+    {
+      "key": "imbir",
+      "section": "Warzywa",
+      "ingredient": "Imbir",
+      "quantity": "2",
+      "unit": "łyżka",
+      "note": "świeży"
+    },
+    {
+      "key": "dymka",
+      "section": "Warzywa",
+      "ingredient": "Dymka",
+      "quantity": "2",
+      "unit": "sztuka"
+    },
+    {
+      "key": "chili",
+      "section": "Warzywa",
+      "ingredient": "Papryczka chili",
+      "quantity": "0.5",
+      "unit": "sztuka"
+    },
+    {
+      "key": "bambus",
+      "section": "Warzywa",
+      "ingredient": "Pędy bambusa (z puszki)",
+      "quantity": "100",
+      "unit": "g"
+    },
+    {
+      "key": "boczniaki",
+      "section": "Warzywa",
+      "ingredient": "Boczniaki",
+      "quantity": "150–200",
+      "unit": "g",
+      "optional": true
+    },
+    {
+      "key": "olej-boczniaki",
+      "section": "Warzywa",
+      "ingredient": "Olej roślinny",
+      "quantity": "1",
+      "unit": "łyżeczka",
+      "optional": true
+    },
+    {
+      "key": "olej-warzywa",
+      "section": "Warzywa",
+      "ingredient": "Olej roślinny",
+      "quantity": "2",
+      "unit": "łyżka"
+    },
+    {
+      "key": "sos-sojowy",
+      "section": "Sos",
+      "ingredient": "Sos sojowy",
+      "quantity": "6",
+      "unit": "łyżka",
+      "note": "ciemny"
+    },
+    {
+      "key": "ocet",
+      "section": "Sos",
+      "ingredient": "Ocet ryżowy",
+      "quantity": "3",
+      "unit": "łyżka"
+    },
+    {
+      "key": "cukier",
+      "section": "Sos",
+      "ingredient": "Cukier brązowy",
+      "quantity": "1",
+      "unit": "łyżka",
+      "substitutes": [
+        {
+          "ingredient": "Cukier biały"
+        }
+      ]
+    },
+    {
+      "key": "5-smakow-sos",
+      "section": "Sos",
+      "ingredient": "Przyprawa 5 smaków",
+      "quantity": "0.5",
+      "unit": "łyżeczka"
+    },
+    {
+      "key": "sos-rybny",
+      "section": "Sos",
+      "ingredient": "Sos rybny",
+      "quantity": "0.5",
+      "unit": "łyżeczka"
+    },
+    {
+      "key": "woda",
+      "section": "Sos",
+      "ingredient": "Woda",
+      "quantity": "40",
+      "unit": "ml"
+    },
+    {
+      "key": "olej-sezamowy",
+      "section": "Na koniec",
+      "ingredient": "Olej sezamowy",
+      "quantity": "0.5–1",
+      "unit": "łyżka"
+    },
+    {
+      "key": "sezam",
+      "section": "Na koniec",
+      "ingredient": "Sezam",
+      "unit": "do smaku"
+    }
+  ],
+  "equipment": [
+    {
+      "name": "Patelnia",
+      "spec": "duża albo wok"
+    }
+  ],
+  "steps": [
+    {
+      "section": "Przygotowanie",
+      "text": "Pokrój kurczaka {{ing:kurczak}} w poprzek włókien w paski szerokości 1–1,5 cm. Przełóż do miski, wsyp skrobię {{ing:skrobia}}, sól {{ing:sol}}, chili {{ing:chili-mielone}} i {{term:1|przyprawę 5 smaków}} {{ing:5-smakow-kurczak}}. Dokładnie wymieszaj i odstaw na 10–15 minut.",
+      "hints": [
+        "Grubą pierś najpierw przetnij wzdłuż na pół.",
+        "Skrobia oblepia paski cienką warstwą, która chroni mięso przed wysuszeniem. Na końcu zagęści też sos."
+      ]
+    },
+    {
+      "section": "Przygotowanie",
+      "text": "Marchew {{ing:marchew}} pokrój w cienkie słupki, a paprykę {{ing:papryka}} w paski. Czosnek {{ing:czosnek}} i imbir {{ing:imbir}} posiekaj drobno, a chili {{ing:chili}} pokrój w krążki. Dymkę {{ing:dymka}} pokrój w krążki, a zielony szczypior odłóż na koniec. Odsącz bambus {{ing:bambus}}.",
+      "hints": [
+        "Skórkę z imbiru łatwo zeskrobać łyżeczką."
+      ]
+    },
+    {
+      "section": "Przygotowanie",
+      "text": "W misce wymieszaj sos sojowy {{ing:sos-sojowy}}, ocet ryżowy {{ing:ocet}}, cukier {{ing:cukier}}, przyprawę 5 smaków {{ing:5-smakow-sos}}, sos rybny {{ing:sos-rybny}} i wodę {{ing:woda}}."
+    },
+    {
+      "section": "Smażenie",
+      "optional": true,
+      "text": "Boczniaki {{ing:boczniaki}} porwij palcami w paski. Smaż na bardzo gorącej patelni z olejem {{ing:olej-boczniaki}} 3–4 minuty, aż puszczą wodę, woda odparuje, a brzegi się zrumienią. Zdejmij na talerz.",
+      "hints": [
+        "Nie mieszaj ich za często. Rumienią się, kiedy leżą na gorącym dnie.",
+        "Boczniaki i tak czekają potem na talerzu, więc możesz je smażyć wcześniej, w trakcie krojenia warzyw."
+      ]
+    },
+    {
+      "section": "Smażenie",
+      "text": "Rozgrzej olej {{ing:olej-warzywa}} na patelni. Smaż marchew 2–3 minuty, potem dodaj paprykę na 1–2 minuty. Dodaj czosnek, imbir, chili oraz dymkę i smaż 30 sekund. Wrzuć bambus i boczniaki, wymieszaj i zdejmij wszystko na talerz.",
+      "hints": [
+        "Warzywa mają zostać chrupiące, bo na końcu jeszcze chwilę pogotują się w sosie.",
+        "Czosnek na mocnym ogniu szybko się przypala i robi gorzki, więc cały czas mieszaj."
+      ]
+    },
+    {
+      "section": "Smażenie",
+      "text": "Na tej samej patelni rozgrzej olej {{ing:olej-kurczak}}. Smaż kurczaka na mocnym ogniu 2–3 minuty, aż się zetnie i lekko zrumieni.",
+      "hints": [
+        "Na mniejszej patelni smaż w dwóch turach. Za dużo mięsa naraz schładza patelnię, sok nie nadąża odparować i kurczak się w nim dusi."
+      ]
+    },
+    {
+      "section": "Smażenie",
+      "text": "Wrzuć warzywa z powrotem na patelnię. Zamieszaj sos i wlej go do kurczaka. Gotuj 1–2 minuty, mieszając, aż wszystko się połączy, a sos lekko zgęstnieje.",
+      "hints": [
+        "Sos gęstnieje od skrobi z kurczaka. Jeśli wyjdzie za gęsty, dolej trochę wody."
+      ]
+    },
+    {
+      "section": "Smażenie",
+      "text": "Zdejmij patelnię z ognia i wmieszaj olej sezamowy {{ing:olej-sezamowy}}. Posyp sezamem i szczypiorem.",
+      "hints": [
+        "Olej sezamowy dodaj poza ogniem, bo w wysokiej temperaturze szybko traci aromat."
+      ]
+    }
+  ]
+}
