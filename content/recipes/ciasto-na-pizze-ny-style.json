@@ -1,6 +1,37 @@
 {
   "name": "Ciasto na pizzę New York Style (krótka fermentacja)",
   "servings": 2,
+  "portion": {
+    "mode": "sized",
+    "pieceUnit": "placek",
+    "sizes": [
+      {
+        "diameterCm": 25,
+        "doughG": 190,
+        "isBase": false
+      },
+      {
+        "diameterCm": 30,
+        "doughG": 255,
+        "isBase": true
+      },
+      {
+        "diameterCm": 35,
+        "doughG": 345,
+        "isBase": false
+      },
+      {
+        "diameterCm": 40,
+        "doughG": 425,
+        "isBase": false
+      },
+      {
+        "diameterCm": 45,
+        "doughG": 520,
+        "isBase": false
+      }
+    ]
+  },
   "timeMin": 270,
   "timeMax": null,
   "difficulty": 2,
@@ -128,7 +159,6 @@
       "section": "Wyrastanie",
       "text": "Podziel ciasto na kawałki po ok. 255 g i z każdego uformuj ciasną, gładką kulkę. Przykryj i zostaw na kolejne 2 godziny w temperaturze pokojowej. Potem ciasto jest gotowe do rozciągania.",
       "hints": [
-        "Na inny rozmiar pizzy: 25 cm — 180–200 g, 35 cm — 330–360 g, 40 cm — 410–440 g, 45 cm — 500–540 g ciasta na placek.",
         "Kulki odstaw z odstępem na natłuszczonej desce albo każdą w osobnym pojemniku, bo urosną też wszerz."
       ]
     }
