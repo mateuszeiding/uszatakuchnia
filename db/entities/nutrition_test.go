@@ -17,7 +17,12 @@ func TestRecipeNutritionScanValue(t *testing.T) {
 		t.Fatal(err)
 	}
 	var out RecipeNutrition
-	if err := out.Scan(raw.([]byte)); err != nil {
+	// string, not []byte: in pgx exec mode a []byte parameter is sent as bytea, which jsonb rejects
+	s, ok := raw.(string)
+	if !ok {
+		t.Fatalf("Value() returned %T, want string", raw)
+	}
+	if err := out.Scan(s); err != nil {
 		t.Fatal(err)
 	}
 	if !reflect.DeepEqual(in, out) {

@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -47,7 +46,7 @@ func initDB() error {
 		return fmt.Errorf("DB_DATABASE_URL is empty")
 	}
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := Open(dsn, nil)
 	if err != nil {
 		return fmt.Errorf("open: %w", err)
 	}
