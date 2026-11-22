@@ -8,7 +8,7 @@ import (
 )
 
 func MapTaxonomyValueToDto(e entities.TaxonomyValue) dtos.TaxonomyValueDto {
-	return dtos.TaxonomyValueDto{ID: e.ID, Label: e.Label, Color: e.Color}
+	return dtos.TaxonomyValueDto{ID: e.ID, Label: e.Label, Color: e.Color, Icon: e.Icon}
 }
 
 // MapRecipeTaxonomyToDto groups values by axis code. Needs "Taxonomy.Value.Axis" preloaded.

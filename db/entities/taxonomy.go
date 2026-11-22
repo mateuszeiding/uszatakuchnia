@@ -1,5 +1,7 @@
 package entities
 
+import "slices"
+
 // New axes are added as table rows, without changing the model.
 type TaxonomyAxis struct {
 	ID         uint   `gorm:"primaryKey;autoIncrement"`
@@ -21,10 +23,19 @@ type TaxonomyValue struct {
 
 	Label     string  `gorm:"type:varchar(64);not null;uniqueIndex:ux_taxonomy_values_axis_label,priority:2"`
 	Color     *string `gorm:"type:varchar(16)"` // color token key, e.g. "coral" → var(--c-coral)
+	Icon      *string `gorm:"type:varchar(16)"` // dish-type icon key, e.g. "zupa" (TaxonomyIcons); nil = no icon
 	SortOrder int     `gorm:"not null;default:0"`
 }
 
 func (TaxonomyValue) TableName() string { return "taxonomy_values" }
+
+// TaxonomyIcons are the icon keys the frontend can draw (web/src/shared/dishIcons.ts, DISH_ICONS).
+// A new icon needs a drawing there and its key here; taxonomy_test.go keeps both lists equal.
+var TaxonomyIcons = []string{"sniadanie", "zupa", "glowne", "salatka", "przekaska", "deser", "wypiek", "sos", "napoj"}
+
+func IsTaxonomyIcon(k string) bool {
+	return slices.Contains(TaxonomyIcons, k)
+}
 
 type RecipeTaxonomy struct {
 	RecipeID uint          `gorm:"not null;primaryKey"`

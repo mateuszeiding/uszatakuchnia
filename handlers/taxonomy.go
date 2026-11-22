@@ -123,14 +123,41 @@ func Dictionaries(w http.ResponseWriter, r *http.Request) {
 
 // ─── Classification axis values (admin → Classification) ─────────────────
 //
-//	POST   /api/taxonomy/values                  {axisId, label, color?}
-//	PUT    /api/taxonomy/values/{id}             {label, color?}
+//	POST   /api/taxonomy/values                  {axisId, label, color?, icon?}
+//	PUT    /api/taxonomy/values/{id}             {label, color?, icon?}
 //	DELETE /api/taxonomy/values/{id}?moveTo=<id>  recipes with this value get moveTo
+//
+// icon: a key from entities.TaxonomyIcons (axes with colors only); null or "" removes it. A PUT without
+// the field keeps the current icon (the admin panel doesn't send it yet).
 
 type valueRequest struct {
-	AxisID uint    `json:"axisId"`
-	Label  string  `json:"label"`
-	Color  *string `json:"color"`
+	AxisID uint         `json:"axisId"`
+	Label  string       `json:"label"`
+	Color  *string      `json:"color"`
+	Icon   optionalIcon `json:"icon"`
+}
+
+// optionalIcon tells a missing "icon" (Set = false) from null / "" (Set, Value = nil).
+type optionalIcon struct {
+	Set   bool
+	Value *string
+}
+
+func (o *optionalIcon) UnmarshalJSON(b []byte) error {
+	// a repeated "icon" member replaces the earlier one, null and "" included
+	o.Set, o.Value = true, nil
+	var s *string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	if s != nil && *s != "" {
+		o.Value = s
+	}
+	return nil
+}
+
+func (o optionalIcon) valid() bool {
+	return o.Value == nil || entities.IsTaxonomyIcon(*o.Value)
 }
 
 func labelTaken(tx *gorm.DB, axisID uint, label string, exceptID uint) bool {
@@ -152,6 +179,10 @@ func ValueCreate(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusBadRequest, "axisId and label are required")
 		return
 	}
+	if !req.Icon.valid() {
+		resp.Error(w, http.StatusBadRequest, "unknown icon")
+		return
+	}
 	conn := db.DB()
 
 	var axis entities.TaxonomyAxis
@@ -171,6 +202,7 @@ func ValueCreate(w http.ResponseWriter, r *http.Request) {
 	val := entities.TaxonomyValue{AxisID: axis.ID, Label: label, SortOrder: maxSort + 1}
 	if axis.HasColor {
 		val.Color = req.Color
+		val.Icon = req.Icon.Value
 	}
 	if err := conn.Omit("Axis").Create(&val).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
@@ -190,6 +222,10 @@ func ValueUpdate(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusBadRequest, "label is required")
 		return
 	}
+	if !req.Icon.valid() {
+		resp.Error(w, http.StatusBadRequest, "unknown icon")
+		return
+	}
 	conn := db.DB()
 
 	var val entities.TaxonomyValue
@@ -205,6 +241,9 @@ func ValueUpdate(w http.ResponseWriter, r *http.Request) {
 	updates := map[string]any{"label": label}
 	if val.Axis.HasColor {
 		updates["color"] = req.Color
+		if req.Icon.Set {
+			updates["icon"] = req.Icon.Value
+		}
 	}
 	if err := conn.Model(&entities.TaxonomyValue{}).Where("id = ?", val.ID).Updates(updates).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
@@ -213,6 +252,9 @@ func ValueUpdate(w http.ResponseWriter, r *http.Request) {
 	val.Label = label
 	if val.Axis.HasColor {
 		val.Color = req.Color
+		if req.Icon.Set {
+			val.Icon = req.Icon.Value
+		}
 	}
 	resp.JSON(w, http.StatusOK, mappers.MapTaxonomyValueToDto(val))
 }
