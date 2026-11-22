@@ -118,8 +118,13 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 	conn.Model(&entities.RecipeIngredient{}).Where("unit_id = ?", unit.ID).Count(&used)
 	conn.Model(&entities.Recipe{}).Where("piece_unit_id = ?", unit.ID).Count(&usedAsPiece)
 
-	// a piece unit must inflect (placek / placki / placków): moving it to "g" would leave recipes that fail validation
-	if usedAsPiece > 0 && moveTo != nil && !services.IsPieceUnit(target) {
+	// A piece unit needs a replacement that inflects (placek / placki / placków): without one, or with "g",
+	// published "sized" recipes would be left failing validation on their next save (owner's decision 22.11).
+	if usedAsPiece > 0 && moveTo == nil {
+		resp.Error(w, http.StatusBadRequest, "Jednostka jest nazwą sztuki w przepisach — wybierz, na co ją przenieść.")
+		return
+	}
+	if usedAsPiece > 0 && !services.IsPieceUnit(target) {
 		resp.Error(w, http.StatusBadRequest,
 			fmt.Sprintf("„%s” jest nazwą sztuki w przepisach — przenieś ją na jednostkę z odmianą (np. placek / placki / placków)", unit.Name))
 		return
@@ -130,7 +135,6 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 			Update("unit_id", moveTo).Error; err != nil {
 			return err
 		}
-		// without moveTo the recipe falls back to "sztuka" on the page (no unit = generic pieces)
 		if err := tx.Model(&entities.Recipe{}).Where("piece_unit_id = ?", unit.ID).
 			Update("piece_unit_id", moveTo).Error; err != nil {
 			return err

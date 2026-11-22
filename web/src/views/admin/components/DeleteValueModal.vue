@@ -11,6 +11,8 @@ const props = defineProps<{
     countNoun: string;
     others: { id: number; label: string }[];
     required: boolean;
+    /** Why moving is required, when it isn't the required axis (e.g. a piece unit). */
+    requiredText?: string;
 }>();
 const emit = defineEmits<{ confirm: [moveTo: number | null]; close: [] }>();
 
@@ -27,7 +29,8 @@ const canDelete = computed(() => !props.required || target.value !== '');
             Używa jej {{ count }} {{ countNoun }}.
             {{
                 required
-                    ? 'Ta wartość jest wymagana w przepisie, więc wybierz, dokąd je przenieść.'
+                    ? (requiredText ??
+                      'Ta wartość jest wymagana w przepisie, więc wybierz, dokąd je przenieść.')
                     : 'Możesz przenieść je do innej wartości albo po prostu usunąć wartość.'
             }}
         </p>

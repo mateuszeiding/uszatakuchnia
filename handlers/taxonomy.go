@@ -101,6 +101,16 @@ func Dictionaries(w http.ResponseWriter, r *http.Request) {
 	for _, c := range unitCounts {
 		byUnit[c.ID] = c.N
 	}
+	var pieceCounts []count
+	if err := conn.Model(&entities.Recipe{}).Select("piece_unit_id AS id, COUNT(*) AS n").
+		Where("piece_unit_id IS NOT NULL").Group("piece_unit_id").Scan(&pieceCounts).Error; err != nil {
+		resp.Error(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	byPiece := map[uint]int{}
+	for _, c := range pieceCounts {
+		byPiece[c.ID] = c.N
+	}
 
 	axesDto := mappers.MapTaxonomyAxesToDto(axes, values)
 	for ai := range axesDto {
@@ -112,6 +122,7 @@ func Dictionaries(w http.ResponseWriter, r *http.Request) {
 	unitsDto := mappers.MapUnitArrayToDto(units)
 	for i := range unitsDto {
 		unitsDto[i].UsedIn = byUnit[unitsDto[i].ID]
+		unitsDto[i].UsedAsPiece = byPiece[unitsDto[i].ID]
 	}
 
 	resp.JSON(w, http.StatusOK, dtos.DictionariesDto{

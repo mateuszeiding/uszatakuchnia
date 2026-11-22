@@ -35,6 +35,8 @@ export interface IUnit {
     forms?: [string, string, string];
     noQty: boolean;
     usedIn?: number;
+    /** Recipes naming their pieces with it: deleting it needs an inflected unit to move them to. */
+    usedAsPiece?: number;
 }
 
 export interface IAllergen {

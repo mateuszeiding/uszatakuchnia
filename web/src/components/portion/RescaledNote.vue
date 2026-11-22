@@ -4,11 +4,12 @@ import { computed } from 'vue';
 import { fmtScale, scaleWarning } from '@/shared/utils/portion';
 
 // "Przeliczone: tortownica Ø 26 cm ×1,17 · Przywróć przepis" (only when it differs from the recipe), like the
-// substitutes line. A form also gets the baking time note; under 0,5 / over 2 a warning, but we still scale.
+// substitutes line. A form also gets the baking time note and, under 0,5 / over 2, a warning (we still scale).
+// Pieces get no warning: fewer or more pizzas don't make the dough thinner (owner's decision 22.11).
 const props = defineProps<{ text: string; scale: number; form: boolean }>();
 const emit = defineEmits<{ restore: [] }>();
 
-const warn = computed(() => scaleWarning(props.scale));
+const warn = computed(() => (props.form ? scaleWarning(props.scale) : null));
 </script>
 
 <template>

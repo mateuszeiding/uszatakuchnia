@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import DeleteValueModal from './DeleteValueModal.vue';
 
@@ -8,6 +8,7 @@ import { confirmAction } from '@/composables/useConfirm';
 import { showToast } from '@/composables/useToast';
 import { createUnit, deleteUnit, updateUnit } from '@/data/api/taxonomy/fetch';
 import type { IUnit } from '@/data/dtos/taxonomy/DictionariesDto';
+import { pieceUnits } from '@/views/recipies/auth/portionForm';
 
 // Inflected forms "1, 2–4, 5+" stay empty for abbreviations like g, ml.
 const props = defineProps<{ units: IUnit[] }>();
@@ -17,6 +18,8 @@ const editId = ref<number | null>(null);
 const buf = ref({ name: '', forms: '' });
 const newName = ref('');
 const deleting = ref<IUnit | null>(null);
+// a piece unit ("placek") can't be dropped from recipes: they need another inflected unit (owner's decision 22.11)
+const asPiece = computed(() => (deleting.value?.usedAsPiece ?? 0) > 0);
 const busy = ref(false);
 
 const parseForms = (s: string) =>
@@ -217,10 +220,11 @@ async function doDelete(u: IUnit, moveTo: number | null) {
         :count-noun="usesNoun(deleting.usedIn ?? 0)"
         :others="
             props.units
-                .filter((u) => u.id !== deleting?.id)
+                .filter((u) => u.id !== deleting?.id && (!asPiece || pieceUnits([u]).length))
                 .map((u) => ({ id: u.id, label: u.name }))
         "
-        :required="false"
+        :required="asPiece"
+        required-text="Jednostka jest nazwą sztuki w przepisach — wybierz, na co ją przenieść (tylko jednostki z odmianą)."
         @confirm="doDelete(deleting!, $event)"
         @close="deleting = null"
     />

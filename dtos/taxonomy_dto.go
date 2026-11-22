@@ -28,6 +28,8 @@ type UnitDto struct {
 	NoQty bool     `json:"noQty"`
 	// Number of recipe ingredient rows using it, plus recipes using it as the piece unit.
 	UsedIn int `json:"usedIn"`
+	// Recipes using it as the piece unit: deleting it then needs an inflected unit to move them to.
+	UsedAsPiece int `json:"usedAsPiece"`
 }
 
 type AllergenDto struct {
