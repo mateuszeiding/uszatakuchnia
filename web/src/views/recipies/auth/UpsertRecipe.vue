@@ -8,6 +8,7 @@ import FormActionBar, { type BusyAction } from './components/FormActionBar.vue';
 import FormSection from './components/FormSection.vue';
 import IngredientsEditor from './components/IngredientsEditor.vue';
 import PhotoField from './components/PhotoField.vue';
+import PortionFields from './components/PortionFields.vue';
 import StepsEditor from './components/StepsEditor.vue';
 import TaxonomyField from './components/TaxonomyField.vue';
 import TimeField from './components/TimeField.vue';
@@ -450,6 +451,12 @@ const prepSummary = computed(() => {
                             </div>
                         </div>
                     </div>
+                    <PortionFields
+                        v-model="form.portion"
+                        v-model:servings="form.servings"
+                        :units="units"
+                        :error="errors.portion"
+                    />
                 </FormSection>
 
                 <FormSection
@@ -586,14 +593,19 @@ const prepSummary = computed(() => {
                 </div>
 
                 <div class="side-card">
-                    <h2 class="side-card__title">Czas i porcje</h2>
+                    <h2 class="side-card__title">
+                        {{ form.portion.mode === 'servings' ? 'Czas i porcje' : 'Czas' }}
+                    </h2>
                     <TimeField
                         v-model:time="form.time"
                         v-model:time-max="form.timeMax"
                         v-model:unit="form.timeUnit"
                         :error="errors.time"
                     />
-                    <div class="side-card__two">
+                    <div
+                        v-if="form.portion.mode === 'servings'"
+                        class="side-card__two"
+                    >
                         <div
                             id="f-servings"
                             class="field"
