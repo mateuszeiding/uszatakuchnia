@@ -27,8 +27,11 @@ func RecipeList(w http.ResponseWriter, r *http.Request) {
 
 	query := conn.Model(&entities.Recipe{}).
 		Select(`id, name, tagline, time_min, time_max, difficulty, status, nutrition,
+			servings, portion_mode, piece_unit_id, form_shape, form_d_cm, form_a_cm, form_b_cm, form_pieces,
 			EXISTS (SELECT 1 FROM recipe_steps s WHERE s.recipe_id = recipes.id AND s.prep AND NOT s.optional) AS needs_prep`).
 		Preload("Photo").
+		Preload("PieceUnit").
+		Preload("PieceSizes").
 		Preload("Taxonomy.Value.Axis").
 		Order("id DESC")
 
@@ -142,6 +145,8 @@ func RecipeGet(w http.ResponseWriter, r *http.Request) {
 	var entity entities.Recipe
 	if err := conn.
 		Preload("Photo").
+		Preload("PieceUnit").
+		Preload("PieceSizes").
 		Preload("Steps", func(tx *gorm.DB) *gorm.DB { return tx.Order("step_no") }).
 		Preload("Ingredients", func(tx *gorm.DB) *gorm.DB { return tx.Order("sort_order") }).
 		Preload("Ingredients.Ingredient.Allergens").

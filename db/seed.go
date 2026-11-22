@@ -151,6 +151,7 @@ func seedUnits(tx *gorm.DB) error {
 		unit("pęczek", "pęczek", "pęczki", "pęczków"),
 		unit("garść", "garść", "garście", "garści"),
 		unit("listek", "listek", "listki", "listków"),
+		unit("placek", "placek", "placki", "placków"),
 		{Name: "do smaku", NoQty: true},
 	}
 	for i := range units {

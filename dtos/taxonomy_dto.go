@@ -26,7 +26,7 @@ type UnitDto struct {
 	Name  string   `json:"name"`
 	Forms []string `json:"forms,omitempty"` // [1, 2–4, 5+]; empty = doesn't inflect
 	NoQty bool     `json:"noQty"`
-	// Number of recipe ingredient rows using it.
+	// Number of recipe ingredient rows using it, plus recipes using it as the piece unit.
 	UsedIn int `json:"usedIn"`
 }
 

@@ -101,6 +101,12 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 		}
 	}
 
+	portion, err := effectivePortion(tx, req, selfID)
+	if err != nil {
+		return nil, err
+	}
+	validatePortion(portion, req.Servings, publish, units, add)
+
 	if req.Cautions != nil {
 		validateCautions(*req.Cautions, add)
 	}
@@ -162,9 +168,6 @@ func ValidateRecipe(tx *gorm.DB, req dtos.UpsertRecipeRequest, selfID uint) ([]d
 		if req.Difficulty == nil {
 			add("difficulty", "Wybierz trudność")
 		}
-		if req.Servings <= 0 {
-			add("servings", "Podaj liczbę porcji")
-		}
 		if req.TimeMin <= 0 {
 			add("time", "Podaj czas")
 		}
@@ -198,6 +201,7 @@ func ApplyRecipeRequest(e *entities.Recipe, req dtos.UpsertRecipeRequest) {
 	if req.Cautions != nil {
 		e.Cautions = CleanCautions(*req.Cautions)
 	}
+	applyPortion(e, req.Portion)
 }
 
 // ReplaceRecipeChildren replaces the recipe's photo, steps, ingredients and classification. Call inside a transaction.
@@ -266,6 +270,9 @@ func ReplaceRecipeChildren(tx *gorm.DB, recipeID uint, req dtos.UpsertRecipeRequ
 		if err := tx.Create(&entities.RecipeTaxonomy{RecipeID: recipeID, ValueID: vid}).Error; err != nil {
 			return err
 		}
+	}
+	if err := replacePieceSizes(tx, recipeID, req.Portion); err != nil {
+		return err
 	}
 	return replaceRecipeEquipment(tx, recipeID, req)
 }

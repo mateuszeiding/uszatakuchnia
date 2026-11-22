@@ -85,8 +85,11 @@ func Dictionaries(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if err := conn.Model(&entities.RecipeIngredient{}).Select("unit_id AS id, COUNT(*) AS n").
-		Where("unit_id IS NOT NULL").Group("unit_id").Scan(&unitCounts).Error; err != nil {
+	// a recipe's piece unit ("placek") counts as a use too, so deleting it asks where to move it
+	if err := conn.Raw(`SELECT id, COUNT(*) AS n FROM (
+			SELECT unit_id AS id FROM recipe_ingredients WHERE unit_id IS NOT NULL
+			UNION ALL SELECT piece_unit_id FROM recipes WHERE piece_unit_id IS NOT NULL
+		) u GROUP BY id`).Scan(&unitCounts).Error; err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}

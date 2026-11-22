@@ -90,7 +90,7 @@ func FillLineNutrition(items []dtos.RecipeIngredientDto, e entities.Recipe, ix *
 			return
 		}
 		main := nutritionLineOf(e.Ingredients[i])
-		items[i].Nutrition = ix.LineNutrition([]NutritionLine{main}, e.Servings)
+		items[i].Nutrition = ix.LineNutrition([]NutritionLine{main}, e.NutritionDivisor())
 		for k := range items[i].Substitutes {
 			sub := &items[i].Substitutes[k]
 			alt := main
@@ -99,7 +99,7 @@ func FillLineNutrition(items []dtos.RecipeIngredientDto, e entities.Recipe, ix *
 			if sub.Mix {
 				lines = []NutritionLine{main.Half(), alt.Half()}
 			}
-			sub.Nutrition = ix.LineNutrition(lines, e.Servings)
+			sub.Nutrition = ix.LineNutrition(lines, e.NutritionDivisor())
 			sub.HasNutrition = len(ix.ResolveMacros(sub.IngredientID)) > 0
 			sub.GramsPerUnit = nil
 			if main.NoQty {

@@ -8,6 +8,7 @@ type RecipeDto struct {
 	ID          uint              `json:"id"`
 	Name        string            `json:"name"`
 	Servings    int               `json:"servings"`
+	Portion     PortionDto        `json:"portion"`
 	Description *string           `json:"description,omitempty"`
 	Tagline     *string           `json:"tagline,omitempty"`
 	Tip         *string           `json:"tip,omitempty"`
@@ -48,7 +49,9 @@ type RecipeBaseDto struct {
 	NeedsPrep  bool              `json:"needsPrep"`
 	Taxonomy   RecipeTaxonomyDto `json:"taxonomy"`
 	Photo      *RecipePhotoDto   `json:"photo,omitempty"`
-	// Kcal per serving (range); null = no data.
+	Servings   int               `json:"servings"`
+	Portion    PortionDto        `json:"portion"`
+	// Kcal per serving / piece of the base size / piece of the form (whole form without pieces); null = no data.
 	Kcal *entities.SumRange `json:"kcal"`
 	// Ingredient names: the list search matches them too.
 	IngredientNames []string `json:"ingredientNames"`
@@ -69,6 +72,8 @@ type UpsertRecipeRequest struct {
 	Status      string  `json:"status"`
 	// Notes; nil = unchanged (older client), on create nil = [].
 	Cautions *[]string `json:"cautions"`
+	// nil = unchanged (older client, content/ scripts); on create nil = "servings".
+	Portion *UpsertPortionRequest `json:"portion"`
 
 	TaxonomyValueIDs []uint `json:"taxonomyValueIds"`
 

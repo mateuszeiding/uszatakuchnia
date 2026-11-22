@@ -65,16 +65,47 @@ type shareRecipe struct {
 	TimeMin     int
 	TimeMax     *int
 	Status      string
+	PortionMode string
+	FormShape   *string
+	FormDCm     *int
+	FormACm     *int
+	FormBCm     *int
+	// "sized" only, filled by the loader: offered diameters, the base one, the piece unit's forms.
+	Sizes      []int    `gorm:"-"`
+	BaseD      int      `gorm:"-"`
+	PieceForms []string `gorm:"-"`
 }
 
 // loadShareRecipe is swapped out in tests (no database).
 var loadShareRecipe = func(ctx context.Context, id uint) (*shareRecipe, error) {
+	conn := db.DB().WithContext(ctx)
 	var rec shareRecipe
-	err := db.DB().WithContext(ctx).Model(&entities.Recipe{}).
-		Select("id, name, servings, description, tagline, time_min, time_max, status").
+	err := conn.Model(&entities.Recipe{}).
+		Select("id, name, servings, description, tagline, time_min, time_max, status, portion_mode, form_shape, form_d_cm, form_a_cm, form_b_cm").
 		Where("id = ?", id).Take(&rec).Error
 	if err != nil {
 		return nil, err
+	}
+	if rec.PortionMode == entities.PortionSized {
+		var sizes []entities.RecipePieceSize
+		if err := conn.Where("recipe_id = ?", id).Order("sort_order").Find(&sizes).Error; err != nil {
+			return nil, err
+		}
+		for _, s := range sizes {
+			rec.Sizes = append(rec.Sizes, s.DiameterCm)
+			if s.IsBase {
+				rec.BaseD = s.DiameterCm
+			}
+		}
+		var unit entities.Unit
+		if err := conn.Model(&entities.Recipe{}).Select("units.*").
+			Joins("JOIN units ON units.id = recipes.piece_unit_id").
+			Where("recipes.id = ?", id).Limit(1).Find(&unit).Error; err != nil {
+			return nil, err
+		}
+		if unit.FormOne != nil && unit.FormFew != nil && unit.FormMany != nil {
+			rec.PieceForms = []string{*unit.FormOne, *unit.FormFew, *unit.FormMany}
+		}
 	}
 	return &rec, nil
 }
@@ -91,7 +122,7 @@ func sharePage(w http.ResponseWriter, r *http.Request, shopping bool) {
 		if shopping && r.URL.RawQuery != "" {
 			path += "?" + r.URL.RawQuery // servings and substitutes: each list variant gets its own preview
 		}
-		meta = recipeMeta(rec, shopping, servingsParam(r, rec.Servings), origin, path)
+		meta = recipeMeta(rec, shopping, shoppingPortion(rec, r), origin, path)
 	}
 
 	page := renderPage(indexTemplate(ctx, origin), meta)
@@ -126,7 +157,8 @@ func genericMeta(origin string) pageMeta {
 	}
 }
 
-func recipeMeta(rec *shareRecipe, shopping bool, servings int, origin, path string) pageMeta {
+// portion: "6 porcji" / "3 placki 25 cm" / "tortownica Ø 26 cm" from the link (shoppingPortion); "" = left out.
+func recipeMeta(rec *shareRecipe, shopping bool, portion, origin, path string) pageMeta {
 	m := pageMeta{
 		Title:       rec.Name + " · " + siteName,
 		OGTitle:     rec.Name,
@@ -139,7 +171,10 @@ func recipeMeta(rec *shareRecipe, shopping bool, servings int, origin, path stri
 	}
 	if shopping {
 		m.Title = "Lista zakupów: " + rec.Name + " · " + siteName
-		m.OGTitle = fmt.Sprintf("Lista zakupów: %s · %d %s", rec.Name, servings, servingsNoun(servings))
+		m.OGTitle = "Lista zakupów: " + rec.Name
+		if portion != "" {
+			m.OGTitle += " · " + portion
+		}
 	}
 	return m
 }
@@ -153,12 +188,7 @@ func recipeDescription(rec *shareRecipe) string {
 	if rec.Description != nil && strings.TrimSpace(*rec.Description) != "" {
 		return truncateWords(collapse(*rec.Description), descMaxRunes)
 	}
-	parts := []string{}
-	if rec.Servings > 0 {
-		parts = append(parts, fmt.Sprintf("Przepis na %d %s", rec.Servings, servingsAcc(rec.Servings)))
-	} else {
-		parts = append(parts, "Przepis")
-	}
+	parts := []string{recipePortion(rec)}
 	if t := formatTime(rec.TimeMin, rec.TimeMax); t != "" {
 		parts = append(parts, t)
 	}

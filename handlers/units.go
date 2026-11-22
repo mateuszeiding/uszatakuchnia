@@ -113,12 +113,18 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 		moveTo = &target.ID
 	}
 
-	var used int64
+	var used, usedAsPiece int64
 	conn.Model(&entities.RecipeIngredient{}).Where("unit_id = ?", unit.ID).Count(&used)
+	conn.Model(&entities.Recipe{}).Where("piece_unit_id = ?", unit.ID).Count(&usedAsPiece)
 
 	if err := conn.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(&entities.RecipeIngredient{}).Where("unit_id = ?", unit.ID).
 			Update("unit_id", moveTo).Error; err != nil {
+			return err
+		}
+		// without moveTo the recipe falls back to "sztuka" on the page (no unit = generic pieces)
+		if err := tx.Model(&entities.Recipe{}).Where("piece_unit_id = ?", unit.ID).
+			Update("piece_unit_id", moveTo).Error; err != nil {
 			return err
 		}
 		return tx.Delete(&entities.Unit{}, unit.ID).Error
@@ -126,7 +132,7 @@ func UnitDelete(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	resp.JSON(w, http.StatusOK, map[string]any{"deleted": unit.ID, "moved": used})
+	resp.JSON(w, http.StatusOK, map[string]any{"deleted": unit.ID, "moved": used + usedAsPiece})
 }
 
 // ─── Equipment (admin → Classification → Equipment) ─────────────────
